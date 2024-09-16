@@ -1,40 +1,45 @@
 {
-  "name": "@swc/html-win32-x64-msvc",
-  "version": "1.7.27",
-  "os": [
-    "win32"
-  ],
-  "cpu": [
-    "x64"
-  ],
-  "main": "swc-html.win32-x64-msvc.node",
-  "files": [
-    "swc-html.win32-x64-msvc.node"
-  ],
-  "description": "Super-fast HTML minifier",
-  "keywords": [
-    "swcpack",
-    "babel",
-    "typescript",
-    "rust",
-    "webpack",
-    "tsc"
-  ],
-  "author": "강동윤 <kdy1997.dev@gmail.com>",
-  "homepage": "https://swc.rs",
-  "license": "Apache-2.0 AND MIT",
-  "engines": {
-    "node": ">=10"
-  },
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/swc-project/swc.git"
-  },
-  "bugs": {
-    "url": "https://github.com/swc-project/swc/issues"
-  }
+	"author": {
+		"email": "Source/Open@Editor.Land",
+		"name": "🖋️ Source — 👐🏻 Open —",
+		"url": "HTTPS://Editor.Land"
+	},
+	"bugs": {
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	},
+	"cpu": [
+		"x64"
+	],
+	"description": "Super-fast HTML minifier",
+	"devDependencies": {
+		"@playform/build": "0.1.6"
+	},
+	"files": [
+		"swc-html.win32-x64-msvc.node"
+	],
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
+	"keywords": [
+		"codeeditorland",
+		"land",
+		"playform"
+	],
+	"license": "SEE LICENSE IN LICENSE",
+	"main": "swc-html.win32-x64-msvc.node",
+	"name": "@swc/html-win32-x64-msvc",
+	"os": [
+		"win32"
+	],
+	"private": false,
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
+	},
+	"scripts": {
+		"prepublishOnly": "Build 'Source/**/*.ts'"
+	},
+	"type": "module",
+	"version": "0.0.1"
 }

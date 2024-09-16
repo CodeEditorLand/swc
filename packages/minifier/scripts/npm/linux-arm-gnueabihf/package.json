@@ -1,38 +1,46 @@
 {
-  "name": "@swc/minifier-linux-arm-gnueabihf",
-  "version": "1.7.27",
-  "os": [
-    "linux"
-  ],
-  "cpu": [
-    "arm"
-  ],
-  "main": "minifier.linux-arm-gnueabihf.node",
-  "files": [
-    "minifier.linux-arm-gnueabihf.node",
-    "swc"
-  ],
-  "description": "Super-fast alternative for terser",
-  "keywords": [
-    "swc",
-    "terser",
-    "minifier"
-  ],
-  "author": "강동윤 <kdy1997.dev@gmail.com>",
-  "homepage": "https://swc.rs",
-  "license": "Apache-2.0",
-  "engines": {
-    "node": ">=12"
-  },
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/swc-project/swc.git"
-  },
-  "bugs": {
-    "url": "https://github.com/swc-project/swc/issues"
-  }
+	"author": {
+		"email": "Source/Open@Editor.Land",
+		"name": "🖋️ Source — 👐🏻 Open —",
+		"url": "HTTPS://Editor.Land"
+	},
+	"bugs": {
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	},
+	"cpu": [
+		"arm"
+	],
+	"description": "Super-fast alternative for terser",
+	"devDependencies": {
+		"@playform/build": "0.1.6"
+	},
+	"files": [
+		"minifier.linux-arm-gnueabihf.node",
+		"swc"
+	],
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
+	"keywords": [
+		"codeeditorland",
+		"land",
+		"playform"
+	],
+	"license": "SEE LICENSE IN LICENSE",
+	"main": "minifier.linux-arm-gnueabihf.node",
+	"name": "@swc/minifier-linux-arm-gnueabihf",
+	"os": [
+		"linux"
+	],
+	"private": false,
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
+	},
+	"scripts": {
+		"prepublishOnly": "Build 'Source/**/*.ts'"
+	},
+	"type": "module",
+	"version": "0.0.1"
 }
