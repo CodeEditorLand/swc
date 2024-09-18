@@ -1,10 +1,8 @@
-# Used to see ideal output using terser
 /lab.js
 /lab.mjs
 
 private/
 
-# Used for reducing
 /input.js
 /output.js
 *.orig
