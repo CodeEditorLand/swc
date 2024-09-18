@@ -425,7 +425,7 @@ pub fn inject_helpers(global_mark: Mark) -> impl Fold + VisitMut {
     })
 }
 
-pub struct InjectHelpers {
+struct InjectHelpers {
     global_mark: Mark,
     helper_ctxt: Option<SyntaxContext>,
 }
