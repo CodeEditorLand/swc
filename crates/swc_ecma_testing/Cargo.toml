@@ -10,6 +10,7 @@ version       = "0.27.0"
 
 [lib]
 bench = false
+path = "Source/lib.rs"
 
 [dependencies]
 anyhow  = { workspace = true }

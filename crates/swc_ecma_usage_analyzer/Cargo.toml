@@ -15,6 +15,7 @@ version       = "0.31.0"
 
 [lib]
 bench = false
+path = "Source/lib.rs"
 
 [features]
 # This enables global concurrent mode

@@ -11,6 +11,7 @@ version       = "0.142.0"
 
 [lib]
 bench = false
+path = "Source/lib.rs"
 
 [dependencies]
 once_cell  = { workspace = true }

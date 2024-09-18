@@ -11,6 +11,7 @@ version       = "0.155.0"
 
 [lib]
 bench = false
+path = "Source/lib.rs"
 
 [features]
 debug = []

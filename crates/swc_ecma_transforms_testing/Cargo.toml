@@ -10,6 +10,7 @@ version       = "0.150.0"
 
 [lib]
 bench = false
+path = "Source/lib.rs"
 
 [dependencies]
 ansi_term  = { workspace = true }

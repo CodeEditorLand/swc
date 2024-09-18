@@ -16,6 +16,7 @@ version = "0.28.0"
 
 [lib]
 bench = false
+path = "Source/lib.rs"
 
 [features]
 default    = ["serde-impl"]

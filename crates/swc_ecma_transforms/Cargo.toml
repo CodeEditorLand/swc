@@ -15,6 +15,7 @@ version       = "0.241.0"
 
 [lib]
 bench = false
+path = "Source/lib.rs"
 
 [features]
 compat = ["swc_ecma_transforms_compat"]

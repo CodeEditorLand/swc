@@ -10,5 +10,6 @@ version       = "0.24.1"
 
 [lib]
 bench = false
+path = "Source/lib.rs"
 
 [dependencies]

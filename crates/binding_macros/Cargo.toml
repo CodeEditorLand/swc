@@ -9,6 +9,7 @@ version     = "0.79.0"
 
 [lib]
 bench = false
+path = "Source/lib.rs"
 
 [features]
 binding_native = []

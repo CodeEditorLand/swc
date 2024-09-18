@@ -10,6 +10,7 @@ version       = "0.121.0"
 
 [lib]
 bench = false
+path = "Source/lib.rs"
 
 [dependencies]
 phf = { workspace = true, features = ["macros"] }
