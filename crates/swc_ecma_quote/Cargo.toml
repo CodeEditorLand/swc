@@ -10,7 +10,6 @@ version       = "0.66.0"
 
 [lib]
 bench = false
-path = "Source/lib.rs"
 
 [dependencies]
 swc_atoms             = { version = "0.6.5", path = "../swc_atoms" }

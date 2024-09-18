@@ -10,7 +10,6 @@ version       = "0.145.0"
 
 [lib]
 bench = false
-path = "Source/lib.rs"
 
 [features]
 __rkyv     = []

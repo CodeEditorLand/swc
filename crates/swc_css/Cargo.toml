@@ -14,7 +14,6 @@ version       = "0.163.0"
 
 [lib]
 bench = false
-path = "Source/lib.rs"
 
 [features]
 compat   = ["swc_css_compat"]

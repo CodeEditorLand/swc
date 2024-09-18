@@ -13,7 +13,6 @@ version = "0.25.0"
 
 [lib]
 bench = false
-path = "Source/lib.rs"
 
 [dependencies]
 dashmap = { workspace = true }

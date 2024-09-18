@@ -10,7 +10,6 @@ version       = "0.5.1"
 
 [lib]
 bench = false
-path = "Source/lib.rs"
 
 [dependencies]
 ahash           = { workspace = true }

@@ -13,7 +13,6 @@ version = "0.17.0"
 
 [lib]
 bench = false
-path = "Source/lib.rs"
 
 [features]
 serde-impl = ["serde"]

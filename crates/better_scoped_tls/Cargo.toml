@@ -10,7 +10,6 @@ version       = "0.1.1"
 
 [lib]
 bench = false
-path = "Source/lib.rs"
 
 [dependencies]
 scoped-tls = { workspace = true }

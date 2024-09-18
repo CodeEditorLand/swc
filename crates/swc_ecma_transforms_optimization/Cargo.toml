@@ -12,7 +12,6 @@ version       = "0.210.0"
 
 [lib]
 bench = false
-path = "Source/lib.rs"
 
 [features]
 concurrent = [

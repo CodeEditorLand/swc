@@ -11,7 +11,6 @@ version       = "0.77.0"
 
 [lib]
 bench = false
-path = "Source/lib.rs"
 
 [features]
 default    = ["swc_v1"]

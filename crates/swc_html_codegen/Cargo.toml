@@ -14,7 +14,6 @@ version = "0.47.0"
 
 [lib]
 bench = false
-path = "Source/lib.rs"
 
 [dependencies]
 auto_impl  = { workspace = true }
