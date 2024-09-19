@@ -9,4 +9,5 @@ input.orig.js
 /.input
 /.compare
 
+# creduce
 creduce_bug*

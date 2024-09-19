@@ -1,3 +1,4 @@
+# Built files
 /*.js
 !node-swc/jest.config.js
 /*.map
@@ -25,6 +26,7 @@ target/
 
 /node_modules/
 
+# Flamegraph
 *.html
 !crates/swc_html*/**/*.html
 *.svg
@@ -33,8 +35,10 @@ package-lock.json
 *.old
 *.stacks
 
+# Coverage datas
 *.zip
 *.info
+# Custom cargo target directory for converages
 .COVERAGE_DIR
 
 **/*~
@@ -45,15 +49,19 @@ pkg/
 .idea/
 
 
+# Generated while testing
 *.tmp.js
 
+# Used to see output of babel.
 /lab
 
 *.mm_profdata
 .tsbuildinfo
 .swc/
 
+# Used by scripts
 *.tmp.txt
 swc-core-*.tgz
 
+# samply
 profile.json
