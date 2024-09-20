@@ -1,0 +1,469 @@
+{
+	"author": {
+		"email": "Source/Open@Editor.Land",
+		"name": "🖋️ Source — 👐🏻 Open —",
+		"url": "HTTPS://Editor.Land"
+	},
+	"bugs": {
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	},
+	"dependencies": {
+		"tslib": "^2.4.0"
+	},
+	"description": "External helpers for the swc project.",
+	"devDependencies": {
+		"@ast-grep/napi": "^0.3.1",
+		"@playform/build": "0.1.6",
+		"dprint": "^0.35.3",
+		"magic-string": "^0.30.0",
+		"zx": "^7.2.1"
+	},
+	"exports": {
+		".": {
+			"default": "./cjs/index.cjs",
+			"import": "./esm/index.js"
+		},
+		"./_": {
+			"default": "./cjs/index.cjs",
+			"import": "./esm/index.js"
+		},
+		"./_/_apply_decorated_descriptor": {
+			"default": "./cjs/_apply_decorated_descriptor.cjs",
+			"import": "./esm/_apply_decorated_descriptor.js"
+		},
+		"./_/_apply_decs_2203_r": {
+			"default": "./cjs/_apply_decs_2203_r.cjs",
+			"import": "./esm/_apply_decs_2203_r.js"
+		},
+		"./_/_array_like_to_array": {
+			"default": "./cjs/_array_like_to_array.cjs",
+			"import": "./esm/_array_like_to_array.js"
+		},
+		"./_/_array_with_holes": {
+			"default": "./cjs/_array_with_holes.cjs",
+			"import": "./esm/_array_with_holes.js"
+		},
+		"./_/_array_without_holes": {
+			"default": "./cjs/_array_without_holes.cjs",
+			"import": "./esm/_array_without_holes.js"
+		},
+		"./_/_assert_this_initialized": {
+			"default": "./cjs/_assert_this_initialized.cjs",
+			"import": "./esm/_assert_this_initialized.js"
+		},
+		"./_/_async_generator": {
+			"default": "./cjs/_async_generator.cjs",
+			"import": "./esm/_async_generator.js"
+		},
+		"./_/_async_generator_delegate": {
+			"default": "./cjs/_async_generator_delegate.cjs",
+			"import": "./esm/_async_generator_delegate.js"
+		},
+		"./_/_async_iterator": {
+			"default": "./cjs/_async_iterator.cjs",
+			"import": "./esm/_async_iterator.js"
+		},
+		"./_/_async_to_generator": {
+			"default": "./cjs/_async_to_generator.cjs",
+			"import": "./esm/_async_to_generator.js"
+		},
+		"./_/_await_async_generator": {
+			"default": "./cjs/_await_async_generator.cjs",
+			"import": "./esm/_await_async_generator.js"
+		},
+		"./_/_await_value": {
+			"default": "./cjs/_await_value.cjs",
+			"import": "./esm/_await_value.js"
+		},
+		"./_/_call_super": {
+			"default": "./cjs/_call_super.cjs",
+			"import": "./esm/_call_super.js"
+		},
+		"./_/_check_private_redeclaration": {
+			"default": "./cjs/_check_private_redeclaration.cjs",
+			"import": "./esm/_check_private_redeclaration.js"
+		},
+		"./_/_class_apply_descriptor_destructure": {
+			"default": "./cjs/_class_apply_descriptor_destructure.cjs",
+			"import": "./esm/_class_apply_descriptor_destructure.js"
+		},
+		"./_/_class_apply_descriptor_get": {
+			"default": "./cjs/_class_apply_descriptor_get.cjs",
+			"import": "./esm/_class_apply_descriptor_get.js"
+		},
+		"./_/_class_apply_descriptor_set": {
+			"default": "./cjs/_class_apply_descriptor_set.cjs",
+			"import": "./esm/_class_apply_descriptor_set.js"
+		},
+		"./_/_class_apply_descriptor_update": {
+			"default": "./cjs/_class_apply_descriptor_update.cjs",
+			"import": "./esm/_class_apply_descriptor_update.js"
+		},
+		"./_/_class_call_check": {
+			"default": "./cjs/_class_call_check.cjs",
+			"import": "./esm/_class_call_check.js"
+		},
+		"./_/_class_check_private_static_access": {
+			"default": "./cjs/_class_check_private_static_access.cjs",
+			"import": "./esm/_class_check_private_static_access.js"
+		},
+		"./_/_class_check_private_static_field_descriptor": {
+			"default": "./cjs/_class_check_private_static_field_descriptor.cjs",
+			"import": "./esm/_class_check_private_static_field_descriptor.js"
+		},
+		"./_/_class_extract_field_descriptor": {
+			"default": "./cjs/_class_extract_field_descriptor.cjs",
+			"import": "./esm/_class_extract_field_descriptor.js"
+		},
+		"./_/_class_name_tdz_error": {
+			"default": "./cjs/_class_name_tdz_error.cjs",
+			"import": "./esm/_class_name_tdz_error.js"
+		},
+		"./_/_class_private_field_destructure": {
+			"default": "./cjs/_class_private_field_destructure.cjs",
+			"import": "./esm/_class_private_field_destructure.js"
+		},
+		"./_/_class_private_field_get": {
+			"default": "./cjs/_class_private_field_get.cjs",
+			"import": "./esm/_class_private_field_get.js"
+		},
+		"./_/_class_private_field_init": {
+			"default": "./cjs/_class_private_field_init.cjs",
+			"import": "./esm/_class_private_field_init.js"
+		},
+		"./_/_class_private_field_loose_base": {
+			"default": "./cjs/_class_private_field_loose_base.cjs",
+			"import": "./esm/_class_private_field_loose_base.js"
+		},
+		"./_/_class_private_field_loose_key": {
+			"default": "./cjs/_class_private_field_loose_key.cjs",
+			"import": "./esm/_class_private_field_loose_key.js"
+		},
+		"./_/_class_private_field_set": {
+			"default": "./cjs/_class_private_field_set.cjs",
+			"import": "./esm/_class_private_field_set.js"
+		},
+		"./_/_class_private_field_update": {
+			"default": "./cjs/_class_private_field_update.cjs",
+			"import": "./esm/_class_private_field_update.js"
+		},
+		"./_/_class_private_method_get": {
+			"default": "./cjs/_class_private_method_get.cjs",
+			"import": "./esm/_class_private_method_get.js"
+		},
+		"./_/_class_private_method_init": {
+			"default": "./cjs/_class_private_method_init.cjs",
+			"import": "./esm/_class_private_method_init.js"
+		},
+		"./_/_class_private_method_set": {
+			"default": "./cjs/_class_private_method_set.cjs",
+			"import": "./esm/_class_private_method_set.js"
+		},
+		"./_/_class_static_private_field_destructure": {
+			"default": "./cjs/_class_static_private_field_destructure.cjs",
+			"import": "./esm/_class_static_private_field_destructure.js"
+		},
+		"./_/_class_static_private_field_spec_get": {
+			"default": "./cjs/_class_static_private_field_spec_get.cjs",
+			"import": "./esm/_class_static_private_field_spec_get.js"
+		},
+		"./_/_class_static_private_field_spec_set": {
+			"default": "./cjs/_class_static_private_field_spec_set.cjs",
+			"import": "./esm/_class_static_private_field_spec_set.js"
+		},
+		"./_/_class_static_private_field_update": {
+			"default": "./cjs/_class_static_private_field_update.cjs",
+			"import": "./esm/_class_static_private_field_update.js"
+		},
+		"./_/_class_static_private_method_get": {
+			"default": "./cjs/_class_static_private_method_get.cjs",
+			"import": "./esm/_class_static_private_method_get.js"
+		},
+		"./_/_construct": {
+			"default": "./cjs/_construct.cjs",
+			"import": "./esm/_construct.js"
+		},
+		"./_/_create_class": {
+			"default": "./cjs/_create_class.cjs",
+			"import": "./esm/_create_class.js"
+		},
+		"./_/_create_for_of_iterator_helper_loose": {
+			"default": "./cjs/_create_for_of_iterator_helper_loose.cjs",
+			"import": "./esm/_create_for_of_iterator_helper_loose.js"
+		},
+		"./_/_create_super": {
+			"default": "./cjs/_create_super.cjs",
+			"import": "./esm/_create_super.js"
+		},
+		"./_/_decorate": {
+			"default": "./cjs/_decorate.cjs",
+			"import": "./esm/_decorate.js"
+		},
+		"./_/_defaults": {
+			"default": "./cjs/_defaults.cjs",
+			"import": "./esm/_defaults.js"
+		},
+		"./_/_define_enumerable_properties": {
+			"default": "./cjs/_define_enumerable_properties.cjs",
+			"import": "./esm/_define_enumerable_properties.js"
+		},
+		"./_/_define_property": {
+			"default": "./cjs/_define_property.cjs",
+			"import": "./esm/_define_property.js"
+		},
+		"./_/_dispose": {
+			"default": "./cjs/_dispose.cjs",
+			"import": "./esm/_dispose.js"
+		},
+		"./_/_export_star": {
+			"default": "./cjs/_export_star.cjs",
+			"import": "./esm/_export_star.js"
+		},
+		"./_/_extends": {
+			"default": "./cjs/_extends.cjs",
+			"import": "./esm/_extends.js"
+		},
+		"./_/_get": {
+			"default": "./cjs/_get.cjs",
+			"import": "./esm/_get.js"
+		},
+		"./_/_get_prototype_of": {
+			"default": "./cjs/_get_prototype_of.cjs",
+			"import": "./esm/_get_prototype_of.js"
+		},
+		"./_/_identity": {
+			"default": "./cjs/_identity.cjs",
+			"import": "./esm/_identity.js"
+		},
+		"./_/_inherits": {
+			"default": "./cjs/_inherits.cjs",
+			"import": "./esm/_inherits.js"
+		},
+		"./_/_inherits_loose": {
+			"default": "./cjs/_inherits_loose.cjs",
+			"import": "./esm/_inherits_loose.js"
+		},
+		"./_/_initializer_define_property": {
+			"default": "./cjs/_initializer_define_property.cjs",
+			"import": "./esm/_initializer_define_property.js"
+		},
+		"./_/_initializer_warning_helper": {
+			"default": "./cjs/_initializer_warning_helper.cjs",
+			"import": "./esm/_initializer_warning_helper.js"
+		},
+		"./_/_instanceof": {
+			"default": "./cjs/_instanceof.cjs",
+			"import": "./esm/_instanceof.js"
+		},
+		"./_/_interop_require_default": {
+			"default": "./cjs/_interop_require_default.cjs",
+			"import": "./esm/_interop_require_default.js"
+		},
+		"./_/_interop_require_wildcard": {
+			"default": "./cjs/_interop_require_wildcard.cjs",
+			"import": "./esm/_interop_require_wildcard.js"
+		},
+		"./_/_is_native_function": {
+			"default": "./cjs/_is_native_function.cjs",
+			"import": "./esm/_is_native_function.js"
+		},
+		"./_/_is_native_reflect_construct": {
+			"default": "./cjs/_is_native_reflect_construct.cjs",
+			"import": "./esm/_is_native_reflect_construct.js"
+		},
+		"./_/_iterable_to_array": {
+			"default": "./cjs/_iterable_to_array.cjs",
+			"import": "./esm/_iterable_to_array.js"
+		},
+		"./_/_iterable_to_array_limit": {
+			"default": "./cjs/_iterable_to_array_limit.cjs",
+			"import": "./esm/_iterable_to_array_limit.js"
+		},
+		"./_/_iterable_to_array_limit_loose": {
+			"default": "./cjs/_iterable_to_array_limit_loose.cjs",
+			"import": "./esm/_iterable_to_array_limit_loose.js"
+		},
+		"./_/_jsx": {
+			"default": "./cjs/_jsx.cjs",
+			"import": "./esm/_jsx.js"
+		},
+		"./_/_new_arrow_check": {
+			"default": "./cjs/_new_arrow_check.cjs",
+			"import": "./esm/_new_arrow_check.js"
+		},
+		"./_/_non_iterable_rest": {
+			"default": "./cjs/_non_iterable_rest.cjs",
+			"import": "./esm/_non_iterable_rest.js"
+		},
+		"./_/_non_iterable_spread": {
+			"default": "./cjs/_non_iterable_spread.cjs",
+			"import": "./esm/_non_iterable_spread.js"
+		},
+		"./_/_object_destructuring_empty": {
+			"default": "./cjs/_object_destructuring_empty.cjs",
+			"import": "./esm/_object_destructuring_empty.js"
+		},
+		"./_/_object_spread": {
+			"default": "./cjs/_object_spread.cjs",
+			"import": "./esm/_object_spread.js"
+		},
+		"./_/_object_spread_props": {
+			"default": "./cjs/_object_spread_props.cjs",
+			"import": "./esm/_object_spread_props.js"
+		},
+		"./_/_object_without_properties": {
+			"default": "./cjs/_object_without_properties.cjs",
+			"import": "./esm/_object_without_properties.js"
+		},
+		"./_/_object_without_properties_loose": {
+			"default": "./cjs/_object_without_properties_loose.cjs",
+			"import": "./esm/_object_without_properties_loose.js"
+		},
+		"./_/_possible_constructor_return": {
+			"default": "./cjs/_possible_constructor_return.cjs",
+			"import": "./esm/_possible_constructor_return.js"
+		},
+		"./_/_read_only_error": {
+			"default": "./cjs/_read_only_error.cjs",
+			"import": "./esm/_read_only_error.js"
+		},
+		"./_/_set": {
+			"default": "./cjs/_set.cjs",
+			"import": "./esm/_set.js"
+		},
+		"./_/_set_prototype_of": {
+			"default": "./cjs/_set_prototype_of.cjs",
+			"import": "./esm/_set_prototype_of.js"
+		},
+		"./_/_skip_first_generator_next": {
+			"default": "./cjs/_skip_first_generator_next.cjs",
+			"import": "./esm/_skip_first_generator_next.js"
+		},
+		"./_/_sliced_to_array": {
+			"default": "./cjs/_sliced_to_array.cjs",
+			"import": "./esm/_sliced_to_array.js"
+		},
+		"./_/_sliced_to_array_loose": {
+			"default": "./cjs/_sliced_to_array_loose.cjs",
+			"import": "./esm/_sliced_to_array_loose.js"
+		},
+		"./_/_super_prop_base": {
+			"default": "./cjs/_super_prop_base.cjs",
+			"import": "./esm/_super_prop_base.js"
+		},
+		"./_/_tagged_template_literal": {
+			"default": "./cjs/_tagged_template_literal.cjs",
+			"import": "./esm/_tagged_template_literal.js"
+		},
+		"./_/_tagged_template_literal_loose": {
+			"default": "./cjs/_tagged_template_literal_loose.cjs",
+			"import": "./esm/_tagged_template_literal_loose.js"
+		},
+		"./_/_throw": {
+			"default": "./cjs/_throw.cjs",
+			"import": "./esm/_throw.js"
+		},
+		"./_/_to_array": {
+			"default": "./cjs/_to_array.cjs",
+			"import": "./esm/_to_array.js"
+		},
+		"./_/_to_consumable_array": {
+			"default": "./cjs/_to_consumable_array.cjs",
+			"import": "./esm/_to_consumable_array.js"
+		},
+		"./_/_to_primitive": {
+			"default": "./cjs/_to_primitive.cjs",
+			"import": "./esm/_to_primitive.js"
+		},
+		"./_/_to_property_key": {
+			"default": "./cjs/_to_property_key.cjs",
+			"import": "./esm/_to_property_key.js"
+		},
+		"./_/_ts_decorate": {
+			"default": "./cjs/_ts_decorate.cjs",
+			"import": "./esm/_ts_decorate.js"
+		},
+		"./_/_ts_generator": {
+			"default": "./cjs/_ts_generator.cjs",
+			"import": "./esm/_ts_generator.js"
+		},
+		"./_/_ts_metadata": {
+			"default": "./cjs/_ts_metadata.cjs",
+			"import": "./esm/_ts_metadata.js"
+		},
+		"./_/_ts_param": {
+			"default": "./cjs/_ts_param.cjs",
+			"import": "./esm/_ts_param.js"
+		},
+		"./_/_ts_values": {
+			"default": "./cjs/_ts_values.cjs",
+			"import": "./esm/_ts_values.js"
+		},
+		"./_/_type_of": {
+			"default": "./cjs/_type_of.cjs",
+			"import": "./esm/_type_of.js"
+		},
+		"./_/_unsupported_iterable_to_array": {
+			"default": "./cjs/_unsupported_iterable_to_array.cjs",
+			"import": "./esm/_unsupported_iterable_to_array.js"
+		},
+		"./_/_update": {
+			"default": "./cjs/_update.cjs",
+			"import": "./esm/_update.js"
+		},
+		"./_/_using": {
+			"default": "./cjs/_using.cjs",
+			"import": "./esm/_using.js"
+		},
+		"./_/_using_ctx": {
+			"default": "./cjs/_using_ctx.cjs",
+			"import": "./esm/_using_ctx.js"
+		},
+		"./_/_wrap_async_generator": {
+			"default": "./cjs/_wrap_async_generator.cjs",
+			"import": "./esm/_wrap_async_generator.js"
+		},
+		"./_/_wrap_native_super": {
+			"default": "./cjs/_wrap_native_super.cjs",
+			"import": "./esm/_wrap_native_super.js"
+		},
+		"./_/_write_only_error": {
+			"default": "./cjs/_write_only_error.cjs",
+			"import": "./esm/_write_only_error.js"
+		},
+		"./_/index": {
+			"default": "./cjs/index.cjs",
+			"import": "./esm/index.js"
+		},
+		"./cjs/*": "./cjs/*",
+		"./esm/*": "./esm/*",
+		"./package.json": "./package.json",
+		"./src/*": "./src/*"
+	},
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
+	"keywords": [
+		"codeeditorland",
+		"land",
+		"playform"
+	],
+	"license": "SEE LICENSE IN LICENSE",
+	"main": "cjs/index.cjs",
+	"module": "esm/index.js",
+	"name": "@swc/helpers",
+	"private": false,
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
+	},
+	"scripts": {
+		"build": "zx ./scripts/build.js",
+		"prepack": "zx ./scripts/build.js",
+		"prepublishOnly": "Build 'Source/**/*.ts'"
+	},
+	"sideEffects": false,
+	"type": "module",
+	"version": "0.0.1"
+}

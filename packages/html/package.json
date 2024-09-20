@@ -1,0 +1,61 @@
+{
+	"author": {
+		"email": "Source/Open@Editor.Land",
+		"name": "🖋️ Source — 👐🏻 Open —",
+		"url": "HTTPS://Editor.Land"
+	},
+	"bugs": {
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	},
+	"dependencies": {
+		"@swc/counter": "^0.1.3"
+	},
+	"description": "Super-fast HTML minifier",
+	"devDependencies": {
+		"@napi-rs/cli": "^3.0.0-alpha.43",
+		"@playform/build": "0.1.6"
+	},
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
+	"keywords": [
+		"codeeditorland",
+		"land",
+		"playform"
+	],
+	"license": "SEE LICENSE IN LICENSE",
+	"main": "./index.js",
+	"name": "@swc/html",
+	"napi": {
+		"binaryName": "swc-html",
+		"targets": [
+			"x86_64-apple-darwin",
+			"x86_64-pc-windows-msvc",
+			"x86_64-unknown-linux-gnu",
+			"x86_64-unknown-linux-musl",
+			"i686-pc-windows-msvc",
+			"armv7-unknown-linux-gnueabihf",
+			"aarch64-unknown-linux-gnu",
+			"aarch64-apple-darwin",
+			"aarch64-unknown-linux-musl",
+			"aarch64-pc-windows-msvc"
+		]
+	},
+	"private": false,
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
+	},
+	"scripts": {
+		"artifacts": "napi artifacts --npm-dir scripts/npm",
+		"build": "tsc -d && napi build --manifest-path ../../bindings/Cargo.toml --platform -p binding_html_node --js ./binding.js --dts ./binding.d.ts --release -o .",
+		"build:dev": "tsc -d && napi build --manifest-path ../../bindings/Cargo.toml --platform -p binding_html_node --js ./binding.js --dts ./binding.d.ts -o .",
+		"build:ts": "tsc -d",
+		"prepack": "tsc -d && napi prepublish -p scripts/npm --tag-style npm",
+		"prepublishOnly": "Build 'Source/**/*.ts'",
+		"version": "napi version --npm-dir scripts/npm"
+	},
+	"type": "module",
+	"version": "0.0.1"
+}

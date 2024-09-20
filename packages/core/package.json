@@ -1,0 +1,95 @@
+{
+	"author": {
+		"email": "Source/Open@Editor.Land",
+		"name": "🖋️ Source — 👐🏻 Open —",
+		"url": "HTTPS://Editor.Land"
+	},
+	"bugs": {
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	},
+	"dependencies": {
+		"@swc/counter": "^0.1.3",
+		"@swc/types": "workspace:^"
+	},
+	"description": "Super-fast alternative for babel",
+	"devDependencies": {
+		"@napi-rs/cli": "^3.0.0-alpha.43",
+		"@playform/build": "0.1.6",
+		"cross-env": "^7.0.3"
+	},
+	"files": [
+		"CHANGELOG.md",
+		"Visitor.d.ts",
+		"index.d.ts",
+		"spack.js",
+		"util.d.ts",
+		"LICENSE",
+		"Visitor.js",
+		"binding.d.ts",
+		"index.js",
+		"types.d.ts",
+		"util.js",
+		"README.md",
+		"binding.js",
+		"package.json",
+		"spack.d.ts",
+		"types.js",
+		"postinstall.js",
+		"bindings/binding_core_wasm/pkg/binding_core_wasm.d.ts"
+	],
+	"funding": {
+		"type": "opencollective",
+		"url": "https://opencollective.com/swc"
+	},
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
+	"keywords": [
+		"codeeditorland",
+		"land",
+		"playform"
+	],
+	"license": "SEE LICENSE IN LICENSE",
+	"main": "./index.js",
+	"name": "@swc/core",
+	"napi": {
+		"binaryName": "swc",
+		"targets": [
+			"x86_64-apple-darwin",
+			"x86_64-pc-windows-msvc",
+			"x86_64-unknown-linux-gnu",
+			"x86_64-unknown-linux-musl",
+			"i686-pc-windows-msvc",
+			"armv7-unknown-linux-gnueabihf",
+			"aarch64-unknown-linux-gnu",
+			"aarch64-apple-darwin",
+			"aarch64-unknown-linux-musl",
+			"aarch64-pc-windows-msvc"
+		]
+	},
+	"peerDependenciesMeta": {
+		"@swc/helpers": {
+			"optional": true
+		}
+	},
+	"private": false,
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
+	},
+	"scripts": {
+		"artifacts": "napi artifacts --npm-dir scripts/npm",
+		"build": "tsc -d && napi build --manifest-path ../../bindings/Cargo.toml --platform -p binding_core_node --js ./binding.js --dts ./binding.d.ts --release -o .",
+		"build:dev": "tsc -d && napi build --manifest-path ../../bindings/Cargo.toml --platform -p binding_core_node --js ./binding.js --dts ./binding.d.ts -o .",
+		"build:ts": "tsc -d",
+		"build:wasm": "npm-run-all \"pack -- build ../../bindings/binding_core_wasm --scope swc {1} -t {2} --features plugin\" --",
+		"pack": "wasm-pack",
+		"prepack": "tsc -d && napi prepublish -p scripts/npm --tag-style npm",
+		"prepublishOnly": "Build 'Source/**/*.ts'",
+		"version": "napi version --npm-dir scripts/npm"
+	},
+	"type": "module",
+	"types": "./index.d.ts",
+	"version": "0.0.1"
+}
