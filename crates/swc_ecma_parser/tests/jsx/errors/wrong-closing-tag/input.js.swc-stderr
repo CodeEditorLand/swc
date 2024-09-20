@@ -1,4 +1,0 @@
-  x Unexpected eof
-   ,-[$DIR/tests/jsx/errors/wrong-closing-tag/input.js:1:13]
- 1 | <Foo></Bar>
-   `----
