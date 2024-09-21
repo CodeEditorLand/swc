@@ -1,4 +1,5 @@
 use std::{env::args, io, path::Path};
+
 use swc_common::{input::SourceFileInput, sync::Lrc, FilePathMapping, Mark, SourceMap};
 use swc_ecma_ast::Module;
 use swc_ecma_codegen::text_writer::JsWriter;
