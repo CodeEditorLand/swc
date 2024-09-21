@@ -20,3 +20,4 @@ swc_config_macro = { version = "0.1.4", path = "../swc_config_macro" }
 
 [lib]
 bench = false
+path = "Source/lib.rs"

@@ -11,6 +11,7 @@ version = "0.10.0"
 [lib]
 bench = false
 proc-macro = true
+path = "Source/lib.rs"
 
 [dependencies]
 proc-macro2 = { workspace = true }

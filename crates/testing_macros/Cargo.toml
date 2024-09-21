@@ -15,6 +15,7 @@ rust-analyzer = []
 [lib]
 bench = false
 proc-macro = true
+path = "Source/lib.rs"
 
 [dependencies]
 anyhow = { workspace = true }
