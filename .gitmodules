@@ -1,13 +1,11 @@
 [submodule "ecmascript/test262-parser-tests"]
-	path = crates/swc_ecma_parser/tests/test262-parser
-	url = https://github.com/tc39/test262-parser-tests.git
-	shallow = true
-	ignore = dirty
+path = crates/swc_ecma_parser/tests/test262-parser
+url = ssh://git@github.com/CodeEditorLand/test262-parser-tests.git
+
 [submodule "html/html5lib-tests"]
-	path = crates/swc_html_parser/tests/html5lib-tests
-	url = https://github.com/html5lib/html5lib-tests.git
-    shallow = true
-    ignore = dirty
+path = crates/swc_html_parser/tests/html5lib-tests
+url = ssh://git@github.com/CodeEditorLand/html5lib-tests.git
+
 [submodule "crates/swc_ecma_transforms_proposal/tests/decorator-tests"]
-	path = crates/swc_ecma_transforms_proposal/tests/decorator-tests
-	url = https://github.com/evanw/decorator-tests
+path = crates/swc_ecma_transforms_proposal/tests/decorator-tests
+url = ssh://git@github.com/CodeEditorLand/decorator-tests
