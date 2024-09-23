@@ -8,14 +8,14 @@
 		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
 	},
 	"dependencies": {
-		"@swc/counter": "^0.1.3",
+		"@swc/counter": "0.1.3",
 		"@swc/types": "workspace:^"
 	},
 	"description": "Super-fast alternative for babel",
 	"devDependencies": {
-		"@napi-rs/cli": "^3.0.0-alpha.43",
+		"@napi-rs/cli": "3.0.0-alpha.43",
 		"@playform/build": "0.1.6",
-		"cross-env": "^7.0.3"
+		"cross-env": "7.0.3"
 	},
 	"files": [
 		"CHANGELOG.md",
