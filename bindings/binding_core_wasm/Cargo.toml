@@ -1,21 +1,21 @@
 [package]
-authors     = ["강동윤 <kdy1997.dev@gmail.com>"]
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "wasm module for swc"
-edition     = "2021"
-license     = "Apache-2.0"
-name        = "binding_core_wasm"
-publish     = false
-repository  = "https://github.com/swc-project/swc.git"
-version     = "1.7.28"
+edition = "2021"
+license = "Apache-2.0"
+name = "binding_core_wasm"
+publish = false
+repository = "https://github.com/swc-project/swc.git"
+version = "1.7.28"
 
 [lib]
-bench      = false
+bench = false
 crate-type = ["cdylib"]
 
 [features]
 default = ["swc_v1"]
-swc_v1  = []
-swc_v2  = []
+swc_v1 = []
+swc_v2 = []
 # This feature exists to allow cargo operations
 # [TODO]: this is disabled due to signature mismatch between host_native and host_js,
 # which causes build errors like
@@ -36,11 +36,11 @@ getrandom = { workspace = true, features = ["js"] }
 serde = { workspace = true, features = ["derive"] }
 serde-wasm-bindgen = { workspace = true }
 swc_core = { workspace = true, features = [
-  "ecma_ast_serde",
-  "ecma_codegen",
-  "binding_macro_wasm",
-  "ecma_transforms",
-  "ecma_visit",
+	"ecma_ast_serde",
+	"ecma_codegen",
+	"binding_macro_wasm",
+	"ecma_transforms",
+	"ecma_visit",
 ] }
 tracing = { workspace = true, features = ["max_level_off"] }
 wasm-bindgen = { workspace = true, features = ["enable-interning"] }
