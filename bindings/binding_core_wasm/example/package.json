@@ -1,38 +1,38 @@
 {
-	"author": {
-		"email": "Source/Open@Editor.Land",
-		"name": "🖋️ Source — 👐🏻 Open —",
-		"url": "HTTPS://Editor.Land"
-	},
-	"bugs": {
-		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
-	},
-	"devDependencies": {
-		"@playform/build": "0.1.6",
-		"copyfiles": "2.3.0",
-		"npm-run-all": "4.1.5"
-	},
-	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
+	"version": "0.0.1",
+	"private": false,
 	"keywords": [
 		"codeeditorland",
 		"land",
 		"playform"
 	],
-	"license": "SEE LICENSE IN LICENSE",
-	"private": false,
-	"publishConfig": {
-		"access": "public"
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
+	"bugs": {
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
 	},
 	"repository": {
 		"type": "git",
 		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
 	},
+	"license": "SEE LICENSE IN LICENSE",
+	"author": {
+		"name": "🖋️ Source — 👐🏻 Open —",
+		"email": "Source/Open@Editor.Land",
+		"url": "HTTPS://Editor.Land"
+	},
+	"type": "module",
 	"scripts": {
 		"copy-files": "copyfiles ../pkg/* ./pkg",
 		"dev-server": "webpack-dev-server",
 		"prepublishOnly": "Build 'Source/**/*.ts'",
 		"serve": "run-s copy-files dev-server"
 	},
-	"type": "module",
-	"version": "0.0.1"
+	"devDependencies": {
+		"@playform/build": "0.1.6",
+		"copyfiles": "2.3.0",
+		"npm-run-all": "4.1.5"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
 }
