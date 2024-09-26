@@ -1,7 +1,7 @@
 [package]
 authors = [
-  "강동윤 <kdy1997.dev@gmail.com>",
-  "Daniel Woznicki <daniel.woznicki@gmail.com>",
+	"강동윤 <kdy1997.dev@gmail.com>",
+	"Daniel Woznicki <daniel.woznicki@gmail.com>",
 ]
 description = "Implementation of Comments of swc_common"
 documentation = "https://rustdoc.swc.rs/swc_node_comments/"
@@ -13,9 +13,10 @@ version = "0.27.0"
 
 [lib]
 bench = false
+path = "Source/lib.rs"
 
 [dependencies]
 dashmap = { workspace = true }
 
-swc_atoms  = { version = "1.0.0", path = "../swc_atoms" }
+swc_atoms = { version = "1.0.0", path = "../swc_atoms" }
 swc_common = { version = "0.40.0", path = "../swc_common" }
