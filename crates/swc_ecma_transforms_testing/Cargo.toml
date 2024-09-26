@@ -1,30 +1,29 @@
 [package]
-authors = ["강동윤 <kdy1997.dev@gmail.com>"]
-description = "rust port of babel and closure compiler."
+authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
+description   = "rust port of babel and closure compiler."
 documentation = "https://rustdoc.swc.rs/swc_ecma_transforms_testing/"
-edition = "2021"
-license = "Apache-2.0"
-name = "swc_ecma_transforms_testing"
-repository = "https://github.com/swc-project/swc.git"
-version = "0.152.0"
+edition       = "2021"
+license       = "Apache-2.0"
+name          = "swc_ecma_transforms_testing"
+repository    = "https://github.com/swc-project/swc.git"
+version       = "0.152.0"
 
 [lib]
 bench = false
-path = "Source/lib.rs"
 
 [dependencies]
-ansi_term = { workspace = true }
-anyhow = { workspace = true }
-base64 = { workspace = true }
-hex = { workspace = true }
-serde = { workspace = true }
+ansi_term  = { workspace = true }
+anyhow     = { workspace = true }
+base64     = { workspace = true }
+hex        = { workspace = true }
+serde      = { workspace = true }
 serde_json = { workspace = true }
-sha2 = { workspace = true }
-sourcemap = { workspace = true }
-tempfile = { workspace = true }
+sha2       = { workspace = true }
+sourcemap  = { workspace = true }
+tempfile   = { workspace = true }
 
 swc_common = { version = "0.40.0", path = "../swc_common", features = [
-	"sourcemap",
+  "sourcemap",
 ] }
 swc_ecma_ast = { version = "0.121.0", path = "../swc_ecma_ast" }
 swc_ecma_codegen = { version = "0.158.0", path = "../swc_ecma_codegen" }

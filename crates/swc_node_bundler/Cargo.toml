@@ -1,42 +1,41 @@
 [package]
-authors = ["강동윤 <kdy1997.dev@gmail.com>"]
-build = "build.rs"
-description = "Speedy web compiler"
+authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
+build         = "build.rs"
+description   = "Speedy web compiler"
 documentation = "https://rustdoc.swc.rs/swc/"
-edition = "2021"
-license = "Apache-2.0"
-name = "swc_node_bundler"
-repository = "https://github.com/swc-project/swc.git"
-version = "0.79.0"
+edition       = "2021"
+license       = "Apache-2.0"
+name          = "swc_node_bundler"
+repository    = "https://github.com/swc-project/swc.git"
+version       = "0.79.0"
 
 [lib]
 bench = false
-path = "Source/lib.rs"
 
 [features]
-default = ["swc_v1"]
+default    = ["swc_v1"]
 serde-impl = ["serde"]
-swc_v1 = ["serde-impl"]
-swc_v2 = ["serde-impl"]
+swc_v1     = ["serde-impl"]
+swc_v2     = ["serde-impl"]
 
 [dependencies]
-anyhow = { workspace = true }
-dashmap = { workspace = true }
-is-macro = { workspace = true }
-once_cell = { workspace = true }
-regex = { workspace = true }
-serde = { workspace = true, features = ["derive"], optional = true }
+anyhow     = { workspace = true }
+dashmap    = { workspace = true }
+is-macro   = { workspace = true }
+once_cell  = { workspace = true }
+regex      = { workspace = true }
+serde      = { workspace = true, features = ["derive"], optional = true }
 serde_json = { workspace = true }
-tracing = { workspace = true }
+tracing    = { workspace = true }
 
 string_enum = { version = "0.4.4", path = "../string_enum" }
 swc = { version = "0.289.0", path = "../swc" }
 swc_atoms = { version = "1.0.0", path = "../swc_atoms" }
 swc_bundler = { version = "0.241.0", path = "../swc_bundler", features = [
-	"concurrent",
+  "concurrent",
 ] }
 swc_common = { version = "0.40.0", path = "../swc_common", features = [
-	"concurrent",
+  "concurrent",
 ] }
 swc_ecma_ast = { version = "0.121.0", path = "../swc_ecma_ast" }
 swc_ecma_codegen = { version = "0.158.0", path = "../swc_ecma_codegen" }
