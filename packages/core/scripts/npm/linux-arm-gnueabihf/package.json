@@ -1,87 +1,46 @@
 {
-	"name": "@swc/core-linux-arm-gnueabihf",
-	"version": "0.0.1",
-	"private": false,
+	"author": {
+		"email": "Source/Open@Editor.Land",
+		"name": "🖋️ Source — 👐🏻 Open —",
+		"url": "HTTPS://Editor.Land"
+	},
+	"bugs": {
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	},
+	"cpu": [
+		"arm"
+	],
 	"description": "Super-fast alternative for babel",
+	"devDependencies": {
+		"@playform/build": "0.1.6"
+	},
+	"files": [
+		"swc.linux-arm-gnueabihf.node",
+		"swc"
+	],
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
 	"keywords": [
 		"codeeditorland",
 		"land",
 		"playform"
 	],
-	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
-	"bugs": {
-		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	"license": "SEE LICENSE IN LICENSE",
+	"main": "swc.linux-arm-gnueabihf.node",
+	"name": "@swc/core-linux-arm-gnueabihf",
+	"os": [
+		"linux"
+	],
+	"private": false,
+	"publishConfig": {
+		"access": "public"
 	},
 	"repository": {
 		"type": "git",
 		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
 	},
-	"license": "SEE LICENSE IN LICENSE",
-	"author": {
-		"name": "🖋️ Source — 👐🏻 Open —",
-		"email": "Source/Open@Editor.Land",
-		"url": "HTTPS://Editor.Land"
-	},
-	"type": "module",
-	"main": "swc.linux-arm-gnueabihf.node",
-	"files": [
-		"swc.linux-arm-gnueabihf.node",
-		"swc"
-	],
 	"scripts": {
 		"prepublishOnly": "Build 'Source/**/*.ts'"
 	},
-	"devDependencies": {
-		"@playform/build": "0.1.6"
-	},
-	"os": [
-		"linux"
-	],
-	"cpu": [
-		"arm"
-	],
-	"publishConfig": {
-		"access": "public"
-	}
-}
-  "name": "@swc/core-linux-arm-gnueabihf",
-  "version": "1.7.28",
-  "os": [
-    "linux"
-  ],
-  "cpu": [
-    "arm"
-  ],
-  "main": "swc.linux-arm-gnueabihf.node",
-  "files": [
-    "swc.linux-arm-gnueabihf.node",
-    "swc"
-  ],
-  "description": "Super-fast alternative for babel",
-  "keywords": [
-    "swc",
-    "swcpack",
-    "babel",
-    "typescript",
-    "rust",
-    "webpack",
-    "tsc"
-  ],
-  "author": "강동윤 <kdy1997.dev@gmail.com>",
-  "homepage": "https://swc.rs",
-  "license": "Apache-2.0",
-  "engines": {
-    "node": ">=10"
-  },
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/swc-project/swc.git"
-  },
-  "bugs": {
-    "url": "https://github.com/swc-project/swc/issues"
-  }
+	"type": "module",
+	"version": "0.0.1"
 }
