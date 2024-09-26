@@ -8,15 +8,15 @@
 		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
 	},
 	"dependencies": {
-		"tslib": "^2.7.0"
+		"tslib": "2.7.0"
 	},
 	"description": "External helpers for the swc project.",
 	"devDependencies": {
-		"@ast-grep/napi": "^0.3.1",
+		"@ast-grep/napi": "0.3.1",
 		"@playform/build": "0.1.6",
-		"dprint": "^0.35.3",
-		"magic-string": "^0.30.0",
-		"zx": "^7.2.1"
+		"dprint": "0.35.3",
+		"magic-string": "0.30.0",
+		"zx": "7.2.1"
 	},
 	"exports": {
 		".": {
