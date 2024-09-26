@@ -14,7 +14,7 @@
 	"description": "Super-fast alternative for babel",
 	"devDependencies": {
 		"@napi-rs/cli": "3.0.0-alpha.43",
-		"@playform/build": "0.1.6",
+		"@playform/build": "0.1.7",
 		"cross-env": "7.0.3"
 	},
 	"files": [

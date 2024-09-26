@@ -8,7 +8,7 @@
 		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
 	},
 	"devDependencies": {
-		"@playform/build": "0.1.6"
+		"@playform/build": "0.1.7"
 	},
 	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
 	"keywords": [

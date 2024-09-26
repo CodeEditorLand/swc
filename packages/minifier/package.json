@@ -45,8 +45,8 @@
 	},
 	"devDependencies": {
 		"@napi-rs/cli": "3.0.0-alpha.22",
-		"@playform/build": "0.1.6",
-		"@types/node": "20.7.1",
+		"@playform/build": "0.1.7",
+		"@types/node": "22.7.2",
 		"cross-env": "7.0.3"
 	},
 	"publishConfig": {
