@@ -1,49 +1,24 @@
 {
-	"name": "@swc/core-linux-arm64-gnu",
-	"version": "0.0.1",
-	"private": false,
-	"description": "Super-fast alternative for babel",
-	"keywords": [
-		"codeeditorland",
-		"land",
-		"playform"
+	"cpu": [
+		"arm64"
 	],
-	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
-	"bugs": {
-		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	"description": "Super-fast alternative for babel",
+	"devDependencies": {
+		"@playform/build": "0.1.7"
 	},
-	"repository": {
-		"type": "git",
-		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
-	},
-	"license": "SEE LICENSE IN LICENSE",
-	"author": {
-		"name": "🖋️ Source — 👐🏻 Open —",
-		"email": "Source/Open@Editor.Land",
-		"url": "HTTPS://Editor.Land"
-	},
-	"type": "module",
-	"main": "swc.linux-arm64-gnu.node",
 	"files": [
 		"swc.linux-arm64-gnu.node",
 		"swc"
 	],
-	"scripts": {
-		"prepublishOnly": "Build 'Source/**/*.ts'"
-	},
-	"devDependencies": {
-		"@playform/build": "0.1.7"
-	},
+	"libc": [
+		"glibc"
+	],
+	"main": "swc.linux-arm64-gnu.node",
+	"name": "@swc/core-linux-arm64-gnu",
 	"os": [
 		"linux"
 	],
-	"cpu": [
-		"arm64"
-	],
-	"publishConfig": {
-		"access": "public"
-	},
-	"libc": [
-		"glibc"
-	]
+	"scripts": {
+		"prepublishOnly": "Build 'Source/**/*.ts'"
+	}
 }

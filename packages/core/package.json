@@ -1,34 +1,14 @@
 {
-	"name": "@swc/core",
-	"version": "0.0.1",
-	"private": false,
+	"dependencies": {
+		"@swc/counter": "0.1.3",
+		"@swc/types": "workspace:^"
+	},
 	"description": "Super-fast alternative for babel",
-	"keywords": [
-		"codeeditorland",
-		"land",
-		"playform"
-	],
-	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
-	"bugs": {
-		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	"devDependencies": {
+		"@napi-rs/cli": "3.0.0-alpha.43",
+		"@playform/build": "0.1.7",
+		"cross-env": "7.0.3"
 	},
-	"repository": {
-		"type": "git",
-		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
-	},
-	"funding": {
-		"type": "opencollective",
-		"url": "https://opencollective.com/swc"
-	},
-	"license": "SEE LICENSE IN LICENSE",
-	"author": {
-		"name": "🖋️ Source — 👐🏻 Open —",
-		"email": "Source/Open@Editor.Land",
-		"url": "HTTPS://Editor.Land"
-	},
-	"type": "module",
-	"main": "./index.js",
-	"types": "./index.d.ts",
 	"files": [
 		"CHANGELOG.md",
 		"Visitor.d.ts",
@@ -49,34 +29,12 @@
 		"postinstall.js",
 		"bindings/binding_core_wasm/pkg/binding_core_wasm.d.ts"
 	],
-	"scripts": {
-		"artifacts": "napi artifacts --npm-dir scripts/npm",
-		"build": "tsc -d && napi build --manifest-path ../../bindings/Cargo.toml --platform -p binding_core_node --js ./binding.js --dts ./binding.d.ts --release -o .",
-		"build:dev": "tsc -d && napi build --manifest-path ../../bindings/Cargo.toml --platform -p binding_core_node --js ./binding.js --dts ./binding.d.ts -o .",
-		"build:ts": "tsc -d",
-		"build:wasm": "npm-run-all \"pack -- build ../../bindings/binding_core_wasm --scope swc {1} -t {2} --features plugin\" --",
-		"prepack": "tsc -d && napi prepublish -p scripts/npm --tag-style npm",
-		"pack": "wasm-pack",
-		"prepublishOnly": "Build 'Source/**/*.ts'",
-		"version": "napi version --npm-dir scripts/npm"
+	"funding": {
+		"type": "opencollective",
+		"url": "https://opencollective.com/swc"
 	},
-	"dependencies": {
-		"@swc/counter": "0.1.3",
-		"@swc/types": "workspace:^"
-	},
-	"devDependencies": {
-		"@napi-rs/cli": "3.0.0-alpha.43",
-		"@playform/build": "0.1.7",
-		"cross-env": "7.0.3"
-	},
-	"peerDependenciesMeta": {
-		"@swc/helpers": {
-			"optional": true
-		}
-	},
-	"publishConfig": {
-		"access": "public"
-	},
+	"main": "./index.js",
+	"name": "@swc/core",
 	"napi": {
 		"binaryName": "swc",
 		"targets": [
@@ -91,5 +49,22 @@
 			"aarch64-unknown-linux-musl",
 			"aarch64-pc-windows-msvc"
 		]
-	}
+	},
+	"peerDependenciesMeta": {
+		"@swc/helpers": {
+			"optional": true
+		}
+	},
+	"scripts": {
+		"artifacts": "napi artifacts --npm-dir scripts/npm",
+		"build": "tsc -d && napi build --manifest-path ../../bindings/Cargo.toml --platform -p binding_core_node --js ./binding.js --dts ./binding.d.ts --release -o .",
+		"build:dev": "tsc -d && napi build --manifest-path ../../bindings/Cargo.toml --platform -p binding_core_node --js ./binding.js --dts ./binding.d.ts -o .",
+		"build:ts": "tsc -d",
+		"build:wasm": "npm-run-all \"pack -- build ../../bindings/binding_core_wasm --scope swc {1} -t {2} --features plugin\" --",
+		"pack": "wasm-pack",
+		"prepack": "tsc -d && napi prepublish -p scripts/npm --tag-style npm",
+		"prepublishOnly": "Build 'Source/**/*.ts'",
+		"version": "napi version --npm-dir scripts/npm"
+	},
+	"types": "./index.d.ts"
 }

@@ -1,46 +1,21 @@
 {
-	"name": "@swc/core-win32-x64-msvc",
-	"version": "0.0.1",
-	"private": false,
-	"description": "Super-fast alternative for babel",
-	"keywords": [
-		"codeeditorland",
-		"land",
-		"playform"
+	"cpu": [
+		"x64"
 	],
-	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
-	"bugs": {
-		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	"description": "Super-fast alternative for babel",
+	"devDependencies": {
+		"@playform/build": "0.1.7"
 	},
-	"repository": {
-		"type": "git",
-		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
-	},
-	"license": "SEE LICENSE IN LICENSE",
-	"author": {
-		"name": "🖋️ Source — 👐🏻 Open —",
-		"email": "Source/Open@Editor.Land",
-		"url": "HTTPS://Editor.Land"
-	},
-	"type": "module",
-	"main": "swc.win32-x64-msvc.node",
 	"files": [
 		"swc.win32-x64-msvc.node",
 		"swc.exe"
 	],
-	"scripts": {
-		"prepublishOnly": "Build 'Source/**/*.ts'"
-	},
-	"devDependencies": {
-		"@playform/build": "0.1.7"
-	},
+	"main": "swc.win32-x64-msvc.node",
+	"name": "@swc/core-win32-x64-msvc",
 	"os": [
 		"win32"
 	],
-	"cpu": [
-		"x64"
-	],
-	"publishConfig": {
-		"access": "public"
+	"scripts": {
+		"prepublishOnly": "Build 'Source/**/*.ts'"
 	}
 }

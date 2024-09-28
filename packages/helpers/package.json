@@ -1,29 +1,15 @@
 {
-	"name": "@swc/helpers",
-	"version": "0.0.1",
-	"private": false,
+	"dependencies": {
+		"tslib": "2.7.0"
+	},
 	"description": "External helpers for the swc project.",
-	"keywords": [
-		"codeeditorland",
-		"land",
-		"playform"
-	],
-	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
-	"bugs": {
-		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	"devDependencies": {
+		"@ast-grep/napi": "0.27.2",
+		"@playform/build": "0.1.7",
+		"dprint": "0.47.2",
+		"magic-string": "0.30.11",
+		"zx": "8.1.8"
 	},
-	"repository": {
-		"type": "git",
-		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
-	},
-	"license": "SEE LICENSE IN LICENSE",
-	"author": {
-		"name": "🖋️ Source — 👐🏻 Open —",
-		"email": "Source/Open@Editor.Land",
-		"url": "HTTPS://Editor.Land"
-	},
-	"sideEffects": false,
-	"type": "module",
 	"exports": {
 		".": {
 			"default": "./cjs/index.cjs",
@@ -456,22 +442,11 @@
 	},
 	"main": "cjs/index.cjs",
 	"module": "esm/index.js",
+	"name": "@swc/helpers",
 	"scripts": {
 		"build": "zx ./scripts/build.js",
 		"prepack": "zx ./scripts/build.js",
 		"prepublishOnly": "Build 'Source/**/*.ts'"
 	},
-	"dependencies": {
-		"tslib": "2.7.0"
-	},
-	"devDependencies": {
-		"@ast-grep/napi": "0.27.2",
-		"@playform/build": "0.1.7",
-		"dprint": "0.47.2",
-		"magic-string": "0.30.11",
-		"zx": "8.1.8"
-	},
-	"publishConfig": {
-		"access": "public"
-	}
+	"sideEffects": false
 }

@@ -1,45 +1,20 @@
 {
-	"name": "@swc/html-darwin-x64",
-	"version": "0.0.1",
-	"private": false,
-	"description": "Super-fast HTML minifier",
-	"keywords": [
-		"codeeditorland",
-		"land",
-		"playform"
-	],
-	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
-	"bugs": {
-		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
-	},
-	"license": "SEE LICENSE IN LICENSE",
-	"author": {
-		"name": "🖋️ Source — 👐🏻 Open —",
-		"email": "Source/Open@Editor.Land",
-		"url": "HTTPS://Editor.Land"
-	},
-	"type": "module",
-	"main": "swc-html.darwin-x64.node",
-	"files": [
-		"swc-html.darwin-x64.node"
-	],
-	"scripts": {
-		"prepublishOnly": "Build 'Source/**/*.ts'"
-	},
-	"devDependencies": {
-		"@playform/build": "0.1.7"
-	},
-	"os": [
-		"darwin"
-	],
 	"cpu": [
 		"x64"
 	],
-	"publishConfig": {
-		"access": "public"
+	"description": "Super-fast HTML minifier",
+	"devDependencies": {
+		"@playform/build": "0.1.7"
+	},
+	"files": [
+		"swc-html.darwin-x64.node"
+	],
+	"main": "swc-html.darwin-x64.node",
+	"name": "@swc/html-darwin-x64",
+	"os": [
+		"darwin"
+	],
+	"scripts": {
+		"prepublishOnly": "Build 'Source/**/*.ts'"
 	}
 }
