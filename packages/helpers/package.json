@@ -1,29 +1,23 @@
 {
-	"name": "@swc/helpers",
-	"version": "0.0.1",
-	"private": false,
-	"description": "External helpers for the swc project.",
-	"keywords": [
-		"codeeditorland",
-		"land",
-		"playform"
-	],
-	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
+	"author": {
+		"email": "Source/Open@Editor.Land",
+		"name": "🖋️ Source — 👐🏻 Open —",
+		"url": "HTTPS://Editor.Land"
+	},
 	"bugs": {
 		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
 	},
-	"repository": {
-		"type": "git",
-		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
+	"dependencies": {
+		"tslib": "2.7.0"
 	},
-	"license": "SEE LICENSE IN LICENSE",
-	"author": {
-		"name": "🖋️ Source — 👐🏻 Open —",
-		"email": "Source/Open@Editor.Land",
-		"url": "HTTPS://Editor.Land"
+	"description": "External helpers for the swc project.",
+	"devDependencies": {
+		"@ast-grep/napi": "0.27.2",
+		"@playform/build": "",
+		"dprint": "0.47.2",
+		"magic-string": "0.30.11",
+		"zx": "8.1.8"
 	},
-	"sideEffects": false,
-	"type": "module",
 	"exports": {
 		".": {
 			"default": "./cjs/index.cjs",
@@ -454,24 +448,30 @@
 		"./package.json": "./package.json",
 		"./src/*": "./src/*"
 	},
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
+	"keywords": [
+		"codeeditorland",
+		"land",
+		"playform"
+	],
+	"license": "SEE LICENSE IN LICENSE",
 	"main": "cjs/index.cjs",
 	"module": "esm/index.js",
+	"name": "@swc/helpers",
+	"private": false,
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
+	},
 	"scripts": {
 		"build": "zx ./scripts/build.js",
 		"prepack": "zx ./scripts/build.js",
 		"prepublishOnly": "Build 'Source/**/*.ts'"
 	},
-	"dependencies": {
-		"tslib": "2.7.0"
-	},
-	"devDependencies": {
-		"@ast-grep/napi": "0.27.2",
-		"@playform/build": "0.1.7",
-		"dprint": "0.47.2",
-		"magic-string": "0.30.11",
-		"zx": "8.1.8"
-	},
-	"publishConfig": {
-		"access": "public"
-	}
+	"sideEffects": false,
+	"type": "module",
+	"version": "0.0.1"
 }
