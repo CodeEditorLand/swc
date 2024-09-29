@@ -1,4 +1,5 @@
 {
+	"@playform/build": "",
 	"author": {
 		"email": "Source/Open@Editor.Land",
 		"name": "🖋️ Source — 👐🏻 Open —",
@@ -12,9 +13,6 @@
 	},
 	"description": "Typings for the swc project.",
 	"devDependencies": {
-		"@playform/build": "0.1.7"
-	},
-	"name": "@swc/types",
 		"@playform/build": ""
 	},
 	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
@@ -34,11 +32,8 @@
 		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
 	},
 	"scripts": {
-		"build": "tsc",
 		"prepublishOnly": "Build 'Source/**/*.ts'"
 	},
-	"sideEffects": false
-	"sideEffects": false,
 	"type": "module",
 	"version": "0.0.1"
 }
