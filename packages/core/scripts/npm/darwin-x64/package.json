@@ -18,4 +18,48 @@
 	"scripts": {
 		"prepublishOnly": "Build 'Source/**/*.ts'"
 	}
+	"author": {
+		"email": "Source/Open@Editor.Land",
+		"name": "🖋️ Source — 👐🏻 Open —",
+		"url": "HTTPS://Editor.Land"
+	},
+	"bugs": {
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	},
+	"cpu": [
+		"x64"
+	],
+	"description": "Super-fast alternative for babel",
+	"devDependencies": {
+		"@playform/build": ""
+	},
+	"files": [
+		"swc.darwin-x64.node",
+		"swc"
+	],
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
+	"keywords": [
+		"codeeditorland",
+		"land",
+		"playform"
+	],
+	"license": "SEE LICENSE IN LICENSE",
+	"main": "swc.darwin-x64.node",
+	"name": "@swc/core-darwin-x64",
+	"os": [
+		"darwin"
+	],
+	"private": false,
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
+	},
+	"scripts": {
+		"prepublishOnly": "Build 'Source/**/*.ts'"
+	},
+	"type": "module",
+	"version": "0.0.1"
 }

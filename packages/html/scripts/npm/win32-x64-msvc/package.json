@@ -1,14 +1,30 @@
 {
+	"author": {
+		"email": "Source/Open@Editor.Land",
+		"name": "🖋️ Source — 👐🏻 Open —",
+		"url": "HTTPS://Editor.Land"
+	},
+	"bugs": {
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	},
 	"cpu": [
 		"x64"
 	],
 	"description": "Super-fast HTML minifier",
 	"devDependencies": {
 		"@playform/build": "0.1.7"
+		"@playform/build": ""
 	},
 	"files": [
 		"swc-html.win32-x64-msvc.node"
 	],
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
+	"keywords": [
+		"codeeditorland",
+		"land",
+		"playform"
+	],
+	"license": "SEE LICENSE IN LICENSE",
 	"main": "swc-html.win32-x64-msvc.node",
 	"name": "@swc/html-win32-x64-msvc",
 	"os": [
@@ -17,4 +33,17 @@
 	"scripts": {
 		"prepublishOnly": "Build 'Source/**/*.ts'"
 	}
+	"private": false,
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
+	},
+	"scripts": {
+		"prepublishOnly": "Build 'Source/**/*.ts'"
+	},
+	"type": "module",
+	"version": "0.0.1"
 }

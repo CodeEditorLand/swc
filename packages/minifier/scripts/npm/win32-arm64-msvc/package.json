@@ -18,4 +18,48 @@
 	"scripts": {
 		"prepublishOnly": "Build 'Source/**/*.ts'"
 	}
+	"author": {
+		"email": "Source/Open@Editor.Land",
+		"name": "🖋️ Source — 👐🏻 Open —",
+		"url": "HTTPS://Editor.Land"
+	},
+	"bugs": {
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	},
+	"cpu": [
+		"arm64"
+	],
+	"description": "Super-fast alternative for babel",
+	"devDependencies": {
+		"@playform/build": ""
+	},
+	"files": [
+		"minifier.win32-arm64-msvc.node",
+		"swc.exe"
+	],
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
+	"keywords": [
+		"codeeditorland",
+		"land",
+		"playform"
+	],
+	"license": "SEE LICENSE IN LICENSE",
+	"main": "minifier.win32-arm64-msvc.node",
+	"name": "@swc/minifier-win32-arm64-msvc",
+	"os": [
+		"win32"
+	],
+	"private": false,
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
+	},
+	"scripts": {
+		"prepublishOnly": "Build 'Source/**/*.ts'"
+	},
+	"type": "module",
+	"version": "0.0.1"
 }
