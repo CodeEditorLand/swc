@@ -11,6 +11,7 @@ version = "0.115.0"
 [lib]
 bench = false
 doctest = false
+path = "Source/lib.rs"
 
 [features]
 default = ["filesystem_cache", "plugin_transform_host_native"]

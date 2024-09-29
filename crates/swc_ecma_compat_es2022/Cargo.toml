@@ -22,3 +22,6 @@ swc_ecma_transforms_macros = { version = "0.5.5", path = "../swc_ecma_transforms
 swc_ecma_utils = { version = "0.137.0", path = "../swc_ecma_utils" }
 swc_ecma_visit = { version = "0.107.0", path = "../swc_ecma_visit" }
 swc_trace_macro = { version = "1.0.0", path = "../swc_trace_macro" }
+
+[lib]
+path = "Source/lib.rs"

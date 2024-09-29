@@ -19,3 +19,6 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 better_scoped_tls = { version = "0.1.1", path = "../better_scoped_tls" }
+
+[lib]
+path = "Source/lib.rs"

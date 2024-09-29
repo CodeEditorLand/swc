@@ -46,3 +46,6 @@ default-features = false
 features = ["napi3"]
 optional = true
 workspace = true
+
+[lib]
+path = "Source/lib.rs"

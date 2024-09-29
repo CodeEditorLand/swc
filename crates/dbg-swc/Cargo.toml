@@ -10,6 +10,7 @@ version = "0.107.0"
 [[bin]]
 bench = false
 name = "dbg-swc"
+path = "Source/main.rs"
 
 [dependencies]
 anyhow = { workspace = true }
@@ -41,3 +42,6 @@ swc_ecma_transforms_base = { version = "0.149.0", path = "../swc_ecma_transforms
 swc_ecma_visit = { version = "0.107.0", path = "../swc_ecma_visit" }
 swc_error_reporters = { version = "1.0.0", path = "../swc_error_reporters" }
 swc_timer = { version = "0.27.0", path = "../swc_timer" }
+
+[lib]
+path = "Source/lib.rs"

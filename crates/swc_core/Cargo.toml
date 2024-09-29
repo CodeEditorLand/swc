@@ -30,6 +30,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 [lib]
 bench = false
 doctest = false
+path = "Source/lib.rs"
 
 [features]
 ### Public features

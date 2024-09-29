@@ -12,6 +12,7 @@ version = "0.289.0"
 [lib]
 bench = false
 name = "swc"
+path = "Source/lib.rs"
 
 [features]
 # TODO: This may need reorganization with swc_core - swc_core allows to optionally enable

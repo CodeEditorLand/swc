@@ -14,3 +14,6 @@ proc-macro2 = { workspace = true }
 quote = { workspace = true }
 syn = { workspace = true, features = ["full", "visit-mut", "extra-traits"] }
 walkdir = { workspace = true }
+
+[lib]
+path = "Source/lib.rs"
