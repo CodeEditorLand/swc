@@ -1,33 +1,32 @@
 [package]
-authors = ["강동윤 <kdy1997.dev@gmail.com>"]
-description = "CSS code generator for the swc project"
+authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
+description   = "CSS code generator for the swc project"
 documentation = "https://rustdoc.swc.rs/swc_css_codegen/"
-edition = "2021"
-include = ["Cargo.toml", "src/**/*.rs"]
-license = "Apache-2.0"
-name = "swc_css_codegen"
-repository = "https://github.com/swc-project/swc.git"
-version = "0.158.0"
+edition       = "2021"
+include       = ["Cargo.toml", "src/**/*.rs"]
+license       = "Apache-2.0"
+name          = "swc_css_codegen"
+repository    = "https://github.com/swc-project/swc.git"
+version       = "0.158.0"
 
 [lib]
 bench = false
-path = "Source/lib.rs"
 
 [dependencies]
-auto_impl = { workspace = true }
-bitflags = { workspace = true }
+auto_impl  = { workspace = true }
+bitflags   = { workspace = true }
 rustc-hash = { workspace = true }
-serde = { workspace = true }
+serde      = { workspace = true }
 
-swc_atoms = { version = "1.0.0", path = "../swc_atoms" }
-swc_common = { version = "0.40.0", path = "../swc_common" }
-swc_css_ast = { version = "0.147.0", path = "../swc_css_ast" }
+swc_atoms              = { version = "1.0.0", path = "../swc_atoms" }
+swc_common             = { version = "0.40.0", path = "../swc_common" }
+swc_css_ast            = { version = "0.147.0", path = "../swc_css_ast" }
 swc_css_codegen_macros = { version = "0.2.4", path = "../swc_css_codegen_macros" }
-swc_css_utils = { version = "0.144.0", path = "../swc_css_utils" }
+swc_css_utils          = { version = "0.144.0", path = "../swc_css_utils" }
 
 [dev-dependencies]
 swc_common = { version = "0.40.0", path = "../swc_common", features = [
-	"sourcemap",
+  "sourcemap",
 ] }
 swc_css_parser = { version = "0.157.0", path = "../swc_css_parser" }
 swc_css_visit = { version = "0.146.0", path = "../swc_css_visit" }
