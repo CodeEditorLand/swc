@@ -1,4 +1,12 @@
 {
+	"author": {
+		"email": "Source/Open@Editor.Land",
+		"name": "🖋️ Source — 👐🏻 Open —",
+		"url": "HTTPS://Editor.Land"
+	},
+	"bugs": {
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	},
 	"devDependencies": {
 		"@babel/compat-data": "7.25.4",
 		"@babel/generator": "7.25.6",
@@ -40,6 +48,13 @@
 		"yaml": "2.5.1",
 		"zx": "8.1.8"
 	},
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
+	"keywords": [
+		"codeeditorland",
+		"land",
+		"playform"
+	],
+	"license": "SEE LICENSE IN LICENSE",
 	"lint-staged": {
 		"!(**/tests/**/*)*.js": [
 			"prettier --write"
@@ -64,6 +79,14 @@
 		]
 	},
 	"name": "@swc/workspace",
+	"private": false,
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
+	},
 	"scripts": {
 		"build": "cd ./packages/core && yarn build",
 		"build:dev": "cd ./packages/core && yarn build:dev",
@@ -74,6 +97,8 @@
 		"test:core": "cd ./packages/core && yarn test",
 		"test:html": "cd ./packages/html && yarn test"
 	},
+	"type": "module",
+	"version": "0.0.1",
 	"workspaces": [
 		"./.github/bot",
 		"./.github/swc-ecosystem-ci",
