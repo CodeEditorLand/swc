@@ -1,0 +1,12 @@
+contact_links:
+  - name: Github discussions
+    url: https://github.com/swc-project/swc/discussions
+    about: Please write questions at here.
+
+  - name: Discord server
+    url: https://discord.gg/w488Bxgy3y
+    about: You can ask questions here if you prefer Discord.
+
+  - name: Documentation issues
+    url: https://github.com/swc-project/website/issues
+    about: Please use this if you have a problem with the documentation.
