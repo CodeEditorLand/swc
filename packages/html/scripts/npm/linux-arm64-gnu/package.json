@@ -1,13 +1,4 @@
-
 {
-	"author": {
-		"email": "Source/Open@Editor.Land",
-		"name": "🖋️ Source — 👐🏻 Open —",
-		"url": "HTTPS://Editor.Land"
-	},
-	"bugs": {
-		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
-	},
 	"cpu": [
 		"arm64"
 	],
@@ -18,32 +9,15 @@
 	"files": [
 		"swc-html.linux-arm64-gnu.node"
 	],
-	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
-	"keywords": [
-		"codeeditorland",
-		"land",
-		"playform"
-	],
 	"libc": [
 		"glibc"
 	],
-	"license": "SEE LICENSE IN LICENSE",
 	"main": "swc-html.linux-arm64-gnu.node",
 	"name": "@swc/html-linux-arm64-gnu",
 	"os": [
 		"linux"
 	],
-	"private": false,
-	"publishConfig": {
-		"access": "public"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
-	},
 	"scripts": {
 		"prepublishOnly": "Build 'Source/**/*.ts'"
-	},
-	"type": "module",
-	"version": "0.0.1"
+	}
 }
