@@ -350,6 +350,7 @@ export interface TerserMangleOptions {
 }
 
 export interface TerserManglePropertiesOptions {}
+export interface TerserManglePropertiesOptions { }
 
 /**
  * Programmatic options.
@@ -671,6 +672,11 @@ export interface JscConfig {
          * Emit isolated dts files for each module.
          */
         emitIsolatedDts?: boolean;
+
+        /**
+         * Disable all lint rules.
+         */
+        disableAllLints?: boolean;
     };
 
     baseUrl?: string;
@@ -1155,6 +1161,7 @@ export interface Output {
 }
 
 export interface MatchPattern {}
+export interface MatchPattern { }
 
 // -------------------------------
 // ---------- Ast nodes ----------
@@ -1387,6 +1394,7 @@ export type Expression =
     | Invalid;
 
 interface ExpressionBase extends Node, HasSpan {}
+interface ExpressionBase extends Node, HasSpan { }
 
 export interface Identifier extends ExpressionBase {
     type: "Identifier";

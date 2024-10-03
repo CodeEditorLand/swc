@@ -5,4 +5,7 @@
 	"scripts": {
 		"prepublishOnly": "Build 'Source/**/*.ts'"
 	}
+    "devDependencies": {
+        "jest": "^29.7.0"
+    }
 }
