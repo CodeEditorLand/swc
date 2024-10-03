@@ -1,4 +1,12 @@
 {
+	"author": {
+		"email": "Source/Open@Editor.Land",
+		"name": "🖋️ Source — 👐🏻 Open —",
+		"url": "HTTPS://Editor.Land"
+	},
+	"bugs": {
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
+	},
 	"devDependencies": {
 		"@playform/build": "",
 		"copyfiles": "2.4.1",
@@ -10,4 +18,7 @@
 		"prepublishOnly": "Build 'Source/**/*.ts'",
 		"serve": "run-s copy-files dev-server"
 	}
+	},
+	"type": "module",
+	"version": "0.0.1"
 }

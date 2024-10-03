@@ -1,8 +1,0 @@
-{
-	"devDependencies": {
-		"@playform/build": ""
-	},
-	"scripts": {
-		"prepublishOnly": "Build 'Source/**/*.ts'"
-	}
-}
