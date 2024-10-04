@@ -1,6 +1,9 @@
 function _assert_this_initialized(self) {
-    if (self === void 0) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+	if (self === void 0)
+		throw new ReferenceError(
+			"this hasn't been initialised - super() hasn't been called",
+		);
 
-    return self;
+	return self;
 }
 export { _assert_this_initialized as _ };
