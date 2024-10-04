@@ -1,6 +1,6 @@
 function _class_apply_descriptor_get(receiver, descriptor) {
-    if (descriptor.get) return descriptor.get.call(receiver);
+	if (descriptor.get) return descriptor.get.call(receiver);
 
-    return descriptor.value;
+	return descriptor.value;
 }
 export { _class_apply_descriptor_get as _ };

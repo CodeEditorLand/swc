@@ -1,1 +1,3 @@
-function _identity(x) { return x; }
+function _identity(x) {
+	return x;
+}
