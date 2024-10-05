@@ -7711,8 +7711,7 @@
 			constructor: Material,
 			isMaterial: true,
 			onBeforeCompile:
-				function onBeforeCompile() /* shaderobject, renderer */
-				{},
+				function onBeforeCompile /* shaderobject, renderer */() {},
 			customProgramCacheKey: function customProgramCacheKey() {
 				return this.onBeforeCompile.toString();
 			},
@@ -21736,8 +21735,7 @@
 			_isContextLost = true;
 		}
 
-		function onContextRestore() /* event */
-		{
+		function onContextRestore /* event */() {
 			console.log("THREE.WebGLRenderer: Context Restored.");
 			_isContextLost = false;
 			initGLContext();
@@ -23109,8 +23107,7 @@
 			return new FogExp2(this.color, this.density);
 		};
 
-		_proto.toJSON = function toJSON() /* meta */
-		{
+		_proto.toJSON = function toJSON /* meta */() {
 			return {
 				type: "FogExp2",
 				color: this.color.getHex(),
@@ -23138,8 +23135,7 @@
 			return new Fog(this.color, this.near, this.far);
 		};
 
-		_proto.toJSON = function toJSON() /* meta */
-		{
+		_proto.toJSON = function toJSON /* meta */() {
 			return {
 				type: "Fog",
 				color: this.color.getHex(),
@@ -31797,12 +31793,10 @@
 			return result;
 		},
 		// Template methods for derived classes:
-		interpolate_: function interpolate_() /* i1, t0, t, t1 */
-		{
+		interpolate_: function interpolate_ /* i1, t0, t, t1 */() {
 			throw new Error("call to abstract method"); // implementations shall return this.resultBuffer
 		},
-		intervalChanged_: function intervalChanged_() /* i1, t0, t1 */
-		{
+		intervalChanged_: function intervalChanged_ /* i1, t0, t1 */() {
 			// empty
 		},
 	}); // DECLARE ALIAS AFTER assign prototype
@@ -33082,16 +33076,14 @@
 	}
 
 	Object.assign(Loader.prototype, {
-		load: function load() /* url, onLoad, onProgress, onError */
-		{},
+		load: function load /* url, onLoad, onProgress, onError */() {},
 		loadAsync: function loadAsync(url, onProgress) {
 			var scope = this;
 			return new Promise(function (resolve, reject) {
 				scope.load(url, resolve, onProgress, reject);
 			});
 		},
-		parse: function parse() /* data */
-		{},
+		parse: function parse /* data */() {},
 		setCrossOrigin: function setCrossOrigin(crossOrigin) {
 			this.crossOrigin = crossOrigin;
 			return this;
@@ -33762,8 +33754,7 @@
 	Object.assign(Curve.prototype, {
 		// Virtual base class method to overwrite and implement in subclasses
 		//	- t [0 .. 1]
-		getPoint: function getPoint() /* t, optionalTarget */
-		{
+		getPoint: function getPoint /* t, optionalTarget */() {
 			console.warn("THREE.Curve: .getPoint() not implemented.");
 			return null;
 		},
@@ -41888,8 +41879,7 @@
 		Object3D.call(this);
 		this.material = material;
 
-		this.render = function () /* renderCallback */
-		{};
+		this.render = function () /* renderCallback */ {};
 
 		this.hasPositions = false;
 		this.hasNormals = false;
@@ -44110,20 +44100,17 @@
 	}
 	Spline.prototype = Object.create(CatmullRomCurve3.prototype);
 	Object.assign(Spline.prototype, {
-		initFromArray: function initFromArray() /* a */
-		{
+		initFromArray: function initFromArray /* a */() {
 			console.error("THREE.Spline: .initFromArray() has been removed.");
 		},
 		getControlPointsArray:
-			function getControlPointsArray() /* optionalTarget */
-			{
+			function getControlPointsArray /* optionalTarget */() {
 				console.error(
 					"THREE.Spline: .getControlPointsArray() has been removed.",
 				);
 			},
 		reparametrizeByArcLength:
-			function reparametrizeByArcLength() /* samplingCoef */
-			{
+			function reparametrizeByArcLength /* samplingCoef */() {
 				console.error(
 					"THREE.Spline: .reparametrizeByArcLength() has been removed.",
 				);
@@ -44185,14 +44172,12 @@
 		},
 	});
 	Loader.Handlers = {
-		add: function add() /* regex, loader */
-		{
+		add: function add /* regex, loader */() {
 			console.error(
 				"THREE.Loader: Handlers.add() has been removed. Use LoadingManager.addHandler() instead.",
 			);
 		},
-		get: function get() /* file */
-		{
+		get: function get /* file */() {
 			console.error(
 				"THREE.Loader: Handlers.get() has been removed. Use LoadingManager.getHandler() instead.",
 			);
@@ -44319,8 +44304,7 @@
 			);
 			return vector.applyMatrix3(this);
 		},
-		multiplyVector3Array: function multiplyVector3Array() /* a */
-		{
+		multiplyVector3Array: function multiplyVector3Array /* a */() {
 			console.error(
 				"THREE.Matrix3: .multiplyVector3Array() has been removed.",
 			);
@@ -44332,8 +44316,7 @@
 			return attribute.applyMatrix3(this);
 		},
 		applyToVector3Array:
-			function applyToVector3Array() /* array, offset, length */
-			{
+			function applyToVector3Array /* array, offset, length */() {
 				console.error(
 					"THREE.Matrix3: .applyToVector3Array() has been removed.",
 				);
@@ -44385,8 +44368,7 @@
 			);
 			return vector.applyMatrix4(this);
 		},
-		multiplyVector3Array: function multiplyVector3Array() /* a */
-		{
+		multiplyVector3Array: function multiplyVector3Array /* a */() {
 			console.error(
 				"THREE.Matrix4: .multiplyVector3Array() has been removed.",
 			);
@@ -44425,8 +44407,7 @@
 			return attribute.applyMatrix4(this);
 		},
 		applyToVector3Array:
-			function applyToVector3Array() /* array, offset, length */
-			{
+			function applyToVector3Array /* array, offset, length */() {
 				console.error(
 					"THREE.Matrix4: .applyToVector3Array() has been removed.",
 				);
@@ -44906,8 +44887,7 @@
 				);
 				return this.usage === DynamicDrawUsage;
 			},
-			set: function set() /* value */
-			{
+			set: function set /* value */() {
 				console.warn(
 					"THREE.BufferAttribute: .dynamic has been deprecated. Use .usage instead.",
 				);
@@ -44923,14 +44903,12 @@
 			this.setUsage(value === true ? DynamicDrawUsage : StaticDrawUsage);
 			return this;
 		},
-		copyIndicesArray: function copyIndicesArray() /* indices */
-		{
+		copyIndicesArray: function copyIndicesArray /* indices */() {
 			console.error(
 				"THREE.BufferAttribute: .copyIndicesArray() has been removed.",
 			);
 		},
-		setArray: function setArray() /* array */
-		{
+		setArray: function setArray /* array */() {
 			console.error(
 				"THREE.BufferAttribute: .setArray has been removed. Use BufferGeometry .setAttribute to replace/resize attribute buffers",
 			);
@@ -45086,8 +45064,7 @@
 			this.setUsage(value === true ? DynamicDrawUsage : StaticDrawUsage);
 			return this;
 		},
-		setArray: function setArray() /* array */
-		{
+		setArray: function setArray /* array */() {
 			console.error(
 				"THREE.InterleavedBuffer: .setArray has been removed. Use BufferGeometry .setAttribute to replace/resize attribute buffers",
 			);
@@ -45419,8 +45396,7 @@
 				);
 				return undefined;
 			},
-			set: function set() /* value */
-			{
+			set: function set /* value */() {
 				console.warn(
 					"THREE.WebGLRenderer: .shadowMapCullFace has been removed. Set Material.shadowSide instead.",
 				);
@@ -45492,8 +45468,7 @@
 				);
 				return undefined;
 			},
-			set: function set() /* cullFace */
-			{
+			set: function set /* cullFace */() {
 				console.warn(
 					"THREE.WebGLRenderer: .shadowMap.cullFace has been removed. Set Material.shadowSide instead.",
 				);
@@ -45784,20 +45759,17 @@
 
 	var SceneUtils = {
 		createMultiMaterialObject:
-			function createMultiMaterialObject() /* geometry, materials */
-			{
+			function createMultiMaterialObject /* geometry, materials */() {
 				console.error(
 					"THREE.SceneUtils has been moved to /examples/jsm/utils/SceneUtils.js",
 				);
 			},
-		detach: function detach() /* child, parent, scene */
-		{
+		detach: function detach /* child, parent, scene */() {
 			console.error(
 				"THREE.SceneUtils has been moved to /examples/jsm/utils/SceneUtils.js",
 			);
 		},
-		attach: function attach() /* child, scene, parent */
-		{
+		attach: function attach /* child, scene, parent */() {
 			console.error(
 				"THREE.SceneUtils has been moved to /examples/jsm/utils/SceneUtils.js",
 			);
