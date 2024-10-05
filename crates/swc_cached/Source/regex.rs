@@ -15,73 +15,65 @@ use serde::{Deserialize, Serialize};
 /// the pattern.
 #[derive(Debug, Clone)]
 pub struct CachedRegex {
-    regex: Arc<Regex>,
+	regex:Arc<Regex>,
 }
 
 impl Deref for CachedRegex {
-    type Target = Regex;
+	type Target = Regex;
 
-    fn deref(&self) -> &Self::Target {
-        &self.regex
-    }
+	fn deref(&self) -> &Self::Target { &self.regex }
 }
 
 impl CachedRegex {
-    /// Get or create a cached regex. This will return the previous instance if
-    /// it's already cached.
-    pub fn new(input: &str) -> Result<Self> {
-        static CACHE: Lazy<DashMap<String, Arc<Regex>, ahash::RandomState>> =
-            Lazy::new(Default::default);
+	/// Get or create a cached regex. This will return the previous instance if
+	/// it's already cached.
+	pub fn new(input:&str) -> Result<Self> {
+		static CACHE:Lazy<DashMap<String, Arc<Regex>, ahash::RandomState>> =
+			Lazy::new(Default::default);
 
-        if let Some(cache) = CACHE.get(input).as_deref().cloned() {
-            return Ok(Self { regex: cache });
-        }
+		if let Some(cache) = CACHE.get(input).as_deref().cloned() {
+			return Ok(Self { regex:cache });
+		}
 
-        let regex =
-            Regex::new(input).with_context(|| format!("failed to parse `{}` as regex", input))?;
-        let regex = Arc::new(regex);
+		let regex = Regex::new(input)
+			.with_context(|| format!("failed to parse `{}` as regex", input))?;
+		let regex = Arc::new(regex);
 
-        CACHE.insert(input.to_owned(), regex.clone());
+		CACHE.insert(input.to_owned(), regex.clone());
 
-        Ok(CachedRegex { regex })
-    }
+		Ok(CachedRegex { regex })
+	}
 }
 
 impl<'de> Deserialize<'de> for CachedRegex {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        use serde::de::Error;
+	fn deserialize<D>(deserializer:D) -> Result<Self, D::Error>
+	where
+		D: serde::Deserializer<'de>, {
+		use serde::de::Error;
 
-        let s = String::deserialize(deserializer)?;
+		let s = String::deserialize(deserializer)?;
 
-        Self::new(&s).map_err(|err| D::Error::custom(err.to_string()))
-    }
+		Self::new(&s).map_err(|err| D::Error::custom(err.to_string()))
+	}
 }
 
 impl Serialize for CachedRegex {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let s = self.regex.as_str();
+	fn serialize<S>(&self, serializer:S) -> Result<S::Ok, S::Error>
+	where
+		S: serde::Serializer, {
+		let s = self.regex.as_str();
 
-        serializer.serialize_str(s)
-    }
+		serializer.serialize_str(s)
+	}
 }
 
 /// This will panic for wrong patterns.
 impl From<&'_ str> for CachedRegex {
-    fn from(s: &'_ str) -> Self {
-        Self::new(s).unwrap()
-    }
+	fn from(s:&'_ str) -> Self { Self::new(s).unwrap() }
 }
 
 impl FromStr for CachedRegex {
-    type Err = Error;
+	type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::new(s)
-    }
+	fn from_str(s:&str) -> Result<Self, Self::Err> { Self::new(s) }
 }
