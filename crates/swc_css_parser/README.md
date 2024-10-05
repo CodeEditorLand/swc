@@ -16,8 +16,8 @@ Error reporting test.
 
 ### `/tests/identity`
 
-These tests ensure that `input.css` and `input.explicit.css` is parsed identically.
-These are copied from `esbuild`, by modifying the test suite.
+These tests ensure that `input.css` and `input.explicit.css` is parsed
+identically. These are copied from `esbuild`, by modifying the test suite.
 
 The name of a test is `base64_url(md5(name))`.
 
@@ -25,4 +25,5 @@ The name of a test is `base64_url(md5(name))`.
 
 Apache 2.0 / MIT, at your option.
 
-Lots of tests are copied from rome tools and esbuild. If you want to use tests, please consult license of those libraries.
+Lots of tests are copied from rome tools and esbuild. If you want to use tests,
+please consult license of those libraries.

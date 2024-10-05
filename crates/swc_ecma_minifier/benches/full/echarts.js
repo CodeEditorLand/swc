@@ -18454,12 +18454,13 @@
 	var SYSTEM_LANG = !env.domSupported
 		? DEFAULT_LOCALE
 		: (function () {
-				var langStr = /* eslint-disable-next-line */
-				(
-					document.documentElement.lang ||
-					navigator.language ||
-					navigator.browserLanguage
-				).toUpperCase();
+				var langStr =
+					/* eslint-disable-next-line */
+					(
+						document.documentElement.lang ||
+						navigator.language ||
+						navigator.browserLanguage
+					).toUpperCase();
 				return langStr.indexOf(LOCALE_ZH) > -1
 					? LOCALE_ZH
 					: DEFAULT_LOCALE;
@@ -21890,7 +21891,8 @@
 	 * ```
 	 */
 
-	function parseRawOption(rawOption, optionPreprocessorFuncs, isNew) { // `rawOption` May be modified
+	function parseRawOption(rawOption, optionPreprocessorFuncs, isNew) {
+		// `rawOption` May be modified
 		var mediaList = [];
 		var mediaDefault;
 		var baseOption;
@@ -40109,7 +40111,8 @@
 	 * @param opt.encodeDefaulter Make default encode if user not specified.
 	 */
 
-	function createDimensions(source, opt) { // TODO: TYPE completeDimensions type
+	function createDimensions(source, opt) {
+		// TODO: TYPE completeDimensions type
 		opt = opt || {};
 		return completeDimensions(opt.coordDimensions || [], source, {
 			// FIXME:TS detect whether source then call `.dimensionsDefine` and `.encodeDefine`?
@@ -101090,7 +101093,8 @@
 	 * [dataFilter description]
 	 */
 
-	function dataFilter$1(coordSys, item) { // Currently only polar and cartesian has containData.
+	function dataFilter$1(coordSys, item) {
+		// Currently only polar and cartesian has containData.
 		// Alwalys return true if there is no coordSys
 		return coordSys && coordSys.containData && item.coord && !hasXOrY(item)
 			? coordSys.containData(item.coord)

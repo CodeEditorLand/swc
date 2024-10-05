@@ -38,7 +38,11 @@
   </a>
 </p>
 
-SWC (stands for `Speedy Web Compiler`) is a super-fast TypeScript / JavaScript compiler written in Rust. It's a library for Rust and JavaScript at the same time. If you are using SWC from Rust, see [rustdoc](https://rustdoc.swc.rs/swc/) and for most users, your entry point for using the library will be [parser](https://rustdoc.swc.rs/swc_ecma_parser/).
+SWC (stands for `Speedy Web Compiler`) is a super-fast TypeScript / JavaScript
+compiler written in Rust. It's a library for Rust and JavaScript at the same
+time. If you are using SWC from Rust, see [rustdoc](https://rustdoc.swc.rs/swc/)
+and for most users, your entry point for using the library will be
+[parser](https://rustdoc.swc.rs/swc_ecma_parser/).
 
 Also, SWC tries to ensure that
 
@@ -48,8 +52,10 @@ for rust users.
 
 MSRV of crates is currently `1.73`.
 
-To update all SWC crates you use, you can run `curl https://raw.githubusercontent.com/swc-project/swc/main/scripts/update-all-swc-crates.sh | bash -s`. This script will update all dependencies to the latest version and run `cargo build` to ensure that everything works.
-Note that you need
+To update all SWC crates you use, you can run
+`curl https://raw.githubusercontent.com/swc-project/swc/main/scripts/update-all-swc-crates.sh | bash -s`.
+This script will update all dependencies to the latest version and run
+`cargo build` to ensure that everything works. Note that you need
 
 -   `jq`
 -   `cargo upgrade`
@@ -58,7 +64,8 @@ command to run the script.
 
 ---
 
-If you are using SWC from JavaScript, please refer to [docs on the website](https://swc.rs/docs/installation/).
+If you are using SWC from JavaScript, please refer to
+[docs on the website](https://swc.rs/docs/installation/).
 
 # Documentation
 
@@ -70,7 +77,8 @@ Please see [comparison with babel](https://swc.rs/docs/migrating-from-babel).
 
 # Performance
 
-Please see [benchmark results](https://swc.rs/docs/benchmark-transform) on the website.
+Please see [benchmark results](https://swc.rs/docs/benchmark-transform) on the
+website.
 
 <h2 align="center">Supporting swc</h2>
 
@@ -80,9 +88,14 @@ Please see [benchmark results](https://swc.rs/docs/benchmark-transform) on the w
   </a>
 </p>
 
-SWC is a community-driven project, and is maintained by a group of [volunteers](https://opencollective.com/swc#team). If you'd like to help support the future of the project, please consider:
+SWC is a community-driven project, and is maintained by a group of
+[volunteers](https://opencollective.com/swc#team). If you'd like to help support
+the future of the project, please consider:
 
--   Giving developer time on the project. (Message us on [Discord](https://discord.gg/GnHbXTdZz6) (preferred) or [Github discussions](https://github.com/swc-project/swc/discussions) for guidance!)
+-   Giving developer time on the project. (Message us on
+    [Discord](https://discord.gg/GnHbXTdZz6) (preferred) or
+    [Github discussions](https://github.com/swc-project/swc/discussions) for
+    guidance!)
 -   Giving funds by becoming a sponsor (see https://opencollective.com/swc)!
 
 ## Contributing
@@ -92,6 +105,7 @@ documentation useful ([ARCHITECTURE.md](ARCHITECTURE.md)).
 
 ## License
 
-SWC is primarily distributed under the terms of the Apache License (Version 2.0).
+SWC is primarily distributed under the terms of the Apache License (Version
+2.0).
 
 See [LICENSE](LICENSE) for details.
