@@ -19,9 +19,7 @@ pub(crate) fn calc_hash(cm:Lrc<SourceMap>, m:&Module) -> Result<String, Error> {
 			wr:Box::new(&mut buf) as Box<dyn WriteJs>,
 		};
 
-		emitter
-			.emit_module(m)
-			.context("failed to emit module to calculate hash")?;
+		emitter.emit_module(m).context("failed to emit module to calculate hash")?;
 	}
 	//
 
@@ -52,11 +50,7 @@ impl WriteJs for &mut Hasher<'_> {
 		Ok(())
 	}
 
-	fn write_keyword(
-		&mut self,
-		_:Option<Span>,
-		s:&'static str,
-	) -> io::Result<()> {
+	fn write_keyword(&mut self, _:Option<Span>, s:&'static str) -> io::Result<()> {
 		self.w(s);
 		Ok(())
 	}
@@ -106,11 +100,7 @@ impl WriteJs for &mut Hasher<'_> {
 		Ok(())
 	}
 
-	fn write_punct(
-		&mut self,
-		_:Option<Span>,
-		s:&'static str,
-	) -> io::Result<()> {
+	fn write_punct(&mut self, _:Option<Span>, s:&'static str) -> io::Result<()> {
 		self.w(s);
 		Ok(())
 	}

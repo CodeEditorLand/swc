@@ -6,10 +6,7 @@
 ))]
 #[cfg_attr(
 	docsrs,
-	doc(cfg(any(
-		feature = "__common_plugin_transform",
-		feature = "__css_plugin_transform"
-	)))
+	doc(cfg(any(feature = "__common_plugin_transform", feature = "__css_plugin_transform")))
 )]
 pub use swc_plugin_macro::css_plugin_transform;
 #[cfg(any(
@@ -85,10 +82,7 @@ pub mod metadata {
 ))]
 #[cfg_attr(
 	docsrs,
-	doc(cfg(any(
-		feature = "__common_plugin_transform",
-		feature = "__plugin_transform_host"
-	)))
+	doc(cfg(any(feature = "__common_plugin_transform", feature = "__plugin_transform_host")))
 )]
 pub mod proxies {
 	pub use swc_plugin_proxy::*;

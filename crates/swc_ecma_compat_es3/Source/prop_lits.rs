@@ -30,57 +30,49 @@ use swc_trace_macro::swc_trace;
 ///   foo: 1
 /// };
 /// ```
-pub fn property_literals() -> impl Fold {
-    PropertyLiteral
-}
+pub fn property_literals() -> impl Fold { PropertyLiteral }
 
 struct PropertyLiteral;
 
 #[swc_trace]
 impl Fold for PropertyLiteral {
-    standard_only_fold!();
+	standard_only_fold!();
 
-    fn fold_prop_name(&mut self, n: PropName) -> PropName {
-        let n = n.fold_children_with(self);
+	fn fold_prop_name(&mut self, n:PropName) -> PropName {
+		let n = n.fold_children_with(self);
 
-        match n {
-            PropName::Str(Str {
-                raw, value, span, ..
-            }) => {
-                if value.is_reserved() || !is_valid_ident(&value) {
-                    PropName::Str(Str { span, raw, value })
-                } else {
-                    PropName::Ident(IdentName::new(value, span))
-                }
-            }
-            PropName::Ident(i) => {
-                let IdentName { sym, span, .. } = i;
-                if sym.is_reserved() || sym.contains('-') || sym.contains('.') {
-                    PropName::Str(Str {
-                        span,
-                        raw: None,
-                        value: sym,
-                    })
-                } else {
-                    PropName::Ident(IdentName { span, sym })
-                }
-            }
-            _ => n,
-        }
-    }
+		match n {
+			PropName::Str(Str { raw, value, span, .. }) => {
+				if value.is_reserved() || !is_valid_ident(&value) {
+					PropName::Str(Str { span, raw, value })
+				} else {
+					PropName::Ident(IdentName::new(value, span))
+				}
+			},
+			PropName::Ident(i) => {
+				let IdentName { sym, span, .. } = i;
+				if sym.is_reserved() || sym.contains('-') || sym.contains('.') {
+					PropName::Str(Str { span, raw:None, value:sym })
+				} else {
+					PropName::Ident(IdentName { span, sym })
+				}
+			},
+			_ => n,
+		}
+	}
 }
 
 #[cfg(test)]
 mod tests {
-    use swc_ecma_transforms_testing::test;
+	use swc_ecma_transforms_testing::test;
 
-    use super::*;
+	use super::*;
 
-    test!(
-        ::swc_ecma_parser::Syntax::default(),
-        |_| PropertyLiteral,
-        babel_basic,
-        r#"var foo = {
+	test!(
+		::swc_ecma_parser::Syntax::default(),
+		|_| PropertyLiteral,
+		babel_basic,
+		r#"var foo = {
   // changed
   "bar": function () {},
   "1": function () {},
@@ -90,17 +82,17 @@ mod tests {
   [a]: 2,
   foo: 1
 };"#,
-        ok_if_code_eq
-    );
+		ok_if_code_eq
+	);
 
-    test!(
-        ::swc_ecma_parser::Syntax::default(),
-        |_| PropertyLiteral,
-        str_lit,
-        r#"'use strict';
+	test!(
+		::swc_ecma_parser::Syntax::default(),
+		|_| PropertyLiteral,
+		str_lit,
+		r#"'use strict';
 var x = {
     'foo.bar': true
 };"#,
-        ok_if_code_eq
-    );
+		ok_if_code_eq
+	);
 }

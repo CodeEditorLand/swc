@@ -14,11 +14,8 @@ mod spanned;
 /// Derives [`swc_common::Spanned`]. See [`swc_common::Spanned`] for
 /// documentation.
 #[proc_macro_derive(Spanned, attributes(span))]
-pub fn derive_spanned(
-	input:proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-	let input = parse::<DeriveInput>(input)
-		.expect("failed to parse input as DeriveInput");
+pub fn derive_spanned(input:proc_macro::TokenStream) -> proc_macro::TokenStream {
+	let input = parse::<DeriveInput>(input).expect("failed to parse input as DeriveInput");
 
 	let item = self::spanned::derive(input);
 
@@ -27,11 +24,8 @@ pub fn derive_spanned(
 
 /// Derives `serde::Deserialize` which is aware of `tag` based deserialization.
 #[proc_macro_derive(DeserializeEnum, attributes(tag))]
-pub fn derive_deserialize_enum(
-	input:proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-	let input = parse::<DeriveInput>(input)
-		.expect("failed to parse input as DeriveInput");
+pub fn derive_deserialize_enum(input:proc_macro::TokenStream) -> proc_macro::TokenStream {
+	let input = parse::<DeriveInput>(input).expect("failed to parse input as DeriveInput");
 
 	let item = enum_deserialize::expand(input);
 
@@ -83,8 +77,7 @@ pub fn ast_serde(
 	args:proc_macro::TokenStream,
 	input:proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-	let input:DeriveInput =
-		parse(input).expect("failed to parse input as a DeriveInput");
+	let input:DeriveInput = parse(input).expect("failed to parse input as a DeriveInput");
 
 	// we should use call_site
 	let mut item = TokenStream::new();
@@ -107,18 +100,13 @@ pub fn ast_serde(
 				Some(parse(args).expect("failed to parse args of #[ast_serde]"))
 			};
 
-			let serde_tag = match input.data {
-				Data::Struct(DataStruct {
-					fields: Fields::Named(..), ..
-				}) => {
-					if args.is_some() {
-						Some(quote!(#[serde(tag = "type")]))
-					} else {
-						None
-					}
-				},
-				_ => None,
-			};
+			let serde_tag =
+				match input.data {
+					Data::Struct(DataStruct { fields: Fields::Named(..), .. }) => {
+						if args.is_some() { Some(quote!(#[serde(tag = "type")])) } else { None }
+					},
+					_ => None,
+				};
 
 			let serde_rename = args.as_ref().map(|args| {
 				let name = &args.ty;
@@ -142,11 +130,9 @@ struct AddAttr;
 
 impl VisitMut for AddAttr {
 	fn visit_field_mut(&mut self, f:&mut Field) {
+		f.attrs.push(parse_quote!(#[cfg_attr(feature = "__rkyv", omit_bounds)]));
 		f.attrs
-			.push(parse_quote!(#[cfg_attr(feature = "__rkyv", omit_bounds)]));
-		f.attrs.push(
-			parse_quote!(#[cfg_attr(feature = "__rkyv", archive_attr(omit_bounds))]),
-		);
+			.push(parse_quote!(#[cfg_attr(feature = "__rkyv", archive_attr(omit_bounds))]));
 	}
 }
 
@@ -159,8 +145,7 @@ pub fn ast_node(
 	args:proc_macro::TokenStream,
 	input:proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-	let mut input:DeriveInput =
-		parse(input).expect("failed to parse input as a DeriveInput");
+	let mut input:DeriveInput = parse(input).expect("failed to parse input as a DeriveInput");
 
 	AddAttr.visit_data_mut(&mut input.data);
 
@@ -186,8 +171,7 @@ pub fn ast_node(
 				parse(args).expect("failed to parse args of #[ast_node]")
 			};
 
-			let clone =
-				if args.clone { Some(quote!(#[derive(Clone)])) } else { None };
+			let clone = if args.clone { Some(quote!(#[derive(Clone)])) } else { None };
 
 			item.extend(quote!(
                 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -232,9 +216,7 @@ pub fn ast_node(
 			};
 
 			let serde_tag = match input.data {
-				Data::Struct(DataStruct {
-					fields: Fields::Named(..), ..
-				}) => {
+				Data::Struct(DataStruct { fields: Fields::Named(..), .. }) => {
 					if args.is_some() {
 						Some(quote!(#[cfg_attr(
 							feature = "serde-impl",
@@ -256,9 +238,9 @@ pub fn ast_node(
 				)])
 			});
 
-			let ast_node_impl = args.as_ref().map(|args| {
-				ast_node_macro::expand_struct(args.clone(), input.clone())
-			});
+			let ast_node_impl = args
+				.as_ref()
+				.map(|args| ast_node_macro::expand_struct(args.clone(), input.clone()));
 
 			item.extend(quote!(
                 #[allow(clippy::derive_partial_eq_without_eq)]

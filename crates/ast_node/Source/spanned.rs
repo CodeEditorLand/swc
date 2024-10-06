@@ -66,19 +66,13 @@ pub fn derive(input:DeriveInput) -> ItemImpl {
 		.variants()
 		.into_iter()
 		.map(|v| {
-			let (pat, bindings) =
-				v.bind("_", Some(Token![ref](def_site())), None);
+			let (pat, bindings) = v.bind("_", Some(Token![ref](def_site())), None);
 
 			let body = make_body_for_variant(&v, bindings);
 
 			Arm {
 				body,
-				attrs:v
-					.attrs()
-					.iter()
-					.filter(|attr| is_attr_name(attr, "cfg"))
-					.cloned()
-					.collect(),
+				attrs:v.attrs().iter().filter(|attr| is_attr_name(attr, "cfg")).cloned().collect(),
 				pat,
 				guard:None,
 				fat_arrow_token:Default::default(),
@@ -109,10 +103,7 @@ pub fn derive(input:DeriveInput) -> ItemImpl {
 	item.with_generics(input.generics)
 }
 
-fn make_body_for_variant(
-	v:&VariantBinder<'_>,
-	bindings:Vec<BindedField<'_>>,
-) -> Box<Expr> {
+fn make_body_for_variant(v:&VariantBinder<'_>, bindings:Vec<BindedField<'_>>) -> Box<Expr> {
 	/// `swc_common::Spanned::span(#field)`
 	fn simple_field(field:&dyn ToTokens) -> Box<Expr> {
 		Box::new(parse_quote_spanned! (def_site() => {
@@ -132,9 +123,7 @@ fn make_body_for_variant(
 	}
 
 	//  Handle #[span] attribute.
-	if let Some(f) =
-		bindings.iter().find(|b| has_empty_span_attr(&b.field().attrs))
-	{
+	if let Some(f) = bindings.iter().find(|b| has_empty_span_attr(&b.field().attrs)) {
 		// TODO: Verify that there's no more #[span]
 		return simple_field(f);
 	}
@@ -147,17 +136,10 @@ fn make_body_for_variant(
 	if !has_any_span_attr {
 		let span_field = bindings
 			.iter()
-			.find(|b| {
-				b.field()
-					.ident
-					.as_ref()
-					.map(|ident| ident == "span")
-					.unwrap_or(false)
-			})
+			.find(|b| b.field().ident.as_ref().map(|ident| ident == "span").unwrap_or(false))
 			.unwrap_or_else(|| {
 				panic!(
-					"#[derive(Spanned)]: cannot determine span field to use \
-					 for {}",
+					"#[derive(Spanned)]: cannot determine span field to use for {}",
 					v.qual_path().into_token_stream()
 				)
 			});
@@ -165,8 +147,7 @@ fn make_body_for_variant(
 		return simple_field(span_field);
 	}
 
-	let fields:Vec<_> =
-		bindings.iter().map(|b| (b, MyField::from_field(b.field()))).collect();
+	let fields:Vec<_> = bindings.iter().map(|b| (b, MyField::from_field(b.field()))).collect();
 
 	// TODO: Only one field should be `#[span(lo)]`.
 	let lo = fields.iter().find(|&(_, f)| f.lo);
@@ -179,9 +160,7 @@ fn make_body_for_variant(
                 .with_hi(swc_common::Spanned::span(#hi_field).hi())))
 		},
 		_ => {
-			panic!(
-				"#[derive(Spanned)]: #[span(lo)] and #[span(hi)] is required"
-			)
+			panic!("#[derive(Spanned)]: #[span(lo)] and #[span(hi)] is required")
 		},
 	}
 }

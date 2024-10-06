@@ -62,9 +62,7 @@ use syn::{parse::Parse, *};
 ///
 /// All formatting flags are handled correctly.
 #[proc_macro_derive(StringEnum, attributes(string_enum))]
-pub fn derive_string_enum(
-	input:proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
+pub fn derive_string_enum(input:proc_macro::TokenStream) -> proc_macro::TokenStream {
 	let input = syn::parse::<syn::DeriveInput>(input)
 		.map(From::from)
 		.expect("failed to parse derive input");
@@ -76,10 +74,8 @@ pub fn derive_string_enum(
 	make_serialize(&input).to_tokens(&mut tts);
 	make_deserialize(&input).to_tokens(&mut tts);
 
-	derive_fmt(&input, quote_spanned!(Span::call_site() => std::fmt::Debug))
-		.to_tokens(&mut tts);
-	derive_fmt(&input, quote_spanned!(Span::call_site() => std::fmt::Display))
-		.to_tokens(&mut tts);
+	derive_fmt(&input, quote_spanned!(Span::call_site() => std::fmt::Debug)).to_tokens(&mut tts);
+	derive_fmt(&input, quote_spanned!(Span::call_site() => std::fmt::Display)).to_tokens(&mut tts);
 
 	print("derive(StringEnum)", tts)
 }
@@ -131,11 +127,7 @@ fn make_from_str(i:&DeriveInput) -> ItemImpl {
 			});
 
 			// Handle `string_enum(alias("foo"))`
-			for attr in v
-				.attrs()
-				.iter()
-				.filter(|attr| is_attr_name(attr, "string_enum"))
-			{
+			for attr in v.attrs().iter().filter(|attr| is_attr_name(attr, "string_enum")) {
 				if let Meta::List(meta) = &attr.meta {
 					let mut cases = Punctuated::default();
 
@@ -151,11 +143,7 @@ fn make_from_str(i:&DeriveInput) -> ItemImpl {
 						}));
 					}
 
-					pat = Pat::Or(PatOr {
-						attrs:Default::default(),
-						leading_vert:None,
-						cases,
-					});
+					pat = Pat::Or(PatOr { attrs:Default::default(), leading_vert:None, cases });
 					continue;
 				}
 
@@ -165,20 +153,13 @@ fn make_from_str(i:&DeriveInput) -> ItemImpl {
 			let body = match *v.data() {
 				Fields::Unit => Box::new(parse_quote!(return Ok(#qual_name))),
 				_ => {
-					unreachable!(
-						"StringEnum requires all variants not to have fields"
-					)
+					unreachable!("StringEnum requires all variants not to have fields")
 				},
 			};
 
 			Arm {
 				body,
-				attrs:v
-					.attrs()
-					.iter()
-					.filter(|attr| is_attr_name(attr, "cfg"))
-					.cloned()
-					.collect(),
+				attrs:v.attrs().iter().filter(|attr| is_attr_name(attr, "cfg")).cloned().collect(),
 				pat,
 				guard:None,
 				fat_arrow_token:Default::default(),
@@ -246,12 +227,7 @@ fn make_as_str(i:&DeriveInput) -> ItemImpl {
 
 			Arm {
 				body,
-				attrs:v
-					.attrs()
-					.iter()
-					.filter(|attr| is_attr_name(attr, "cfg"))
-					.cloned()
-					.collect(),
+				attrs:v.attrs().iter().filter(|attr| is_attr_name(attr, "cfg")).cloned().collect(),
 				pat:Pat::Reference(PatReference {
 					and_token:Default::default(),
 					mutability:None,
@@ -362,8 +338,7 @@ impl Parse for FieldAttrItem {
 
 		assert!(
 			name == "alias",
-			"#[derive(StringEnum) only supports \
-			 `#[string_enum(alias(\"text\"))]]"
+			"#[derive(StringEnum) only supports `#[string_enum(alias(\"text\"))]]"
 		);
 
 		let alias;

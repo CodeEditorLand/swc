@@ -20,14 +20,11 @@ where
 		return;
 	}
 
-	let new =
-		take(v)
-			.into_iter()
-			.enumerate()
-			.filter_map(|(idx, value)| {
-				if remove_list.contains(&idx) { None } else { Some(value) }
-			})
-			.collect::<Vec<_>>();
+	let new = take(v)
+		.into_iter()
+		.enumerate()
+		.filter_map(|(idx, value)| if remove_list.contains(&idx) { None } else { Some(value) })
+		.collect::<Vec<_>>();
 
 	*v = new;
 }

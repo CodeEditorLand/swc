@@ -31,8 +31,7 @@ impl SourceMapContent {
 	pub fn to_sourcemap(&self) -> Result<SourceMap> {
 		match self {
 			SourceMapContent::Json(s) => {
-				SourceMap::from_slice(s.as_bytes())
-					.context("failed to parse sourcemap")
+				SourceMap::from_slice(s.as_bytes()).context("failed to parse sourcemap")
 			},
 			SourceMapContent::Parsed {
 				sources,
@@ -49,8 +48,7 @@ impl SourceMapContent {
 				let mut src_col = 0;
 				let mut name_id = 0;
 
-				let allocation_size =
-					mappings.matches(&[',', ';'][..]).count() + 10;
+				let allocation_size = mappings.matches(&[',', ';'][..]).count() + 10;
 				let mut tokens = Vec::with_capacity(allocation_size);
 
 				let mut nums = Vec::with_capacity(6);
@@ -77,8 +75,7 @@ impl SourceMapContent {
 						if nums.len() > 1 {
 							if nums.len() != 4 && nums.len() != 5 {
 								bail!(
-									"invalid vlq segment size; expected 4 or \
-									 5, got {}",
+									"invalid vlq segment size; expected 4 or 5, got {}",
 									nums.len()
 								);
 							}
@@ -94,10 +91,7 @@ impl SourceMapContent {
 							if nums.len() > 4 {
 								name_id = (i64::from(name_id) + nums[4]) as u32;
 								if name_id >= names.len() as u32 {
-									bail!(
-										"invalid name reference: {}",
-										name_id
-									);
+									bail!("invalid name reference: {}", name_id);
 								}
 								name = name_id;
 							}

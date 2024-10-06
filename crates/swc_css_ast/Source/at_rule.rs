@@ -458,29 +458,13 @@ pub struct MediaFeatureBoolean {
 	pub name:MediaFeatureName,
 }
 
-#[derive(
-	StringEnum,
-	Clone,
-	Copy,
-	Eq,
-	PartialEq,
-	PartialOrd,
-	Ord,
-	Hash,
-	Is,
-	EqIgnoreSpan,
-)]
-#[cfg_attr(
-	feature = "rkyv",
-	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
-)]
+#[derive(StringEnum, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash, Is, EqIgnoreSpan)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "rkyv", archive(check_bytes))]
 #[cfg_attr(feature = "rkyv", archive_attr(repr(u32)))]
 #[cfg_attr(
 	feature = "rkyv",
-	archive(bound(
-		serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"
-	))
+	archive(bound(serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"))
 )]
 pub enum MediaFeatureRangeComparison {
 	/// `<`
@@ -716,9 +700,7 @@ pub struct ContainerQueryNot {
 }
 
 impl EqIgnoreSpan for ContainerQueryNot {
-	fn eq_ignore_span(&self, other:&Self) -> bool {
-		self.query.eq_ignore_span(&other.query)
-	}
+	fn eq_ignore_span(&self, other:&Self) -> bool { self.query.eq_ignore_span(&other.query) }
 }
 
 #[ast_node("ContainerQueryAnd")]
@@ -730,9 +712,7 @@ pub struct ContainerQueryAnd {
 }
 
 impl EqIgnoreSpan for ContainerQueryAnd {
-	fn eq_ignore_span(&self, other:&Self) -> bool {
-		self.query.eq_ignore_span(&other.query)
-	}
+	fn eq_ignore_span(&self, other:&Self) -> bool { self.query.eq_ignore_span(&other.query) }
 }
 
 #[ast_node("ContainerQueryOr")]
@@ -744,9 +724,7 @@ pub struct ContainerQueryOr {
 }
 
 impl EqIgnoreSpan for ContainerQueryOr {
-	fn eq_ignore_span(&self, other:&Self) -> bool {
-		self.query.eq_ignore_span(&other.query)
-	}
+	fn eq_ignore_span(&self, other:&Self) -> bool { self.query.eq_ignore_span(&other.query) }
 }
 
 #[ast_node]
@@ -797,29 +775,13 @@ pub struct SizeFeatureBoolean {
 	pub name:SizeFeatureName,
 }
 
-#[derive(
-	StringEnum,
-	Clone,
-	Copy,
-	Eq,
-	PartialEq,
-	PartialOrd,
-	Ord,
-	Hash,
-	Is,
-	EqIgnoreSpan,
-)]
-#[cfg_attr(
-	feature = "rkyv",
-	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
-)]
+#[derive(StringEnum, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash, Is, EqIgnoreSpan)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "rkyv", archive(check_bytes))]
 #[cfg_attr(feature = "rkyv", archive_attr(repr(u32)))]
 #[cfg_attr(
 	feature = "rkyv",
-	archive(bound(
-		serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"
-	))
+	archive(bound(serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"))
 )]
 pub enum SizeFeatureRangeComparison {
 	/// `<`
@@ -901,9 +863,7 @@ impl EqIgnoreSpan for ExtensionName {
 
 impl Take for ExtensionName {
 	#[inline]
-	fn dummy() -> Self {
-		Self { span:Take::dummy(), value:Default::default(), raw:Take::dummy() }
-	}
+	fn dummy() -> Self { Self { span:Take::dummy(), value:Default::default(), raw:Take::dummy() } }
 }
 
 #[ast_node("CustomMedia")]
@@ -916,9 +876,7 @@ pub struct CustomMediaQuery {
 
 impl Take for CustomMediaQuery {
 	#[inline]
-	fn dummy() -> Self {
-		Self { span:Take::dummy(), name:Take::dummy(), media:Take::dummy() }
-	}
+	fn dummy() -> Self { Self { span:Take::dummy(), name:Take::dummy(), media:Take::dummy() } }
 }
 
 #[ast_node]

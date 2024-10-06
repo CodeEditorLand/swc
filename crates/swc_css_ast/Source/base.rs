@@ -67,9 +67,7 @@ pub struct QualifiedRule {
 }
 
 impl Take for QualifiedRule {
-	fn dummy() -> Self {
-		Self { span:Take::dummy(), prelude:Take::dummy(), block:Take::dummy() }
-	}
+	fn dummy() -> Self { Self { span:Take::dummy(), prelude:Take::dummy(), block:Take::dummy() } }
 }
 
 #[ast_node]
@@ -109,9 +107,7 @@ pub struct SimpleBlock {
 }
 
 impl Take for SimpleBlock {
-	fn dummy() -> Self {
-		Self { span:Take::dummy(), name:Take::dummy(), value:Take::dummy() }
-	}
+	fn dummy() -> Self { Self { span:Take::dummy(), name:Take::dummy(), value:Take::dummy() } }
 }
 
 #[ast_node]
@@ -258,9 +254,7 @@ impl From<StyleBlock> for ComponentValue {
 	fn from(block:StyleBlock) -> Self {
 		match block {
 			StyleBlock::AtRule(at_rule) => ComponentValue::AtRule(at_rule),
-			StyleBlock::Declaration(declaration) => {
-				ComponentValue::Declaration(declaration)
-			},
+			StyleBlock::Declaration(declaration) => ComponentValue::Declaration(declaration),
 			StyleBlock::QualifiedRule(qualified_rule) => {
 				ComponentValue::QualifiedRule(qualified_rule)
 			},
@@ -278,12 +272,10 @@ impl From<DeclarationOrAtRule> for ComponentValue {
 			DeclarationOrAtRule::Declaration(declaration) => {
 				ComponentValue::Declaration(declaration)
 			},
-			DeclarationOrAtRule::AtRule(at_rule) => {
-				ComponentValue::AtRule(at_rule)
+			DeclarationOrAtRule::AtRule(at_rule) => ComponentValue::AtRule(at_rule),
+			DeclarationOrAtRule::ListOfComponentValues(list_of_component_values) => {
+				ComponentValue::ListOfComponentValues(list_of_component_values)
 			},
-			DeclarationOrAtRule::ListOfComponentValues(
-				list_of_component_values,
-			) => ComponentValue::ListOfComponentValues(list_of_component_values),
 		}
 	}
 }
@@ -293,9 +285,7 @@ impl From<Rule> for ComponentValue {
 	fn from(rule:Rule) -> Self {
 		match rule {
 			Rule::AtRule(at_rule) => ComponentValue::AtRule(at_rule),
-			Rule::QualifiedRule(qualified_rule) => {
-				ComponentValue::QualifiedRule(qualified_rule)
-			},
+			Rule::QualifiedRule(qualified_rule) => ComponentValue::QualifiedRule(qualified_rule),
 			Rule::ListOfComponentValues(list_of_component_values) => {
 				ComponentValue::ListOfComponentValues(list_of_component_values)
 			},

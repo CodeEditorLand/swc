@@ -23,10 +23,7 @@
 /// use swc_ecma_quote::quote;
 ///
 /// // This will return ast for `const ref = 4;`
-/// let _stmt = quote!(
-/// 	"const $name = 4;" as Stmt,
-/// 	name = Ident::new("ref".into(), DUMMY_SP)
-/// );
+/// let _stmt = quote!("const $name = 4;" as Stmt, name = Ident::new("ref".into(), DUMMY_SP));
 ///
 /// // Tip: Use private_ident!("ref") for real identifiers.
 /// ```
@@ -65,10 +62,7 @@
 /// use swc_ecma_quote::quote;
 ///
 /// // This will return ast for `const ref = 4;`
-/// let _stmt = quote!(
-/// 	"const $name = 4;" as Stmt,
-/// 	name = Ident::new("ref".into(), DUMMY_SP)
-/// );
+/// let _stmt = quote!("const $name = 4;" as Stmt, name = Ident::new("ref".into(), DUMMY_SP));
 ///
 /// // Tip: Use private_ident!("ref") for real identifiers.
 /// ```

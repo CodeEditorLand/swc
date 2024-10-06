@@ -25,10 +25,7 @@ pub extern crate swc_ecma_quote_macros;
 ))]
 #[cfg_attr(
 	docsrs,
-	doc(cfg(any(
-		feature = "__common_plugin_transform",
-		feature = "__plugin_transform_host"
-	)))
+	doc(cfg(any(feature = "__common_plugin_transform", feature = "__plugin_transform_host")))
 )]
 pub mod plugin;
 
@@ -49,10 +46,7 @@ pub mod ecma {
 	#[cfg(any(feature = "__ecma_transforms", feature = "__testing_transform"))]
 	#[cfg_attr(
 		docsrs,
-		doc(cfg(any(
-			feature = "__ecma_transforms",
-			feature = "__testing_transform"
-		)))
+		doc(cfg(any(feature = "__ecma_transforms", feature = "__testing_transform")))
 	)]
 	pub mod transforms {
 		pub mod base {
@@ -209,13 +203,7 @@ pub mod bundler {
 	pub use swc_bundler::*;
 
 	#[cfg(any(feature = "bundler_node_v1", feature = "bundler_node_v2"))]
-	#[cfg_attr(
-		docsrs,
-		doc(cfg(any(
-			feature = "bundler_node_v1",
-			feature = "bundler_node_v2"
-		)))
-	)]
+	#[cfg_attr(docsrs, doc(cfg(any(feature = "bundler_node_v1", feature = "bundler_node_v2"))))]
 	pub mod node {
 		pub use swc_node_bundler::*;
 	}
@@ -310,8 +298,7 @@ pub mod testing {
 #[cfg_attr(docsrs, doc(cfg(feature = "allocator_node")))]
 extern crate swc_malloc;
 
-pub static SWC_CORE_VERSION:&str =
-	include_str!(concat!(env!("OUT_DIR"), "/core_pkg_version.txt"));
+pub static SWC_CORE_VERSION:&str = include_str!(concat!(env!("OUT_DIR"), "/core_pkg_version.txt"));
 
 mod __diagnostics;
 pub mod diagnostics {

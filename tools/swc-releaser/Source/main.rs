@@ -56,18 +56,12 @@ fn run_bump(workspace_dir:&Path, dry_run:bool) -> Result<()> {
 	let (versions, graph) = get_data()?;
 	let mut new_versions = VersionMap::new();
 
-	let mut worker = Bump {
-		versions:&versions,
-		graph:&graph,
-		new_versions:&mut new_versions,
-	};
+	let mut worker = Bump { versions:&versions, graph:&graph, new_versions:&mut new_versions };
 
 	for (pkg_name, release) in changeset.releases {
 		let is_breaking = worker
 			.is_breaking(pkg_name.as_str(), release.change_type())
-			.with_context(|| {
-				format!("failed to check if package {} is breaking", pkg_name)
-			})?;
+			.with_context(|| format!("failed to check if package {} is breaking", pkg_name))?;
 
 		worker
 			.bump_crate(pkg_name.as_str(), release.change_type(), is_breaking)
@@ -75,16 +69,14 @@ fn run_bump(workspace_dir:&Path, dry_run:bool) -> Result<()> {
 	}
 
 	for (pkg_name, version) in new_versions {
-		run_cargo_set_version(&pkg_name, &version, dry_run).with_context(
-			|| format!("failed to set version for {}", pkg_name),
-		)?;
+		run_cargo_set_version(&pkg_name, &version, dry_run)
+			.with_context(|| format!("failed to set version for {}", pkg_name))?;
 	}
 
 	{
 		eprintln!("Removing changeset files... ");
 		if !dry_run {
-			std::fs::remove_dir_all(&changeset_dir)
-				.context("failed to remove changeset files")?;
+			std::fs::remove_dir_all(&changeset_dir).context("failed to remove changeset files")?;
 		}
 	}
 
@@ -100,11 +92,7 @@ fn run_bump(workspace_dir:&Path, dry_run:bool) -> Result<()> {
 	Ok(())
 }
 
-fn run_cargo_set_version(
-	pkg_name:&str,
-	version:&Version,
-	dry_run:bool,
-) -> Result<()> {
+fn run_cargo_set_version(pkg_name:&str, version:&Version, dry_run:bool) -> Result<()> {
 	let mut cmd = Command::new("cargo");
 	cmd.arg("set-version").arg("-p").arg(pkg_name).arg(version.to_string());
 
@@ -178,15 +166,11 @@ struct Bump<'a> {
 }
 
 impl<'a> Bump<'a> {
-	fn is_breaking(
-		&self,
-		pkg_name:&str,
-		change_type:Option<&ChangeType>,
-	) -> Result<bool> {
-		let original_version = self.versions.get(pkg_name).context(format!(
-			"failed to find original version for {}",
-			pkg_name
-		))?;
+	fn is_breaking(&self, pkg_name:&str, change_type:Option<&ChangeType>) -> Result<bool> {
+		let original_version = self
+			.versions
+			.get(pkg_name)
+			.context(format!("failed to find original version for {}", pkg_name))?;
 
 		Ok(match change_type {
 			Some(ChangeType::Major) => true,
@@ -211,10 +195,10 @@ impl<'a> Bump<'a> {
 	) -> Result<()> {
 		eprintln!("Bumping crate: {}", pkg_name);
 
-		let original_version = self.versions.get(pkg_name).context(format!(
-			"failed to find original version for {}",
-			pkg_name
-		))?;
+		let original_version = self
+			.versions
+			.get(pkg_name)
+			.context(format!("failed to find original version for {}", pkg_name))?;
 
 		let mut new_version = original_version.clone();
 
@@ -314,9 +298,7 @@ impl InternedGraph {
 		}) as _
 	}
 
-	fn node(&self, name:&str) -> usize {
-		self.ix.get_index_of(name).expect("unknown node")
-	}
+	fn node(&self, name:&str) -> usize { self.ix.get_index_of(name).expect("unknown node") }
 }
 
 fn get_data() -> Result<(VersionMap, InternedGraph)> {

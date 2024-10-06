@@ -30,12 +30,7 @@ use swc_core::{
 	ecma::{
 		minifier::{
 			js::{JsMinifyCommentOption, JsMinifyOptions},
-			option::{
-				MangleCache,
-				MinifyOptions,
-				SimpleMangleCache,
-				TopLevelOptions,
-			},
+			option::{MangleCache, MinifyOptions, SimpleMangleCache, TopLevelOptions},
 		},
 		parser::{EsSyntax, Syntax},
 		transforms::base::{fixer::fixer, hygiene::hygiene, resolver},
@@ -70,9 +65,7 @@ enum MinifyTarget {
 impl MinifyTarget {
 	fn to_file(&self, cm:Lrc<SourceMap>) -> Lrc<SourceFile> {
 		match self {
-			MinifyTarget::Single(code) => {
-				cm.new_source_file(FileName::Anon.into(), code.clone())
-			},
+			MinifyTarget::Single(code) => cm.new_source_file(FileName::Anon.into(), code.clone()),
 			MinifyTarget::Map(codes) => {
 				assert_eq!(
 					codes.len(),
@@ -82,10 +75,7 @@ impl MinifyTarget {
 
 				let (filename, code) = codes.iter().next().unwrap();
 
-				cm.new_source_file(
-					FileName::Real(filename.clone().into()).into(),
-					code.clone(),
-				)
+				cm.new_source_file(FileName::Real(filename.clone().into()).into(), code.clone())
 			},
 		}
 	}
@@ -109,10 +99,7 @@ fn do_work(
 			.map(|obj| -> Result<_, Error> {
 				Ok((
 					SourceMapsConfig::Bool(true),
-					obj.content
-						.as_ref()
-						.map(|s| s.to_sourcemap())
-						.transpose()?,
+					obj.content.as_ref().map(|s| s.to_sourcemap()).transpose()?,
 				))
 			})
 			.unwrap_as_option(|v| {
@@ -205,11 +192,7 @@ fn do_work(
 		let is_mangler_enabled = min_opts.mangle.is_some();
 
 		let module = {
-			let module = module.fold_with(&mut resolver(
-				unresolved_mark,
-				top_level_mark,
-				false,
-			));
+			let module = module.fold_with(&mut resolver(unresolved_mark, top_level_mark, false));
 
 			let mut module = swc_core::ecma::minifier::optimize(
 				module,
@@ -231,10 +214,12 @@ fn do_work(
 			module
 		};
 
-		let preserve_comments =
-			options.format.comments.clone().into_inner().unwrap_or(
-				BoolOr::Data(JsMinifyCommentOption::PreserveSomeComments),
-			);
+		let preserve_comments = options
+			.format
+			.comments
+			.clone()
+			.into_inner()
+			.unwrap_or(BoolOr::Data(JsMinifyCommentOption::PreserveSomeComments));
 		minify_file_comments(&comments, preserve_comments);
 
 		swc_compiler_base::print(
@@ -276,11 +261,7 @@ impl Task for MinifyTask {
 		do_work(input, options, self.extras.clone())
 	}
 
-	fn resolve(
-		&mut self,
-		_env:napi::Env,
-		output:Self::Output,
-	) -> napi::Result<Self::JsValue> {
+	fn resolve(&mut self, _env:napi::Env, output:Self::Output) -> napi::Result<Self::JsValue> {
 		Ok(output)
 	}
 }

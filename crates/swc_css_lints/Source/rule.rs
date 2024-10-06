@@ -39,11 +39,7 @@ where
 				.flat_map(|rule| {
 					let emitter = Capturing::default();
 					{
-						let handler = Handler::with_emitter(
-							true,
-							false,
-							Box::new(emitter.clone()),
-						);
+						let handler = Handler::with_emitter(true, false, Box::new(emitter.clone()));
 						HANDLER.set(&handler, || {
 							rule.lint_stylesheet(stylesheet);
 						});
@@ -68,15 +64,10 @@ struct Capturing {
 }
 
 impl Emitter for Capturing {
-	fn emit(&mut self, db:&DiagnosticBuilder<'_>) {
-		self.errors.lock().push((**db).clone());
-	}
+	fn emit(&mut self, db:&DiagnosticBuilder<'_>) { self.errors.lock().push((**db).clone()); }
 }
 
-pub(crate) fn visitor_rule<V>(
-	reaction:LintRuleReaction,
-	v:V,
-) -> Box<dyn LintRule>
+pub(crate) fn visitor_rule<V>(reaction:LintRuleReaction, v:V) -> Box<dyn LintRule>
 where
 	V: 'static + Send + Sync + Visit + Default + Debug, {
 	Box::new(VisitorRule(v, reaction))
@@ -117,14 +108,10 @@ where
 		HANDLER.with(|handler| {
 			match self.reaction {
 				LintRuleReaction::Error => {
-					handler
-						.struct_span_err(ast_node.span(), message.as_ref())
-						.emit()
+					handler.struct_span_err(ast_node.span(), message.as_ref()).emit()
 				},
 				LintRuleReaction::Warning => {
-					handler
-						.struct_span_warn(ast_node.span(), message.as_ref())
-						.emit()
+					handler.struct_span_warn(ast_node.span(), message.as_ref()).emit()
 				},
 				_ => {},
 			}
@@ -143,9 +130,6 @@ where
 	C: Debug + Clone + Serialize + Default,
 {
 	fn from(config:&RuleConfig<C>) -> Self {
-		Self {
-			reaction:config.get_rule_reaction(),
-			config:config.get_rule_config().clone(),
-		}
+		Self { reaction:config.get_rule_reaction(), config:config.get_rule_config().clone() }
 	}
 }

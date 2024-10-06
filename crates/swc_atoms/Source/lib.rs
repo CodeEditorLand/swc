@@ -35,9 +35,7 @@ pub struct Atom(hstr::Atom);
 #[cfg(feature = "arbitrary")]
 #[cfg_attr(docsrs, doc(cfg(feature = "arbitrary")))]
 impl<'a> arbitrary::Arbitrary<'a> for Atom {
-	fn arbitrary(
-		u:&mut arbitrary::Unstructured<'_>,
-	) -> arbitrary::Result<Self> {
+	fn arbitrary(u:&mut arbitrary::Unstructured<'_>) -> arbitrary::Result<Self> {
 		let sym = u.arbitrary::<String>()?;
 		if sym.is_empty() {
 			return Err(arbitrary::Error::NotEnoughData);
@@ -66,9 +64,7 @@ impl Atom {
 	}
 
 	#[inline]
-	pub fn to_ascii_lowercase(&self) -> Self {
-		Self(self.0.to_ascii_lowercase())
-	}
+	pub fn to_ascii_lowercase(&self) -> Self { Self(self.0.to_ascii_lowercase()) }
 
 	#[inline]
 	pub fn as_str(&self) -> &str { &self.0 }
@@ -118,27 +114,19 @@ impl AsRef<str> for Atom {
 }
 
 impl fmt::Debug for Atom {
-	fn fmt(&self, f:&mut Formatter<'_>) -> fmt::Result {
-		fmt::Debug::fmt(&**self, f)
-	}
+	fn fmt(&self, f:&mut Formatter<'_>) -> fmt::Result { fmt::Debug::fmt(&**self, f) }
 }
 
 impl Display for Atom {
-	fn fmt(&self, f:&mut Formatter<'_>) -> fmt::Result {
-		Display::fmt(&**self, f)
-	}
+	fn fmt(&self, f:&mut Formatter<'_>) -> fmt::Result { Display::fmt(&**self, f) }
 }
 
 impl PartialOrd for Atom {
-	fn partial_cmp(&self, other:&Self) -> Option<std::cmp::Ordering> {
-		Some(self.cmp(other))
-	}
+	fn partial_cmp(&self, other:&Self) -> Option<std::cmp::Ordering> { Some(self.cmp(other)) }
 }
 
 impl Ord for Atom {
-	fn cmp(&self, other:&Self) -> std::cmp::Ordering {
-		self.as_str().cmp(other.as_str())
-	}
+	fn cmp(&self, other:&Self) -> std::cmp::Ordering { self.as_str().cmp(other.as_str()) }
 }
 
 impl serde::ser::Serialize for Atom {
@@ -180,12 +168,7 @@ impl rkyv::Archive for Atom {
 	type Resolver = rkyv::string::StringResolver;
 
 	#[allow(clippy::unit_arg)]
-	unsafe fn resolve(
-		&self,
-		pos:usize,
-		resolver:Self::Resolver,
-		out:*mut Self::Archived,
-	) {
+	unsafe fn resolve(&self, pos:usize, resolver:Self::Resolver, out:*mut Self::Archived) {
 		rkyv::string::ArchivedString::resolve_from_str(self, pos, resolver, out)
 	}
 }
@@ -204,10 +187,7 @@ impl<D> rkyv::Deserialize<Atom, D> for rkyv::string::ArchivedString
 where
 	D: ?Sized + rkyv::Fallible,
 {
-	fn deserialize(
-		&self,
-		deserializer:&mut D,
-	) -> Result<Atom, <D as rkyv::Fallible>::Error> {
+	fn deserialize(&self, deserializer:&mut D) -> Result<Atom, <D as rkyv::Fallible>::Error> {
 		let s:String = self.deserialize(deserializer)?;
 
 		Ok(Atom::new(s))
@@ -227,9 +207,7 @@ pub struct AtomStore(hstr::AtomStore);
 
 impl AtomStore {
 	#[inline]
-	pub fn atom<'a>(&mut self, s:impl Into<Cow<'a, str>>) -> Atom {
-		Atom(self.0.atom(s))
-	}
+	pub fn atom<'a>(&mut self, s:impl Into<Cow<'a, str>>) -> Atom { Atom(self.0.atom(s)) }
 }
 
 /// A fast internally mutable cell for [AtomStore].

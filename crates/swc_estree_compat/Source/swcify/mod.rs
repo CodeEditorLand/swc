@@ -14,40 +14,36 @@ mod typescript;
 
 /// Used to convert a babel ast node to
 pub trait Swcify {
-    type Output: Debug + Send + Sync;
+	type Output: Debug + Send + Sync;
 
-    fn swcify(self, ctx: &Context) -> Self::Output;
+	fn swcify(self, ctx:&Context) -> Self::Output;
 }
 
 impl<T> Swcify for Vec<T>
 where
-    T: Swcify,
+	T: Swcify,
 {
-    type Output = Vec<T::Output>;
+	type Output = Vec<T::Output>;
 
-    fn swcify(self, ctx: &Context) -> Self::Output {
-        self.into_iter().map(|v| v.swcify(ctx)).collect()
-    }
+	fn swcify(self, ctx:&Context) -> Self::Output {
+		self.into_iter().map(|v| v.swcify(ctx)).collect()
+	}
 }
 
 impl<T> Swcify for Option<T>
 where
-    T: Swcify,
+	T: Swcify,
 {
-    type Output = Option<T::Output>;
+	type Output = Option<T::Output>;
 
-    fn swcify(self, ctx: &Context) -> Self::Output {
-        self.map(|v| v.swcify(ctx))
-    }
+	fn swcify(self, ctx:&Context) -> Self::Output { self.map(|v| v.swcify(ctx)) }
 }
 
 impl<T> Swcify for Box<T>
 where
-    T: Swcify,
+	T: Swcify,
 {
-    type Output = T::Output;
+	type Output = T::Output;
 
-    fn swcify(self, ctx: &Context) -> Self::Output {
-        (*self).swcify(ctx)
-    }
+	fn swcify(self, ctx:&Context) -> Self::Output { (*self).swcify(ctx) }
 }

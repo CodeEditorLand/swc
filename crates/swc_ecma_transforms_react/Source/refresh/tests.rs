@@ -5,33 +5,27 @@ use swc_ecma_transforms_testing::{test, Tester};
 use super::*;
 use crate::jsx;
 
-fn tr(t: &mut Tester) -> impl Fold {
-    let unresolved_mark = Mark::new();
-    let top_level_mark = Mark::new();
+fn tr(t:&mut Tester) -> impl Fold {
+	let unresolved_mark = Mark::new();
+	let top_level_mark = Mark::new();
 
-    chain!(
-        resolver(unresolved_mark, top_level_mark, false),
-        refresh(
-            true,
-            Some(RefreshOptions {
-                emit_full_signatures: true,
-                ..Default::default()
-            }),
-            t.cm.clone(),
-            Some(t.comments.clone()),
-            top_level_mark
-        )
-    )
+	chain!(
+		resolver(unresolved_mark, top_level_mark, false),
+		refresh(
+			true,
+			Some(RefreshOptions { emit_full_signatures:true, ..Default::default() }),
+			t.cm.clone(),
+			Some(t.comments.clone()),
+			top_level_mark
+		)
+	)
 }
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    normal_function,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	normal_function,
+	r#"
     function Hello() {
         function handleClick() {}
         return <h1 onClick={handleClick}>Hi</h1>;
@@ -43,13 +37,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    export_function,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	export_function,
+	r#"
     export function Hello() {
       function handleClick() {}
       return <h1 onClick={handleClick}>Hi</h1>;
@@ -68,13 +59,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    export_named_arrow_function,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	export_named_arrow_function,
+	r#"
     export const Hello = () => {
       function handleClick() {}
       return <h1 onClick={handleClick}>Hi</h1>;
@@ -89,14 +77,11 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    reassigned_function,
-    // TODO: in the future, we may *also* register the wrapped one.
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	reassigned_function,
+	// TODO: in the future, we may *also* register the wrapped one.
+	r#"
     function Hello() {
       return <h1>Hi</h1>;
     }
@@ -105,13 +90,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    pascal_case_only,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	pascal_case_only,
+	r#"
     function hello() {
       return 2 * 2;
     }
@@ -119,13 +101,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    anonymous_function_expressions_declaration,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	anonymous_function_expressions_declaration,
+	r#"
     let Hello = function() {
       function handleClick() {}
       return <h1 onClick={handleClick}>Hi</h1>;
@@ -140,13 +119,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    named_arrow_function_expressions_declaration,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	named_arrow_function_expressions_declaration,
+	r#"
     let Hello = () => {
       const handleClick = () => {};
       return <h1 onClick={handleClick}>Hi</h1>;
@@ -160,15 +136,12 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    ignore_hoc,
-    // TODO: we might want to handle HOCs at usage site, however.
-    // TODO: it would be nice if we could always avoid registering
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	ignore_hoc,
+	// TODO: we might want to handle HOCs at usage site, however.
+	// TODO: it would be nice if we could always avoid registering
+	r#"
     let connect = () => {
       function Comp() {
         const handleClick = () => {};
@@ -186,13 +159,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    ignore_complex_definition,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	ignore_complex_definition,
+	r#"
     let A = foo ? () => {
       return <h1>Hi</h1>;
     } : null
@@ -209,23 +179,17 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    ignore_unnamed_function_declarations,
-    r#"export default function() {}"#
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	ignore_unnamed_function_declarations,
+	r#"export default function() {}"#
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    register_likely_hoc_1,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	register_likely_hoc_1,
+	r#"
     const A = forwardRef(function() {
       return <h1>Foo</h1>;
     });
@@ -239,13 +203,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    register_likely_hoc_2,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	register_likely_hoc_2,
+	r#"
     export default React.memo(forwardRef(function (props, ref) {
       return <h1>Foo</h1>;
     }));
@@ -253,13 +214,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    register_likely_hoc_3,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	register_likely_hoc_3,
+	r#"
     export default React.memo(forwardRef(function Named(props, ref) {
       return <h1>Foo</h1>;
     }));
@@ -267,13 +225,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    register_likely_hoc_4,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	register_likely_hoc_4,
+	r#"
     function Foo() {
       return <div>123</div>
     }
@@ -283,13 +238,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    ignore_not_hoc,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	ignore_not_hoc,
+	r#"
     const throttledAlert = throttle(function() {
       alert('Hi');
     });
@@ -301,13 +253,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    register_identifiers_used_in_jsx,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	register_identifiers_used_in_jsx,
+	r#"
     import A from './A';
     import Store from './Store';
     Store.subscribe();
@@ -336,13 +285,10 @@ test!(
 // A doesn't get registered because it's not declared locally.
 // Alias doesn't get registered because its definition is just an identifier.
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    register_identifiers_used_in_create_element,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	register_identifiers_used_in_create_element,
+	r#"
     import A from './A';
     import Store from './Store';
     Store.subscribe();
@@ -376,14 +322,11 @@ test!(
 );
 
 test!(
-    ignore,
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    register_identifiers_used_in_jsx_false_positive,
-    r#"
+	ignore,
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	register_identifiers_used_in_jsx_false_positive,
+	r#"
   const A = foo() {}
   const B = () => {
     const A = () => null
@@ -393,13 +336,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    register_capitalized_identifiers_in_hoc,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	register_capitalized_identifiers_in_hoc,
+	r#"
     function Foo() {
       return <h1>Hi</h1>;
     }
@@ -410,13 +350,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    register_fn_with_hooks,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	register_fn_with_hooks,
+	r#"
     export default function App() {
       const [foo, setFoo] = useState(0);
       React.useEffect(() => {});
@@ -426,13 +363,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    register_fn_with_hooks_2,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	register_fn_with_hooks_2,
+	r#"
     export function Foo() {
       const [foo, setFoo] = useState(0);
       React.useEffect(() => {});
@@ -451,13 +385,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    register_fn_expr_with_hooks,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	register_fn_expr_with_hooks,
+	r#"
     export const A = React.memo(React.forwardRef((props, ref) => {
       const [foo, setFoo] = useState(0);
       React.useEffect(() => {});
@@ -480,13 +411,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    register_fn_expr_with_hooks_2,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	register_fn_expr_with_hooks_2,
+	r#"
   const A = function () {
     const [foo, setFoo] = useState(0);
   }, B = () => {
@@ -496,13 +424,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    register_implicit_arrow_returns,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	register_implicit_arrow_returns,
+	r#"
     export default () => useContext(X);
     export const Foo = () => useContext(X);
     module.exports = () => useContext(X);
@@ -513,13 +438,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    hook_signatures_should_include_custom_hook,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	hook_signatures_should_include_custom_hook,
+	r#"
     function useFancyState() {
       const [foo, setFoo] = React.useState(0);
       useFancyEffect();
@@ -536,37 +458,34 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Typescript(::swc_ecma_parser::TsSyntax {
-        tsx: true,
-        ..Default::default()
-    }),
-    |t| {
-        let unresolved_mark = Mark::new();
-        let top_level_mark = Mark::new();
+	::swc_ecma_parser::Syntax::Typescript(::swc_ecma_parser::TsSyntax {
+		tsx:true,
+		..Default::default()
+	}),
+	|t| {
+		let unresolved_mark = Mark::new();
+		let top_level_mark = Mark::new();
 
-        chain!(
-            resolver(unresolved_mark, top_level_mark, false),
-            refresh(
-                true,
-                Some(RefreshOptions {
-                    emit_full_signatures: true,
-                    ..Default::default()
-                }),
-                t.cm.clone(),
-                Some(t.comments.clone()),
-                top_level_mark
-            ),
-            jsx(
-                t.cm.clone(),
-                Some(t.comments.clone()),
-                Default::default(),
-                top_level_mark,
-                unresolved_mark
-            ),
-        )
-    },
-    include_hook_signature_in_commonjs,
-    r#"
+		chain!(
+			resolver(unresolved_mark, top_level_mark, false),
+			refresh(
+				true,
+				Some(RefreshOptions { emit_full_signatures:true, ..Default::default() }),
+				t.cm.clone(),
+				Some(t.comments.clone()),
+				top_level_mark
+			),
+			jsx(
+				t.cm.clone(),
+				Some(t.comments.clone()),
+				Default::default(),
+				top_level_mark,
+				unresolved_mark
+			),
+		)
+	},
+	include_hook_signature_in_commonjs,
+	r#"
     import {useFancyState} from './hooks';
     import useFoo from './foo'
     export default function App() {
@@ -578,13 +497,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    gen_valid_hook_signatures_for_exotic_hooks,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	gen_valid_hook_signatures_for_exotic_hooks,
+	r#"
     import FancyHook from 'fancy';
     export default function App() {
       function useFancyState() {
@@ -602,13 +518,13 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Typescript(::swc_ecma_parser::TsSyntax {
-        tsx: true,
-        ..Default::default()
-    }),
-    tr,
-    dont_consider_require_as_hoc,
-    r#"
+	::swc_ecma_parser::Syntax::Typescript(::swc_ecma_parser::TsSyntax {
+		tsx:true,
+		..Default::default()
+	}),
+	tr,
+	dont_consider_require_as_hoc,
+	r#"
     const A = require('A');
     const B = foo ? require('X') : require('Y');
     const C = requireCond(gk, 'C');
@@ -629,13 +545,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    should_refresh_when_has_comment,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	should_refresh_when_has_comment,
+	r#"
     export function Foo() {
       const [foo, setFoo] = useState(0);
       React.useEffect(() => {});
@@ -652,13 +565,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    dont_consider_iife_as_hoc,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	dont_consider_iife_as_hoc,
+	r#"
     while (item) {
       (item => {
         useFoo();
@@ -668,31 +578,28 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    |t| {
-        let unresolved_mark = Mark::new();
-        let top_level_mark = Mark::new();
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	|t| {
+		let unresolved_mark = Mark::new();
+		let top_level_mark = Mark::new();
 
-        chain!(
-            resolver(unresolved_mark, top_level_mark, false),
-            refresh(
-                true,
-                Some(RefreshOptions {
-                    refresh_reg: "import_meta_refreshReg".to_string(),
-                    refresh_sig: "import_meta_refreshSig".to_string(),
-                    emit_full_signatures: true,
-                }),
-                t.cm.clone(),
-                Some(t.comments.clone()),
-                top_level_mark
-            )
-        )
-    },
-    custom_identifier,
-    r#"
+		chain!(
+			resolver(unresolved_mark, top_level_mark, false),
+			refresh(
+				true,
+				Some(RefreshOptions {
+					refresh_reg:"import_meta_refreshReg".to_string(),
+					refresh_sig:"import_meta_refreshSig".to_string(),
+					emit_full_signatures:true,
+				}),
+				t.cm.clone(),
+				Some(t.comments.clone()),
+				top_level_mark
+			)
+		)
+	},
+	custom_identifier,
+	r#"
     export default function Bar () {
       useContext(X)
       return <Foo />
@@ -701,13 +608,13 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Typescript(::swc_ecma_parser::TsSyntax {
-        tsx: true,
-        ..Default::default()
-    }),
-    tr,
-    issue_1865,
-    r#"
+	::swc_ecma_parser::Syntax::Typescript(::swc_ecma_parser::TsSyntax {
+		tsx:true,
+		..Default::default()
+	}),
+	tr,
+	issue_1865,
+	r#"
     function useHooks() {
       return useMemo(() => 1);
     }
@@ -717,10 +624,10 @@ test!(
 );
 
 test!(
-    Default::default(),
-    tr,
-    next_001,
-    "
+	Default::default(),
+	tr,
+	next_001,
+	"
     import dynamic from 'next/dynamic'
 
     export const Comp = dynamic(() => import('../Content'), { ssr: false })
@@ -728,10 +635,10 @@ test!(
 );
 
 test!(
-    Default::default(),
-    tr,
-    issue_2261,
-    "
+	Default::default(),
+	tr,
+	issue_2261,
+	"
     export function App() {
       console.log(useState())
 
@@ -741,13 +648,10 @@ test!(
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    nested_hook,
-    r#"
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	nested_hook,
+	r#"
 const a = (a) => {
     const useE = useEffect;
     return function useFoo() {
@@ -759,13 +663,10 @@ const a = (a) => {
 );
 
 test!(
-    ::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax {
-        jsx: true,
-        ..Default::default()
-    }),
-    tr,
-    issue_6022,
-    r#"/* @refresh reset */
+	::swc_ecma_parser::Syntax::Es(::swc_ecma_parser::EsSyntax { jsx:true, ..Default::default() }),
+	tr,
+	issue_6022,
+	r#"/* @refresh reset */
     import { useState } from 'react';
 
     function Counter() {

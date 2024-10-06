@@ -74,12 +74,7 @@ fn print_bundles(cm:Lrc<SourceMap>, modules:Vec<Bundle>, minify:bool) {
 	}
 }
 
-fn do_test(
-	_entry:&Path,
-	entries:HashMap<String, FileName>,
-	inline:bool,
-	minify:bool,
-) {
+fn do_test(_entry:&Path, entries:HashMap<String, FileName>, inline:bool, minify:bool) {
 	testing::run_test2(false, |cm, _| {
 		let start = Instant::now();
 
@@ -90,11 +85,7 @@ fn do_test(
 			Loader { cm:cm.clone() },
 			CachingResolver::new(
 				4096,
-				NodeModulesResolver::new(
-					TargetEnv::Node,
-					Default::default(),
-					true,
-				),
+				NodeModulesResolver::new(TargetEnv::Node, Default::default(), true),
 			),
 			swc_bundler::Config {
 				require:false,
@@ -108,8 +99,7 @@ fn do_test(
 			Box::new(Hook),
 		);
 
-		let mut modules =
-			bundler.bundle(entries).map_err(|err| println!("{:?}", err))?;
+		let mut modules = bundler.bundle(entries).map_err(|err| println!("{:?}", err))?;
 		println!("Bundled as {} modules", modules.len());
 
 		#[cfg(feature = "concurrent")]
@@ -137,9 +127,7 @@ fn do_test(
 							None,
 							&MinifyOptions {
 								compress:Some(CompressOptions {
-									top_level:Some(TopLevelOptions {
-										functions:true,
-									}),
+									top_level:Some(TopLevelOptions { functions:true }),
 									..Default::default()
 								}),
 								mangle:Some(MangleOptions {
@@ -186,8 +174,7 @@ fn main() -> Result<(), Error> {
 
 	let main_file = env::args().nth(1).unwrap();
 	let mut entries = HashMap::default();
-	entries
-		.insert("main".to_string(), FileName::Real(main_file.clone().into()));
+	entries.insert("main".to_string(), FileName::Real(main_file.clone().into()));
 
 	let start = Instant::now();
 	do_test(Path::new(&main_file), entries, false, minify);
@@ -210,11 +197,7 @@ impl swc_bundler::Hook for Hook {
 		Ok(vec![
 			KeyValueProp {
 				key:PropName::Ident(IdentName::new("url".into(), span)),
-				value:Box::new(Expr::Lit(Lit::Str(Str {
-					span,
-					raw:None,
-					value:file_name.into(),
-				}))),
+				value:Box::new(Expr::Lit(Lit::Str(Str { span, raw:None, value:file_name.into() }))),
 			},
 			KeyValueProp {
 				key:PropName::Ident(IdentName::new("main".into(), span)),
@@ -225,10 +208,7 @@ impl swc_bundler::Hook for Hook {
 							span,
 							kind:MetaPropKind::ImportMeta,
 						})),
-						prop:MemberProp::Ident(IdentName::new(
-							"main".into(),
-							span,
-						)),
+						prop:MemberProp::Ident(IdentName::new("main".into(), span)),
 					})
 				} else {
 					Expr::Lit(Lit::Bool(Bool { span, value:false }))
@@ -257,12 +237,8 @@ impl Load for Loader {
 			&mut Vec::new(),
 		)
 		.unwrap_or_else(|err| {
-			let handler = Handler::with_tty_emitter(
-				ColorConfig::Always,
-				false,
-				false,
-				Some(self.cm.clone()),
-			);
+			let handler =
+				Handler::with_tty_emitter(ColorConfig::Always, false, false, Some(self.cm.clone()));
 			err.into_diagnostic(&handler).emit();
 			panic!("failed to parse")
 		});

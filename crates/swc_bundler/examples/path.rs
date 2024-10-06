@@ -1,24 +1,8 @@
 use std::{collections::HashMap, io::stdout};
 
 use anyhow::Error;
-use swc_bundler::{
-	BundleKind,
-	Bundler,
-	Config,
-	Hook,
-	Load,
-	ModuleData,
-	ModuleRecord,
-	Resolve,
-};
-use swc_common::{
-	sync::Lrc,
-	FileName,
-	FilePathMapping,
-	Globals,
-	SourceMap,
-	Span,
-};
+use swc_bundler::{BundleKind, Bundler, Config, Hook, Load, ModuleData, ModuleRecord, Resolve};
+use swc_common::{sync::Lrc, FileName, FilePathMapping, Globals, SourceMap, Span};
 use swc_ecma_ast::KeyValueProp;
 use swc_ecma_codegen::{text_writer::JsWriter, Emitter};
 use swc_ecma_loader::resolve::Resolution;
@@ -46,15 +30,10 @@ fn main() {
 	assert_eq!(
 		bundles.len(),
 		1,
-		"There's no conditional / dynamic imports and we provided only one \
-		 entry"
+		"There's no conditional / dynamic imports and we provided only one entry"
 	);
 	let bundle = bundles.pop().unwrap();
-	assert_eq!(
-		bundle.kind,
-		BundleKind::Named { name:"main".into() },
-		"We provided it"
-	);
+	assert_eq!(bundle.kind, BundleKind::Named { name:"main".into() }, "We provided it");
 
 	let wr = stdout();
 	let mut emitter = Emitter {
@@ -95,11 +74,7 @@ impl Load for PathLoader {
 struct PathResolver;
 
 impl Resolve for PathResolver {
-	fn resolve(
-		&self,
-		base:&FileName,
-		module_specifier:&str,
-	) -> Result<Resolution, Error> {
+	fn resolve(&self, base:&FileName, module_specifier:&str) -> Result<Resolution, Error> {
 		assert!(
 			module_specifier.starts_with('.'),
 			"We are not using node_modules within this example"
@@ -112,10 +87,7 @@ impl Resolve for PathResolver {
 
 		Ok(Resolution {
 			filename:FileName::Real(
-				base.parent()
-					.unwrap()
-					.join(module_specifier)
-					.with_extension("js"),
+				base.parent().unwrap().join(module_specifier).with_extension("js"),
 			),
 			slug:None,
 		})
@@ -125,11 +97,7 @@ impl Resolve for PathResolver {
 struct Noop;
 
 impl Hook for Noop {
-	fn get_import_meta_props(
-		&self,
-		_:Span,
-		_:&ModuleRecord,
-	) -> Result<Vec<KeyValueProp>, Error> {
+	fn get_import_meta_props(&self, _:Span, _:&ModuleRecord) -> Result<Vec<KeyValueProp>, Error> {
 		unimplemented!()
 	}
 }

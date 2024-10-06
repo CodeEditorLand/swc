@@ -22,9 +22,8 @@ impl TryFrom<String> for NamePattern {
 	type Error = swc_cached::regex::Error;
 
 	fn try_from(pattern:String) -> Result<Self, Self::Error> {
-		if let Some(pattern) = pattern
-			.strip_prefix('/')
-			.and_then(|pattern| pattern.strip_suffix('/'))
+		if let Some(pattern) =
+			pattern.strip_prefix('/').and_then(|pattern| pattern.strip_suffix('/'))
 		{
 			CachedRegex::new(pattern).map(Self::Regex)
 		} else {

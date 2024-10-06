@@ -3,7 +3,14 @@
 #![deny(unused)]
 
 pub use swc_ecma_transforms_base::{
-    assumptions::Assumptions, feature, fixer, helpers, hygiene, pass, perf, resolver,
+	assumptions::Assumptions,
+	feature,
+	fixer,
+	helpers,
+	hygiene,
+	pass,
+	perf,
+	resolver,
 };
 // TODO: May remove these reexports once swc_core directly reexports all
 #[cfg(feature = "swc_ecma_transforms_compat")]

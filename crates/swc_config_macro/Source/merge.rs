@@ -43,12 +43,7 @@ fn call_merge_for_fields(obj:&dyn ToTokens, fields:&Fields) -> Vec<Stmt> {
 				.iter()
 				.enumerate()
 				.map(|(idx, f)| call_merge(obj, idx, f))
-				.map(|expr| {
-					Stmt::Expr(
-						expr,
-						Some(Token![;](fs.brace_token.span.join())),
-					)
-				})
+				.map(|expr| Stmt::Expr(expr, Some(Token![;](fs.brace_token.span.join()))))
 				.collect()
 		},
 		Fields::Unnamed(fs) => {
@@ -56,12 +51,7 @@ fn call_merge_for_fields(obj:&dyn ToTokens, fields:&Fields) -> Vec<Stmt> {
 				.iter()
 				.enumerate()
 				.map(|(idx, f)| call_merge(obj, idx, f))
-				.map(|expr| {
-					Stmt::Expr(
-						expr,
-						Some(Token![;](fs.paren_token.span.join())),
-					)
-				})
+				.map(|expr| Stmt::Expr(expr, Some(Token![;](fs.paren_token.span.join()))))
 				.collect()
 		},
 		Fields::Unit => {

@@ -35,15 +35,9 @@ fn main() -> Result<()> {
 	Ok(())
 }
 
-fn run_visitor_codegen(
-	input_dir:&Path,
-	output:&Path,
-	excludes:&[String],
-) -> Result<()> {
-	let crate_name = Ident::new(
-		input_dir.file_name().unwrap().to_str().unwrap(),
-		Span::call_site(),
-	);
+fn run_visitor_codegen(input_dir:&Path, output:&Path, excludes:&[String]) -> Result<()> {
+	let crate_name =
+		Ident::new(input_dir.file_name().unwrap().to_str().unwrap(), Span::call_site());
 
 	let input_dir = input_dir
 		.canonicalize()
@@ -59,14 +53,12 @@ fn run_visitor_codegen(
 	let inputs = input_files
 		.iter()
 		.map(|file| {
-			parse_rust_file(file)
-				.with_context(|| format!("failed to parse file: {:?}", file))
+			parse_rust_file(file).with_context(|| format!("failed to parse file: {:?}", file))
 		})
 		.map(|res| res.map(qualify_types))
 		.collect::<Result<Vec<_>>>()?;
 
-	let mut all_type_defs =
-		inputs.iter().flat_map(get_type_defs).collect::<Vec<_>>();
+	let mut all_type_defs = inputs.iter().flat_map(get_type_defs).collect::<Vec<_>>();
 	all_type_defs.retain(|type_def| {
 		let ident = match type_def {
 			Item::Struct(data) => &data.ident,
@@ -91,8 +83,7 @@ fn run_visitor_codegen(
 
 	let original = std::fs::read_to_string(output).ok();
 
-	std::fs::write(output, output_content)
-		.context("failed to write the output file")?;
+	std::fs::write(output, output_content).context("failed to write the output file")?;
 
 	eprintln!("Generated visitor code in file: {:?}", output);
 
@@ -100,13 +91,13 @@ fn run_visitor_codegen(
 
 	if std::env::var("CI").is_ok_and(|v| v != "1") {
 		if let Some(original) = original {
-			let output = std::fs::read_to_string(output)
-				.context("failed to read the output file")?;
+			let output =
+				std::fs::read_to_string(output).context("failed to read the output file")?;
 
 			if original != output {
 				bail!(
-					"The generated code is not up to date. Please run `cargo \
-					 codegen` and commit the changes."
+					"The generated code is not up to date. Please run `cargo codegen` and commit \
+					 the changes."
 				);
 			}
 		}
@@ -170,10 +161,8 @@ fn get_type_defs(file:&syn::File) -> Vec<&Item> {
 }
 
 fn parse_rust_file(file:&Path) -> Result<syn::File> {
-	let content = std::fs::read_to_string(file)
-		.context("failed to read the input file")?;
-	let syntax = syn::parse_file(&content)
-		.context("failed to parse the input file using syn")?;
+	let content = std::fs::read_to_string(file).context("failed to read the input file")?;
+	let syntax = syn::parse_file(&content).context("failed to parse the input file using syn")?;
 	Ok(syntax)
 }
 

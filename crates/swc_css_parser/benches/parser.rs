@@ -1,12 +1,6 @@
 extern crate swc_malloc;
 
-use codspeed_criterion_compat::{
-	black_box,
-	criterion_group,
-	criterion_main,
-	Bencher,
-	Criterion,
-};
+use codspeed_criterion_compat::{black_box, criterion_group, criterion_main, Bencher, Criterion};
 use swc_common::{input::StringInput, FileName};
 use swc_css_parser::{lexer::Lexer, parser::Parser};
 
@@ -16,11 +10,7 @@ fn bench_stylesheet(b:&mut Bencher, src:&'static str) {
 
 		b.iter(|| {
 			let _ = black_box({
-				let lexer = Lexer::new(
-					StringInput::from(&*fm),
-					None,
-					Default::default(),
-				);
+				let lexer = Lexer::new(StringInput::from(&*fm), None, Default::default());
 				let mut parser = Parser::new(lexer, Default::default());
 
 				parser.parse_all()

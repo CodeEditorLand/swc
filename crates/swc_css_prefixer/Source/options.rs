@@ -10,6 +10,4 @@ pub struct Options {
 	pub env:Option<Targets>,
 }
 
-fn default_targets() -> Option<Targets> {
-	Some(Targets::Query(Query::Single("".into())))
-}
+fn default_targets() -> Option<Targets> { Some(Targets::Query(Query::Single("".into()))) }

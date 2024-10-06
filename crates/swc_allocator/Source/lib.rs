@@ -29,12 +29,7 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(
 	feature = "nightly",
-	feature(
-		allocator_api,
-		fundamental,
-		with_negative_coherence,
-		box_into_inner
-	)
+	feature(allocator_api, fundamental, with_negative_coherence, box_into_inner)
 )]
 #![deny(missing_docs)]
 #![allow(clippy::derivable_impls)]

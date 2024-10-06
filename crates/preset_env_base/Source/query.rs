@@ -37,9 +37,7 @@ pub enum QueryOrVersion {
 	Version(Version),
 }
 
-#[derive(
-	Debug, Clone, Deserialize, FromVariant, Eq, PartialEq, PartialOrd, Ord, Hash,
-)]
+#[derive(Debug, Clone, Deserialize, FromVariant, Eq, PartialEq, PartialOrd, Ord, Hash)]
 #[serde(untagged)]
 pub enum Query {
 	Single(String),
@@ -68,8 +66,8 @@ impl Query {
 				)
 			})?;
 
-			let versions = BrowserData::parse_versions(distribs)
-				.expect("failed to parse browser version");
+			let versions =
+				BrowserData::parse_versions(distribs).expect("failed to parse browser version");
 
 			Ok(versions)
 		}
@@ -109,9 +107,7 @@ pub fn targets_to_versions(v:Option<Targets>) -> Result<Versions, Error> {
 		Some(Targets::HashMap(mut map)) => {
 			let q = map.remove("browsers").map(|q| {
 				match q {
-					QueryOrVersion::Query(q) => {
-						q.exec().expect("failed to run query")
-					},
+					QueryOrVersion::Query(q) => q.exec().expect("failed to run query"),
 					_ => unreachable!(),
 				}
 			});
@@ -159,9 +155,6 @@ mod tests {
 	#[test]
 	fn test_empty() {
 		let res = Query::Single("".into()).exec().unwrap();
-		assert!(
-			!res.is_any_target(),
-			"empty query should return non-empty result"
-		);
+		assert!(!res.is_any_target(), "empty query should return non-empty result");
 	}
 }

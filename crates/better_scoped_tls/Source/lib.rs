@@ -63,8 +63,7 @@ where
 		if !self.inner.is_set() {
 			// Override panic message
 			panic!(
-				"You should perform this operation in the closure passed to \
-				 `set` of {}::{}",
+				"You should perform this operation in the closure passed to `set` of {}::{}",
 				self.module_path, self.name
 			)
 		}
@@ -86,8 +85,8 @@ mod tests {
 
 	#[cfg(debug_assertions)]
 	#[test]
-	#[should_panic = "You should perform this operation in the closure passed \
-	                  to `set` of better_scoped_tls::tests::TESTTLS"]
+	#[should_panic = "You should perform this operation in the closure passed to `set` of \
+	                  better_scoped_tls::tests::TESTTLS"]
 
 	fn panic_on_with() {
 		TESTTLS.with(|s| {

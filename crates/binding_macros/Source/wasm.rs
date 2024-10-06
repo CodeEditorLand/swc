@@ -76,10 +76,7 @@ pub fn compiler() -> Arc<Compiler> {
 }
 
 #[doc(hidden)]
-pub fn convert_err(
-	err:Error,
-	error_format:Option<ErrorFormat>,
-) -> wasm_bindgen::prelude::JsValue {
+pub fn convert_err(err:Error, error_format:Option<ErrorFormat>) -> wasm_bindgen::prelude::JsValue {
 	error_format.unwrap_or(ErrorFormat::Normal).format(&err).into()
 }
 

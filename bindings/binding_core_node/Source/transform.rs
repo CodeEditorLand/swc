@@ -47,14 +47,12 @@ impl Task for TransformTask {
 
 	#[instrument(level = "trace", skip_all)]
 	fn compute(&mut self) -> napi::Result<Self::Output> {
-		let mut options:Options =
-			serde_json::from_slice(self.options.as_ref())?;
+		let mut options:Options = serde_json::from_slice(self.options.as_ref())?;
 		if !options.filename.is_empty() {
 			options.config.adjust(Path::new(&options.filename));
 		}
 
-		let error_format =
-			options.experimental.error_format.unwrap_or_default();
+		let error_format = options.experimental.error_format.unwrap_or_default();
 
 		try_with(
 			self.c.cm.clone(),
@@ -64,18 +62,14 @@ impl Task for TransformTask {
 				self.c.run(|| {
 					match &self.input {
 						Input::Program(ref s) => {
-							let program:Program = deserialize_json(s)
-								.expect("failed to deserialize Program");
+							let program:Program =
+								deserialize_json(s).expect("failed to deserialize Program");
 							// TODO: Source map
 							self.c.process_js(handler, program, &options)
 						},
 
 						Input::File(ref path) => {
-							let fm = self
-								.c
-								.cm
-								.load_file(path)
-								.context("failed to load file")?;
+							let fm = self.c.cm.load_file(path).context("failed to load file")?;
 							self.c.process_js_file(fm, handler, &options)
 						},
 
@@ -84,10 +78,7 @@ impl Task for TransformTask {
 								if options.filename.is_empty() {
 									FileName::Anon.into()
 								} else {
-									FileName::Real(
-										options.filename.clone().into(),
-									)
-									.into()
+									FileName::Real(options.filename.clone().into()).into()
 								},
 								src.to_string(),
 							);
@@ -101,11 +92,7 @@ impl Task for TransformTask {
 		.convert_err()
 	}
 
-	fn resolve(
-		&mut self,
-		_env:Env,
-		result:Self::Output,
-	) -> napi::Result<Self::JsValue> {
+	fn resolve(&mut self, _env:Env, result:Self::Output) -> napi::Result<Self::JsValue> {
 		Ok(result)
 	}
 
@@ -127,8 +114,7 @@ pub fn transform(
 
 	let c = get_compiler();
 
-	let input =
-		if is_module { Input::Program(src) } else { Input::Source { src } };
+	let input = if is_module { Input::Program(src) } else { Input::Source { src } };
 
 	let task = TransformTask { c, input, options:options.into_ref()? };
 	Ok(AsyncTask::with_optional_signal(task, signal))
@@ -136,11 +122,7 @@ pub fn transform(
 
 #[napi]
 #[instrument(level = "trace", skip_all)]
-pub fn transform_sync(
-	s:String,
-	is_module:bool,
-	opts:Buffer,
-) -> napi::Result<TransformOutput> {
+pub fn transform_sync(s:String, is_module:bool, opts:Buffer) -> napi::Result<TransformOutput> {
 	crate::util::init_default_trace_subscriber();
 
 	let c = get_compiler();
@@ -160,16 +142,15 @@ pub fn transform_sync(
 		|handler| {
 			c.run(|| {
 				if is_module {
-					let program:Program = deserialize_json(s.as_str())
-						.context("failed to deserialize Program")?;
+					let program:Program =
+						deserialize_json(s.as_str()).context("failed to deserialize Program")?;
 					c.process_js(handler, program, &options)
 				} else {
 					let fm = c.cm.new_source_file(
 						if options.filename.is_empty() {
 							FileName::Anon.into()
 						} else {
-							FileName::Real(options.filename.clone().into())
-								.into()
+							FileName::Real(options.filename.clone().into()).into()
 						},
 						s,
 					);
@@ -194,20 +175,12 @@ pub fn transform_file(
 	let c = get_compiler();
 
 	let path = clean(&src);
-	let task = TransformTask {
-		c,
-		input:Input::File(path),
-		options:options.into_ref()?,
-	};
+	let task = TransformTask { c, input:Input::File(path), options:options.into_ref()? };
 	Ok(AsyncTask::with_optional_signal(task, signal))
 }
 
 #[napi]
-pub fn transform_file_sync(
-	s:String,
-	is_module:bool,
-	opts:Buffer,
-) -> napi::Result<TransformOutput> {
+pub fn transform_file_sync(s:String, is_module:bool, opts:Buffer) -> napi::Result<TransformOutput> {
 	crate::util::init_default_trace_subscriber();
 
 	let c = get_compiler();
@@ -227,13 +200,11 @@ pub fn transform_file_sync(
 		|handler| {
 			c.run(|| {
 				if is_module {
-					let program:Program = deserialize_json(s.as_str())
-						.context("failed to deserialize Program")?;
+					let program:Program =
+						deserialize_json(s.as_str()).context("failed to deserialize Program")?;
 					c.process_js(handler, program, &options)
 				} else {
-					let fm =
-						c.cm.load_file(Path::new(&s))
-							.expect("failed to load file");
+					let fm = c.cm.load_file(Path::new(&s)).expect("failed to load file");
 					c.process_js_file(fm, handler, &options)
 				}
 			})

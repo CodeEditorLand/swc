@@ -1,10 +1,5 @@
 use ast_node::ast_node;
-use codspeed_criterion_compat::{
-	black_box,
-	criterion_group,
-	criterion_main,
-	Criterion,
-};
+use codspeed_criterion_compat::{black_box, criterion_group, criterion_main, Criterion};
 use serde::{Deserialize, Serialize};
 use swc_common::{Span, DUMMY_SP};
 
@@ -48,10 +43,7 @@ pub enum AstNode {
 }
 
 fn bench_serde(c:&mut Criterion) {
-	let src = Serde::String(SerdeStr {
-		span:DUMMY_SP,
-		value:String::from("perf-diff"),
-	});
+	let src = Serde::String(SerdeStr { span:DUMMY_SP, value:String::from("perf-diff") });
 
 	c.bench_function("serialization of serde", |b| {
 		b.iter(|| black_box(serde_json::to_string(&src).unwrap()));

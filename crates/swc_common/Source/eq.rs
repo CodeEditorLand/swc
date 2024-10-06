@@ -26,8 +26,7 @@ where
 	T: EqIgnoreSpan,
 {
 	fn eq_ignore_span(&self, other:&Self) -> bool {
-		self.len() == other.len()
-			&& self.iter().zip(other.iter()).all(|(a, b)| a.eq_ignore_span(b))
+		self.len() == other.len() && self.iter().zip(other.iter()).all(|(a, b)| a.eq_ignore_span(b))
 	}
 }
 
@@ -49,8 +48,7 @@ where
 	T: EqIgnoreSpan,
 {
 	fn eq_ignore_span(&self, other:&Self) -> bool {
-		self.len() == other.len()
-			&& self.iter().zip(other.iter()).all(|(a, b)| a.eq_ignore_span(b))
+		self.len() == other.len() && self.iter().zip(other.iter()).all(|(a, b)| a.eq_ignore_span(b))
 	}
 }
 
@@ -61,10 +59,7 @@ nightly_only!(
 	{
 		fn eq_ignore_span(&self, other:&Self) -> bool {
 			self.len() == other.len()
-				&& self
-					.iter()
-					.zip(other.iter())
-					.all(|(a, b)| a.eq_ignore_span(b))
+				&& self.iter().zip(other.iter()).all(|(a, b)| a.eq_ignore_span(b))
 		}
 	}
 );
@@ -99,8 +94,7 @@ where
 	T: TypeEq,
 {
 	fn type_eq(&self, other:&Self) -> bool {
-		self.len() == other.len()
-			&& self.iter().zip(other.iter()).all(|(a, b)| a.type_eq(b))
+		self.len() == other.len() && self.iter().zip(other.iter()).all(|(a, b)| a.type_eq(b))
 	}
 }
 
@@ -183,9 +177,7 @@ swc_allocator::nightly_only!(
 		N: EqIgnoreSpan,
 	{
 		#[inline]
-		fn eq_ignore_span(&self, other:&Self) -> bool {
-			(**self).eq_ignore_span(&**other)
-		}
+		fn eq_ignore_span(&self, other:&Self) -> bool { (**self).eq_ignore_span(&**other) }
 	}
 
 	impl<N> TypeEq for swc_allocator::boxed::Box<N>
@@ -202,9 +194,7 @@ where
 	N: EqIgnoreSpan,
 {
 	#[inline]
-	fn eq_ignore_span(&self, other:&Self) -> bool {
-		(**self).eq_ignore_span(&**other)
-	}
+	fn eq_ignore_span(&self, other:&Self) -> bool { (**self).eq_ignore_span(&**other) }
 }
 
 impl<'a, N> TypeEq for &'a N
@@ -219,18 +209,14 @@ impl<N> EqIgnoreSpan for RefCell<N>
 where
 	N: EqIgnoreSpan,
 {
-	fn eq_ignore_span(&self, other:&Self) -> bool {
-		self.borrow().eq_ignore_span(&*other.borrow())
-	}
+	fn eq_ignore_span(&self, other:&Self) -> bool { self.borrow().eq_ignore_span(&*other.borrow()) }
 }
 
 impl<N> TypeEq for RefCell<N>
 where
 	N: TypeEq,
 {
-	fn type_eq(&self, other:&Self) -> bool {
-		self.borrow().type_eq(&*other.borrow())
-	}
+	fn type_eq(&self, other:&Self) -> bool { self.borrow().type_eq(&*other.borrow()) }
 }
 
 impl EqIgnoreSpan for BigInt {

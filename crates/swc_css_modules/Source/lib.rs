@@ -61,10 +61,7 @@ pub struct TransformResult {
 }
 
 /// Returns a map from local name to exported name.
-pub fn compile<'a>(
-	ss:&mut Stylesheet,
-	config:impl 'a + TransformConfig,
-) -> TransformResult {
+pub fn compile<'a>(ss:&mut Stylesheet, config:impl 'a + TransformConfig) -> TransformResult {
 	let mut compiler = Compiler {
 		config,
 		data:Default::default(),
@@ -73,12 +70,7 @@ pub fn compile<'a>(
 
 	ss.visit_mut_with(&mut compiler);
 
-	fn add(
-		result:&mut TransformResult,
-		data:&Data,
-		key:&JsWord,
-		composes:&[CssClassName],
-	) {
+	fn add(result:&mut TransformResult, data:&Data, key:&JsWord, composes:&[CssClassName]) {
 		let mut extra_classes = Vec::new();
 		{
 			let class_names = result.renamed.entry(key.clone()).or_default();
@@ -88,9 +80,7 @@ pub fn compile<'a>(
 
 		for composed_class_name in composes.iter() {
 			if let CssClassName::Local { name } = composed_class_name {
-				if let Some(original_class_name) =
-					data.renamed_to_orig.get(&name.value)
-				{
+				if let Some(original_class_name) = data.renamed_to_orig.get(&name.value) {
 					extra_classes.extend(
 						result
 							.renamed
@@ -199,9 +189,7 @@ where
 
 				return;
 			},
-			KeyframesName::PseudoPrefix(pseudo_prefix)
-				if pseudo_prefix.pseudo.value == "local" =>
-			{
+			KeyframesName::PseudoPrefix(pseudo_prefix) if pseudo_prefix.pseudo.value == "local" => {
 				match &pseudo_prefix.name {
 					KeyframesName::CustomIdent(custom_ident) => {
 						*n = KeyframesName::CustomIdent(custom_ident.clone());
@@ -269,24 +257,15 @@ where
 			let composes = self.data.composes_for_current.take();
 
 			for child in &sel.children {
-				if let ComplexSelectorChildren::CompoundSelector(sel) =
-					&child.children[0]
-				{
+				if let ComplexSelectorChildren::CompoundSelector(sel) = &child.children[0] {
 					for subclass_sel in &sel.subclass_selectors {
-						if let SubclassSelector::Class(class_sel) =
-							&subclass_sel
-						{
+						if let SubclassSelector::Class(class_sel) = &subclass_sel {
 							if let Some(composes) = &composes {
-								let key = self
-									.data
-									.renamed_to_orig
-									.get(&class_sel.text.value)
-									.cloned();
+								let key =
+									self.data.renamed_to_orig.get(&class_sel.text.value).cloned();
 
 								if let Some(key) = key {
-									self.data
-										.composes_inherit
-										.push((key, composes.clone()));
+									self.data.composes_inherit.push((key, composes.clone()));
 								}
 							}
 						}
@@ -321,56 +300,33 @@ where
 	fn visit_mut_declaration(&mut self, n:&mut Declaration) {
 		n.visit_mut_children_with(self);
 
-		if let Some(composes_for_current) = &mut self.data.composes_for_current
-		{
+		if let Some(composes_for_current) = &mut self.data.composes_for_current {
 			if let DeclarationName::Ident(name) = &n.name {
 				if &*name.value == "composes" {
 					// composes: name from 'foo.css'
 					if n.value.len() >= 3 {
-						match (
-							&n.value[n.value.len() - 2],
-							&n.value[n.value.len() - 1],
-						) {
-							(
-								ComponentValue::Ident(ident),
-								ComponentValue::Str(import_source),
-							) if ident.value == "from" => {
-								for class_name in
-									n.value.iter().take(n.value.len() - 2)
-								{
-									if let ComponentValue::Ident(value) =
-										class_name
-									{
-										composes_for_current.push(
-											CssClassName::Import {
-												name:*value.clone(),
-												from:import_source
-													.value
-													.clone(),
-											},
-										);
+						match (&n.value[n.value.len() - 2], &n.value[n.value.len() - 1]) {
+							(ComponentValue::Ident(ident), ComponentValue::Str(import_source))
+								if ident.value == "from" =>
+							{
+								for class_name in n.value.iter().take(n.value.len() - 2) {
+									if let ComponentValue::Ident(value) = class_name {
+										composes_for_current.push(CssClassName::Import {
+											name:*value.clone(),
+											from:import_source.value.clone(),
+										});
 									}
 								}
 
 								return;
 							},
-							(
-								ComponentValue::Ident(from),
-								ComponentValue::Ident(global),
-							) if from.value == "from"
-								&& global.value == "global" =>
+							(ComponentValue::Ident(from), ComponentValue::Ident(global))
+								if from.value == "from" && global.value == "global" =>
 							{
-								for class_name in
-									n.value.iter().take(n.value.len() - 2)
-								{
-									if let ComponentValue::Ident(value) =
-										class_name
-									{
-										composes_for_current.push(
-											CssClassName::Global {
-												name:*value.clone(),
-											},
-										);
+								for class_name in n.value.iter().take(n.value.len() - 2) {
+									if let ComponentValue::Ident(value) = class_name {
+										composes_for_current
+											.push(CssClassName::Global { name:*value.clone() });
 									}
 								}
 								return;
@@ -392,18 +348,10 @@ where
 								value,
 							);
 
-							if let Some(new_name) =
-								self.data.orig_to_renamed.get(&orig)
-							{
-								composes_for_current.push(
-									CssClassName::Local {
-										name:Ident {
-											span:*span,
-											value:new_name.clone(),
-											raw:None,
-										},
-									},
-								);
+							if let Some(new_name) = self.data.orig_to_renamed.get(&orig) {
+								composes_for_current.push(CssClassName::Local {
+									name:Ident { span:*span, value:new_name.clone(), raw:None },
+								});
 							}
 						}
 					}
@@ -429,8 +377,7 @@ where
 									continue;
 								}
 
-								let Ident { span, value, raw, .. } =
-									&mut **ident;
+								let Ident { span, value, raw, .. } = &mut **ident;
 
 								match &**value {
 									// iteration-count
@@ -443,24 +390,21 @@ where
 									// fill-mode
 									// NOTE: `animation: none:` will be trapped
 									// here
-									"none" | "forwards" | "backwards"
-									| "both" => {
+									"none" | "forwards" | "backwards" | "both" => {
 										if !fill_mode_visited {
 											fill_mode_visited = true;
 											continue;
 										}
 									},
 									// direction
-									"normal" | "reverse" | "alternate"
-									| "alternate-reverse" => {
+									"normal" | "reverse" | "alternate" | "alternate-reverse" => {
 										if !direction_visited {
 											direction_visited = true;
 											continue;
 										}
 									},
 									// easing-function
-									"linear" | "ease" | "ease-in"
-									| "ease-out" | "ease-in-out"
+									"linear" | "ease" | "ease-in" | "ease-out" | "ease-in-out"
 									| "step-start" | "step-end" => {
 										if !easing_function_visited {
 											easing_function_visited = true;
@@ -508,10 +452,7 @@ where
 							ComponentValue::Delimiter(delimiter) => {
 								if matches!(
 									&**delimiter,
-									Delimiter {
-										value:DelimiterValue::Comma,
-										..
-									}
+									Delimiter { value:DelimiterValue::Comma, .. }
 								) {
 									can_change = true;
 
@@ -555,12 +496,10 @@ where
 		let old_is_global_mode = self.data.is_global_mode;
 
 		'complex: for mut n in n.children.take() {
-			if let ComplexSelectorChildren::CompoundSelector(selector) = &mut n
-			{
+			if let ComplexSelectorChildren::CompoundSelector(selector) = &mut n {
 				for sel in selector.subclass_selectors.iter_mut() {
 					match sel {
-						SubclassSelector::Class(..)
-						| SubclassSelector::Id(..) => {
+						SubclassSelector::Class(..) | SubclassSelector::Id(..) => {
 							if !self.data.is_global_mode {
 								process_local(
 									&mut self.config,
@@ -576,45 +515,39 @@ where
 					}
 				}
 
-				for (sel_index, sel) in
-					selector.subclass_selectors.iter_mut().enumerate()
-				{
+				for (sel_index, sel) in selector.subclass_selectors.iter_mut().enumerate() {
 					if let SubclassSelector::PseudoClass(class_sel) = sel {
 						match &*class_sel.name.value {
 							"local" => {
-								if let Some(children) = &mut class_sel.children
-								{
+								if let Some(children) = &mut class_sel.children {
 									if let Some(PseudoClassSelectorChildren::ComplexSelector(
-                                        complex_selector,
-                                    )) = children.get_mut(0)
-                                    {
-                                        let old_is_global_mode = self.data.is_global_mode;
-                                        let old_inside = self.data.is_global_mode;
+										complex_selector,
+									)) = children.get_mut(0)
+									{
+										let old_is_global_mode = self.data.is_global_mode;
+										let old_inside = self.data.is_global_mode;
 
-                                        self.data.is_global_mode = false;
-                                        self.data.is_in_local_pseudo_class = true;
+										self.data.is_global_mode = false;
+										self.data.is_in_local_pseudo_class = true;
 
-                                        complex_selector.visit_mut_with(self);
+										complex_selector.visit_mut_with(self);
 
-                                        let mut complex_selector_children =
-                                            complex_selector.children.clone();
-                                        prepend_left_subclass_selectors(
-                                            &mut complex_selector_children,
-                                            &mut selector.subclass_selectors,
-                                            sel_index,
-                                        );
-                                        new_children.extend(complex_selector_children);
+										let mut complex_selector_children =
+											complex_selector.children.clone();
+										prepend_left_subclass_selectors(
+											&mut complex_selector_children,
+											&mut selector.subclass_selectors,
+											sel_index,
+										);
+										new_children.extend(complex_selector_children);
 
-                                        self.data.is_global_mode = old_is_global_mode;
-                                        self.data.is_in_local_pseudo_class = old_inside;
-                                    }
+										self.data.is_global_mode = old_is_global_mode;
+										self.data.is_in_local_pseudo_class = old_inside;
+									}
 								} else {
 									if sel_index > 0 {
-										if let Some(n) =
-											n.as_mut_compound_selector()
-										{
-											n.subclass_selectors
-												.remove(sel_index);
+										if let Some(n) = n.as_mut_compound_selector() {
+											n.subclass_selectors.remove(sel_index);
 										}
 										new_children.push(n);
 									}
@@ -624,28 +557,24 @@ where
 								continue 'complex;
 							},
 							"global" => {
-								if let Some(children) = &mut class_sel.children
-								{
+								if let Some(children) = &mut class_sel.children {
 									if let Some(PseudoClassSelectorChildren::ComplexSelector(
-                                        complex_selector,
-                                    )) = children.get_mut(0)
-                                    {
-                                        let mut complex_selector_children =
-                                            complex_selector.children.clone();
-                                        prepend_left_subclass_selectors(
-                                            &mut complex_selector_children,
-                                            &mut selector.subclass_selectors,
-                                            sel_index,
-                                        );
-                                        new_children.extend(complex_selector_children);
-                                    }
+										complex_selector,
+									)) = children.get_mut(0)
+									{
+										let mut complex_selector_children =
+											complex_selector.children.clone();
+										prepend_left_subclass_selectors(
+											&mut complex_selector_children,
+											&mut selector.subclass_selectors,
+											sel_index,
+										);
+										new_children.extend(complex_selector_children);
+									}
 								} else {
 									if sel_index > 0 {
-										if let Some(n) =
-											n.as_mut_compound_selector()
-										{
-											n.subclass_selectors
-												.remove(sel_index);
+										if let Some(n) = n.as_mut_compound_selector() {
+											n.subclass_selectors.remove(sel_index);
 										}
 										new_children.push(n);
 									}
@@ -703,9 +632,7 @@ fn rename<C>(
 	{
 		let e = result.renamed.entry(name.clone()).or_default();
 
-		let v = CssClassName::Local {
-			name:Ident { span, value:new.clone(), raw:None },
-		};
+		let v = CssClassName::Local { name:Ident { span, value:new.clone(), raw:None } };
 		if !e.contains(&v) {
 			e.push(v);
 		}
@@ -726,26 +653,12 @@ fn process_local<C>(
 		SubclassSelector::Id(sel) => {
 			sel.text.raw = None;
 
-			rename(
-				sel.span,
-				config,
-				result,
-				orig_to_renamed,
-				renamed_to_orig,
-				&mut sel.text.value,
-			);
+			rename(sel.span, config, result, orig_to_renamed, renamed_to_orig, &mut sel.text.value);
 		},
 		SubclassSelector::Class(sel) => {
 			sel.text.raw = None;
 
-			rename(
-				sel.span,
-				config,
-				result,
-				orig_to_renamed,
-				renamed_to_orig,
-				&mut sel.text.value,
-			);
+			rename(sel.span, config, result, orig_to_renamed, renamed_to_orig, &mut sel.text.value);
 		},
 		SubclassSelector::Attribute(_) => {},
 		SubclassSelector::PseudoClass(_) => {},

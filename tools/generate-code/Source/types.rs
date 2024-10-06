@@ -38,11 +38,7 @@ pub fn qualify_types(mut file:File) -> File {
 	file
 }
 
-fn for_each_use_item(
-	path:&[Ident],
-	tree:&UseTree,
-	op:&mut impl FnMut(Ident, Path),
-) {
+fn for_each_use_item(path:&[Ident], tree:&UseTree, op:&mut impl FnMut(Ident, Path)) {
 	match tree {
 		UseTree::Path(p) => {
 			if p.ident == "self" || p.ident == "super" || p.ident == "crate" {

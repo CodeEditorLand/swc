@@ -15,13 +15,7 @@ use swc_core::{
 		JsMinifyExtras,
 		TransformOutput,
 	},
-	common::{
-		collections::AHashMap,
-		sync::Lrc,
-		FileName,
-		SourceFile,
-		SourceMap,
-	},
+	common::{collections::AHashMap, sync::Lrc, FileName, SourceFile, SourceMap},
 	ecma::minifier::option::{MangleCache, SimpleMangleCache},
 	node::{deserialize_json, get_deserialized, MapErr},
 };
@@ -53,9 +47,7 @@ enum MinifyTarget {
 impl MinifyTarget {
 	fn to_file(&self, cm:Lrc<SourceMap>) -> Lrc<SourceFile> {
 		match self {
-			MinifyTarget::Single(code) => {
-				cm.new_source_file(FileName::Anon.into(), code.clone())
-			},
+			MinifyTarget::Single(code) => cm.new_source_file(FileName::Anon.into(), code.clone()),
 			MinifyTarget::Map(codes) => {
 				assert_eq!(
 					codes.len(),
@@ -65,10 +57,7 @@ impl MinifyTarget {
 
 				let (filename, code) = codes.iter().next().unwrap();
 
-				cm.new_source_file(
-					FileName::Real(filename.clone().into()).into(),
-					code.clone(),
-				)
+				cm.new_source_file(FileName::Real(filename.clone().into()).into(), code.clone())
 			},
 		}
 	}
@@ -91,11 +80,7 @@ impl Task for MinifyTask {
 		.convert_err()
 	}
 
-	fn resolve(
-		&mut self,
-		_env:napi::Env,
-		output:Self::Output,
-	) -> napi::Result<Self::JsValue> {
+	fn resolve(&mut self, _env:napi::Env, output:Self::Output) -> napi::Result<Self::JsValue> {
 		Ok(output)
 	}
 }

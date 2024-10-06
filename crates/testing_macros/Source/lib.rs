@@ -52,29 +52,29 @@ mod fixture;
 ///
 /// - Support async function
 #[proc_macro_attribute]
-pub fn fixture(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let item: ItemFn = syn::parse(item).expect("failed to parse input as a function item");
+pub fn fixture(attr:TokenStream, item:TokenStream) -> TokenStream {
+	let item:ItemFn = syn::parse(item).expect("failed to parse input as a function item");
 
-    if cfg!(feature = "rust-analyzer") {
-        return quote!(
-            #[allow(unused)]
-            #item
-        )
-        .into();
-    }
+	if cfg!(feature = "rust-analyzer") {
+		return quote!(
+			#[allow(unused)]
+			#item
+		)
+		.into();
+	}
 
-    let config: self::fixture::Config =
-        syn::parse(attr).expect("failed to parse input passed to #[fixture]");
+	let config:self::fixture::Config =
+		syn::parse(attr).expect("failed to parse input passed to #[fixture]");
 
-    let cases = self::fixture::expand(&item.sig.ident, config).unwrap();
+	let cases = self::fixture::expand(&item.sig.ident, config).unwrap();
 
-    let mut output = proc_macro2::TokenStream::new();
+	let mut output = proc_macro2::TokenStream::new();
 
-    for case in cases {
-        case.to_tokens(&mut output);
-    }
+	for case in cases {
+		case.to_tokens(&mut output);
+	}
 
-    item.to_tokens(&mut output);
+	item.to_tokens(&mut output);
 
-    output.into()
+	output.into()
 }

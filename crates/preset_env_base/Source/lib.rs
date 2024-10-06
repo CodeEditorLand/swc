@@ -13,17 +13,7 @@ pub mod query;
 pub mod version;
 
 /// A map without allocation.
-#[derive(
-	Debug,
-	Default,
-	Deserialize,
-	Clone,
-	Copy,
-	Serialize,
-	StaticMap,
-	PartialEq,
-	Eq,
-)]
+#[derive(Debug, Default, Deserialize, Clone, Copy, Serialize, StaticMap, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct BrowserData<T:Default> {
 	#[serde(default)]
@@ -105,14 +95,10 @@ pub type Versions = BrowserData<Option<Version>>;
 
 impl BrowserData<Option<Version>> {
 	/// Returns true if all fields are [None].
-	pub fn is_any_target(&self) -> bool {
-		self.iter().all(|(_, v)| v.is_none())
-	}
+	pub fn is_any_target(&self) -> bool { self.iter().all(|(_, v)| v.is_none()) }
 
 	/// Parses the value returned from `browserslist` as [Versions].
-	pub fn parse_versions(
-		distribs:Vec<browserslist::Distrib>,
-	) -> Result<Self, Error> {
+	pub fn parse_versions(distribs:Vec<browserslist::Distrib>) -> Result<Self, Error> {
 		fn remap(key:&str) -> &str {
 			match key {
 				"and_chr" => "chrome",

@@ -12,9 +12,7 @@ where
 		|handler| {
 			//
 			let result =
-				std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-					op(&cm, handler)
-				}));
+				std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| op(&cm, handler)));
 
 			let p = match result {
 				Ok(v) => return v,

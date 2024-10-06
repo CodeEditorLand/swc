@@ -83,10 +83,7 @@ impl<'a, 'b, P:swc_ecma_visit::Fold> PassBuilder<'a, 'b, P> {
 		}
 	}
 
-	pub fn then<N>(
-		self,
-		next:N,
-	) -> PassBuilder<'a, 'b, swc_visit::AndThen<P, N>>
+	pub fn then<N>(self, next:N) -> PassBuilder<'a, 'b, swc_visit::AndThen<P, N>>
 	where
 		N: swc_ecma_visit::Fold, {
 		let pass = chain!(self.pass, next);
@@ -153,10 +150,7 @@ impl<'a, 'b, P:swc_ecma_visit::Fold> PassBuilder<'a, 'b, P> {
 		self
 	}
 
-	pub fn preset_env(
-		mut self,
-		env:Option<swc_ecma_preset_env::Config>,
-	) -> Self {
+	pub fn preset_env(mut self, env:Option<swc_ecma_preset_env::Config>) -> Self {
 		self.env = env;
 		self
 	}
@@ -188,9 +182,7 @@ impl<'a, 'b, P:swc_ecma_visit::Fold> PassBuilder<'a, 'b, P> {
 	where
 		P: 'cmt, {
 		let (need_analyzer, import_interop, ignore_dynamic) = match module {
-			Some(ModuleConfig::CommonJs(ref c)) => {
-				(true, c.import_interop(), c.ignore_dynamic)
-			},
+			Some(ModuleConfig::CommonJs(ref c)) => (true, c.import_interop(), c.ignore_dynamic),
 			Some(ModuleConfig::Amd(ref c)) => {
 				(true, c.config.import_interop(), c.config.ignore_dynamic)
 			},
@@ -217,30 +209,24 @@ impl<'a, 'b, P:swc_ecma_visit::Fold> PassBuilder<'a, 'b, P> {
 		} else {
 			let assumptions = self.assumptions;
 
-			feature_flag =
-				enable_available_feature_from_es_version(self.target);
+			feature_flag = enable_available_feature_from_es_version(self.target);
 
 			Either::Right(chain!(
 				Optional::new(
-					compat::class_fields_use_set::class_fields_use_set(
-						assumptions.pure_getters
-					),
+					compat::class_fields_use_set::class_fields_use_set(assumptions.pure_getters),
 					assumptions.set_public_class_fields,
 				),
 				Optional::new(
 					compat::es2022::es2022(
 						compat::es2022::Config {
-							class_properties:
-								compat::es2022::class_properties::Config {
-									private_as_properties:assumptions
-										.private_fields_as_properties,
-									constant_super:assumptions.constant_super,
-									set_public_fields:assumptions
-										.set_public_class_fields,
-									no_document_all:assumptions.no_document_all,
-									static_blocks_mark:Mark::new(),
-									pure_getter:assumptions.pure_getters,
-								}
+							class_properties:compat::es2022::class_properties::Config {
+								private_as_properties:assumptions.private_fields_as_properties,
+								constant_super:assumptions.constant_super,
+								set_public_fields:assumptions.set_public_class_fields,
+								no_document_all:assumptions.no_document_all,
+								static_blocks_mark:Mark::new(),
+								pure_getter:assumptions.pure_getters,
+							}
 						},
 						self.unresolved_mark
 					),
@@ -253,15 +239,13 @@ impl<'a, 'b, P:swc_ecma_visit::Fold> PassBuilder<'a, 'b, P> {
 				Optional::new(
 					compat::es2020::es2020(
 						compat::es2020::Config {
-							nullish_coalescing:
-								compat::es2020::nullish_coalescing::Config {
-									no_document_all:assumptions.no_document_all
-								},
-							optional_chaining:
-								compat::es2020::optional_chaining::Config {
-									no_document_all:assumptions.no_document_all,
-									pure_getter:assumptions.pure_getters
-								}
+							nullish_coalescing:compat::es2020::nullish_coalescing::Config {
+								no_document_all:assumptions.no_document_all
+							},
+							optional_chaining:compat::es2020::optional_chaining::Config {
+								no_document_all:assumptions.no_document_all,
+								pure_getter:assumptions.pure_getters
+							}
 						},
 						self.unresolved_mark
 					),
@@ -273,34 +257,27 @@ impl<'a, 'b, P:swc_ecma_visit::Fold> PassBuilder<'a, 'b, P> {
 				),
 				Optional::new(
 					compat::es2018(compat::es2018::Config {
-						object_rest_spread:
-							compat::es2018::object_rest_spread::Config {
-								no_symbol:assumptions.object_rest_no_symbols,
-								set_property:assumptions.set_spread_properties,
-								pure_getters:assumptions.pure_getters
-							}
+						object_rest_spread:compat::es2018::object_rest_spread::Config {
+							no_symbol:assumptions.object_rest_no_symbols,
+							set_property:assumptions.set_spread_properties,
+							pure_getters:assumptions.pure_getters
+						}
 					}),
 					should_enable(self.target, EsVersion::Es2018)
 				),
 				Optional::new(
 					compat::es2017(
 						compat::es2017::Config {
-							async_to_generator:
-								compat::es2017::async_to_generator::Config {
-									ignore_function_name:assumptions
-										.ignore_function_name,
-									ignore_function_length:assumptions
-										.ignore_function_length
-								},
+							async_to_generator:compat::es2017::async_to_generator::Config {
+								ignore_function_name:assumptions.ignore_function_name,
+								ignore_function_length:assumptions.ignore_function_length
+							},
 						},
 						self.unresolved_mark
 					),
 					should_enable(self.target, EsVersion::Es2017)
 				),
-				Optional::new(
-					compat::es2016(),
-					should_enable(self.target, EsVersion::Es2016)
-				),
+				Optional::new(compat::es2016(), should_enable(self.target, EsVersion::Es2016)),
 				Optional::new(
 					compat::es2015(
 						self.unresolved_mark,
@@ -313,32 +290,24 @@ impl<'a, 'b, P:swc_ecma_visit::Fold> PassBuilder<'a, 'b, P> {
 								super_is_callable_constructor:assumptions
 									.super_is_callable_constructor
 							},
-							computed_props:
-								compat::es2015::computed_props::Config {
-									loose:self.loose
-								},
+							computed_props:compat::es2015::computed_props::Config {
+								loose:self.loose
+							},
 							for_of:compat::es2015::for_of::Config {
 								assume_array:false,
 								loose:self.loose
 							},
-							spread:compat::es2015::spread::Config {
+							spread:compat::es2015::spread::Config { loose:self.loose },
+							destructuring:compat::es2015::destructuring::Config {
 								loose:self.loose
 							},
-							destructuring:
-								compat::es2015::destructuring::Config {
-									loose:self.loose
-								},
 							regenerator:self.regenerator,
-							template_literal:
-								compat::es2015::template_literal::Config {
-									ignore_to_primitive:assumptions
-										.ignore_to_primitive_hint,
-									mutable_template:assumptions
-										.mutable_template_object
-								},
+							template_literal:compat::es2015::template_literal::Config {
+								ignore_to_primitive:assumptions.ignore_to_primitive_hint,
+								mutable_template:assumptions.mutable_template_object
+							},
 							parameters:compat::es2015::parameters::Config {
-								ignore_function_length:assumptions
-									.ignore_function_length,
+								ignore_function_length:assumptions.ignore_function_length,
 							},
 							typescript:syntax.typescript()
 						}
@@ -360,24 +329,15 @@ impl<'a, 'b, P:swc_ecma_visit::Fold> PassBuilder<'a, 'b, P> {
 
 		chain!(
 			self.pass,
-			Optional::new(
-				paren_remover(comments.map(|v| v as &dyn Comments)),
-				self.fixer
-			),
+			Optional::new(paren_remover(comments.map(|v| v as &dyn Comments)), self.fixer),
 			compat_pass,
 			// module / helper
 			Optional::new(
-				modules::import_analysis::import_analyzer(
-					import_interop,
-					ignore_dynamic
-				),
+				modules::import_analysis::import_analyzer(import_interop, ignore_dynamic),
 				need_analyzer
 			),
 			compat::reserved_words::reserved_words(),
-			Optional::new(
-				helpers::inject_helpers(self.unresolved_mark),
-				self.inject_helpers
-			),
+			Optional::new(helpers::inject_helpers(self.unresolved_mark), self.inject_helpers),
 			ModuleConfig::build(
 				self.cm.clone(),
 				comments,
@@ -393,18 +353,13 @@ impl<'a, 'b, P:swc_ecma_visit::Fold> PassBuilder<'a, 'b, P> {
 				top_level_mark:self.top_level_mark,
 			}),
 			Optional::new(
-				hygiene_with_config(
-					swc_ecma_transforms_base::hygiene::Config {
-						top_level_mark:self.top_level_mark,
-						..self.hygiene.clone().unwrap_or_default()
-					}
-				),
+				hygiene_with_config(swc_ecma_transforms_base::hygiene::Config {
+					top_level_mark:self.top_level_mark,
+					..self.hygiene.clone().unwrap_or_default()
+				}),
 				self.hygiene.is_some() && !is_mangler_enabled
 			),
-			Optional::new(
-				fixer(comments.map(|v| v as &dyn Comments)),
-				self.fixer
-			),
+			Optional::new(fixer(comments.map(|v| v as &dyn Comments)), self.fixer),
 		)
 	}
 }
@@ -436,8 +391,7 @@ impl VisitMut for MinifierPass<'_> {
 							v.const_to_let = Some(true);
 						}
 						if v.toplevel.is_none() {
-							v.toplevel =
-								Some(TerserTopLevelOptions::Bool(true));
+							v.toplevel = Some(TerserTopLevelOptions::Bool(true));
 						}
 
 						v.into_config(self.cm.clone())
@@ -455,21 +409,15 @@ impl VisitMut for MinifierPass<'_> {
 				return;
 			}
 
-			m.visit_mut_with(&mut hygiene_with_config(
-				swc_ecma_transforms_base::hygiene::Config {
-					top_level_mark:self.top_level_mark,
-					..Default::default()
-				},
-			));
+			m.visit_mut_with(&mut hygiene_with_config(swc_ecma_transforms_base::hygiene::Config {
+				top_level_mark:self.top_level_mark,
+				..Default::default()
+			}));
 
 			let unresolved_mark = Mark::new();
 			let top_level_mark = Mark::new();
 
-			m.visit_mut_with(&mut resolver(
-				unresolved_mark,
-				top_level_mark,
-				false,
-			));
+			m.visit_mut_with(&mut resolver(unresolved_mark, top_level_mark, false));
 
 			m.map_with_mut(|m| {
 				swc_ecma_minifier::optimize(
@@ -523,21 +471,15 @@ impl VisitMut for MinifierPass<'_> {
 				return;
 			}
 
-			m.visit_mut_with(&mut hygiene_with_config(
-				swc_ecma_transforms_base::hygiene::Config {
-					top_level_mark:self.top_level_mark,
-					..Default::default()
-				},
-			));
+			m.visit_mut_with(&mut hygiene_with_config(swc_ecma_transforms_base::hygiene::Config {
+				top_level_mark:self.top_level_mark,
+				..Default::default()
+			}));
 
 			let unresolved_mark = Mark::new();
 			let top_level_mark = Mark::new();
 
-			m.visit_mut_with(&mut resolver(
-				unresolved_mark,
-				top_level_mark,
-				false,
-			));
+			m.visit_mut_with(&mut resolver(unresolved_mark, top_level_mark, false));
 
 			m.map_with_mut(|m| {
 				swc_ecma_minifier::optimize(
@@ -558,6 +500,4 @@ impl VisitMut for MinifierPass<'_> {
 	}
 }
 
-pub(crate) fn should_enable(target:EsVersion, feature:EsVersion) -> bool {
-	target < feature
-}
+pub(crate) fn should_enable(target:EsVersion, feature:EsVersion) -> bool { target < feature }

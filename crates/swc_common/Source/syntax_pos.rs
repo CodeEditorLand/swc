@@ -30,9 +30,7 @@ pub mod hygiene;
 /// able to use many of the functions on spans in `source_map` and you cannot
 /// assume that the length of the `span = hi - lo`; there may be space in the
 /// `BytePos` range between files.
-#[derive(
-	Clone, Copy, Hash, PartialEq, Eq, Ord, PartialOrd, Serialize, Deserialize,
-)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Ord, PartialOrd, Serialize, Deserialize)]
 #[cfg_attr(
 	any(feature = "rkyv-impl"),
 	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
@@ -67,9 +65,7 @@ impl From<Span> for (BytePos, BytePos) {
 #[cfg(feature = "arbitrary")]
 #[cfg_attr(docsrs, doc(cfg(feature = "arbitrary")))]
 impl<'a> arbitrary::Arbitrary<'a> for Span {
-	fn arbitrary(
-		u:&mut arbitrary::Unstructured<'_>,
-	) -> arbitrary::Result<Self> {
+	fn arbitrary(u:&mut arbitrary::Unstructured<'_>) -> arbitrary::Result<Self> {
 		let lo = u.arbitrary::<BytePos>()?;
 		let hi = u.arbitrary::<BytePos>()?;
 
@@ -134,13 +130,7 @@ better_scoped_tls::scoped_tls!(
 #[cfg_attr(feature = "rkyv-impl", archive_attr(repr(u32)))]
 #[derive(Debug, Eq, PartialEq, Clone, Ord, PartialOrd, Hash)]
 pub enum FileName {
-	Real(
-		#[cfg_attr(
-			any(feature = "rkyv-impl"),
-			with(crate::source_map::EncodePathBuf)
-		)]
-		PathBuf,
-	),
+	Real(#[cfg_attr(any(feature = "rkyv-impl"), with(crate::source_map::EncodePathBuf))] PathBuf),
 	/// A macro. This includes the full name of the macro, so that there are no
 	/// clashes.
 	Macros(String),
@@ -151,13 +141,7 @@ pub enum FileName {
 	/// Hack in src/libsyntax/parse.rs
 	MacroExpansion,
 	ProcMacroSourceCode,
-	Url(
-		#[cfg_attr(
-			any(feature = "rkyv-impl"),
-			with(crate::source_map::EncodeUrl)
-		)]
-		Url,
-	),
+	Url(#[cfg_attr(any(feature = "rkyv-impl"), with(crate::source_map::EncodeUrl))] Url),
 	Internal(String),
 	/// Custom sources for explicit parser calls from plugins and drivers
 	Custom(String),
@@ -192,12 +176,7 @@ impl rkyv::with::ArchiveWith<PathBuf> for EncodePathBuf {
 	) {
 		// It's safe to unwrap here because if the OsString wasn't valid UTF-8
 		// it would have failed to serialize
-		rkyv::string::ArchivedString::resolve_from_str(
-			field.to_str().unwrap(),
-			pos,
-			resolver,
-			out,
-		);
+		rkyv::string::ArchivedString::resolve_from_str(field.to_str().unwrap(), pos, resolver, out);
 	}
 }
 
@@ -207,18 +186,14 @@ where
 	S: ?Sized + rkyv::ser::Serializer,
 {
 	#[inline]
-	fn serialize_with(
-		field:&PathBuf,
-		serializer:&mut S,
-	) -> Result<Self::Resolver, S::Error> {
+	fn serialize_with(field:&PathBuf, serializer:&mut S) -> Result<Self::Resolver, S::Error> {
 		let s = field.to_str().unwrap_or_default();
 		rkyv::string::ArchivedString::serialize_from_str(s, serializer)
 	}
 }
 
 #[cfg(feature = "rkyv-impl")]
-impl<D> rkyv::with::DeserializeWith<rkyv::string::ArchivedString, PathBuf, D>
-	for EncodePathBuf
+impl<D> rkyv::with::DeserializeWith<rkyv::string::ArchivedString, PathBuf, D> for EncodePathBuf
 where
 	D: ?Sized + rkyv::Fallible,
 {
@@ -250,12 +225,7 @@ impl rkyv::with::ArchiveWith<Url> for EncodeUrl {
 		resolver:Self::Resolver,
 		out:*mut Self::Archived,
 	) {
-		rkyv::string::ArchivedString::resolve_from_str(
-			field.as_str(),
-			pos,
-			resolver,
-			out,
-		);
+		rkyv::string::ArchivedString::resolve_from_str(field.as_str(), pos, resolver, out);
 	}
 }
 
@@ -265,26 +235,19 @@ where
 	S: ?Sized + rkyv::ser::Serializer,
 {
 	#[inline]
-	fn serialize_with(
-		field:&Url,
-		serializer:&mut S,
-	) -> Result<Self::Resolver, S::Error> {
+	fn serialize_with(field:&Url, serializer:&mut S) -> Result<Self::Resolver, S::Error> {
 		let field = field.as_str();
 		rkyv::string::ArchivedString::serialize_from_str(field, serializer)
 	}
 }
 
 #[cfg(feature = "rkyv-impl")]
-impl<D> rkyv::with::DeserializeWith<rkyv::Archived<String>, Url, D>
-	for EncodeUrl
+impl<D> rkyv::with::DeserializeWith<rkyv::Archived<String>, Url, D> for EncodeUrl
 where
 	D: ?Sized + rkyv::Fallible,
 {
 	#[inline]
-	fn deserialize_with(
-		field:&rkyv::string::ArchivedString,
-		_:&mut D,
-	) -> Result<Url, D::Error> {
+	fn deserialize_with(field:&rkyv::string::ArchivedString, _:&mut D) -> Result<Url, D::Error> {
 		Ok(Url::parse(field.as_str()).unwrap())
 	}
 }
@@ -351,10 +314,7 @@ impl FileName {
 }
 
 #[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
-#[cfg_attr(
-	feature = "diagnostic-serde",
-	derive(serde::Serialize, serde::Deserialize)
-)]
+#[cfg_attr(feature = "diagnostic-serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(
 	any(feature = "rkyv-impl"),
 	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
@@ -370,10 +330,7 @@ pub struct PrimarySpanLabel(pub Span, pub String);
 /// - they can have a *label*. In this case, the label is written next to the
 ///   mark in the snippet when we render.
 #[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
-#[cfg_attr(
-	feature = "diagnostic-serde",
-	derive(serde::Serialize, serde::Deserialize)
-)]
+#[cfg_attr(feature = "diagnostic-serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(
 	any(feature = "rkyv-impl"),
 	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
@@ -413,18 +370,14 @@ impl Span {
 
 	/// Returns `true` if this is a dummy span with any hygienic context.
 	#[inline]
-	pub fn is_dummy(self) -> bool {
-		self.lo.0 == 0 && self.hi.0 == 0 || self.lo.0 >= DUMMY_RESERVE
-	}
+	pub fn is_dummy(self) -> bool { self.lo.0 == 0 && self.hi.0 == 0 || self.lo.0 >= DUMMY_RESERVE }
 
 	#[inline]
 	pub fn is_pure(self) -> bool { self.lo.is_pure() }
 
 	/// Returns `true` if this is a dummy span with any hygienic context.
 	#[inline]
-	pub fn is_dummy_ignoring_cmt(self) -> bool {
-		self.lo.0 == 0 && self.hi.0 == 0
-	}
+	pub fn is_dummy_ignoring_cmt(self) -> bool { self.lo.0 == 0 && self.hi.0 == 0 }
 
 	/// Returns a new span representing an empty span at the beginning of this
 	/// span
@@ -436,22 +389,16 @@ impl Span {
 	pub fn shrink_to_hi(self) -> Span { self.with_lo(self.hi) }
 
 	/// Returns `self` if `self` is not the dummy span, and `other` otherwise.
-	pub fn substitute_dummy(self, other:Span) -> Span {
-		if self.is_dummy() { other } else { self }
-	}
+	pub fn substitute_dummy(self, other:Span) -> Span { if self.is_dummy() { other } else { self } }
 
 	/// Return true if `self` fully encloses `other`.
-	pub fn contains(self, other:Span) -> bool {
-		self.lo <= other.lo && other.hi <= self.hi
-	}
+	pub fn contains(self, other:Span) -> bool { self.lo <= other.lo && other.hi <= self.hi }
 
 	/// Return true if the spans are equal with regards to the source text.
 	///
 	/// Use this instead of `==` when either span could be generated code,
 	/// and you only care that they point to the same bytes of source text.
-	pub fn source_equal(self, other:Span) -> bool {
-		self.lo == other.lo && self.hi == other.hi
-	}
+	pub fn source_equal(self, other:Span) -> bool { self.lo == other.lo && self.hi == other.hi }
 
 	/// Returns `Some(span)`, where the start is trimmed by the end of `other`
 	pub fn trim_start(self, other:Span) -> Option<Span> {
@@ -471,10 +418,7 @@ impl Span {
 		// diagnostic output. It is preferable to have an incomplete span than
 		// a completely nonsensical one.
 
-		Span::new(
-			cmp::min(span_data.lo, end_data.lo),
-			cmp::max(span_data.hi, end_data.hi),
-		)
+		Span::new(cmp::min(span_data.lo, end_data.lo), cmp::max(span_data.hi, end_data.hi))
 	}
 
 	/// Return a `Span` between the end of `self` to the beginning of `end`.
@@ -492,10 +436,7 @@ impl Span {
 
 	pub fn from_inner_byte_pos(self, start:usize, end:usize) -> Span {
 		let span = self;
-		Span::new(
-			span.lo + BytePos::from_usize(start),
-			span.lo + BytePos::from_usize(end),
-		)
+		Span::new(span.lo + BytePos::from_usize(start), span.lo + BytePos::from_usize(end))
 	}
 
 	/// Dummy span, both position are extremely large numbers so they would be
@@ -508,16 +449,9 @@ impl Span {
 			return Span { lo, hi:lo };
 		}
 
-		#[cfg(not(all(
-			any(feature = "__plugin_mode"),
-			target_arch = "wasm32"
-		)))]
+		#[cfg(not(all(any(feature = "__plugin_mode"), target_arch = "wasm32")))]
 		return GLOBALS.with(|globals| {
-			let lo = BytePos(
-				globals
-					.dummy_cnt
-					.fetch_add(1, std::sync::atomic::Ordering::SeqCst),
-			);
+			let lo = BytePos(globals.dummy_cnt.fetch_add(1, std::sync::atomic::Ordering::SeqCst));
 			Span { lo, hi:lo }
 		});
 	}
@@ -557,9 +491,7 @@ impl MultiSpan {
 	}
 
 	/// Selects the first primary span (if any)
-	pub fn primary_span(&self) -> Option<Span> {
-		self.primary_spans.first().cloned()
-	}
+	pub fn primary_span(&self) -> Option<Span> { self.primary_spans.first().cloned() }
 
 	/// Returns all primary spans.
 	pub fn primary_spans(&self) -> &[Span] { &self.primary_spans }
@@ -608,21 +540,13 @@ impl MultiSpan {
 			.span_labels
 			.iter()
 			.map(|&PrimarySpanLabel(span, ref label)| {
-				SpanLabel {
-					span,
-					is_primary:is_primary(span),
-					label:Some(label.clone()),
-				}
+				SpanLabel { span, is_primary:is_primary(span), label:Some(label.clone()) }
 			})
 			.collect::<Vec<_>>();
 
 		for &span in &self.primary_spans {
 			if !span_labels.iter().any(|sl| sl.span == span) {
-				span_labels.push(SpanLabel {
-					span,
-					is_primary:true,
-					label:None,
-				});
+				span_labels.push(SpanLabel { span, is_primary:true, label:None });
 			}
 		}
 
@@ -661,9 +585,7 @@ impl MultiByteChar {
 	///
 	/// 1, 2, and 3 UTF-8 bytes encode into 1 UTF-16 char, but 4 UTF-8 bytes
 	/// encode into 2.
-	pub fn byte_to_char_diff(&self) -> u8 {
-		if self.bytes == 4 { 2 } else { self.bytes - 1 }
-	}
+	pub fn byte_to_char_diff(&self) -> u8 { if self.bytes == 4 { 2 } else { self.bytes - 1 } }
 }
 
 /// Identifies an offset of a non-narrow character in a SourceFile
@@ -697,9 +619,7 @@ impl NonNarrowChar {
 	/// Returns the absolute offset of the character in the SourceMap
 	pub fn pos(self) -> BytePos {
 		match self {
-			NonNarrowChar::ZeroWidth(p)
-			| NonNarrowChar::Wide(p)
-			| NonNarrowChar::Tab(p) => p,
+			NonNarrowChar::ZeroWidth(p) | NonNarrowChar::Wide(p) | NonNarrowChar::Tab(p) => p,
 		}
 	}
 
@@ -718,9 +638,7 @@ impl Add<BytePos> for NonNarrowChar {
 
 	fn add(self, rhs:BytePos) -> Self {
 		match self {
-			NonNarrowChar::ZeroWidth(pos) => {
-				NonNarrowChar::ZeroWidth(pos + rhs)
-			},
+			NonNarrowChar::ZeroWidth(pos) => NonNarrowChar::ZeroWidth(pos + rhs),
 			NonNarrowChar::Wide(pos) => NonNarrowChar::Wide(pos + rhs),
 			NonNarrowChar::Tab(pos) => NonNarrowChar::Tab(pos + rhs),
 		}
@@ -732,9 +650,7 @@ impl Sub<BytePos> for NonNarrowChar {
 
 	fn sub(self, rhs:BytePos) -> Self {
 		match self {
-			NonNarrowChar::ZeroWidth(pos) => {
-				NonNarrowChar::ZeroWidth(pos - rhs)
-			},
+			NonNarrowChar::ZeroWidth(pos) => NonNarrowChar::ZeroWidth(pos - rhs),
 			NonNarrowChar::Wide(pos) => NonNarrowChar::Wide(pos - rhs),
 			NonNarrowChar::Tab(pos) => NonNarrowChar::Tab(pos - rhs),
 		}
@@ -770,17 +686,13 @@ impl<S> rkyv::with::SerializeWith<Lrc<String>, S> for EncodeArcString
 where
 	S: ?Sized + rkyv::ser::Serializer,
 {
-	fn serialize_with(
-		field:&Lrc<String>,
-		serializer:&mut S,
-	) -> Result<Self::Resolver, S::Error> {
+	fn serialize_with(field:&Lrc<String>, serializer:&mut S) -> Result<Self::Resolver, S::Error> {
 		rkyv::string::ArchivedString::serialize_from_str(field, serializer)
 	}
 }
 
 #[cfg(feature = "rkyv-impl")]
-impl<D> rkyv::with::DeserializeWith<rkyv::Archived<String>, Lrc<String>, D>
-	for EncodeArcString
+impl<D> rkyv::with::DeserializeWith<rkyv::Archived<String>, Lrc<String>, D> for EncodeArcString
 where
 	D: ?Sized + rkyv::Fallible,
 {
@@ -852,13 +764,7 @@ impl SourceFile {
 	) -> SourceFile {
 		remove_bom(&mut src);
 
-		Self::new_from(
-			name,
-			name_was_remapped,
-			unmapped_path,
-			Lrc::new(src),
-			start_pos,
-		)
+		Self::new_from(name, name_was_remapped, unmapped_path, Lrc::new(src), start_pos)
 	}
 
 	/// `src` should not have UTF8 BOM
@@ -1005,17 +911,7 @@ pub trait SmallPos {
 ///
 /// `u32::MAX` is special value used to generate source map entries.
 #[derive(
-	Clone,
-	Copy,
-	PartialEq,
-	Eq,
-	Hash,
-	PartialOrd,
-	Ord,
-	Debug,
-	Serialize,
-	Deserialize,
-	Default,
+	Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Debug, Serialize, Deserialize, Default,
 )]
 #[serde(transparent)]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
@@ -1083,18 +979,14 @@ impl Add for BytePos {
 	type Output = BytePos;
 
 	#[inline(always)]
-	fn add(self, rhs:BytePos) -> BytePos {
-		BytePos((self.to_usize() + rhs.to_usize()) as u32)
-	}
+	fn add(self, rhs:BytePos) -> BytePos { BytePos((self.to_usize() + rhs.to_usize()) as u32) }
 }
 
 impl Sub for BytePos {
 	type Output = BytePos;
 
 	#[inline(always)]
-	fn sub(self, rhs:BytePos) -> BytePos {
-		BytePos((self.to_usize() - rhs.to_usize()) as u32)
-	}
+	fn sub(self, rhs:BytePos) -> BytePos { BytePos((self.to_usize() - rhs.to_usize()) as u32) }
 }
 
 impl SmallPos for CharPos {
@@ -1115,18 +1007,14 @@ impl Add for CharPos {
 	type Output = CharPos;
 
 	#[inline(always)]
-	fn add(self, rhs:CharPos) -> CharPos {
-		CharPos(self.to_usize() + rhs.to_usize())
-	}
+	fn add(self, rhs:CharPos) -> CharPos { CharPos(self.to_usize() + rhs.to_usize()) }
 }
 
 impl Sub for CharPos {
 	type Output = CharPos;
 
 	#[inline(always)]
-	fn sub(self, rhs:CharPos) -> CharPos {
-		CharPos(self.to_usize() - rhs.to_usize())
-	}
+	fn sub(self, rhs:CharPos) -> CharPos { CharPos(self.to_usize() - rhs.to_usize()) }
 }
 
 // _____________________________________________________________________________
@@ -1344,9 +1232,7 @@ fn lookup_line(lines:&[BytePos], pos:BytePos) -> isize {
 
 impl From<SourceMapLookupError> for Box<SpanSnippetError> {
 	#[cold]
-	fn from(err:SourceMapLookupError) -> Self {
-		Box::new(SpanSnippetError::LookupFailed(err))
-	}
+	fn from(err:SourceMapLookupError) -> Self { Box::new(SpanSnippetError::LookupFailed(err)) }
 }
 
 #[cfg(test)]

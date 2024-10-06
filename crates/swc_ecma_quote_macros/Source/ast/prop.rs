@@ -3,21 +3,21 @@ use swc_ecma_ast::*;
 impl_enum!(Prop, [Shorthand, KeyValue, Assign, Getter, Setter, Method]);
 
 impl_struct!(
-    PrivateProp,
-    [
-        span,
-        ctxt,
-        definite,
-        key,
-        value,
-        type_ann,
-        is_static,
-        decorators,
-        accessibility,
-        is_optional,
-        is_override,
-        readonly
-    ]
+	PrivateProp,
+	[
+		span,
+		ctxt,
+		definite,
+		key,
+		value,
+		type_ann,
+		is_static,
+		decorators,
+		accessibility,
+		is_optional,
+		is_override,
+		readonly
+	]
 );
 
 impl_struct!(KeyValueProp, [key, value]);

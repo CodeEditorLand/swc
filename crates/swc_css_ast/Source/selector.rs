@@ -108,27 +108,11 @@ pub struct Combinator {
 	pub value:CombinatorValue,
 }
 
-#[derive(
-	StringEnum,
-	Clone,
-	Copy,
-	Eq,
-	PartialEq,
-	PartialOrd,
-	Ord,
-	Hash,
-	Is,
-	EqIgnoreSpan,
-)]
+#[derive(StringEnum, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash, Is, EqIgnoreSpan)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(
 	feature = "rkyv",
-	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
-)]
-#[cfg_attr(
-	feature = "rkyv",
-	archive(bound(
-		serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"
-	))
+	archive(bound(serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"))
 )]
 #[cfg_attr(feature = "rkyv", archive(check_bytes))]
 #[cfg_attr(feature = "rkyv", archive_attr(repr(u32)))]
@@ -260,29 +244,13 @@ pub struct AttributeSelector {
 	pub modifier:Option<AttributeSelectorModifier>,
 }
 
-#[derive(
-	StringEnum,
-	Clone,
-	Copy,
-	Eq,
-	PartialEq,
-	PartialOrd,
-	Ord,
-	Hash,
-	Is,
-	EqIgnoreSpan,
-)]
-#[cfg_attr(
-	feature = "rkyv",
-	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
-)]
+#[derive(StringEnum, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash, Is, EqIgnoreSpan)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "rkyv", archive(check_bytes))]
 #[cfg_attr(feature = "rkyv", archive_attr(repr(u32)))]
 #[cfg_attr(
 	feature = "rkyv",
-	archive(bound(
-		serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"
-	))
+	archive(bound(serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"))
 )]
 pub enum AttributeSelectorMatcherValue {
 	/// `=`

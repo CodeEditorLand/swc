@@ -49,8 +49,8 @@ impl Analyzer<'_> {
 	fn store(&mut self, from:Id, to:Id) {
 		if let Some(prev) = self.data.ids.insert(from.clone(), to.clone()) {
 			unreachable!(
-				"Multiple identifiers equivalent up to span hygiene found: \
-				 {:#?}\nFirst = {:#?}\nSecond = {:#?}",
+				"Multiple identifiers equivalent up to span hygiene found: {:#?}\nFirst = \
+				 {:#?}\nSecond = {:#?}",
 				from, prev, to
 			)
 		}
@@ -79,9 +79,7 @@ impl Visit for Analyzer<'_> {
 
 	fn visit_var_declarator(&mut self, n:&VarDeclarator) {
 		n.visit_children_with(self);
-		if let (Pat::Ident(from), Some(Expr::Ident(to))) =
-			(&n.name, n.init.as_deref())
-		{
+		if let (Pat::Ident(from), Some(Expr::Ident(to))) = (&n.name, n.init.as_deref()) {
 			self.store(from.id.clone().into(), to.into());
 		}
 	}
@@ -93,10 +91,7 @@ impl VisitMut for Inliner {
 	visit_mut_obj_and_computed!();
 
 	/// Don't modify exported ident.
-	fn visit_mut_export_named_specifier(
-		&mut self,
-		n:&mut ExportNamedSpecifier,
-	) {
+	fn visit_mut_export_named_specifier(&mut self, n:&mut ExportNamedSpecifier) {
 		if n.exported.is_none() {
 			n.exported = Some(n.orig.clone());
 		}

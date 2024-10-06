@@ -54,14 +54,10 @@ impl Visit for Analyzer {
 			if &*name.value == "composes" {
 				// composes: name from 'foo.css'
 				if d.value.len() >= 3 {
-					match (
-						&d.value[d.value.len() - 2],
-						&d.value[d.value.len() - 1],
-					) {
-						(
-							ComponentValue::Ident(ident),
-							ComponentValue::Str(s),
-						) if ident.value == "from" => {
+					match (&d.value[d.value.len() - 2], &d.value[d.value.len() - 1]) {
+						(ComponentValue::Ident(ident), ComponentValue::Str(s))
+							if ident.value == "from" =>
+						{
 							self.imports.push(s.value.clone());
 						},
 						_ => (),

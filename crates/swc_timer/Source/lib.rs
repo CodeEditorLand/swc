@@ -7,30 +7,30 @@ use tracing::{info, span::EnteredSpan};
 ///
 /// See [timer] for usages.
 pub struct Timer {
-    #[cfg(not(target_arch = "wasm32"))]
-    _span: EnteredSpan,
-    #[cfg(not(target_arch = "wasm32"))]
-    start: std::time::Instant,
+	#[cfg(not(target_arch = "wasm32"))]
+	_span:EnteredSpan,
+	#[cfg(not(target_arch = "wasm32"))]
+	start:std::time::Instant,
 }
 
 impl Timer {
-    /// Don't use this directly. Use [timer] instead.
-    pub fn new(_span: EnteredSpan) -> Self {
-        Self {
-            #[cfg(not(target_arch = "wasm32"))]
-            _span,
-            #[cfg(not(target_arch = "wasm32"))]
-            start: std::time::Instant::now(),
-        }
-    }
+	/// Don't use this directly. Use [timer] instead.
+	pub fn new(_span:EnteredSpan) -> Self {
+		Self {
+			#[cfg(not(target_arch = "wasm32"))]
+			_span,
+			#[cfg(not(target_arch = "wasm32"))]
+			start:std::time::Instant::now(),
+		}
+	}
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl Drop for Timer {
-    fn drop(&mut self) {
-        let dur = self.start.elapsed();
-        info!(kind = "perf", "Done in {:?}", dur);
-    }
+	fn drop(&mut self) {
+		let dur = self.start.elapsed();
+		info!(kind = "perf", "Done in {:?}", dur);
+	}
 }
 
 /// Creates a timer. For input arguments, see [tracing::span].

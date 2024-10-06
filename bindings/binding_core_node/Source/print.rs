@@ -47,20 +47,10 @@ impl Task for PrintTask {
 							.source_maps
 							.clone()
 							.unwrap_or(SourceMapsConfig::Bool(false)),
-						emit_source_map_columns:options
-							.config
-							.emit_source_map_columns
-							.into_bool(),
-						codegen_config:
-							swc_core::ecma::codegen::Config::default()
-								.with_target(
-									options
-										.config
-										.jsc
-										.target
-										.unwrap_or(EsVersion::Es2020),
-								)
-								.with_minify(options.config.minify.into_bool()),
+						emit_source_map_columns:options.config.emit_source_map_columns.into_bool(),
+						codegen_config:swc_core::ecma::codegen::Config::default()
+							.with_target(options.config.jsc.target.unwrap_or(EsVersion::Es2020))
+							.with_minify(options.config.minify.into_bool()),
 						..Default::default()
 					},
 				)
@@ -68,11 +58,7 @@ impl Task for PrintTask {
 		})
 	}
 
-	fn resolve(
-		&mut self,
-		_env:Env,
-		result:Self::Output,
-	) -> napi::Result<Self::JsValue> {
+	fn resolve(&mut self, _env:Env, result:Self::Output) -> napi::Result<Self::JsValue> {
 		Ok(result)
 	}
 }
@@ -88,17 +74,11 @@ pub fn print(
 	let c = get_compiler();
 	let options = String::from_utf8_lossy(&options).to_string();
 
-	Ok(AsyncTask::with_optional_signal(
-		PrintTask { c, program_json, options },
-		signal,
-	))
+	Ok(AsyncTask::with_optional_signal(PrintTask { c, program_json, options }, signal))
 }
 
 #[napi]
-pub fn print_sync(
-	program:String,
-	options:Buffer,
-) -> napi::Result<TransformOutput> {
+pub fn print_sync(program:String, options:Buffer) -> napi::Result<TransformOutput> {
 	crate::util::init_default_trace_subscriber();
 
 	let c = get_compiler();
@@ -116,14 +96,8 @@ pub fn print_sync(
 			PrintArgs {
 				output_path:options.output_path,
 				inline_sources_content:true,
-				source_map:options
-					.source_maps
-					.clone()
-					.unwrap_or(SourceMapsConfig::Bool(false)),
-				emit_source_map_columns:options
-					.config
-					.emit_source_map_columns
-					.into_bool(),
+				source_map:options.source_maps.clone().unwrap_or(SourceMapsConfig::Bool(false)),
+				emit_source_map_columns:options.config.emit_source_map_columns.into_bool(),
 				codegen_config:swc_core::ecma::codegen::Config::default()
 					.with_target(codegen_target)
 					.with_minify(options.config.minify.into_bool()),

@@ -10,8 +10,7 @@ pub fn emitter(
 	_attr:proc_macro::TokenStream,
 	item:proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-	let item:ImplItemFn =
-		syn::parse(item).expect("failed to parse input as an item");
+	let item:ImplItemFn = syn::parse(item).expect("failed to parse input as an item");
 	let item = expand(item);
 
 	item.into_token_stream().into()
@@ -42,8 +41,7 @@ fn expand(i:ImplItemFn) -> ImplItemFn {
 						Type::Reference(TypeReference { elem, .. }) => *elem,
 						_ => {
 							panic!(
-								"Type of node parameter should be reference \
-								 but got {}",
+								"Type of node parameter should be reference but got {}",
 								ty.into_token_stream()
 							)
 						},

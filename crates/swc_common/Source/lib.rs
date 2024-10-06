@@ -65,13 +65,7 @@ pub use self::{
 		GLOBALS,
 		NO_EXPANSION,
 	},
-	source_map::{
-		FileLines,
-		FileLoader,
-		FilePathMapping,
-		SourceMap,
-		SpanSnippetError,
-	},
+	source_map::{FileLines, FileLoader, FilePathMapping, SourceMap, SpanSnippetError},
 	syntax_pos::LineCol,
 };
 #[doc(hidden)]
@@ -98,14 +92,8 @@ pub mod sync;
 mod syntax_pos;
 pub mod util;
 
-#[cfg(all(
-	not(debug_assertions),
-	feature = "plugin-rt",
-	feature = "plugin-mode"
-))]
-compile_error!(
-	"You can't enable `plugin-rt` and `plugin-mode` at the same time"
-);
+#[cfg(all(not(debug_assertions), feature = "plugin-rt", feature = "plugin-mode"))]
+compile_error!("You can't enable `plugin-rt` and `plugin-mode` at the same time");
 
 /// Warning: The particular implementation of serialization and
 /// deserialization of the ast nodes may change in the future, and so these

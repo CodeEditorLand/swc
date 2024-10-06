@@ -196,11 +196,7 @@ pub mod resolver {
 
 	use swc_common::collections::AHashMap;
 	use swc_ecma_loader::{
-		resolvers::{
-			lru::CachingResolver,
-			node::NodeModulesResolver,
-			tsc::TsConfigResolver,
-		},
+		resolvers::{lru::CachingResolver, node::NodeModulesResolver, tsc::TsConfigResolver},
 		TargetEnv,
 	};
 
@@ -216,11 +212,7 @@ pub mod resolver {
 		preserve_symlinks:bool,
 	) -> CachingResolver<TsConfigResolver<NodeModulesResolver>> {
 		let r = TsConfigResolver::new(
-			NodeModulesResolver::without_node_modules(
-				target_env,
-				alias,
-				preserve_symlinks,
-			),
+			NodeModulesResolver::without_node_modules(target_env, alias, preserve_symlinks),
 			base_url,
 			paths,
 		);
@@ -232,17 +224,12 @@ pub mod resolver {
 		alias:AHashMap<String, String>,
 		preserve_symlinks:bool,
 	) -> NodeResolver {
-		CachingResolver::new(
-			40,
-			NodeModulesResolver::new(target_env, alias, preserve_symlinks),
-		)
+		CachingResolver::new(40, NodeModulesResolver::new(target_env, alias, preserve_symlinks))
 	}
 }
 
 type SwcImportResolver = Arc<
-	NodeImportResolver<
-		CachingResolver<TsConfigResolver<CachingResolver<NodeModulesResolver>>>,
-	>,
+	NodeImportResolver<CachingResolver<TsConfigResolver<CachingResolver<NodeModulesResolver>>>>,
 >;
 
 /// All methods accept [Handler], which is a storage for errors.
@@ -265,10 +252,7 @@ impl Compiler {
 	pub fn run<R, F>(&self, op:F) -> R
 	where
 		F: FnOnce() -> R, {
-		debug_assert!(
-			GLOBALS.is_set(),
-			"`swc_common::GLOBALS` is required for this operation"
-		);
+		debug_assert!(GLOBALS.is_set(), "`swc_common::GLOBALS` is required for this operation");
 
 		op()
 	}
@@ -283,150 +267,125 @@ impl Compiler {
 		self.run(|| -> Result<_, Error> {
 			let name = &fm.name;
 
-			let read_inline_sourcemap = |data_url:&str| -> Result<
-				Option<sourcemap::SourceMap>,
-				Error,
-			> {
-				let url = Url::parse(data_url).with_context(|| {
-					format!(
-						"failed to parse inline source map url\n{}",
-						data_url
-					)
-				})?;
+			let read_inline_sourcemap =
+				|data_url:&str| -> Result<Option<sourcemap::SourceMap>, Error> {
+					let url = Url::parse(data_url).with_context(|| {
+						format!("failed to parse inline source map url\n{}", data_url)
+					})?;
 
-				let idx = match url.path().find("base64,") {
-					Some(v) => v,
-					None => {
-						bail!(
-							"failed to parse inline source map: not base64: \
-							 {:?}",
-							url
-						)
-					},
+					let idx = match url.path().find("base64,") {
+						Some(v) => v,
+						None => {
+							bail!("failed to parse inline source map: not base64: {:?}", url)
+						},
+					};
+
+					let content = url.path()[idx + "base64,".len()..].trim();
+
+					let res = BASE64_STANDARD
+						.decode(content.as_bytes())
+						.context("failed to decode base64-encoded source map")?;
+
+					Ok(Some(sourcemap::SourceMap::from_slice(&res).context(
+						"failed to read input source map from inlined base64 encoded string",
+					)?))
 				};
 
-				let content = url.path()[idx + "base64,".len()..].trim();
+			let read_file_sourcemap =
+				|data_url:Option<&str>| -> Result<Option<sourcemap::SourceMap>, Error> {
+					match &**name {
+						FileName::Real(filename) => {
+							let dir = match filename.parent() {
+								Some(v) => v,
+								None => {
+									bail!("unexpected: root directory is given as a input file")
+								},
+							};
 
-				let res = BASE64_STANDARD
-					.decode(content.as_bytes())
-					.context("failed to decode base64-encoded source map")?;
-
-				Ok(Some(sourcemap::SourceMap::from_slice(&res).context(
-					"failed to read input source map from inlined base64 \
-					 encoded string",
-				)?))
-			};
-
-			let read_file_sourcemap = |data_url:Option<&str>| -> Result<
-				Option<sourcemap::SourceMap>,
-				Error,
-			> {
-				match &**name {
-					FileName::Real(filename) => {
-						let dir = match filename.parent() {
-							Some(v) => v,
-							None => {
-								bail!(
-									"unexpected: root directory is given as a \
-									 input file"
-								)
-							},
-						};
-
-						let map_path = match data_url {
-							Some(data_url) => {
-								let mut map_path = dir.join(data_url);
-								if !map_path.exists() {
-									// Old behavior. This check would prevent
-									// regressions.
-									// Perhaps it shouldn't be supported.
-									// Sometimes developers don't want
-									// to expose their source code.
-									// Map files are for internal
-									// troubleshooting convenience.
-									let fallback_map_path = PathBuf::from(
-										format!("{}.map", filename.display()),
-									);
-									if fallback_map_path.exists() {
-										map_path = fallback_map_path;
-									} else {
-										bail!(
-											"failed to find input source map \
-											 file {:?} in {:?} file as either \
-											 {:?} or with appended .map",
-											data_url,
-											filename.display(),
-											map_path.display(),
-										)
+							let map_path = match data_url {
+								Some(data_url) => {
+									let mut map_path = dir.join(data_url);
+									if !map_path.exists() {
+										// Old behavior. This check would prevent
+										// regressions.
+										// Perhaps it shouldn't be supported.
+										// Sometimes developers don't want
+										// to expose their source code.
+										// Map files are for internal
+										// troubleshooting convenience.
+										let fallback_map_path =
+											PathBuf::from(format!("{}.map", filename.display()));
+										if fallback_map_path.exists() {
+											map_path = fallback_map_path;
+										} else {
+											bail!(
+												"failed to find input source map file {:?} in \
+												 {:?} file as either {:?} or with appended .map",
+												data_url,
+												filename.display(),
+												map_path.display(),
+											)
+										}
 									}
-								}
 
-								Some(map_path)
-							},
-							None => {
-								// Old behavior.
-								let map_path = PathBuf::from(format!(
-									"{}.map",
-									filename.display()
-								));
-								if map_path.exists() {
 									Some(map_path)
-								} else {
-									None
-								}
-							},
-						};
+								},
+								None => {
+									// Old behavior.
+									let map_path =
+										PathBuf::from(format!("{}.map", filename.display()));
+									if map_path.exists() { Some(map_path) } else { None }
+								},
+							};
 
-						match map_path {
-							Some(map_path) => {
-								let path = map_path.display().to_string();
-								let file = File::open(&path);
+							match map_path {
+								Some(map_path) => {
+									let path = map_path.display().to_string();
+									let file = File::open(&path);
 
-								// If file is not found, we should return None.
-								// Some libraries generates source map but omit
-								// them from the npm package.
-								//
-								// See https://github.com/swc-project/swc/issues/8789#issuecomment-2105055772
-								if file.as_ref().is_err_and(|err| {
-									err.kind() == ErrorKind::NotFound
-								}) {
-									warn!(
-										"source map is specified by \
-										 sourceMappingURL but there's no \
-										 source map at `{}`",
-										path
-									);
-									return Ok(None);
-								}
-
-								// Old behavior.
-								let file = if !is_default {
-									file?
-								} else {
-									match file {
-										Ok(v) => v,
-										Err(_) => return Ok(None),
+									// If file is not found, we should return None.
+									// Some libraries generates source map but omit
+									// them from the npm package.
+									//
+									// See https://github.com/swc-project/swc/issues/8789#issuecomment-2105055772
+									if file
+										.as_ref()
+										.is_err_and(|err| err.kind() == ErrorKind::NotFound)
+									{
+										warn!(
+											"source map is specified by sourceMappingURL but \
+											 there's no source map at `{}`",
+											path
+										);
+										return Ok(None);
 									}
-								};
 
-								Ok(Some(
-									sourcemap::SourceMap::from_reader(file)
-										.with_context(|| {
+									// Old behavior.
+									let file = if !is_default {
+										file?
+									} else {
+										match file {
+											Ok(v) => v,
+											Err(_) => return Ok(None),
+										}
+									};
+
+									Ok(Some(sourcemap::SourceMap::from_reader(file).with_context(
+										|| {
 											format!(
-												"failed to read input source \
-												 map
+												"failed to read input source map
                                 from file at {}",
 												path
 											)
-										})?,
-								))
-							},
-							None => Ok(None),
-						}
-					},
-					_ => Ok(None),
-				}
-			};
+										},
+									)?))
+								},
+								None => Ok(None),
+							}
+						},
+						_ => Ok(None),
+					}
+				};
 
 			let read_sourcemap = || -> Option<sourcemap::SourceMap> {
 				let s = "sourceMappingURL=";
@@ -440,18 +399,13 @@ impl Compiler {
 
 				// Load original source map if possible
 				let result = match text {
-					Some(text) if text.starts_with("data:") => {
-						read_inline_sourcemap(text)
-					},
+					Some(text) if text.starts_with("data:") => read_inline_sourcemap(text),
 					_ => read_file_sourcemap(text),
 				};
 				match result {
 					Ok(r) => r,
 					Err(err) => {
-						tracing::error!(
-							"failed to read input source map: {:?}",
-							err
-						);
+						tracing::error!("failed to read input source map: {:?}", err);
 						None
 					},
 				}
@@ -466,13 +420,9 @@ impl Compiler {
 						Ok(read_sourcemap())
 					} else {
 						// Load source map passed by user
-						Ok(Some(
-							sourcemap::SourceMap::from_slice(s.as_bytes())
-								.context(
-									"failed to read input source map from \
-									 user-provided sourcemap",
-								)?,
-						))
+						Ok(Some(sourcemap::SourceMap::from_slice(s.as_bytes()).context(
+							"failed to read input source map from user-provided sourcemap",
+						)?))
 					}
 				},
 			}
@@ -506,11 +456,7 @@ impl Compiler {
 	/// This method receives target file path, but does not write file to the
 	/// path. See: https://github.com/swc-project/swc/issues/1255
 	#[allow(clippy::too_many_arguments)]
-	pub fn print<T>(
-		&self,
-		node:&T,
-		args:PrintArgs,
-	) -> Result<TransformOutput, Error>
+	pub fn print<T>(&self, node:&T, args:PrintArgs) -> Result<TransformOutput, Error>
 	where
 		T: Node + VisitWith<swc_compiler_base::IdentCollector>, {
 		swc_compiler_base::print(self.cm.clone(), node, args)
@@ -519,16 +465,10 @@ impl Compiler {
 
 /// High-level apis.
 impl Compiler {
-	pub fn new(cm:Arc<SourceMap>) -> Self {
-		Compiler { cm, comments:Default::default() }
-	}
+	pub fn new(cm:Arc<SourceMap>) -> Self { Compiler { cm, comments:Default::default() } }
 
 	#[tracing::instrument(skip_all)]
-	pub fn read_config(
-		&self,
-		opts:&Options,
-		name:&FileName,
-	) -> Result<Option<Config>, Error> {
+	pub fn read_config(&self, opts:&Options, name:&FileName) -> Result<Option<Config>, Error> {
 		static CUR_DIR:Lazy<PathBuf> = Lazy::new(|| {
 			if cfg!(target_arch = "wasm32") {
 				PathBuf::new()
@@ -585,18 +525,16 @@ impl Compiler {
 							{
 								dir.canonicalize().with_context(|| {
 									format!(
-										"failed to canonicalize base url \
-										 using the path of .swcrc\nDir: \
-										 {}\n(Used logic for windows)",
+										"failed to canonicalize base url using the path of \
+										 .swcrc\nDir: {}\n(Used logic for windows)",
 										dir.display(),
 									)
 								})?
 							} else {
 								joined.canonicalize().with_context(|| {
 									format!(
-										"failed to canonicalize base url \
-										 using the path of .swcrc\nPath: \
-										 {}\nDir: {}\nbaseUrl: {}",
+										"failed to canonicalize base url using the path of \
+										 .swcrc\nPath: {}\nDir: {}\nbaseUrl: {}",
 										joined.display(),
 										dir.display(),
 										c.jsc.base_url.display()
@@ -627,9 +565,7 @@ impl Compiler {
 				},
 			}
 		})
-		.with_context(|| {
-			format!("failed to read .swcrc file for input file at `{}`", name)
-		})
+		.with_context(|| format!("failed to read .swcrc file for input file at `{}`", name))
 	}
 
 	/// This method returns [None] if a file should be skipped.
@@ -695,18 +631,11 @@ impl Compiler {
 		})
 	}
 
-	pub fn run_transform<F, Ret>(
-		&self,
-		handler:&Handler,
-		external_helpers:bool,
-		op:F,
-	) -> Ret
+	pub fn run_transform<F, Ret>(&self, handler:&Handler, external_helpers:bool, op:F) -> Ret
 	where
 		F: FnOnce() -> Ret, {
 		self.run(|| {
-			helpers::HELPERS.set(&Helpers::new(external_helpers), || {
-				HANDLER.set(handler, op)
-			})
+			helpers::HELPERS.set(&Helpers::new(external_helpers), || HANDLER.set(handler, op))
 		})
 	}
 
@@ -790,13 +719,7 @@ impl Compiler {
 				None
 			};
 
-			self.apply_transforms(
-				handler,
-				comments.clone(),
-				fm.clone(),
-				orig.as_ref(),
-				config,
-			)
+			self.apply_transforms(handler, comments.clone(), fm.clone(), orig.as_ref(), config)
 		})
 	}
 
@@ -835,11 +758,7 @@ impl Compiler {
 				.source_map
 				.as_ref()
 				.map(|obj| -> Result<_, Error> {
-					let orig = obj
-						.content
-						.as_ref()
-						.map(|s| s.to_sourcemap())
-						.transpose()?;
+					let orig = obj.content.as_ref().map(|s| s.to_sourcemap()).transpose()?;
 
 					Ok((SourceMapsConfig::Bool(true), orig))
 				})
@@ -906,8 +825,7 @@ impl Compiler {
 			if program.is_module() {
 				if let Some(opts) = &mut min_opts.compress {
 					if opts.top_level.is_none() {
-						opts.top_level =
-							Some(TopLevelOptions { functions:true });
+						opts.top_level = Some(TopLevelOptions { functions:true });
 					}
 				}
 
@@ -919,9 +837,7 @@ impl Compiler {
 			}
 
 			let source_map_names = if source_map.enabled() {
-				let mut v = swc_compiler_base::IdentCollector {
-					names:Default::default(),
-				};
+				let mut v = swc_compiler_base::IdentCollector { names:Default::default() };
 
 				program.visit_with(&mut v);
 
@@ -936,14 +852,10 @@ impl Compiler {
 			let is_mangler_enabled = min_opts.mangle.is_some();
 
 			let module = self.run_transform(handler, false, || {
-				let module =
-					program.fold_with(&mut paren_remover(Some(&comments)));
+				let module = program.fold_with(&mut paren_remover(Some(&comments)));
 
-				let module = module.fold_with(&mut resolver(
-					unresolved_mark,
-					top_level_mark,
-					false,
-				));
+				let module =
+					module.fold_with(&mut resolver(unresolved_mark, top_level_mark, false));
 
 				let mut module = swc_ecma_minifier::optimize(
 					module,
@@ -964,14 +876,13 @@ impl Compiler {
 				module.fold_with(&mut fixer(Some(&comments as &dyn Comments)))
 			});
 
-			let preserve_comments =
-				opts.format.comments.clone().into_inner().unwrap_or(
-					BoolOr::Data(JsMinifyCommentOption::PreserveSomeComments),
-				);
-			swc_compiler_base::minify_file_comments(
-				&comments,
-				preserve_comments,
-			);
+			let preserve_comments = opts
+				.format
+				.comments
+				.clone()
+				.into_inner()
+				.unwrap_or(BoolOr::Data(JsMinifyCommentOption::PreserveSomeComments));
+			swc_compiler_base::minify_file_comments(&comments, preserve_comments);
 
 			self.print(
 				&module,
@@ -1037,17 +948,13 @@ impl Compiler {
 
 			if config.emit_isolated_dts && !config.syntax.typescript() {
 				handler.warn(
-					"jsc.experimental.emitIsolatedDts is enabled but the \
-					 syntax is not TypeScript",
+					"jsc.experimental.emitIsolatedDts is enabled but the syntax is not TypeScript",
 				);
 			}
 
-			let emit_dts =
-				config.syntax.typescript() && config.emit_isolated_dts;
+			let emit_dts = config.syntax.typescript() && config.emit_isolated_dts;
 			let source_map_names = if config.source_maps.enabled() {
-				let mut v = swc_compiler_base::IdentCollector {
-					names:Default::default(),
-				};
+				let mut v = swc_compiler_base::IdentCollector { names:Default::default() };
 
 				program.visit_with(&mut v);
 
@@ -1062,16 +969,12 @@ impl Compiler {
 				let leading = std::rc::Rc::new(RefCell::new(leading.clone()));
 				let trailing = std::rc::Rc::new(RefCell::new(trailing.clone()));
 
-				let comments =
-					SingleThreadedComments::from_leading_and_trailing(
-						leading, trailing,
-					);
+				let comments = SingleThreadedComments::from_leading_and_trailing(leading, trailing);
 				let mut checker = FastDts::new(fm.name.clone());
 				let mut module = program.clone().expect_module();
 
 				if let Some((base, resolver)) = config.resolver {
-					module =
-						module.fold_with(&mut import_rewriter(base, resolver));
+					module = module.fold_with(&mut import_rewriter(base, resolver));
 				}
 
 				let issues = checker.transform(&mut module);
@@ -1079,9 +982,7 @@ impl Compiler {
 				for issue in issues {
 					let range = issue.range();
 
-					handler
-						.struct_span_err(range.span, &issue.to_string())
-						.emit();
+					handler.struct_span_err(range.span, &issue.to_string()).emit();
 				}
 				let dts_code = to_code_with_comments(Some(&comments), &module);
 				Some(dts_code)
@@ -1090,31 +991,24 @@ impl Compiler {
 			};
 
 			let mut pass = config.pass;
-			let (program, output) =
-				swc_transform_common::output::capture(|| {
-					if let Some(dts_code) = dts_code {
-						emit(
-							"__swc_isolated_declarations__".into(),
-							serde_json::Value::String(dts_code),
-						);
-					}
+			let (program, output) = swc_transform_common::output::capture(|| {
+				if let Some(dts_code) = dts_code {
+					emit(
+						"__swc_isolated_declarations__".into(),
+						serde_json::Value::String(dts_code),
+					);
+				}
 
-					helpers::HELPERS.set(
-						&Helpers::new(config.external_helpers),
-						|| {
-							HANDLER.set(handler, || {
-								// Fold module
-								program.fold_with(&mut pass)
-							})
-						},
-					)
-				});
+				helpers::HELPERS.set(&Helpers::new(config.external_helpers), || {
+					HANDLER.set(handler, || {
+						// Fold module
+						program.fold_with(&mut pass)
+					})
+				})
+			});
 
 			if let Some(comments) = &config.comments {
-				swc_compiler_base::minify_file_comments(
-					comments,
-					config.preserve_comments,
-				);
+				swc_compiler_base::minify_file_comments(comments, config.preserve_comments);
 			}
 
 			self.print(
@@ -1186,8 +1080,7 @@ fn find_swcrc(path:&Path, root:&Path, root_mode:RootMode) -> Option<PathBuf> {
 
 #[tracing::instrument(skip_all)]
 fn load_swcrc(path:&Path) -> Result<Rc, Error> {
-	let content =
-		read_to_string(path).context("failed to read config (.swcrc) file")?;
+	let content = read_to_string(path).context("failed to read config (.swcrc) file")?;
 
 	parse_swcrc(&content)
 }
@@ -1217,9 +1110,7 @@ fn parse_swcrc(s:&str) -> Result<Rc, Error> {
 			allow_loose_object_property_names:false,
 		},
 	)?
-	.ok_or_else(|| {
-		Error::msg("failed to deserialize empty .swcrc (json) file")
-	})?;
+	.ok_or_else(|| Error::msg("failed to deserialize empty .swcrc (json) file"))?;
 
 	if let Ok(rc) = serde_json::from_value(v.clone()) {
 		return Ok(rc);

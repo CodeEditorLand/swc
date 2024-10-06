@@ -29,13 +29,9 @@ impl<'a> From<&'a Comment> for Input<'a> {
 }
 
 impl<'i> Input<'i> {
-	pub const fn empty() -> Self {
-		Self::new(BytePos::DUMMY, BytePos::DUMMY, "")
-	}
+	pub const fn empty() -> Self { Self::new(BytePos::DUMMY, BytePos::DUMMY, "") }
 
-	pub const fn new(start:BytePos, end:BytePos, src:&'i str) -> Self {
-		Self { start, end, src }
-	}
+	pub const fn new(start:BytePos, end:BytePos, src:&'i str) -> Self { Self { start, end, src } }
 
 	#[inline(always)]
 	pub fn span(self) -> Span { Span::new(self.start, self.end) }
@@ -47,11 +43,7 @@ macro_rules! impl_slice {
 			fn slice(&self, range:$T<usize>) -> Self {
 				let s = self.src.slice(range);
 
-				Self::new(
-					self.start,
-					self.start + BytePos(s.as_bytes().len() as _),
-					s,
-				)
+				Self::new(self.start, self.start + BytePos(s.as_bytes().len() as _), s)
 			}
 		}
 	};
@@ -62,25 +54,19 @@ impl_slice!(RangeFrom);
 impl_slice!(RangeTo);
 
 impl<'i> From<Input<'i>> for Text {
-	fn from(i:Input) -> Self {
-		Self { span:Span::new(i.start, i.end), value:i.src.into() }
-	}
+	fn from(i:Input) -> Self { Self { span:Span::new(i.start, i.end), value:i.src.into() } }
 }
 
 impl InputTake for Input<'_> {
 	fn take(&self, count:usize) -> Self { self.slice(..count) }
 
-	fn take_split(&self, count:usize) -> (Self, Self) {
-		(self.slice(..count), self.slice(count..))
-	}
+	fn take_split(&self, count:usize) -> (Self, Self) { (self.slice(..count), self.slice(count..)) }
 }
 
 impl<'a> Compare<&'a str> for Input<'_> {
 	fn compare(&self, t:&'a str) -> CompareResult { self.src.compare(t) }
 
-	fn compare_no_case(&self, t:&'a str) -> CompareResult {
-		self.src.compare_no_case(t)
-	}
+	fn compare_no_case(&self, t:&'a str) -> CompareResult { self.src.compare_no_case(t) }
 }
 
 impl InputLength for Input<'_> {
@@ -104,9 +90,7 @@ impl<'a> InputIter for Input<'a> {
 		self.src.position(predicate)
 	}
 
-	fn slice_index(&self, count:usize) -> Result<usize, Needed> {
-		self.src.slice_index(count)
-	}
+	fn slice_index(&self, count:usize) -> Result<usize, Needed> { self.src.slice_index(count) }
 }
 
 impl Deref for Input<'_> {

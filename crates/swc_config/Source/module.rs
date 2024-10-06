@@ -59,9 +59,7 @@ impl<'de> Visitor<'de> for IsModuleVisitor {
 		E: serde::de::Error, {
 		match s {
 			"unknown" => Ok(IsModule::Unknown),
-			_ => {
-				Err(serde::de::Error::invalid_value(Unexpected::Str(s), &self))
-			},
+			_ => Err(serde::de::Error::invalid_value(Unexpected::Str(s), &self)),
 		}
 	}
 }

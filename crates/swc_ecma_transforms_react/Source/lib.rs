@@ -7,12 +7,12 @@ use swc_common::{chain, comments::Comments, sync::Lrc, Mark, SourceMap};
 use swc_ecma_visit::{Fold, VisitMut};
 
 pub use self::{
-    display_name::display_name,
-    jsx::*,
-    jsx_self::jsx_self,
-    jsx_src::jsx_src,
-    pure_annotations::pure_annotations,
-    refresh::{options::RefreshOptions, refresh},
+	display_name::display_name,
+	jsx::*,
+	jsx_self::jsx_self,
+	jsx_src::jsx_src,
+	pure_annotations::pure_annotations,
+	refresh::{options::RefreshOptions, refresh},
 };
 
 mod display_name;
@@ -36,38 +36,25 @@ mod refresh;
 ///
 /// This pass uses [swc_ecma_utils::HANDLER].
 pub fn react<C>(
-    cm: Lrc<SourceMap>,
-    comments: Option<C>,
-    mut options: Options,
-    top_level_mark: Mark,
-    unresolved_mark: Mark,
+	cm:Lrc<SourceMap>,
+	comments:Option<C>,
+	mut options:Options,
+	top_level_mark:Mark,
+	unresolved_mark:Mark,
 ) -> impl Fold + VisitMut
 where
-    C: Comments + Clone,
-{
-    let Options { development, .. } = options;
-    let development = development.unwrap_or(false);
+	C: Comments + Clone, {
+	let Options { development, .. } = options;
+	let development = development.unwrap_or(false);
 
-    let refresh_options = options.refresh.take();
+	let refresh_options = options.refresh.take();
 
-    chain!(
-        jsx_src(development, cm.clone()),
-        jsx_self(development),
-        refresh(
-            development,
-            refresh_options,
-            cm.clone(),
-            comments.clone(),
-            top_level_mark
-        ),
-        jsx(
-            cm,
-            comments.clone(),
-            options,
-            top_level_mark,
-            unresolved_mark
-        ),
-        display_name(),
-        pure_annotations(comments),
-    )
+	chain!(
+		jsx_src(development, cm.clone()),
+		jsx_self(development),
+		refresh(development, refresh_options, cm.clone(), comments.clone(), top_level_mark),
+		jsx(cm, comments.clone(), options, top_level_mark, unresolved_mark),
+		display_name(),
+		pure_annotations(comments),
+	)
 }

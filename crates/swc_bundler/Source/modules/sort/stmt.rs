@@ -3,10 +3,11 @@ use std::{collections::VecDeque, iter::from_fn, ops::Range};
 use indexmap::IndexSet;
 use petgraph::EdgeDirection::{Incoming as Dependants, Outgoing as Dependencies};
 use swc_common::{
-    collections::{AHashMap, AHashSet, ARandomState},
-    sync::Lrc,
-    util::take::Take,
-    SourceMap, SyntaxContext,
+	collections::{AHashMap, AHashSet, ARandomState},
+	sync::Lrc,
+	util::take::Take,
+	SourceMap,
+	SyntaxContext,
 };
 use swc_ecma_ast::*;
 use swc_ecma_utils::find_pat_ids;
@@ -16,862 +17,826 @@ use super::graph::Required;
 use crate::{id::Id, modules::sort::graph::StmtDepGraph, util::is_injected};
 
 pub(super) fn sort_stmts(
-    injected_ctxt: SyntaxContext,
-    modules: Vec<Vec<ModuleItem>>,
-    _cm: &Lrc<SourceMap>,
+	injected_ctxt:SyntaxContext,
+	modules:Vec<Vec<ModuleItem>>,
+	_cm:&Lrc<SourceMap>,
 ) -> Vec<ModuleItem> {
-    let total_len: usize = modules.iter().map(|v| v.len()).sum();
+	let total_len:usize = modules.iter().map(|v| v.len()).sum();
 
-    let mut stmts = Vec::new();
-    let mut free = Vec::new();
-    let mut same_module_ranges = Vec::new();
-    let mut module_starts = Vec::new();
+	let mut stmts = Vec::new();
+	let mut free = Vec::new();
+	let mut same_module_ranges = Vec::new();
+	let mut module_starts = Vec::new();
 
-    for module in modules {
-        let start = stmts.len();
-        module_starts.push(stmts.len());
-        let mut module_item_count = 0;
+	for module in modules {
+		let start = stmts.len();
+		module_starts.push(stmts.len());
+		let mut module_item_count = 0;
 
-        for stmt in module {
-            if is_injected_module_item(&stmt, injected_ctxt) {
-                free.push(stmt)
-            } else {
-                module_item_count += 1;
-                stmts.push(stmt)
-            }
-        }
+		for stmt in module {
+			if is_injected_module_item(&stmt, injected_ctxt) {
+				free.push(stmt)
+			} else {
+				module_item_count += 1;
+				stmts.push(stmt)
+			}
+		}
 
-        same_module_ranges.push(start..start + module_item_count);
-    }
-    let non_free_count = stmts.len();
-    let free_range = non_free_count..non_free_count + free.len();
-    stmts.extend(free);
+		same_module_ranges.push(start..start + module_item_count);
+	}
+	let non_free_count = stmts.len();
+	let free_range = non_free_count..non_free_count + free.len();
+	stmts.extend(free);
 
-    // print_hygiene(
-    //     &format!("before sort"),
-    //     cm,
-    //     &Module {
-    //         span: DUMMY_SP,
-    //         body: stmts.clone(),
-    //         shebang: None,
-    //     },
-    // );
+	// print_hygiene(
+	//     &format!("before sort"),
+	//     cm,
+	//     &Module {
+	//         span: DUMMY_SP,
+	//         body: stmts.clone(),
+	//         shebang: None,
+	//     },
+	// );
 
-    let mut id_graph = calc_deps(&stmts);
+	let mut id_graph = calc_deps(&stmts);
 
-    tracing::debug!("Analyzed dependencies between statements");
+	tracing::debug!("Analyzed dependencies between statements");
 
-    let orders = iter(
-        &mut id_graph,
-        &same_module_ranges,
-        free_range,
-        &module_starts,
-        &stmts,
-    )
-    .collect::<Vec<_>>();
+	let orders = iter(&mut id_graph, &same_module_ranges, free_range, &module_starts, &stmts)
+		.collect::<Vec<_>>();
 
-    tracing::debug!("Sorted statements");
+	tracing::debug!("Sorted statements");
 
-    debug_assert_eq!(total_len, orders.len());
+	debug_assert_eq!(total_len, orders.len());
 
-    let mut new = Vec::with_capacity(stmts.len());
-    for idx in orders {
-        new.push(stmts[idx].take());
-    }
+	let mut new = Vec::with_capacity(stmts.len());
+	for idx in orders {
+		new.push(stmts[idx].take());
+	}
 
-    new
+	new
 }
 
-fn is_injected_module_item(stmt: &ModuleItem, injected_ctxt: SyntaxContext) -> bool {
-    match stmt {
-        ModuleItem::ModuleDecl(
-            ModuleDecl::Import(ImportDecl {
-                with: Some(with), ..
-            })
-            | ModuleDecl::ExportAll(ExportAll {
-                with: Some(with), ..
-            })
-            | ModuleDecl::ExportNamed(NamedExport {
-                with: Some(with), ..
-            }),
-        ) => is_injected(with),
+fn is_injected_module_item(stmt:&ModuleItem, injected_ctxt:SyntaxContext) -> bool {
+	match stmt {
+		ModuleItem::ModuleDecl(
+			ModuleDecl::Import(ImportDecl { with: Some(with), .. })
+			| ModuleDecl::ExportAll(ExportAll { with: Some(with), .. })
+			| ModuleDecl::ExportNamed(NamedExport { with: Some(with), .. }),
+		) => is_injected(with),
 
-        ModuleItem::Stmt(Stmt::Decl(Decl::Var(v))) => v.ctxt == injected_ctxt,
+		ModuleItem::Stmt(Stmt::Decl(Decl::Var(v))) => v.ctxt == injected_ctxt,
 
-        _ => false,
-    }
+		_ => false,
+	}
 }
 
 fn iter<'a>(
-    graph: &'a mut StmtDepGraph,
-    same_module_ranges: &'a [Range<usize>],
-    free: Range<usize>,
-    module_starts: &[usize],
-    stmts: &'a [ModuleItem],
+	graph:&'a mut StmtDepGraph,
+	same_module_ranges:&'a [Range<usize>],
+	free:Range<usize>,
+	module_starts:&[usize],
+	stmts:&'a [ModuleItem],
 ) -> impl 'a + Iterator<Item = usize> {
-    let len = graph.node_count();
+	let len = graph.node_count();
 
-    // dbg!(&same_module_ranges);
-    // dbg!(&free);
-    // dbg!(&module_starts);
+	// dbg!(&same_module_ranges);
+	// dbg!(&free);
+	// dbg!(&module_starts);
 
-    let mut moves = AHashSet::default();
-    let mut done = AHashSet::default();
-    let mut stack = VecDeque::new();
-    stack.extend(module_starts.iter().copied());
+	let mut moves = AHashSet::default();
+	let mut done = AHashSet::default();
+	let mut stack = VecDeque::new();
+	stack.extend(module_starts.iter().copied());
 
-    for &start in module_starts {
-        let range = same_module_ranges
-            .iter()
-            .find(|range| range.contains(&start))
-            .cloned();
-        if let Some(range) = range {
-            for v in range {
-                stack.push_back(v);
-            }
-        }
-    }
-    for v in free.clone() {
-        stack.push_back(v);
-    }
+	for &start in module_starts {
+		let range = same_module_ranges.iter().find(|range| range.contains(&start)).cloned();
+		if let Some(range) = range {
+			for v in range {
+				stack.push_back(v);
+			}
+		}
+	}
+	for v in free.clone() {
+		stack.push_back(v);
+	}
 
-    from_fn(move || {
-        if done.len() == len {
-            return None;
-        }
+	from_fn(move || {
+		if done.len() == len {
+			return None;
+		}
 
-        // Check for first item.
-        'main: while let Some(idx) = stack.pop_front() {
-            if done.contains(&idx) {
-                // eprintln!("Done: {}", idx);
-                continue;
-            }
-            let is_free = free.contains(&idx);
+		// Check for first item.
+		'main: while let Some(idx) = stack.pop_front() {
+			if done.contains(&idx) {
+				// eprintln!("Done: {}", idx);
+				continue;
+			}
+			let is_free = free.contains(&idx);
 
-            // dbg!(idx, is_free);
-            // match &stmts[idx] {
-            //     ModuleItem::Stmt(Stmt::Decl(Decl::Var(var))) => {
-            //         let ids: Vec<Id> = find_ids(&var.decls);
-            //         eprintln!("(`{}`) Declare var: `{:?}`", idx, ids);
-            //     }
-            //     ModuleItem::Stmt(Stmt::Decl(Decl::Class(cls))) => {
-            //         eprintln!("(`{}`) Declare class: `{:?}`", idx, Id::from(&cls.ident));
-            //     }
-            //     ModuleItem::Stmt(Stmt::Decl(Decl::Fn(f))) => {
-            //         eprintln!("(`{}`) Declare fn: `{:?}`", idx, Id::from(&f.ident));
-            //     }
-            //     _ => eprintln!("(`{}`) Stmt", idx,),
-            // }
+			// dbg!(idx, is_free);
+			// match &stmts[idx] {
+			//     ModuleItem::Stmt(Stmt::Decl(Decl::Var(var))) => {
+			//         let ids: Vec<Id> = find_ids(&var.decls);
+			//         eprintln!("(`{}`) Declare var: `{:?}`", idx, ids);
+			//     }
+			//     ModuleItem::Stmt(Stmt::Decl(Decl::Class(cls))) => {
+			//         eprintln!("(`{}`) Declare class: `{:?}`", idx, Id::from(&cls.ident));
+			//     }
+			//     ModuleItem::Stmt(Stmt::Decl(Decl::Fn(f))) => {
+			//         eprintln!("(`{}`) Declare fn: `{:?}`", idx, Id::from(&f.ident));
+			//     }
+			//     _ => eprintln!("(`{}`) Stmt", idx,),
+			// }
 
-            let current_range = same_module_ranges
-                .iter()
-                .find(|range| range.contains(&idx))
-                .cloned();
+			let current_range =
+				same_module_ranges.iter().find(|range| range.contains(&idx)).cloned();
 
-            // dbg!(&current_range);
+			// dbg!(&current_range);
 
-            let can_ignore_deps = match &stmts[idx] {
-                ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
-                    decl: Decl::Fn(..),
-                    ..
-                }))
-                | ModuleItem::Stmt(Stmt::Decl(Decl::Fn(..))) => true,
+			let can_ignore_deps = match &stmts[idx] {
+				ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
+					decl: Decl::Fn(..),
+					..
+				}))
+				| ModuleItem::Stmt(Stmt::Decl(Decl::Fn(..))) => true,
 
-                ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
-                    decl: Decl::Class(cls),
-                    ..
-                }))
-                | ModuleItem::Stmt(Stmt::Decl(Decl::Class(cls)))
-                    if cls.class.super_class.is_none() =>
-                {
-                    true
-                }
+				ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
+					decl: Decl::Class(cls),
+					..
+				}))
+				| ModuleItem::Stmt(Stmt::Decl(Decl::Class(cls)))
+					if cls.class.super_class.is_none() =>
+				{
+					true
+				},
 
-                _ => false,
-            };
-            let can_ignore_weak_deps = can_ignore_deps
-                || matches!(
-                    &stmts[idx],
-                    ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
-                        decl: Decl::Class(..),
-                        ..
-                    })) | ModuleItem::Stmt(Stmt::Decl(Decl::Class(..)))
-                );
+				_ => false,
+			};
+			let can_ignore_weak_deps = can_ignore_deps
+				|| matches!(
+					&stmts[idx],
+					ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
+						decl:Decl::Class(..),
+						..
+					})) | ModuleItem::Stmt(Stmt::Decl(Decl::Class(..)))
+				);
 
-            // We
-            {
-                let deps = graph
-                    .neighbors_directed(idx, Dependencies)
-                    .filter(|dep| {
-                        let declared_in_same_module = match &current_range {
-                            Some(v) => v.contains(dep),
-                            None => false,
-                        };
-                        if declared_in_same_module {
-                            return false;
-                        }
+			// We
+			{
+				let deps = graph
+					.neighbors_directed(idx, Dependencies)
+					.filter(|dep| {
+						let declared_in_same_module = match &current_range {
+							Some(v) => v.contains(dep),
+							None => false,
+						};
+						if declared_in_same_module {
+							return false;
+						}
 
-                        if !free.contains(&idx)
-                            && graph.has_a_path(*dep, idx)
-                            && !moves.insert((idx, *dep))
-                        {
-                            return false;
-                        }
+						if !free.contains(&idx)
+							&& graph.has_a_path(*dep, idx)
+							&& !moves.insert((idx, *dep))
+						{
+							return false;
+						}
 
-                        // Exclude emitted items
-                        !done.contains(dep)
-                    })
-                    .collect::<Vec<_>>();
+						// Exclude emitted items
+						!done.contains(dep)
+					})
+					.collect::<Vec<_>>();
 
-                // dbg!(&deps);
+				// dbg!(&deps);
 
-                if !deps.is_empty() {
-                    let mut deps_to_push = Vec::new();
-                    for dep in deps.iter().rev().copied() {
-                        if deps_to_push.contains(&dep) {
-                            continue;
-                        }
+				if !deps.is_empty() {
+					let mut deps_to_push = Vec::new();
+					for dep in deps.iter().rev().copied() {
+						if deps_to_push.contains(&dep) {
+							continue;
+						}
 
-                        let can_ignore_dep = can_ignore_deps
-                            || (can_ignore_weak_deps
-                                && graph.edge_weight(idx, dep) == Some(Required::Maybe));
+						let can_ignore_dep = can_ignore_deps
+							|| (can_ignore_weak_deps
+								&& graph.edge_weight(idx, dep) == Some(Required::Maybe));
 
-                        if can_ignore_dep && graph.has_a_path(dep, idx) {
-                            // Just emit idx.
-                            continue;
-                        }
+						if can_ignore_dep && graph.has_a_path(dep, idx) {
+							// Just emit idx.
+							continue;
+						}
 
-                        deps_to_push.push(dep);
-                    }
+						deps_to_push.push(dep);
+					}
 
-                    // dbg!(&deps_to_push);
+					// dbg!(&deps_to_push);
 
-                    if !deps_to_push.is_empty() {
-                        // We should check idx again after emitting dependencies.
-                        stack.push_front(idx);
+					if !deps_to_push.is_empty() {
+						// We should check idx again after emitting dependencies.
+						stack.push_front(idx);
 
-                        for dep in deps_to_push {
-                            // eprintln!("[Move]{} => {}; kind = dep", idx, dep);
-                            stack.push_front(dep)
-                        }
+						for dep in deps_to_push {
+							// eprintln!("[Move]{} => {}; kind = dep", idx, dep);
+							stack.push_front(dep)
+						}
 
-                        continue;
-                    }
-                }
-            }
+						continue;
+					}
+				}
+			}
 
-            if is_free {
-                let dependants = graph
-                    .neighbors_directed(idx, Dependants)
-                    .collect::<Vec<_>>();
+			if is_free {
+				let dependants = graph.neighbors_directed(idx, Dependants).collect::<Vec<_>>();
 
-                for dependant in dependants {
-                    if !done.contains(&dependant) && free.contains(&dependant) {
-                        stack.push_front(dependant);
-                    }
-                }
+				for dependant in dependants {
+					if !done.contains(&dependant) && free.contains(&dependant) {
+						stack.push_front(dependant);
+					}
+				}
 
-                graph.remove_node(idx);
-                done.insert(idx);
-                return Some(idx);
-            }
+				graph.remove_node(idx);
+				done.insert(idx);
+				return Some(idx);
+			}
 
-            let current_range = match current_range {
-                Some(v) => v,
-                None => {
-                    let dependants = graph
-                        .neighbors_directed(idx, Dependants)
-                        .collect::<Vec<_>>();
+			let current_range = match current_range {
+				Some(v) => v,
+				None => {
+					let dependants = graph.neighbors_directed(idx, Dependants).collect::<Vec<_>>();
 
-                    // dbg!(&dependants);
+					// dbg!(&dependants);
 
-                    // We only emit free items because we want to emit statements from same module
-                    // to emitted closely.
-                    for dependant in dependants {
-                        if !done.contains(&dependant) && free.contains(&dependant) {
-                            stack.push_front(dependant);
-                        }
-                    }
+					// We only emit free items because we want to emit statements from same module
+					// to emitted closely.
+					for dependant in dependants {
+						if !done.contains(&dependant) && free.contains(&dependant) {
+							stack.push_front(dependant);
+						}
+					}
 
-                    // It's not within a module, so explicit ordering is not required.
-                    graph.remove_node(idx);
-                    done.insert(idx);
-                    return Some(idx);
-                }
-            };
+					// It's not within a module, so explicit ordering is not required.
+					graph.remove_node(idx);
+					done.insert(idx);
+					return Some(idx);
+				},
+			};
 
-            // We should respect original order of statements within a module.
-            for preceding in current_range.clone() {
-                // We should select first statement in module which is not emitted yet.
-                if done.contains(&preceding) {
-                    continue;
-                }
-                // dbg!(preceding);
-                if preceding == idx {
-                    continue;
-                }
-                if preceding > idx {
-                    break;
-                }
+			// We should respect original order of statements within a module.
+			for preceding in current_range.clone() {
+				// We should select first statement in module which is not emitted yet.
+				if done.contains(&preceding) {
+					continue;
+				}
+				// dbg!(preceding);
+				if preceding == idx {
+					continue;
+				}
+				if preceding > idx {
+					break;
+				}
 
-                if !moves.insert((idx, preceding)) {
-                    // idx = preceding;
-                    continue;
-                }
+				if !moves.insert((idx, preceding)) {
+					// idx = preceding;
+					continue;
+				}
 
-                let dependants = graph
-                    .neighbors_directed(idx, Dependants)
-                    .collect::<Vec<_>>();
+				let dependants = graph.neighbors_directed(idx, Dependants).collect::<Vec<_>>();
 
-                // dbg!(&dependants);
+				// dbg!(&dependants);
 
-                // We only emit free items because we want to emit statements from same module
-                // to emitted closely.
-                for dependant in dependants {
-                    if !done.contains(&dependant) && free.contains(&dependant) {
-                        stack.push_front(dependant);
-                    }
-                }
+				// We only emit free items because we want to emit statements from same module
+				// to emitted closely.
+				for dependant in dependants {
+					if !done.contains(&dependant) && free.contains(&dependant) {
+						stack.push_front(dependant);
+					}
+				}
 
-                // We found a preceding statement which is not emitted yet.
-                stack.push_front(idx);
-                stack.push_front(preceding);
-                continue 'main;
-            }
+				// We found a preceding statement which is not emitted yet.
+				stack.push_front(idx);
+				stack.push_front(preceding);
+				continue 'main;
+			}
 
-            graph.remove_node(idx);
-            done.insert(idx);
-            return Some(idx);
-        }
+			graph.remove_node(idx);
+			done.insert(idx);
+			return Some(idx);
+		}
 
-        None
-    })
+		None
+	})
 }
 
 /// Using prototype should be treated as an initialization.
 #[derive(Default)]
 struct FieldInitFinder {
-    in_object_assign: bool,
-    in_rhs: bool,
-    accessed: AHashSet<Id>,
+	in_object_assign:bool,
+	in_rhs:bool,
+	accessed:AHashSet<Id>,
 }
 
 impl FieldInitFinder {
-    fn check_lhs_of_assign(&mut self, lhs: &AssignTarget) {
-        if let AssignTarget::Simple(SimpleAssignTarget::Member(m)) = lhs {
-            match &*m.obj {
-                Expr::Ident(i) => {
-                    self.accessed.insert(i.into());
-                }
-                Expr::Member(..) => self.check_lhs_expr_of_assign(&m.obj),
-                _ => {}
-            }
-        }
-    }
+	fn check_lhs_of_assign(&mut self, lhs:&AssignTarget) {
+		if let AssignTarget::Simple(SimpleAssignTarget::Member(m)) = lhs {
+			match &*m.obj {
+				Expr::Ident(i) => {
+					self.accessed.insert(i.into());
+				},
+				Expr::Member(..) => self.check_lhs_expr_of_assign(&m.obj),
+				_ => {},
+			}
+		}
+	}
 
-    fn check_lhs_expr_of_assign(&mut self, lhs: &Expr) {
-        if let Expr::Member(m) = lhs {
-            match &*m.obj {
-                Expr::Ident(i) => {
-                    self.accessed.insert(i.into());
-                }
-                Expr::Member(..) => self.check_lhs_expr_of_assign(&m.obj),
-                _ => {}
-            }
-        }
-    }
+	fn check_lhs_expr_of_assign(&mut self, lhs:&Expr) {
+		if let Expr::Member(m) = lhs {
+			match &*m.obj {
+				Expr::Ident(i) => {
+					self.accessed.insert(i.into());
+				},
+				Expr::Member(..) => self.check_lhs_expr_of_assign(&m.obj),
+				_ => {},
+			}
+		}
+	}
 }
 
 impl Visit for FieldInitFinder {
-    noop_visit_type!();
+	noop_visit_type!();
 
-    fn visit_assign_expr(&mut self, e: &AssignExpr) {
-        let old = self.in_rhs;
-        self.in_rhs = false;
-        e.left.visit_with(self);
-        self.check_lhs_of_assign(&e.left);
+	fn visit_assign_expr(&mut self, e:&AssignExpr) {
+		let old = self.in_rhs;
+		self.in_rhs = false;
+		e.left.visit_with(self);
+		self.check_lhs_of_assign(&e.left);
 
-        self.in_rhs = true;
-        e.right.visit_with(self);
-        self.in_rhs = old;
-    }
+		self.in_rhs = true;
+		e.right.visit_with(self);
+		self.in_rhs = old;
+	}
 
-    fn visit_pat(&mut self, e: &Pat) {
-        let old = self.in_rhs;
-        self.in_rhs = false;
-        e.visit_children_with(self);
-        self.in_rhs = old;
-    }
+	fn visit_pat(&mut self, e:&Pat) {
+		let old = self.in_rhs;
+		self.in_rhs = false;
+		e.visit_children_with(self);
+		self.in_rhs = old;
+	}
 
-    fn visit_call_expr(&mut self, e: &CallExpr) {
-        match &e.callee {
-            Callee::Super(_) | Callee::Import(_) => {}
-            Callee::Expr(callee) => {
-                if let Expr::Member(callee) = &**callee {
-                    if callee.obj.is_ident_ref_to("Object") {
-                        match &callee.prop {
-                            MemberProp::Ident(IdentName { sym: prop_sym, .. })
-                                if *prop_sym == *"assign" =>
-                            {
-                                let old = self.in_object_assign;
-                                self.in_object_assign = true;
+	fn visit_call_expr(&mut self, e:&CallExpr) {
+		match &e.callee {
+			Callee::Super(_) | Callee::Import(_) => {},
+			Callee::Expr(callee) => {
+				if let Expr::Member(callee) = &**callee {
+					if callee.obj.is_ident_ref_to("Object") {
+						match &callee.prop {
+							MemberProp::Ident(IdentName { sym: prop_sym, .. })
+								if *prop_sym == *"assign" =>
+							{
+								let old = self.in_object_assign;
+								self.in_object_assign = true;
 
-                                e.args.visit_with(self);
-                                self.in_object_assign = old;
+								e.args.visit_with(self);
+								self.in_object_assign = old;
 
-                                return;
-                            }
-                            _ => {}
-                        }
-                    }
-                }
-            }
-        }
+								return;
+							},
+							_ => {},
+						}
+					}
+				}
+			},
+		}
 
-        e.visit_children_with(self);
-    }
+		e.visit_children_with(self);
+	}
 
-    fn visit_member_expr(&mut self, e: &MemberExpr) {
-        e.obj.visit_with(self);
+	fn visit_member_expr(&mut self, e:&MemberExpr) {
+		e.obj.visit_with(self);
 
-        if let MemberProp::Computed(c) = &e.prop {
-            c.visit_with(self);
-        }
+		if let MemberProp::Computed(c) = &e.prop {
+			c.visit_with(self);
+		}
 
-        if !self.in_rhs || self.in_object_assign {
-            if let Expr::Ident(obj) = &*e.obj {
-                match &e.prop {
-                    MemberProp::Ident(IdentName { sym: prop_sym, .. })
-                        if *prop_sym == *"prototype" =>
-                    {
-                        self.accessed.insert(obj.into());
-                    }
-                    _ => {}
-                }
-            }
-        }
-    }
+		if !self.in_rhs || self.in_object_assign {
+			if let Expr::Ident(obj) = &*e.obj {
+				match &e.prop {
+					MemberProp::Ident(IdentName { sym: prop_sym, .. })
+						if *prop_sym == *"prototype" =>
+					{
+						self.accessed.insert(obj.into());
+					},
+					_ => {},
+				}
+			}
+		}
+	}
 
-    fn visit_super_prop_expr(&mut self, e: &SuperPropExpr) {
-        if let SuperProp::Computed(c) = &e.prop {
-            c.visit_with(self);
-        }
-    }
+	fn visit_super_prop_expr(&mut self, e:&SuperPropExpr) {
+		if let SuperProp::Computed(c) = &e.prop {
+			c.visit_with(self);
+		}
+	}
 }
 
 /// Finds usage of `ident`
 struct InitializerFinder {
-    ident: Id,
-    found: bool,
-    in_complex: bool,
+	ident:Id,
+	found:bool,
+	in_complex:bool,
 }
 
 impl Visit for InitializerFinder {
-    noop_visit_type!();
+	noop_visit_type!();
 
-    fn visit_pat(&mut self, pat: &Pat) {
-        match pat {
-            Pat::Ident(i) if self.ident == i.id => {
-                self.found = true;
-            }
+	fn visit_pat(&mut self, pat:&Pat) {
+		match pat {
+			Pat::Ident(i) if self.ident == i.id => {
+				self.found = true;
+			},
 
-            _ => {
-                pat.visit_children_with(self);
-            }
-        }
-    }
+			_ => {
+				pat.visit_children_with(self);
+			},
+		}
+	}
 
-    fn visit_ident(&mut self, i: &Ident) {
-        if self.in_complex && self.ident == *i {
-            self.found = true;
-        }
-    }
+	fn visit_ident(&mut self, i:&Ident) {
+		if self.in_complex && self.ident == *i {
+			self.found = true;
+		}
+	}
 
-    fn visit_expr_or_spread(&mut self, node: &ExprOrSpread) {
-        let in_complex = self.in_complex;
-        self.in_complex = true;
-        node.visit_children_with(self);
-        self.in_complex = in_complex;
-    }
+	fn visit_expr_or_spread(&mut self, node:&ExprOrSpread) {
+		let in_complex = self.in_complex;
+		self.in_complex = true;
+		node.visit_children_with(self);
+		self.in_complex = in_complex;
+	}
 
-    fn visit_member_expr(&mut self, e: &MemberExpr) {
-        {
-            let in_complex = self.in_complex;
-            self.in_complex = true;
-            e.obj.visit_children_with(self);
-            self.in_complex = in_complex;
-        }
+	fn visit_member_expr(&mut self, e:&MemberExpr) {
+		{
+			let in_complex = self.in_complex;
+			self.in_complex = true;
+			e.obj.visit_children_with(self);
+			self.in_complex = in_complex;
+		}
 
-        if let MemberProp::Computed(c) = &e.prop {
-            c.visit_with(self);
-        }
-    }
+		if let MemberProp::Computed(c) = &e.prop {
+			c.visit_with(self);
+		}
+	}
 
-    fn visit_super_prop_expr(&mut self, e: &SuperPropExpr) {
-        if let SuperProp::Computed(c) = &e.prop {
-            c.visit_with(self);
-        }
-    }
+	fn visit_super_prop_expr(&mut self, e:&SuperPropExpr) {
+		if let SuperProp::Computed(c) = &e.prop {
+			c.visit_with(self);
+		}
+	}
 }
 
 /// We do not care about variables created by current statement.
 /// But we care about modifications.
 #[derive(Default)]
 struct RequirementCalculator {
-    required_ids: IndexSet<(Id, Required), ARandomState>,
-    /// While bundling, there can be two bindings with same name and syntax
-    /// context, in case of wrapped es modules. We exclude them from dependency
-    /// graph.
-    excluded: IndexSet<Id, ARandomState>,
+	required_ids:IndexSet<(Id, Required), ARandomState>,
+	/// While bundling, there can be two bindings with same name and syntax
+	/// context, in case of wrapped es modules. We exclude them from dependency
+	/// graph.
+	excluded:IndexSet<Id, ARandomState>,
 
-    in_weak: bool,
-    in_var_decl: bool,
-    in_assign_lhs: bool,
+	in_weak:bool,
+	in_var_decl:bool,
+	in_assign_lhs:bool,
 }
 
 macro_rules! weak {
-    ($name:ident, $T:ty) => {
-        fn $name(&mut self, f: &$T) {
-            let in_weak = self.in_weak;
-            self.in_weak = true;
+	($name:ident, $T:ty) => {
+		fn $name(&mut self, f:&$T) {
+			let in_weak = self.in_weak;
+			self.in_weak = true;
 
-            f.visit_children_with(self);
+			f.visit_children_with(self);
 
-            self.in_weak = in_weak;
-        }
-    };
+			self.in_weak = in_weak;
+		}
+	};
 }
 
 impl RequirementCalculator {
-    fn insert(&mut self, i: Id) {
-        self.required_ids.insert((
-            i,
-            if self.in_weak {
-                Required::Maybe
-            } else {
-                Required::Always
-            },
-        ));
-    }
+	fn insert(&mut self, i:Id) {
+		self.required_ids
+			.insert((i, if self.in_weak { Required::Maybe } else { Required::Always }));
+	}
 }
 
 impl Visit for RequirementCalculator {
-    noop_visit_type!();
+	noop_visit_type!();
 
-    weak!(visit_arrow_expr, ArrowExpr);
+	weak!(visit_arrow_expr, ArrowExpr);
 
-    weak!(visit_function, Function);
+	weak!(visit_function, Function);
 
-    weak!(visit_class_method, ClassMethod);
+	weak!(visit_class_method, ClassMethod);
 
-    weak!(visit_private_method, PrivateMethod);
+	weak!(visit_private_method, PrivateMethod);
 
-    weak!(visit_method_prop, MethodProp);
+	weak!(visit_method_prop, MethodProp);
 
-    fn visit_export_named_specifier(&mut self, n: &ExportNamedSpecifier) {
-        let orig = match &n.orig {
-            ModuleExportName::Ident(ident) => ident,
-            ModuleExportName::Str(..) => unimplemented!("module string names unimplemented"),
-        };
-        self.insert(orig.clone().into());
-    }
+	fn visit_export_named_specifier(&mut self, n:&ExportNamedSpecifier) {
+		let orig = match &n.orig {
+			ModuleExportName::Ident(ident) => ident,
+			ModuleExportName::Str(..) => unimplemented!("module string names unimplemented"),
+		};
+		self.insert(orig.clone().into());
+	}
 
-    fn visit_assign_expr(&mut self, e: &AssignExpr) {
-        let old = self.in_assign_lhs;
+	fn visit_assign_expr(&mut self, e:&AssignExpr) {
+		let old = self.in_assign_lhs;
 
-        self.in_assign_lhs = true;
-        e.left.visit_with(self);
+		self.in_assign_lhs = true;
+		e.left.visit_with(self);
 
-        self.in_assign_lhs = false;
-        e.right.visit_with(self);
+		self.in_assign_lhs = false;
+		e.right.visit_with(self);
 
-        self.in_assign_lhs = old;
-    }
+		self.in_assign_lhs = old;
+	}
 
-    fn visit_pat(&mut self, pat: &Pat) {
-        match pat {
-            Pat::Ident(i) => {
-                // We do not care about variables created by current statement.
-                if self.in_var_decl && !self.in_assign_lhs {
-                    return;
-                }
-                self.insert(i.id.clone().into());
-            }
-            _ => {
-                pat.visit_children_with(self);
-            }
-        }
-    }
+	fn visit_pat(&mut self, pat:&Pat) {
+		match pat {
+			Pat::Ident(i) => {
+				// We do not care about variables created by current statement.
+				if self.in_var_decl && !self.in_assign_lhs {
+					return;
+				}
+				self.insert(i.id.clone().into());
+			},
+			_ => {
+				pat.visit_children_with(self);
+			},
+		}
+	}
 
-    fn visit_var_declarator(&mut self, var: &VarDeclarator) {
-        let in_var_decl = self.in_var_decl;
-        self.in_var_decl = true;
+	fn visit_var_declarator(&mut self, var:&VarDeclarator) {
+		let in_var_decl = self.in_var_decl;
+		self.in_var_decl = true;
 
-        if self.in_weak {
-            let ids: Vec<Id> = find_pat_ids(&var.name);
-            self.excluded.extend(ids);
-        }
+		if self.in_weak {
+			let ids:Vec<Id> = find_pat_ids(&var.name);
+			self.excluded.extend(ids);
+		}
 
-        var.visit_children_with(self);
+		var.visit_children_with(self);
 
-        self.in_var_decl = in_var_decl;
-    }
+		self.in_var_decl = in_var_decl;
+	}
 
-    fn visit_expr(&mut self, expr: &Expr) {
-        match expr {
-            Expr::Ident(i) => {
-                if self.in_var_decl && self.in_assign_lhs {
-                    return;
-                }
-                self.insert(i.into());
-            }
-            _ => {
-                expr.visit_children_with(self);
-            }
-        }
-    }
+	fn visit_expr(&mut self, expr:&Expr) {
+		match expr {
+			Expr::Ident(i) => {
+				if self.in_var_decl && self.in_assign_lhs {
+					return;
+				}
+				self.insert(i.into());
+			},
+			_ => {
+				expr.visit_children_with(self);
+			},
+		}
+	}
 
-    fn visit_prop(&mut self, prop: &Prop) {
-        match prop {
-            Prop::Shorthand(i) => {
-                self.insert(i.into());
-            }
-            _ => prop.visit_children_with(self),
-        }
-    }
+	fn visit_prop(&mut self, prop:&Prop) {
+		match prop {
+			Prop::Shorthand(i) => {
+				self.insert(i.into());
+			},
+			_ => prop.visit_children_with(self),
+		}
+	}
 
-    fn visit_member_expr(&mut self, e: &MemberExpr) {
-        e.obj.visit_with(self);
+	fn visit_member_expr(&mut self, e:&MemberExpr) {
+		e.obj.visit_with(self);
 
-        if let MemberProp::Computed(c) = &e.prop {
-            c.visit_with(self);
-        }
-    }
+		if let MemberProp::Computed(c) = &e.prop {
+			c.visit_with(self);
+		}
+	}
 
-    fn visit_super_prop_expr(&mut self, e: &SuperPropExpr) {
-        if let SuperProp::Computed(c) = &e.prop {
-            c.visit_with(self);
-        }
-    }
+	fn visit_super_prop_expr(&mut self, e:&SuperPropExpr) {
+		if let SuperProp::Computed(c) = &e.prop {
+			c.visit_with(self);
+		}
+	}
 }
 
-fn calc_deps(new: &[ModuleItem]) -> StmtDepGraph {
-    tracing::debug!("Analyzing dependencies between statements");
-    let mut graph = StmtDepGraph::default();
+fn calc_deps(new:&[ModuleItem]) -> StmtDepGraph {
+	tracing::debug!("Analyzing dependencies between statements");
+	let mut graph = StmtDepGraph::default();
 
-    let mut declared_by = AHashMap::<Id, Vec<usize>>::default();
-    let mut uninitialized_ids = AHashMap::<Id, usize>::default();
+	let mut declared_by = AHashMap::<Id, Vec<usize>>::default();
+	let mut uninitialized_ids = AHashMap::<Id, usize>::default();
 
-    for (idx, item) in new.iter().enumerate() {
-        graph.add_node(idx);
+	for (idx, item) in new.iter().enumerate() {
+		graph.add_node(idx);
 
-        // We start by calculating ids created by statements. Note that we don't need to
-        // analyze bodies of functions nor members of classes, because it's not
-        // evaluated until they are called.
+		// We start by calculating ids created by statements. Note that we don't need to
+		// analyze bodies of functions nor members of classes, because it's not
+		// evaluated until they are called.
 
-        match item {
-            // We only check declarations because ids are created by declarations.
-            ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl { decl, .. }))
-            | ModuleItem::Stmt(Stmt::Decl(decl)) => {
-                //
-                match decl {
-                    Decl::Class(ClassDecl { ident, .. }) | Decl::Fn(FnDecl { ident, .. }) => {
-                        // eprintln!("Decl: `{}` declares {:?}`", idx, Id::from(ident));
-                        declared_by.entry(Id::from(ident)).or_default().push(idx);
-                    }
-                    Decl::Var(vars) => {
-                        for var in &vars.decls {
-                            //
-                            let ids: Vec<Id> = find_pat_ids(&var.name);
-                            for id in ids {
-                                if var.init.is_none() {
-                                    uninitialized_ids.insert(id.clone(), idx);
-                                }
+		match item {
+			// We only check declarations because ids are created by declarations.
+			ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl { decl, .. }))
+			| ModuleItem::Stmt(Stmt::Decl(decl)) => {
+				//
+				match decl {
+					Decl::Class(ClassDecl { ident, .. }) | Decl::Fn(FnDecl { ident, .. }) => {
+						// eprintln!("Decl: `{}` declares {:?}`", idx, Id::from(ident));
+						declared_by.entry(Id::from(ident)).or_default().push(idx);
+					},
+					Decl::Var(vars) => {
+						for var in &vars.decls {
+							//
+							let ids:Vec<Id> = find_pat_ids(&var.name);
+							for id in ids {
+								if var.init.is_none() {
+									uninitialized_ids.insert(id.clone(), idx);
+								}
 
-                                // eprintln!("Decl: `{}` declares {:?}`", idx, id);
-                                declared_by.entry(id).or_default().push(idx);
-                            }
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            _ => {}
-        }
+								// eprintln!("Decl: `{}` declares {:?}`", idx, id);
+								declared_by.entry(id).or_default().push(idx);
+							}
+						}
+					},
+					_ => {},
+				}
+			},
+			_ => {},
+		}
 
-        {
-            // Find extra initializations.
-            let mut v = FieldInitFinder::default();
-            item.visit_with(&mut v);
+		{
+			// Find extra initializations.
+			let mut v = FieldInitFinder::default();
+			item.visit_with(&mut v);
 
-            for id in v.accessed {
-                if let Some(declarator_indexes) = declared_by.get(&id) {
-                    // let idx_decl = match &item {
-                    //     ModuleItem::Stmt(Stmt::Decl(Decl::Var(var))) => {
-                    //         let ids: Vec<Id> = find_ids(&var.decls);
-                    //         format!("`{:?}`", ids)
-                    //     }
-                    //     ModuleItem::Stmt(Stmt::Decl(Decl::Class(c))) => {
-                    //         format!("{}{:?}", c.ident.sym, c.ident.ctxt)
-                    //     }
-                    //     ModuleItem::Stmt(Stmt::Decl(Decl::Fn(f))) => {
-                    //         format!("{}{:?}", f.ident.sym, f.ident.ctxt)
-                    //     }
-                    //     _ => String::from(""),
-                    // };
+			for id in v.accessed {
+				if let Some(declarator_indexes) = declared_by.get(&id) {
+					// let idx_decl = match &item {
+					//     ModuleItem::Stmt(Stmt::Decl(Decl::Var(var))) => {
+					//         let ids: Vec<Id> = find_ids(&var.decls);
+					//         format!("`{:?}`", ids)
+					//     }
+					//     ModuleItem::Stmt(Stmt::Decl(Decl::Class(c))) => {
+					//         format!("{}{:?}", c.ident.sym, c.ident.ctxt)
+					//     }
+					//     ModuleItem::Stmt(Stmt::Decl(Decl::Fn(f))) => {
+					//         format!("{}{:?}", f.ident.sym, f.ident.ctxt)
+					//     }
+					//     _ => String::from(""),
+					// };
 
-                    for &declarator_index in declarator_indexes {
-                        if declarator_index != idx {
-                            graph.add_edge(idx, declarator_index, Required::Always);
-                            // eprintln!(
-                            //     "Field init: `{}` ({}) depends on `{}`:
-                            // {:?}",
-                            //     idx, idx_decl, declarator_index, &id
-                            // );
-                        }
-                    }
+					for &declarator_index in declarator_indexes {
+						if declarator_index != idx {
+							graph.add_edge(idx, declarator_index, Required::Always);
+							// eprintln!(
+							//     "Field init: `{}` ({}) depends on `{}`:
+							// {:?}",
+							//     idx, idx_decl, declarator_index, &id
+							// );
+						}
+					}
 
-                    // eprintln!("`{}` declares {:?}`", idx, id);
-                    declared_by.entry(id).or_default().push(idx);
-                }
-            }
-        }
-    }
+					// eprintln!("`{}` declares {:?}`", idx, id);
+					declared_by.entry(id).or_default().push(idx);
+				}
+			}
+		}
+	}
 
-    // Handle uninitialized variables
-    //
-    // Compiled typescript enum is not initialized by declaration
-    //
-    // var Status;
-    // (function(Status){})(Status)
-    for (uninit_id, start_idx) in uninitialized_ids {
-        for (idx, item) in new.iter().enumerate().filter(|(idx, _)| *idx > start_idx) {
-            let mut finder = InitializerFinder {
-                ident: uninit_id.clone(),
-                found: false,
-                in_complex: false,
-            };
-            item.visit_with(&mut finder);
-            if finder.found {
-                declared_by.entry(uninit_id).or_default().push(idx);
-                break;
-            }
-        }
-    }
+	// Handle uninitialized variables
+	//
+	// Compiled typescript enum is not initialized by declaration
+	//
+	// var Status;
+	// (function(Status){})(Status)
+	for (uninit_id, start_idx) in uninitialized_ids {
+		for (idx, item) in new.iter().enumerate().filter(|(idx, _)| *idx > start_idx) {
+			let mut finder =
+				InitializerFinder { ident:uninit_id.clone(), found:false, in_complex:false };
+			item.visit_with(&mut finder);
+			if finder.found {
+				declared_by.entry(uninit_id).or_default().push(idx);
+				break;
+			}
+		}
+	}
 
-    for (idx, item) in new.iter().enumerate() {
-        // We then calculate which ids a statement require to be executed.
-        // Again, we don't need to analyze non-top-level identifiers because they
-        // are not evaluated while loading module.
+	for (idx, item) in new.iter().enumerate() {
+		// We then calculate which ids a statement require to be executed.
+		// Again, we don't need to analyze non-top-level identifiers because they
+		// are not evaluated while loading module.
 
-        let mut visitor = RequirementCalculator::default();
+		let mut visitor = RequirementCalculator::default();
 
-        item.visit_with(&mut visitor);
+		item.visit_with(&mut visitor);
 
-        for (id, kind) in visitor.required_ids {
-            if visitor.excluded.contains(&id) {
-                continue;
-            }
+		for (id, kind) in visitor.required_ids {
+			if visitor.excluded.contains(&id) {
+				continue;
+			}
 
-            if let Some(declarator_indexes) = declared_by.get(&id) {
-                for &declarator_index in declarator_indexes {
-                    if declarator_index != idx {
-                        // let idx_decl = match &item {
-                        //     ModuleItem::Stmt(Stmt::Decl(Decl::Var(var))) => {
-                        //         let ids: Vec<Id> = find_ids(&var.decls);
-                        //         format!("`{:?}`", ids)
-                        //     }
-                        //     ModuleItem::Stmt(Stmt::Decl(Decl::Class(c))) => {
-                        //         format!("{}{:?}", c.ident.sym, c.ident.ctxt)
-                        //     }
-                        //     ModuleItem::Stmt(Stmt::Decl(Decl::Fn(f))) => {
-                        //         format!("{}{:?}", f.ident.sym, f.ident.ctxt)
-                        //     }
-                        //     _ => String::from(""),
-                        // };
+			if let Some(declarator_indexes) = declared_by.get(&id) {
+				for &declarator_index in declarator_indexes {
+					if declarator_index != idx {
+						// let idx_decl = match &item {
+						//     ModuleItem::Stmt(Stmt::Decl(Decl::Var(var))) => {
+						//         let ids: Vec<Id> = find_ids(&var.decls);
+						//         format!("`{:?}`", ids)
+						//     }
+						//     ModuleItem::Stmt(Stmt::Decl(Decl::Class(c))) => {
+						//         format!("{}{:?}", c.ident.sym, c.ident.ctxt)
+						//     }
+						//     ModuleItem::Stmt(Stmt::Decl(Decl::Fn(f))) => {
+						//         format!("{}{:?}", f.ident.sym, f.ident.ctxt)
+						//     }
+						//     _ => String::from(""),
+						// };
 
-                        graph.add_edge(idx, declarator_index, kind);
-                        // eprintln!(
-                        //     "`{}` ({}) depends on `{}`: {:?}",
-                        //     idx, idx_decl, declarator_index, &id
-                        // );
-                        if cfg!(debug_assertions) {
-                            assert!(graph
-                                .neighbors_directed(idx, Dependencies)
-                                .any(|x| x == declarator_index));
-                        }
-                    }
-                }
-            }
-        }
-    }
+						graph.add_edge(idx, declarator_index, kind);
+						// eprintln!(
+						//     "`{}` ({}) depends on `{}`: {:?}",
+						//     idx, idx_decl, declarator_index, &id
+						// );
+						if cfg!(debug_assertions) {
+							assert!(
+								graph
+									.neighbors_directed(idx, Dependencies)
+									.any(|x| x == declarator_index)
+							);
+						}
+					}
+				}
+			}
+		}
+	}
 
-    graph
+	graph
 }
 
 #[cfg(test)]
 mod tests {
-    use swc_common::DUMMY_SP;
-    use swc_ecma_ast::*;
+	use swc_common::DUMMY_SP;
+	use swc_ecma_ast::*;
 
-    use super::{calc_deps, Dependencies};
-    use crate::{bundler::tests::suite, debug::print_hygiene};
+	use super::{calc_deps, Dependencies};
+	use crate::{bundler::tests::suite, debug::print_hygiene};
 
-    fn assert_no_cycle(s: &str) {
-        suite().file("main.js", s).run(|t| {
-            let info = t.module("main.js");
-            let module = (*info.module).clone();
+	fn assert_no_cycle(s:&str) {
+		suite().file("main.js", s).run(|t| {
+			let info = t.module("main.js");
+			let module = (*info.module).clone();
 
-            let graph = calc_deps(&module.body);
+			let graph = calc_deps(&module.body);
 
-            for i in 0..module.body.len() {
-                if let ModuleItem::Stmt(Stmt::Decl(Decl::Fn(..))) = &module.body[i] {
-                    continue;
-                }
+			for i in 0..module.body.len() {
+				if let ModuleItem::Stmt(Stmt::Decl(Decl::Fn(..))) = &module.body[i] {
+					continue;
+				}
 
-                let deps = graph
-                    .neighbors_directed(i, Dependencies)
-                    .collect::<Vec<_>>();
+				let deps = graph.neighbors_directed(i, Dependencies).collect::<Vec<_>>();
 
-                for dep in deps {
-                    if let ModuleItem::Stmt(Stmt::Decl(Decl::Fn(..))) = &module.body[dep] {
-                        continue;
-                    }
-                    print_hygiene(
-                        "first item",
-                        &t.cm,
-                        &Module {
-                            span: DUMMY_SP,
-                            body: vec![module.body[dep].clone()],
-                            shebang: None,
-                        },
-                    );
-                    print_hygiene(
-                        "second item",
-                        &t.cm,
-                        &Module {
-                            span: DUMMY_SP,
-                            body: vec![module.body[i].clone()],
-                            shebang: None,
-                        },
-                    );
-                    assert!(
-                        !graph.has_a_path(dep, i),
-                        "{} and {} is dependant to each other",
-                        dep,
-                        i,
-                    );
-                }
-            }
+				for dep in deps {
+					if let ModuleItem::Stmt(Stmt::Decl(Decl::Fn(..))) = &module.body[dep] {
+						continue;
+					}
+					print_hygiene(
+						"first item",
+						&t.cm,
+						&Module {
+							span:DUMMY_SP,
+							body:vec![module.body[dep].clone()],
+							shebang:None,
+						},
+					);
+					print_hygiene(
+						"second item",
+						&t.cm,
+						&Module { span:DUMMY_SP, body:vec![module.body[i].clone()], shebang:None },
+					);
+					assert!(
+						!graph.has_a_path(dep, i),
+						"{} and {} is dependant to each other",
+						dep,
+						i,
+					);
+				}
+			}
 
-            Ok(())
-        });
-    }
+			Ok(())
+		});
+	}
 
-    #[test]
-    fn no_cycle_1() {
-        assert_no_cycle(
-            r#"
+	#[test]
+	fn no_cycle_1() {
+		assert_no_cycle(
+			r#"
             function lexer(str) {
                 const tokens = [];
                 let i = 0;
@@ -1233,6 +1198,6 @@ mod tests {
             }
             const pathToRegexp1 = pathToRegexp;
         "#,
-        );
-    }
+		);
+	}
 }

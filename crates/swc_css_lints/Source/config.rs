@@ -85,8 +85,7 @@ pub struct RulesConfig {
 	pub keyframe_declaration_no_important:RuleConfig<()>,
 
 	#[serde(default, alias = "noInvalidPositionAtImportRule")]
-	pub no_invalid_position_at_import_rule:
-		RuleConfig<NoInvalidPositionAtImportRuleConfig>,
+	pub no_invalid_position_at_import_rule:RuleConfig<NoInvalidPositionAtImportRuleConfig>,
 
 	#[serde(default, alias = "selectorMaxClass")]
 	pub selector_max_class:RuleConfig<SelectorMaxClassConfig>,
@@ -104,8 +103,7 @@ pub struct RulesConfig {
 	pub selector_max_combinators:RuleConfig<SelectorMaxCombinatorsConfig>,
 
 	#[serde(default, alias = "fontFamilyNoDuplicateNames")]
-	pub font_family_no_duplicate_names:
-		RuleConfig<FontFamilyNoDuplicateNamesConfig>,
+	pub font_family_no_duplicate_names:RuleConfig<FontFamilyNoDuplicateNamesConfig>,
 
 	#[serde(default, alias = "colorHexAlpha")]
 	pub color_hex_alpha:RuleConfig<ColorHexAlphaConfig>,

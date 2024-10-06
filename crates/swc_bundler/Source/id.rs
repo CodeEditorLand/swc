@@ -4,14 +4,7 @@ use std::{
 };
 
 use swc_atoms::JsWord;
-use swc_common::{
-	collections::AHashMap,
-	sync::Lock,
-	FileName,
-	Mark,
-	SyntaxContext,
-	DUMMY_SP,
-};
+use swc_common::{collections::AHashMap, sync::Lock, FileName, Mark, SyntaxContext, DUMMY_SP};
 use swc_ecma_ast::{Expr, Ident};
 use swc_ecma_utils::ident::IdentLike;
 
@@ -19,9 +12,7 @@ use swc_ecma_utils::ident::IdentLike;
 pub struct ModuleId(u32);
 
 impl fmt::Display for ModuleId {
-	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
-		fmt::Display::fmt(&self.0, f)
-	}
+	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result { fmt::Display::fmt(&self.0, f) }
 }
 
 impl fmt::Debug for ModuleId {
@@ -58,9 +49,7 @@ impl ModuleIdGenerator {
 pub struct Id(JsWord, SyntaxContext);
 
 impl fmt::Debug for Id {
-	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "{}{:?}", self.0, self.1)
-	}
+	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{}{:?}", self.0, self.1) }
 }
 
 impl Id {
@@ -95,9 +84,7 @@ impl<'a> From<&'a Ident> for Id {
 }
 
 impl PartialEq<Ident> for Id {
-	fn eq(&self, other:&Ident) -> bool {
-		self.0 == other.sym && self.1 == other.ctxt
-	}
+	fn eq(&self, other:&Ident) -> bool { self.0 == other.sym && self.1 == other.ctxt }
 }
 
 impl PartialEq<JsWord> for Id {

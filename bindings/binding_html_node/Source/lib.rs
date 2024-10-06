@@ -47,9 +47,7 @@ use crate::util::try_with;
 
 #[napi::module_init]
 fn init() {
-	if cfg!(debug_assertions)
-		|| env::var("SWC_DEBUG").unwrap_or_default() == "1"
-	{
+	if cfg!(debug_assertions) || env::var("SWC_DEBUG").unwrap_or_default() == "1" {
 		set_hook(Box::new(|panic_info| {
 			let backtrace = Backtrace::force_capture();
 			println!("Panic: {:?}\nBacktrace: {:?}", panic_info, backtrace);
@@ -178,9 +176,7 @@ pub struct MinifyOptions {
 
 const fn true_by_default() -> bool { true }
 
-const fn minify_json_by_default() -> MinifyJsonOption {
-	MinifyJsonOption::Bool(true)
-}
+const fn minify_json_by_default() -> MinifyJsonOption { MinifyJsonOption::Bool(true) }
 
 const fn minify_js_by_default() -> MinifyJsOption { MinifyJsOption::Bool(true) }
 
@@ -205,9 +201,7 @@ fn default_preserve_comments() -> Option<Vec<CachedRegex>> {
 	])
 }
 
-const fn default_collapse_whitespaces() -> CollapseWhitespaces {
-	CollapseWhitespaces::OnlyMetadata
-}
+const fn default_collapse_whitespaces() -> CollapseWhitespaces { CollapseWhitespaces::OnlyMetadata }
 
 #[napi]
 impl Task for MinifyTask {
@@ -222,11 +216,7 @@ impl Task for MinifyTask {
 		minify_inner(&self.code, opts, self.is_fragment).convert_err()
 	}
 
-	fn resolve(
-		&mut self,
-		_env:napi::Env,
-		output:Self::Output,
-	) -> napi::Result<Self::JsValue> {
+	fn resolve(&mut self, _env:napi::Env, output:Self::Output) -> napi::Result<Self::JsValue> {
 		Ok(output)
 	}
 }
@@ -250,9 +240,7 @@ fn create_namespace(namespace:&str) -> anyhow::Result<Namespace> {
 	}
 }
 
-fn create_element(
-	context_element:Element,
-) -> anyhow::Result<swc_html_ast::Element> {
+fn create_element(context_element:Element) -> anyhow::Result<swc_html_ast::Element> {
 	let mut attributes = Vec::with_capacity(context_element.attributes.len());
 
 	for attribute in context_element.attributes.into_iter() {
@@ -311,9 +299,7 @@ impl MinifyCss for CssMinifier {
 		let opts = match options {
 			MinifyCssOption::Bool(v) => {
 				if *v {
-					Cow::Owned(CssMinfierOptions::LightningCss(
-						LightningCssOptions {},
-					))
+					Cow::Owned(CssMinfierOptions::LightningCss(LightningCssOptions {}))
 				} else {
 					return None;
 				}
@@ -341,11 +327,7 @@ impl MinifyCss for CssMinifier {
 				.ok()?;
 
 				let to_css_result = ss
-					.to_css(PrinterOptions {
-						minify:true,
-						targets,
-						..Default::default()
-					})
+					.to_css(PrinterOptions { minify:true, targets, ..Default::default() })
 					.ok()?;
 
 				Some(to_css_result.code)
@@ -360,103 +342,102 @@ impl MinifyCss for CssMinifier {
 
 				let mut stylesheet = match mode {
 					CssMinificationMode::Stylesheet => {
-						match swc_css_parser::parse_file(
-							&fm,
-							None,
-							options.parser,
-							&mut errors,
-						) {
+						match swc_css_parser::parse_file(&fm, None, options.parser, &mut errors) {
 							Ok(stylesheet) => stylesheet,
 							_ => return None,
 						}
 					},
 					CssMinificationMode::ListOfDeclarations => {
-						match swc_css_parser::parse_file::<
-							Vec<swc_css_ast::DeclarationOrAtRule>,
-						>(&fm, None, options.parser, &mut errors)
-						{
+						match swc_css_parser::parse_file::<Vec<swc_css_ast::DeclarationOrAtRule>>(
+							&fm,
+							None,
+							options.parser,
+							&mut errors,
+						) {
 							Ok(list_of_declarations) => {
-								let declaration_list:Vec<
-									swc_css_ast::ComponentValue,
-								> = list_of_declarations
-									.into_iter()
-									.map(|node| node.into())
-									.collect();
+								let declaration_list:Vec<swc_css_ast::ComponentValue> =
+									list_of_declarations
+										.into_iter()
+										.map(|node| node.into())
+										.collect();
 
 								swc_css_ast::Stylesheet {
-                                    span: Default::default(),
-                                    rules: vec![swc_css_ast::Rule::QualifiedRule(
-                                        swc_css_ast::QualifiedRule {
-                                            span: Default::default(),
-                                            prelude:
-                                                swc_css_ast::QualifiedRulePrelude::SelectorList(
-                                                    swc_css_ast::SelectorList {
-                                                        span: Default::default(),
-                                                        children: Vec::new(),
-                                                    },
-                                                ),
-                                            block: swc_css_ast::SimpleBlock {
-                                                span: Default::default(),
-                                                name: swc_css_ast::TokenAndSpan {
-                                                    span: DUMMY_SP,
-                                                    token: swc_css_ast::Token::LBrace,
-                                                },
-                                                value: declaration_list,
-                                            },
-                                        }
-                                        .into(),
-                                    )],
-                                }
+									span:Default::default(),
+									rules:vec![swc_css_ast::Rule::QualifiedRule(
+										swc_css_ast::QualifiedRule {
+											span:Default::default(),
+											prelude:swc_css_ast::QualifiedRulePrelude::SelectorList(
+												swc_css_ast::SelectorList {
+													span:Default::default(),
+													children:Vec::new(),
+												},
+											),
+											block:swc_css_ast::SimpleBlock {
+												span:Default::default(),
+												name:swc_css_ast::TokenAndSpan {
+													span:DUMMY_SP,
+													token:swc_css_ast::Token::LBrace,
+												},
+												value:declaration_list,
+											},
+										}
+										.into(),
+									)],
+								}
 							},
 							_ => return None,
 						}
 					},
 					CssMinificationMode::MediaQueryList => {
 						match swc_css_parser::parse_file::<swc_css_ast::MediaQueryList>(
-                            &fm,
-                            None,
-                            options.parser,
-                            &mut errors,
-                        ) {
-                            Ok(media_query_list) => swc_css_ast::Stylesheet {
-                                span: Default::default(),
-                                rules: vec![swc_css_ast::Rule::AtRule(
-                                    swc_css_ast::AtRule {
-                                        span: Default::default(),
-                                        name: swc_css_ast::AtRuleName::Ident(swc_css_ast::Ident {
-                                            span: Default::default(),
-                                            value: "media".into(),
-                                            raw: None,
-                                        }),
-                                        prelude: Some(
-                                            swc_css_ast::AtRulePrelude::MediaPrelude(
-                                                media_query_list,
-                                            )
-                                            .into(),
-                                        ),
-                                        block: Some(swc_css_ast::SimpleBlock {
-                                            span: Default::default(),
-                                            name: swc_css_ast::TokenAndSpan {
-                                                span: DUMMY_SP,
-                                                token: swc_css_ast::Token::LBrace,
-                                            },
-                                            // TODO make the `compress_empty` option for CSS
-                                            // minifier and
-                                            // remove it
-                                            value: vec![swc_css_ast::ComponentValue::Str(
-                                                Box::new(swc_css_ast::Str {
-                                                    span: Default::default(),
-                                                    value: "placeholder".into(),
-                                                    raw: None,
-                                                }),
-                                            )],
-                                        }),
-                                    }
-                                    .into(),
-                                )],
-                            },
-                            _ => return None,
-                        }
+							&fm,
+							None,
+							options.parser,
+							&mut errors,
+						) {
+							Ok(media_query_list) => {
+								swc_css_ast::Stylesheet {
+									span:Default::default(),
+									rules:vec![swc_css_ast::Rule::AtRule(
+										swc_css_ast::AtRule {
+											span:Default::default(),
+											name:swc_css_ast::AtRuleName::Ident(
+												swc_css_ast::Ident {
+													span:Default::default(),
+													value:"media".into(),
+													raw:None,
+												},
+											),
+											prelude:Some(
+												swc_css_ast::AtRulePrelude::MediaPrelude(
+													media_query_list,
+												)
+												.into(),
+											),
+											block:Some(swc_css_ast::SimpleBlock {
+												span:Default::default(),
+												name:swc_css_ast::TokenAndSpan {
+													span:DUMMY_SP,
+													token:swc_css_ast::Token::LBrace,
+												},
+												// TODO make the `compress_empty` option for CSS
+												// minifier and
+												// remove it
+												value:vec![swc_css_ast::ComponentValue::Str(
+													Box::new(swc_css_ast::Str {
+														span:Default::default(),
+														value:"placeholder".into(),
+														raw:None,
+													}),
+												)],
+											}),
+										}
+										.into(),
+									)],
+								}
+							},
+							_ => return None,
+						}
 					},
 				};
 
@@ -469,34 +450,29 @@ impl MinifyCss for CssMinifier {
 
 				let mut minified = String::new();
 				let wr = swc_css_codegen::writer::basic::BasicCssWriter::new(
-                    &mut minified,
-                    None,
-                    swc_css_codegen::writer::basic::BasicCssWriterConfig::default(),
-                );
+					&mut minified,
+					None,
+					swc_css_codegen::writer::basic::BasicCssWriterConfig::default(),
+				);
 
 				options.codegen.minify = true;
 
-				let mut gen =
-					swc_css_codegen::CodeGenerator::new(wr, options.codegen);
+				let mut gen = swc_css_codegen::CodeGenerator::new(wr, options.codegen);
 
 				match mode {
 					CssMinificationMode::Stylesheet => {
-						swc_css_codegen::Emit::emit(&mut gen, &stylesheet)
-							.unwrap();
+						swc_css_codegen::Emit::emit(&mut gen, &stylesheet).unwrap();
 					},
 					CssMinificationMode::ListOfDeclarations => {
 						let swc_css_ast::Stylesheet { rules, .. } = &stylesheet;
 
 						// Because CSS is grammar free, protect for fails
-						let Some(swc_css_ast::Rule::QualifiedRule(
-							qualified_rule,
-						)) = rules.first()
+						let Some(swc_css_ast::Rule::QualifiedRule(qualified_rule)) = rules.first()
 						else {
 							return None;
 						};
 
-						let swc_css_ast::QualifiedRule { block, .. } =
-							&**qualified_rule;
+						let swc_css_ast::QualifiedRule { block, .. } = &**qualified_rule;
 
 						swc_css_codegen::Emit::emit(&mut gen, &block).unwrap();
 
@@ -506,16 +482,13 @@ impl MinifyCss for CssMinifier {
 						let swc_css_ast::Stylesheet { rules, .. } = &stylesheet;
 
 						// Because CSS is grammar free, protect for fails
-						let Some(swc_css_ast::Rule::AtRule(at_rule)) =
-							rules.first()
-						else {
+						let Some(swc_css_ast::Rule::AtRule(at_rule)) = rules.first() else {
 							return None;
 						};
 
 						let swc_css_ast::AtRule { prelude, .. } = &**at_rule;
 
-						swc_css_codegen::Emit::emit(&mut gen, &prelude)
-							.unwrap();
+						swc_css_codegen::Emit::emit(&mut gen, &prelude).unwrap();
 
 						minified = minified.trim().to_string();
 					},
@@ -544,92 +517,85 @@ fn minify_inner(
 			let scripting_enabled = opts.scripting_enabled;
 			let mut errors = vec![];
 
-			let (mut document_or_document_fragment, context_element) =
-				if is_fragment {
-					let context_element = match opts.context_element {
-						Some(context_element) => {
-							create_element(context_element)?
-						},
-						_ => {
-							swc_html_ast::Element {
-								span:DUMMY_SP,
-								tag_name:js_word!("template"),
-								namespace:Namespace::HTML,
-								attributes:vec![],
-								children:vec![],
-								content:None,
-								is_self_closing:false,
-							}
-						},
-					};
-					let mode = match opts.mode {
-						Some(mode) => mode,
-						_ => DocumentMode::NoQuirks,
-					};
-					let form_element = match opts.form_element {
-						Some(form_element) => {
-							Some(create_element(form_element)?)
-						},
-						_ => None,
-					};
-					let document_fragment = parse_file_as_document_fragment(
-						&fm,
-						&context_element,
-						mode,
-						form_element.as_ref(),
-						swc_html::parser::parser::ParserConfig {
-							scripting_enabled,
-							iframe_srcdoc:opts.iframe_srcdoc,
-							..Default::default()
-						},
-						&mut errors,
-					);
-
-					let document_fragment = match document_fragment {
-						Ok(v) => v,
-						Err(err) => {
-							err.to_diagnostics(handler).emit();
-
-							for err in errors {
-								err.to_diagnostics(handler).emit();
-							}
-
-							bail!("failed to parse input as document fragment")
-						},
-					};
-
-					(
-						DocumentOrDocumentFragment::DocumentFragment(
-							document_fragment,
-						),
-						Some(context_element),
-					)
-				} else {
-					let document = parse_file_as_document(
-						&fm,
-						swc_html::parser::parser::ParserConfig {
-							scripting_enabled,
-							iframe_srcdoc:opts.iframe_srcdoc,
-							..Default::default()
-						},
-						&mut errors,
-					);
-
-					let document = match document {
-						Ok(v) => v,
-						Err(err) => {
-							err.to_diagnostics(handler).emit();
-
-							for err in errors {
-								err.to_diagnostics(handler).emit();
-							}
-
-							bail!("failed to parse input as document")
-						},
-					};
-
-					(DocumentOrDocumentFragment::Document(document), None)
+			let (mut document_or_document_fragment, context_element) = if is_fragment {
+				let context_element = match opts.context_element {
+					Some(context_element) => create_element(context_element)?,
+					_ => {
+						swc_html_ast::Element {
+							span:DUMMY_SP,
+							tag_name:js_word!("template"),
+							namespace:Namespace::HTML,
+							attributes:vec![],
+							children:vec![],
+							content:None,
+							is_self_closing:false,
+						}
+					},
 				};
+				let mode = match opts.mode {
+					Some(mode) => mode,
+					_ => DocumentMode::NoQuirks,
+				};
+				let form_element = match opts.form_element {
+					Some(form_element) => Some(create_element(form_element)?),
+					_ => None,
+				};
+				let document_fragment = parse_file_as_document_fragment(
+					&fm,
+					&context_element,
+					mode,
+					form_element.as_ref(),
+					swc_html::parser::parser::ParserConfig {
+						scripting_enabled,
+						iframe_srcdoc:opts.iframe_srcdoc,
+						..Default::default()
+					},
+					&mut errors,
+				);
+
+				let document_fragment = match document_fragment {
+					Ok(v) => v,
+					Err(err) => {
+						err.to_diagnostics(handler).emit();
+
+						for err in errors {
+							err.to_diagnostics(handler).emit();
+						}
+
+						bail!("failed to parse input as document fragment")
+					},
+				};
+
+				(
+					DocumentOrDocumentFragment::DocumentFragment(document_fragment),
+					Some(context_element),
+				)
+			} else {
+				let document = parse_file_as_document(
+					&fm,
+					swc_html::parser::parser::ParserConfig {
+						scripting_enabled,
+						iframe_srcdoc:opts.iframe_srcdoc,
+						..Default::default()
+					},
+					&mut errors,
+				);
+
+				let document = match document {
+					Ok(v) => v,
+					Err(err) => {
+						err.to_diagnostics(handler).emit();
+
+						for err in errors {
+							err.to_diagnostics(handler).emit();
+						}
+
+						bail!("failed to parse input as document")
+					},
+				};
+
+				(DocumentOrDocumentFragment::Document(document), None)
+			};
 
 			let mut returned_errors = None;
 
@@ -654,8 +620,7 @@ fn minify_inner(
 			let options = swc_html_minifier::option::MinifyOptions {
 				force_set_html5_doctype:opts.force_set_html5_doctype,
 				collapse_whitespaces:opts.collapse_whitespaces,
-				remove_empty_metadata_elements:opts
-					.remove_empty_metadata_elements,
+				remove_empty_metadata_elements:opts.remove_empty_metadata_elements,
 				remove_comments:opts.remove_comments,
 				preserve_comments:opts.preserve_comments,
 				minify_conditional_comments:opts.minify_conditional_comments,
@@ -666,26 +631,18 @@ fn minify_inner(
 				minify_json:opts.minify_json,
 				minify_js:opts.minify_js,
 				minify_css:opts.minify_css,
-				minify_additional_scripts_content:opts
-					.minify_additional_scripts_content,
+				minify_additional_scripts_content:opts.minify_additional_scripts_content,
 				minify_additional_attributes:opts.minify_additional_attributes,
-				sort_space_separated_attribute_values:opts
-					.sort_space_separated_attribute_values,
+				sort_space_separated_attribute_values:opts.sort_space_separated_attribute_values,
 				sort_attributes:opts.sort_attributes,
 				merge_metadata_elements:opts.merge_metadata_elements,
 			};
 
 			match document_or_document_fragment {
 				DocumentOrDocumentFragment::Document(ref mut document) => {
-					minify_document_with_custom_css_minifier(
-						document,
-						&options,
-						&CssMinifier,
-					);
+					minify_document_with_custom_css_minifier(document, &options, &CssMinifier);
 				},
-				DocumentOrDocumentFragment::DocumentFragment(
-					ref mut document_fragment,
-				) => {
+				DocumentOrDocumentFragment::DocumentFragment(ref mut document_fragment) => {
 					minify_document_fragment_with_custom_css_minifier(
 						document_fragment,
 						context_element.as_ref().unwrap(),
@@ -711,8 +668,7 @@ fn minify_inner(
 							scripting_enabled,
 							context_element:context_element.as_ref(),
 							tag_omission:opts.tag_omission,
-							self_closing_void_elements:opts
-								.self_closing_void_elements,
+							self_closing_void_elements:opts.self_closing_void_elements,
 							quotes:opts.quotes,
 						},
 					);
@@ -721,11 +677,8 @@ fn minify_inner(
 						DocumentOrDocumentFragment::Document(document) => {
 							gen.emit(&document).context("failed to emit")?;
 						},
-						DocumentOrDocumentFragment::DocumentFragment(
-							document_fragment,
-						) => {
-							gen.emit(&document_fragment)
-								.context("failed to emit")?;
+						DocumentOrDocumentFragment::DocumentFragment(document_fragment) => {
+							gen.emit(&document_fragment).context("failed to emit")?;
 						},
 					}
 				}
@@ -740,11 +693,7 @@ fn minify_inner(
 
 #[allow(unused)]
 #[napi]
-fn minify(
-	code:Buffer,
-	opts:Buffer,
-	signal:Option<AbortSignal>,
-) -> AsyncTask<MinifyTask> {
+fn minify(code:Buffer, opts:Buffer, signal:Option<AbortSignal>) -> AsyncTask<MinifyTask> {
 	let code = String::from_utf8_lossy(code.as_ref()).to_string();
 	let options = String::from_utf8_lossy(opts.as_ref()).to_string();
 
@@ -755,11 +704,7 @@ fn minify(
 
 #[allow(unused)]
 #[napi]
-fn minify_fragment(
-	code:Buffer,
-	opts:Buffer,
-	signal:Option<AbortSignal>,
-) -> AsyncTask<MinifyTask> {
+fn minify_fragment(code:Buffer, opts:Buffer, signal:Option<AbortSignal>) -> AsyncTask<MinifyTask> {
 	let code = String::from_utf8_lossy(code.as_ref()).to_string();
 	let options = String::from_utf8_lossy(opts.as_ref()).to_string();
 
@@ -779,10 +724,7 @@ pub fn minify_sync(code:Buffer, opts:Buffer) -> napi::Result<TransformOutput> {
 
 #[allow(unused)]
 #[napi]
-pub fn minify_fragment_sync(
-	code:Buffer,
-	opts:Buffer,
-) -> napi::Result<TransformOutput> {
+pub fn minify_fragment_sync(code:Buffer, opts:Buffer) -> napi::Result<TransformOutput> {
 	let code = String::from_utf8_lossy(code.as_ref());
 	let options = get_deserialized(opts)?;
 

@@ -30,13 +30,7 @@ impl<'a> StringInput<'a> {
 	pub fn new(src:&'a str, start:BytePos, end:BytePos) -> Self {
 		assert!(start <= end);
 
-		StringInput {
-			last_pos:start,
-			orig:src,
-			iter:src.chars(),
-			orig_start:start,
-			orig_end:end,
-		}
+		StringInput { last_pos:start, orig:src, iter:src.chars(), orig_start:start, orig_end:end }
 	}
 
 	#[inline(always)]
@@ -61,9 +55,7 @@ impl<'a> StringInput<'a> {
 ///    StringInput::new(&fm.src, fm.start_pos, fm.end_pos)
 /// ```
 impl<'a> From<&'a SourceFile> for StringInput<'a> {
-	fn from(fm:&'a SourceFile) -> Self {
-		StringInput::new(&fm.src, fm.start_pos, fm.end_pos)
-	}
+	fn from(fm:&'a SourceFile) -> Self { StringInput::new(&fm.src, fm.start_pos, fm.end_pos) }
 }
 
 impl<'a> Input for StringInput<'a> {
@@ -82,9 +74,7 @@ impl<'a> Input for StringInput<'a> {
 			self.last_pos = self.last_pos + BytePos((c.len_utf8()) as u32);
 		} else {
 			unsafe {
-				debug_unreachable!(
-					"bump should not be called when cur() == None"
-				);
+				debug_unreachable!("bump should not be called when cur() == None");
 			}
 		}
 	}
@@ -297,10 +287,7 @@ mod tests {
 	where
 		F: FnOnce(StringInput<'_>), {
 		let cm = Arc::new(SourceMap::new(FilePathMapping::empty()));
-		let fm = cm.new_source_file(
-			FileName::Real("testing".into()).into(),
-			src.into(),
-		);
+		let fm = cm.new_source_file(FileName::Real("testing".into()).into(), src.into());
 
 		f((&*fm).into())
 	}

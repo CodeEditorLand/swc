@@ -44,13 +44,9 @@ pub trait Load: swc_common::sync::Send + swc_common::sync::Sync {
 }
 
 impl<T:?Sized + Load> Load for Box<T> {
-	fn load(&self, file:&FileName) -> Result<ModuleData, Error> {
-		(**self).load(file)
-	}
+	fn load(&self, file:&FileName) -> Result<ModuleData, Error> { (**self).load(file) }
 }
 
 impl<'a, T:?Sized + Load> Load for &'a T {
-	fn load(&self, file:&FileName) -> Result<ModuleData, Error> {
-		(**self).load(file)
-	}
+	fn load(&self, file:&FileName) -> Result<ModuleData, Error> { (**self).load(file) }
 }

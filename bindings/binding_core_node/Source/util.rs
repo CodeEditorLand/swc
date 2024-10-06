@@ -23,14 +23,11 @@ use tracing_subscriber::{
 	Layer,
 };
 
-static TARGET_TRIPLE:&str =
-	include_str!(concat!(env!("OUT_DIR"), "/triple.txt"));
+static TARGET_TRIPLE:&str = include_str!(concat!(env!("OUT_DIR"), "/triple.txt"));
 static CUSTOM_TRACE_SUBSCRIBER:OnceCell<bool> = OnceCell::new();
 
 #[napi]
-pub fn get_target_triple() -> napi::Result<String> {
-	Ok(TARGET_TRIPLE.to_string())
-}
+pub fn get_target_triple() -> napi::Result<String> { Ok(TARGET_TRIPLE.to_string()) }
 
 #[napi]
 pub fn init_custom_trace_subscriber(
@@ -46,8 +43,7 @@ pub fn init_custom_trace_subscriber(
 		let (chrome_layer, guard) = layer.build();
 		tracing_subscriber::registry()
 			.with(chrome_layer.with_filter(filter::filter_fn(|metadata| {
-				!metadata.target().contains("cranelift")
-					&& !metadata.name().contains("log ")
+				!metadata.target().contains("cranelift") && !metadata.name().contains("log ")
 			})))
 			.try_init()
 			.expect("Failed to register tracing subscriber");
@@ -56,9 +52,7 @@ pub fn init_custom_trace_subscriber(
 			flush_guard.flush();
 			drop(flush_guard);
 		})
-		.expect(
-			"Should able to initialize cleanup for custom trace subscriber",
-		);
+		.expect("Should able to initialize cleanup for custom trace subscriber");
 
 		true
 	});

@@ -24,8 +24,8 @@ pub mod umd;
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EsModuleConfig {
-    #[serde(default)]
-    pub resolve_fully: bool,
+	#[serde(default)]
+	pub resolve_fully:bool,
 }
 
 type SpanCtx = (Span, SyntaxContext);

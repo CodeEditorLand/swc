@@ -64,13 +64,7 @@ where
 			Rule::QualifiedRule(n) => emit!(self, n),
 			Rule::AtRule(n) => emit!(self, n),
 			Rule::ListOfComponentValues(n) => {
-				emit!(
-					&mut *self.with_ctx(Ctx {
-						in_list_of_component_values:true,
-						..self.ctx
-					}),
-					n
-				)
+				emit!(&mut *self.with_ctx(Ctx { in_list_of_component_values:true, ..self.ctx }), n)
 			},
 		}
 	}
@@ -82,10 +76,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_qualified_rule_prelude(
-		&mut self,
-		n:&QualifiedRulePrelude,
-	) -> Result {
+	fn emit_qualified_rule_prelude(&mut self, n:&QualifiedRulePrelude) -> Result {
 		match n {
 			QualifiedRulePrelude::SelectorList(n) => {
 				emit!(self, n);
@@ -96,13 +87,7 @@ where
 				formatting_space!(self);
 			},
 			QualifiedRulePrelude::ListOfComponentValues(n) => {
-				emit!(
-					&mut *self.with_ctx(Ctx {
-						in_list_of_component_values:true,
-						..self.ctx
-					}),
-					n
-				)
+				emit!(&mut *self.with_ctx(Ctx { in_list_of_component_values:true, ..self.ctx }), n)
 			},
 		}
 	}
@@ -110,19 +95,10 @@ where
 	#[emitter]
 	fn emit_at_rule(&mut self, n:&AtRule) -> Result {
 		write_raw!(self, lo_span_offset!(n.span, 1), "@");
-		emit!(
-			&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-			n.name
-		);
+		emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.name);
 
 		if let Some(prelude) = &n.prelude {
-			emit!(
-				&mut *self.with_ctx(Ctx {
-					in_single_line_selectors:true,
-					..self.ctx
-				}),
-				prelude
-			);
+			emit!(&mut *self.with_ctx(Ctx { in_single_line_selectors:true, ..self.ctx }), prelude);
 		}
 
 		if n.block.is_some() {
@@ -175,8 +151,7 @@ where
 				emit!(self, n);
 			},
 			AtRulePrelude::FontFeatureValuesPrelude(n) => {
-				let need_space =
-					!matches!(n.font_family.first(), Some(FamilyName::Str(_)));
+				let need_space = !matches!(n.font_family.first(), Some(FamilyName::Str(_)));
 
 				if need_space {
 					space!(self);
@@ -220,8 +195,7 @@ where
 			AtRulePrelude::MediaPrelude(n) => {
 				let need_space = match n.queries.first() {
 					Some(media_query)
-						if media_query.modifier.is_none()
-							&& media_query.media_type.is_none() =>
+						if media_query.modifier.is_none() && media_query.media_type.is_none() =>
 					{
 						match media_query.condition.as_deref() {
 							Some(MediaConditionType::All(media_condition)) => {
@@ -229,17 +203,13 @@ where
 									media_condition.conditions.first(),
 									Some(MediaConditionAllType::MediaInParens(
 										MediaInParens::MediaCondition(_)
-									)) | Some(
-										MediaConditionAllType::MediaInParens(
-											MediaInParens::Feature(_)
+									)) | Some(MediaConditionAllType::MediaInParens(
+										MediaInParens::Feature(_)
+									)) | Some(MediaConditionAllType::MediaInParens(
+										MediaInParens::GeneralEnclosed(
+											GeneralEnclosed::SimpleBlock(_)
 										)
-									) | Some(
-										MediaConditionAllType::MediaInParens(
-											MediaInParens::GeneralEnclosed(
-												GeneralEnclosed::SimpleBlock(_)
-											)
-										)
-									)
+									))
 								)
 							},
 							_ => true,
@@ -261,14 +231,10 @@ where
 					n.conditions.first(),
 					Some(SupportsConditionType::SupportsInParens(
 						SupportsInParens::SupportsCondition(_)
-					)) | Some(SupportsConditionType::SupportsInParens(
-						SupportsInParens::Feature(
-							SupportsFeature::Declaration(_)
-						)
-					)) | Some(SupportsConditionType::SupportsInParens(
-						SupportsInParens::GeneralEnclosed(
-							GeneralEnclosed::SimpleBlock(_)
-						),
+					)) | Some(SupportsConditionType::SupportsInParens(SupportsInParens::Feature(
+						SupportsFeature::Declaration(_)
+					))) | Some(SupportsConditionType::SupportsInParens(
+						SupportsInParens::GeneralEnclosed(GeneralEnclosed::SimpleBlock(_)),
 					))
 				);
 
@@ -282,9 +248,7 @@ where
 			},
 			AtRulePrelude::PagePrelude(n) => {
 				match n.selectors.first() {
-					Some(page_selector)
-						if page_selector.page_type.is_none() =>
-					{
+					Some(page_selector) if page_selector.page_type.is_none() => {
 						formatting_space!(self);
 					},
 					_ => {
@@ -304,14 +268,12 @@ where
 					_ => {
 						!matches!(
 							n.query.queries.first(),
-							Some(ContainerQueryType::QueryInParens(
-								QueryInParens::ContainerQuery(_,)
-							)) | Some(ContainerQueryType::QueryInParens(
+							Some(ContainerQueryType::QueryInParens(QueryInParens::ContainerQuery(
+								_,
+							))) | Some(ContainerQueryType::QueryInParens(
 								QueryInParens::SizeFeature(_)
 							)) | Some(ContainerQueryType::QueryInParens(
-								QueryInParens::GeneralEnclosed(
-									GeneralEnclosed::SimpleBlock(_)
-								),
+								QueryInParens::GeneralEnclosed(GeneralEnclosed::SimpleBlock(_)),
 							))
 						)
 					},
@@ -330,13 +292,7 @@ where
 				emit!(self, n);
 			},
 			AtRulePrelude::ListOfComponentValues(n) => {
-				emit!(
-					&mut *self.with_ctx(Ctx {
-						in_list_of_component_values:true,
-						..self.ctx
-					}),
-					n
-				)
+				emit!(&mut *self.with_ctx(Ctx { in_list_of_component_values:true, ..self.ctx }), n)
 			},
 			AtRulePrelude::ScopePrelude(n) => {
 				emit!(self, n);
@@ -345,10 +301,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_list_of_component_values(
-		&mut self,
-		n:&ListOfComponentValues,
-	) -> Result {
+	fn emit_list_of_component_values(&mut self, n:&ListOfComponentValues) -> Result {
 		self.emit_list_of_component_values_inner(
 			&n.children,
 			ListFormat::SpaceDelimited | ListFormat::SingleLine,
@@ -433,10 +386,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_keyframes_pseudo_function(
-		&mut self,
-		n:&KeyframesPseudoFunction,
-	) -> Result {
+	fn emit_keyframes_pseudo_function(&mut self, n:&KeyframesPseudoFunction) -> Result {
 		write_raw!(self, ":");
 		emit!(self, n.pseudo);
 		write_raw!(self, "(");
@@ -445,10 +395,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_keyframes_pseudo_prefix(
-		&mut self,
-		n:&KeyframesPseudoPrefix,
-	) -> Result {
+	fn emit_keyframes_pseudo_prefix(&mut self, n:&KeyframesPseudoPrefix) -> Result {
 		write_raw!(self, ":");
 		emit!(self, n.pseudo);
 		space!(self);
@@ -468,21 +415,14 @@ where
 	fn emit_keyframe_selector(&mut self, n:&KeyframeSelector) -> Result {
 		match n {
 			KeyframeSelector::Ident(n) => {
-				emit!(
-					&mut *self
-						.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-					n
-				)
+				emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n)
 			},
 			KeyframeSelector::Percentage(n) => emit!(self, n),
 		}
 	}
 
 	#[emitter]
-	fn emit_font_feature_values_prelude(
-		&mut self,
-		n:&FontFeatureValuesPrelude,
-	) -> Result {
+	fn emit_font_feature_values_prelude(&mut self, n:&FontFeatureValuesPrelude) -> Result {
 		self.emit_list(&n.font_family, ListFormat::CommaDelimited)?;
 	}
 
@@ -512,20 +452,12 @@ where
 	#[emitter]
 	fn emit_media_query(&mut self, n:&MediaQuery) -> Result {
 		if n.modifier.is_some() {
-			emit!(
-				&mut *self
-					.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-				n.modifier
-			);
+			emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.modifier);
 			space!(self);
 		}
 
 		if n.media_type.is_some() {
-			emit!(
-				&mut *self
-					.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-				n.media_type
-			);
+			emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.media_type);
 
 			if n.condition.is_some() {
 				space!(self);
@@ -567,10 +499,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_media_condition_without_or(
-		&mut self,
-		n:&MediaConditionWithoutOr,
-	) -> Result {
+	fn emit_media_condition_without_or(&mut self, n:&MediaConditionWithoutOr) -> Result {
 		self.emit_list(
 			&n.conditions,
 			if self.config.minify {
@@ -582,10 +511,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_media_condition_all_type(
-		&mut self,
-		n:&MediaConditionAllType,
-	) -> Result {
+	fn emit_media_condition_all_type(&mut self, n:&MediaConditionAllType) -> Result {
 		match n {
 			MediaConditionAllType::Not(n) => emit!(self, n),
 			MediaConditionAllType::And(n) => emit!(self, n),
@@ -595,10 +521,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_media_condition_without_or_type(
-		&mut self,
-		n:&MediaConditionWithoutOrType,
-	) -> Result {
+	fn emit_media_condition_without_or_type(&mut self, n:&MediaConditionWithoutOrType) -> Result {
 		match n {
 			MediaConditionWithoutOrType::Not(n) => emit!(self, n),
 			MediaConditionWithoutOrType::And(n) => emit!(self, n),
@@ -703,10 +626,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_media_feature_range_interval(
-		&mut self,
-		n:&MediaFeatureRangeInterval,
-	) -> Result {
+	fn emit_media_feature_range_interval(&mut self, n:&MediaFeatureRangeInterval) -> Result {
 		emit!(self, n.left);
 		formatting_space!(self);
 		write_raw!(self, n.span, n.left_comparison.as_str());
@@ -731,10 +651,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_supports_condition_type(
-		&mut self,
-		n:&SupportsConditionType,
-	) -> Result {
+	fn emit_supports_condition_type(&mut self, n:&SupportsConditionType) -> Result {
 		match n {
 			SupportsConditionType::Not(n) => emit!(self, n),
 			SupportsConditionType::And(n) => emit!(self, n),
@@ -821,10 +738,7 @@ where
 	#[emitter]
 	fn emit_page_selector_pseudo(&mut self, n:&PageSelectorPseudo) -> Result {
 		write_raw!(self, ":");
-		emit!(
-			&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-			n.value
-		);
+		emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.value);
 	}
 
 	#[emitter]
@@ -992,10 +906,7 @@ where
 
 	#[emitter]
 	fn emit_size_feature_plain(&mut self, n:&SizeFeaturePlain) -> Result {
-		emit!(
-			&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-			n.name
-		);
+		emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.name);
 		write_raw!(self, ":");
 		formatting_space!(self);
 		emit!(self, n.value);
@@ -1003,10 +914,7 @@ where
 
 	#[emitter]
 	fn emit_size_feature_boolean(&mut self, n:&SizeFeatureBoolean) -> Result {
-		emit!(
-			&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-			n.name
-		);
+		emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.name);
 	}
 
 	#[emitter]
@@ -1019,18 +927,12 @@ where
 	}
 
 	#[emitter]
-	fn emit_size_feature_range_interval(
-		&mut self,
-		n:&SizeFeatureRangeInterval,
-	) -> Result {
+	fn emit_size_feature_range_interval(&mut self, n:&SizeFeatureRangeInterval) -> Result {
 		emit!(self, n.left);
 		formatting_space!(self);
 		write_raw!(self, n.span, n.left_comparison.as_str());
 		formatting_space!(self);
-		emit!(
-			&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-			n.name
-		);
+		emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.name);
 		formatting_space!(self);
 		write_raw!(self, n.span, n.right_comparison.as_str());
 		formatting_space!(self);
@@ -1045,10 +947,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_custom_media_query_media_type(
-		&mut self,
-		n:&CustomMediaQueryMediaType,
-	) -> Result {
+	fn emit_custom_media_query_media_type(&mut self, n:&CustomMediaQueryMediaType) -> Result {
 		match n {
 			CustomMediaQueryMediaType::MediaQueryList(n) => emit!(self, n),
 			CustomMediaQueryMediaType::Ident(n) => emit!(self, n),
@@ -1070,68 +969,55 @@ where
 				continue;
 			}
 
-			let is_current_preserved_token =
-				matches!(node, ComponentValue::PreservedToken(_));
+			let is_current_preserved_token = matches!(node, ComponentValue::PreservedToken(_));
 			let next = nodes.get(idx + 1);
-			let is_next_preserved_token =
-				matches!(next, Some(ComponentValue::PreservedToken(_)));
+			let is_next_preserved_token = matches!(next, Some(ComponentValue::PreservedToken(_)));
 
-			if idx != len - 1
-				&& !is_current_preserved_token
-				&& !is_next_preserved_token
-			{
-				let need_delim =
-					match node {
-						ComponentValue::SimpleBlock(_)
-						| ComponentValue::Function(_)
-						| ComponentValue::Delimiter(_)
-						| ComponentValue::Str(_)
-						| ComponentValue::Url(_)
-						| ComponentValue::Percentage(_)
-						| ComponentValue::LengthPercentage(_)
-						| ComponentValue::FrequencyPercentage(_)
-						| ComponentValue::AnglePercentage(_)
-						| ComponentValue::TimePercentage(_) => {
-							match next {
-								Some(ComponentValue::Delimiter(delimiter))
-									if matches!(
-										**delimiter,
-										Delimiter {
-											value:DelimiterValue::Comma,
-											..
-										}
-									) =>
-								{
-									false
-								},
-								_ => !self.config.minify,
-							}
-						},
-						ComponentValue::Color(color)
-							if matches!(
-								**color,
-								Color::AbsoluteColorBase(
-									AbsoluteColorBase::Function(_)
-								) | Color::Function(_)
-							) =>
-						{
-							match next {
-								Some(ComponentValue::Delimiter(delimiter))
-									if matches!(
-										**delimiter,
-										Delimiter {
-											value:DelimiterValue::Comma,
-											..
-										}
-									) =>
-								{
-									false
-								},
-								_ => !self.config.minify,
-							}
-						},
-						ComponentValue::Ident(_)
-						| ComponentValue::DashedIdent(_) => match next {
+			if idx != len - 1 && !is_current_preserved_token && !is_next_preserved_token {
+				let need_delim = match node {
+					ComponentValue::SimpleBlock(_)
+					| ComponentValue::Function(_)
+					| ComponentValue::Delimiter(_)
+					| ComponentValue::Str(_)
+					| ComponentValue::Url(_)
+					| ComponentValue::Percentage(_)
+					| ComponentValue::LengthPercentage(_)
+					| ComponentValue::FrequencyPercentage(_)
+					| ComponentValue::AnglePercentage(_)
+					| ComponentValue::TimePercentage(_) => {
+						match next {
+							Some(ComponentValue::Delimiter(delimiter))
+								if matches!(
+									**delimiter,
+									Delimiter { value:DelimiterValue::Comma, .. }
+								) =>
+							{
+								false
+							},
+							_ => !self.config.minify,
+						}
+					},
+					ComponentValue::Color(color)
+						if matches!(
+							**color,
+							Color::AbsoluteColorBase(AbsoluteColorBase::Function(_))
+								| Color::Function(_)
+						) =>
+					{
+						match next {
+							Some(ComponentValue::Delimiter(delimiter))
+								if matches!(
+									**delimiter,
+									Delimiter { value:DelimiterValue::Comma, .. }
+								) =>
+							{
+								false
+							},
+							_ => !self.config.minify,
+						}
+					},
+					ComponentValue::Ident(_) | ComponentValue::DashedIdent(_) => {
+						match next {
 							Some(ComponentValue::SimpleBlock(simple_block)) => {
 								if simple_block.name.token == Token::LParen {
 									true
@@ -1142,9 +1028,7 @@ where
 							Some(ComponentValue::Color(color))
 								if matches!(
 									**color,
-									Color::AbsoluteColorBase(
-										AbsoluteColorBase::HexColor(_),
-									)
+									Color::AbsoluteColorBase(AbsoluteColorBase::HexColor(_),)
 								) =>
 							{
 								!self.config.minify
@@ -1166,16 +1050,10 @@ where
 										Dimension::Length(i) => i.value.value,
 										Dimension::Angle(i) => i.value.value,
 										Dimension::Time(i) => i.value.value,
-										Dimension::Frequency(i) => {
-											i.value.value
-										},
-										Dimension::Resolution(i) => {
-											i.value.value
-										},
+										Dimension::Frequency(i) => i.value.value,
+										Dimension::Resolution(i) => i.value.value,
 										Dimension::Flex(i) => i.value.value,
-										Dimension::UnknownDimension(i) => {
-											i.value.value
-										},
+										Dimension::UnknownDimension(i) => i.value.value,
 									};
 
 									let minified = minify_numeric(value);
@@ -1209,27 +1087,24 @@ where
 								}
 							},
 							_ => true,
-						},
-						_ => {
-							match next {
-								Some(ComponentValue::SimpleBlock(_)) => {
-									!self.config.minify
-								},
-								Some(ComponentValue::Color(color))
-									if matches!(
-										&**color,
-										Color::AbsoluteColorBase(
-											AbsoluteColorBase::HexColor(_)
-										)
-									) =>
-								{
-									!self.config.minify
-								},
-								Some(ComponentValue::Delimiter(_)) => false,
-								_ => true,
-							}
-						},
-					};
+						}
+					},
+					_ => {
+						match next {
+							Some(ComponentValue::SimpleBlock(_)) => !self.config.minify,
+							Some(ComponentValue::Color(color))
+								if matches!(
+									&**color,
+									Color::AbsoluteColorBase(AbsoluteColorBase::HexColor(_))
+								) =>
+							{
+								!self.config.minify
+							},
+							Some(ComponentValue::Delimiter(_)) => false,
+							_ => true,
+						}
+					},
+				};
 
 				if need_delim {
 					self.write_delim(format)?;
@@ -1242,10 +1117,7 @@ where
 
 	#[emitter]
 	fn emit_function(&mut self, n:&Function) -> Result {
-		emit!(
-			&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-			n.name
-		);
+		emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.name);
 		write_raw!(self, "(");
 		self.emit_list_of_component_values_inner(
 			&n.value,
@@ -1302,8 +1174,7 @@ where
 
 		for (idx, node) in n.value.iter().enumerate() {
 			match node {
-				ComponentValue::ListOfComponentValues(_)
-				| ComponentValue::Declaration(_) => {
+				ComponentValue::ListOfComponentValues(_) | ComponentValue::Declaration(_) => {
 					if idx == 0 {
 						formatting_newline!(self);
 					}
@@ -1323,10 +1194,7 @@ where
 			match node {
 				ComponentValue::ListOfComponentValues(node) => {
 					emit!(
-						&mut *self.with_ctx(Ctx {
-							in_list_of_component_values:true,
-							..self.ctx
-						}),
+						&mut *self.with_ctx(Ctx { in_list_of_component_values:true, ..self.ctx }),
 						node
 					);
 				},
@@ -1336,8 +1204,7 @@ where
 			}
 
 			match node {
-				ComponentValue::AtRule(_)
-				| ComponentValue::QualifiedRule(_) => {
+				ComponentValue::AtRule(_) | ComponentValue::QualifiedRule(_) => {
 					formatting_newline!(self);
 					decrease_indent!(self);
 				},
@@ -1364,9 +1231,7 @@ where
 				},
 
 				_ => {
-					if !self.ctx.in_list_of_component_values
-						&& ending == "]" && idx != len - 1
-					{
+					if !self.ctx.in_list_of_component_values && ending == "]" && idx != len - 1 {
 						space!(self);
 					}
 				},
@@ -1421,13 +1286,7 @@ where
 	fn emit_style_block(&mut self, n:&StyleBlock) -> Result {
 		match n {
 			StyleBlock::ListOfComponentValues(n) => {
-				emit!(
-					&mut *self.with_ctx(Ctx {
-						in_list_of_component_values:true,
-						..self.ctx
-					}),
-					n
-				)
+				emit!(&mut *self.with_ctx(Ctx { in_list_of_component_values:true, ..self.ctx }), n)
 			},
 			StyleBlock::AtRule(n) => emit!(self, n),
 			StyleBlock::Declaration(n) => emit!(self, n),
@@ -1436,31 +1295,19 @@ where
 	}
 
 	#[emitter]
-	fn emit_declaration_block_item(
-		&mut self,
-		n:&DeclarationOrAtRule,
-	) -> Result {
+	fn emit_declaration_block_item(&mut self, n:&DeclarationOrAtRule) -> Result {
 		match n {
 			DeclarationOrAtRule::Declaration(n) => emit!(self, n),
 			DeclarationOrAtRule::AtRule(n) => emit!(self, n),
 			DeclarationOrAtRule::ListOfComponentValues(n) => {
-				emit!(
-					&mut *self.with_ctx(Ctx {
-						in_list_of_component_values:true,
-						..self.ctx
-					}),
-					n
-				)
+				emit!(&mut *self.with_ctx(Ctx { in_list_of_component_values:true, ..self.ctx }), n)
 			},
 		}
 	}
 
 	#[emitter]
 	fn emit_declaration(&mut self, n:&Declaration) -> Result {
-		emit!(
-			&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-			n.name
-		);
+		emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.name);
 		write_raw!(self, ":");
 
 		let is_custom_property = match n.name {
@@ -1516,11 +1363,7 @@ where
 		write_raw!(self, lo_span_offset!(n.span, 1), "!");
 
 		if self.config.minify {
-			emit!(
-				&mut *self
-					.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-				n.value
-			);
+			emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.value);
 		} else {
 			emit!(self, n.value);
 		}
@@ -1822,10 +1665,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_calc_product_or_operator(
-		&mut self,
-		n:&CalcProductOrOperator,
-	) -> Result {
+	fn emit_calc_product_or_operator(&mut self, n:&CalcProductOrOperator) -> Result {
 		match n {
 			CalcProductOrOperator::Product(n) => emit!(self, n),
 			CalcProductOrOperator::Operator(n) => emit!(self, n),
@@ -1834,8 +1674,7 @@ where
 
 	#[emitter]
 	fn emit_calc_operator(&mut self, n:&CalcOperator) -> Result {
-		let need_space =
-			matches!(n.value, CalcOperatorType::Add | CalcOperatorType::Sub);
+		let need_space = matches!(n.value, CalcOperatorType::Add | CalcOperatorType::Sub);
 
 		if need_space {
 			space!(self);
@@ -1858,10 +1697,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_calc_value_or_operator(
-		&mut self,
-		n:&CalcValueOrOperator,
-	) -> Result {
+	fn emit_calc_value_or_operator(&mut self, n:&CalcValueOrOperator) -> Result {
 		match n {
 			CalcValueOrOperator::Value(n) => emit!(self, n),
 			CalcValueOrOperator::Operator(n) => emit!(self, n),
@@ -1924,9 +1760,8 @@ where
 				write_raw!(self, span, &percentage);
 			},
 			Token::Dimension(token) => {
-				let mut dimension = String::with_capacity(
-					token.raw_value.len() + token.raw_unit.len(),
-				);
+				let mut dimension =
+					String::with_capacity(token.raw_value.len() + token.raw_unit.len());
 
 				dimension.push_str(&token.raw_value);
 				dimension.push_str(&token.raw_unit);
@@ -1951,8 +1786,7 @@ where
 				write_str!(self, span, raw);
 			},
 			Token::Url { raw, .. } => {
-				let mut url =
-					String::with_capacity(raw.0.len() + raw.1.len() + 2);
+				let mut url = String::with_capacity(raw.0.len() + raw.1.len() + 2);
 
 				url.push_str(&raw.0);
 				url.push('(');
@@ -2001,10 +1835,7 @@ where
 
 	#[emitter]
 	fn emit_url(&mut self, n:&Url) -> Result {
-		emit!(
-			&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-			n.name
-		);
+		emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.name);
 		write_raw!(self, "(");
 
 		if let Some(value) = &n.value {
@@ -2048,9 +1879,7 @@ where
 	#[emitter]
 	fn emit_unicode_range(&mut self, n:&UnicodeRange) -> Result {
 		let mut value = String::with_capacity(
-			n.start.len()
-				+ if let Some(end) = &n.end { end.len() + 1 } else { 0 }
-				+ 2,
+			n.start.len() + if let Some(end) = &n.end { end.len() + 1 } else { 0 } + 2,
 		);
 
 		value.push_str("u+");
@@ -2073,10 +1902,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_sequence_of_custom_idents(
-		&mut self,
-		n:&SequenceOfCustomIdents,
-	) -> Result {
+	fn emit_sequence_of_custom_idents(&mut self, n:&SequenceOfCustomIdents) -> Result {
 		self.emit_list(&n.value, ListFormat::SpaceDelimited)?;
 	}
 
@@ -2093,18 +1919,12 @@ where
 	}
 
 	#[emitter]
-	fn emit_forgiving_selector_list(
-		&mut self,
-		n:&ForgivingSelectorList,
-	) -> Result {
+	fn emit_forgiving_selector_list(&mut self, n:&ForgivingSelectorList) -> Result {
 		for (idx, node) in n.children.iter().enumerate() {
 			if idx != 0 {
 				write_raw!(self, ",");
 
-				let need_space = matches!(
-					node,
-					ForgivingComplexSelector::ComplexSelector(_)
-				);
+				let need_space = matches!(node, ForgivingComplexSelector::ComplexSelector(_));
 
 				if need_space {
 					formatting_space!(self);
@@ -2116,37 +1936,22 @@ where
 	}
 
 	#[emitter]
-	fn emit_forgiving_complex_list(
-		&mut self,
-		n:&ForgivingComplexSelector,
-	) -> Result {
+	fn emit_forgiving_complex_list(&mut self, n:&ForgivingComplexSelector) -> Result {
 		match n {
 			ForgivingComplexSelector::ComplexSelector(n) => emit!(self, n),
 			ForgivingComplexSelector::ListOfComponentValues(n) => {
-				emit!(
-					&mut *self.with_ctx(Ctx {
-						in_list_of_component_values:true,
-						..self.ctx
-					}),
-					n
-				)
+				emit!(&mut *self.with_ctx(Ctx { in_list_of_component_values:true, ..self.ctx }), n)
 			},
 		}
 	}
 
 	#[emitter]
-	fn emit_compound_selector_list(
-		&mut self,
-		n:&CompoundSelectorList,
-	) -> Result {
+	fn emit_compound_selector_list(&mut self, n:&CompoundSelectorList) -> Result {
 		self.emit_list(&n.children, ListFormat::CommaDelimited)?;
 	}
 
 	#[emitter]
-	fn emit_relative_selector_list(
-		&mut self,
-		n:&RelativeSelectorList,
-	) -> Result {
+	fn emit_relative_selector_list(&mut self, n:&RelativeSelectorList) -> Result {
 		self.emit_list(&n.children, ListFormat::CommaDelimited)?;
 	}
 
@@ -2159,10 +1964,7 @@ where
 			if idx != 0 {
 				write_raw!(self, ",");
 
-				let need_space = matches!(
-					node,
-					ForgivingRelativeSelector::RelativeSelector(_)
-				);
+				let need_space = matches!(node, ForgivingRelativeSelector::RelativeSelector(_));
 
 				if need_space {
 					formatting_space!(self);
@@ -2174,20 +1976,11 @@ where
 	}
 
 	#[emitter]
-	fn emit_forgiving_relative_selector(
-		&mut self,
-		n:&ForgivingRelativeSelector,
-	) -> Result {
+	fn emit_forgiving_relative_selector(&mut self, n:&ForgivingRelativeSelector) -> Result {
 		match n {
 			ForgivingRelativeSelector::RelativeSelector(n) => emit!(self, n),
 			ForgivingRelativeSelector::ListOfComponentValues(n) => {
-				emit!(
-					&mut *self.with_ctx(Ctx {
-						in_list_of_component_values:true,
-						..self.ctx
-					}),
-					n
-				)
+				emit!(&mut *self.with_ctx(Ctx { in_list_of_component_values:true, ..self.ctx }), n)
 			},
 		}
 	}
@@ -2204,12 +1997,10 @@ where
 				}) => {},
 				_ => {
 					match n.children.get(idx + 1) {
-						Some(ComplexSelectorChildren::Combinator(
-							Combinator {
-								value: CombinatorValue::Descendant,
-								..
-							},
-						)) => {},
+						Some(ComplexSelectorChildren::Combinator(Combinator {
+							value: CombinatorValue::Descendant,
+							..
+						})) => {},
 						Some(_) => {
 							formatting_space!(self);
 						},
@@ -2232,10 +2023,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_complex_selector_children(
-		&mut self,
-		n:&ComplexSelectorChildren,
-	) -> Result {
+	fn emit_complex_selector_children(&mut self, n:&ComplexSelectorChildren) -> Result {
 		match n {
 			ComplexSelectorChildren::CompoundSelector(n) => emit!(self, n),
 			ComplexSelectorChildren::Combinator(n) => emit!(self, n),
@@ -2281,10 +2069,7 @@ where
 
 	#[emitter]
 	fn emit_tag_name_selector(&mut self, n:&TagNameSelector) -> Result {
-		emit!(
-			&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-			n.name
-		);
+		emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.name);
 	}
 
 	#[emitter]
@@ -2372,18 +2157,12 @@ where
 	}
 
 	#[emitter]
-	fn emit_attribute_selector_matcher(
-		&mut self,
-		n:&AttributeSelectorMatcher,
-	) -> Result {
+	fn emit_attribute_selector_matcher(&mut self, n:&AttributeSelectorMatcher) -> Result {
 		write_raw!(self, n.span, n.value.as_str());
 	}
 
 	#[emitter]
-	fn emit_attribute_selector_value(
-		&mut self,
-		n:&AttributeSelectorValue,
-	) -> Result {
+	fn emit_attribute_selector_value(&mut self, n:&AttributeSelectorValue) -> Result {
 		match n {
 			AttributeSelectorValue::Str(n) => emit!(self, n),
 			AttributeSelectorValue::Ident(n) => emit!(self, n),
@@ -2391,14 +2170,8 @@ where
 	}
 
 	#[emitter]
-	fn emit_attribute_selector_modifier(
-		&mut self,
-		n:&AttributeSelectorModifier,
-	) -> Result {
-		emit!(
-			&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-			n.value
-		);
+	fn emit_attribute_selector_modifier(&mut self, n:&AttributeSelectorModifier) -> Result {
+		emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.value);
 	}
 
 	#[emitter]
@@ -2437,10 +2210,7 @@ where
 	#[emitter]
 	fn emit_pseudo_class_selector(&mut self, n:&PseudoClassSelector) -> Result {
 		write_raw!(self, lo_span_offset!(n.span, 1), ":");
-		emit!(
-			&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-			n.name
-		);
+		emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.name);
 
 		if let Some(children) = &n.children {
 			write_raw!(self, "(");
@@ -2450,10 +2220,7 @@ where
 	}
 
 	#[emitter]
-	fn emit_pseudo_class_selector_children(
-		&mut self,
-		n:&PseudoClassSelectorChildren,
-	) -> Result {
+	fn emit_pseudo_class_selector_children(&mut self, n:&PseudoClassSelectorChildren) -> Result {
 		match n {
 			PseudoClassSelectorChildren::PreservedToken(n) => emit!(self, n),
 			PseudoClassSelectorChildren::AnPlusB(n) => emit!(self, n),
@@ -2462,22 +2229,10 @@ where
 			PseudoClassSelectorChildren::Delimiter(n) => emit!(self, n),
 			PseudoClassSelectorChildren::ComplexSelector(n) => emit!(self, n),
 			PseudoClassSelectorChildren::SelectorList(n) => {
-				emit!(
-					&mut *self.with_ctx(Ctx {
-						in_single_line_selectors:true,
-						..self.ctx
-					}),
-					n
-				)
+				emit!(&mut *self.with_ctx(Ctx { in_single_line_selectors:true, ..self.ctx }), n)
 			},
 			PseudoClassSelectorChildren::ForgivingSelectorList(n) => {
-				emit!(
-					&mut *self.with_ctx(Ctx {
-						in_single_line_selectors:true,
-						..self.ctx
-					}),
-					n
-				)
+				emit!(&mut *self.with_ctx(Ctx { in_single_line_selectors:true, ..self.ctx }), n)
 			},
 			PseudoClassSelectorChildren::CompoundSelectorList(n) => {
 				emit!(self, n)
@@ -2511,11 +2266,10 @@ where
 						let next = nodes.get(idx + 1);
 
 						match next {
-							Some(PseudoClassSelectorChildren::Delimiter(
-								Delimiter {
-									value: DelimiterValue::Comma, ..
-								},
-							)) => {},
+							Some(PseudoClassSelectorChildren::Delimiter(Delimiter {
+								value: DelimiterValue::Comma,
+								..
+							})) => {},
 							_ => {
 								space!(self)
 							},
@@ -2529,16 +2283,10 @@ where
 	}
 
 	#[emitter]
-	fn emit_pseudo_element_selector(
-		&mut self,
-		n:&PseudoElementSelector,
-	) -> Result {
+	fn emit_pseudo_element_selector(&mut self, n:&PseudoElementSelector) -> Result {
 		write_raw!(self, lo_span_offset!(n.span, 1), ":");
 		write_raw!(self, lo_span_offset!(n.span, 2), ":");
-		emit!(
-			&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }),
-			n.name
-		);
+		emit!(&mut *self.with_ctx(Ctx { allow_to_lowercase:true, ..self.ctx }), n.name);
 
 		if let Some(children) = &n.children {
 			write_raw!(self, "(");
@@ -2699,8 +2447,7 @@ fn minify_hex_color(value:&str) -> String {
 	if length == 6 || length == 8 {
 		let chars = value.as_bytes();
 
-		if chars[0] == chars[1] && chars[2] == chars[3] && chars[4] == chars[5]
-		{
+		if chars[0] == chars[1] && chars[2] == chars[3] && chars[4] == chars[5] {
 			// 6 -> 3 or 8 -> 3
 			if length == 6 || chars[6] == b'f' && chars[7] == b'f' {
 				let mut minified = String::with_capacity(3);
@@ -2897,10 +2644,9 @@ fn minify_string(value:&str) -> String {
 
 fn serialize_dimension_unit(value:&str) -> Cow<'_, str> {
 	// Fast-path
-	let need_escape = (value.len() >= 2
-		&& value.as_bytes()[0] == b'e'
-		&& value.as_bytes()[1].is_ascii_digit())
-		|| value.contains(char::REPLACEMENT_CHARACTER);
+	let need_escape =
+		(value.len() >= 2 && value.as_bytes()[0] == b'e' && value.as_bytes()[1].is_ascii_digit())
+			|| value.contains(char::REPLACEMENT_CHARACTER);
 
 	if !need_escape {
 		return Cow::Borrowed(value);

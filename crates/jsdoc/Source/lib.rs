@@ -46,10 +46,7 @@ pub fn parse_tag_item(i:Input) -> IResult<Input, TagItem> {
 		"abstract" | "virtual" => Tag::Abstract(AbstractTag { span }),
 
 		"access" => {
-			let (input, access) = parse_one_of(
-				i,
-				&["private", "protected", "package", "public"],
-			)?;
+			let (input, access) = parse_one_of(i, &["private", "protected", "package", "public"])?;
 			i = input;
 			Tag::Access(AccessTag { span, access })
 		},
@@ -509,10 +506,7 @@ fn parse_name_path(mut i:Input) -> IResult<Input, NamePath> {
 					return Err(err);
 				}
 
-				return Ok((
-					i,
-					NamePath { span:Span::new(lo, i.span().hi), components },
-				));
+				return Ok((i, NamePath { span:Span::new(lo, i.span().hi), components }));
 			},
 		};
 		i = input;
@@ -530,8 +524,7 @@ fn parse_opt_word(i:Input) -> IResult<Input, Option<Text>> {
 
 fn parse_word(i:Input) -> IResult<Input, Text> {
 	let res = i.iter_indices().find(|(_, c)| {
-		!(('a' <= *c && *c <= 'z')
-			|| ('A' <= *c && *c <= 'Z' || *c == '<' || *c == '>'))
+		!(('a' <= *c && *c <= 'z') || ('A' <= *c && *c <= 'Z' || *c == '<' || *c == '>'))
 	});
 
 	if let Some((idx, _)) = res {
@@ -614,9 +607,7 @@ mod tests {
 
 	use super::*;
 
-	fn input(s:&str) -> Input {
-		Input::new(BytePos(0), BytePos(s.as_bytes().len() as _), s)
-	}
+	fn input(s:&str) -> Input { Input::new(BytePos(0), BytePos(s.as_bytes().len() as _), s) }
 
 	#[test]
 	fn issue_1058() {
@@ -687,14 +678,8 @@ mod tests {
 
 		match ret.tag {
 			Tag::Yield(tag) => {
-				assert_eq!(
-					tag.value.as_ref().map(|v| &*v.value),
-					Some("{number}")
-				);
-				assert_eq!(
-					&*tag.description.value,
-					"The next number in the Fibonacci sequence."
-				);
+				assert_eq!(tag.value.as_ref().map(|v| &*v.value), Some("{number}"));
+				assert_eq!(&*tag.description.value, "The next number in the Fibonacci sequence.");
 			},
 			_ => panic!("Invalid tag: {:?}", ret.tag),
 		}
@@ -722,8 +707,7 @@ mod tests {
 
 	#[test]
 	fn one_of_1() {
-		let (rest, ret) =
-			parse_one_of(input("foo bar\nbaz"), &["fo", "bar"]).unwrap();
+		let (rest, ret) = parse_one_of(input("foo bar\nbaz"), &["fo", "bar"]).unwrap();
 
 		assert_eq!(&*ret.value, "fo");
 		assert_eq!(&*rest, "o bar\nbaz");

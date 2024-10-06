@@ -3,13 +3,7 @@ extern crate swc_malloc;
 
 use std::{path::PathBuf, sync::Arc};
 
-use codspeed_criterion_compat::{
-	black_box,
-	criterion_group,
-	criterion_main,
-	Bencher,
-	Criterion,
-};
+use codspeed_criterion_compat::{black_box, criterion_group, criterion_main, Bencher, Criterion};
 use swc::{config::JsMinifyOptions, try_with_handler, BoolOrDataConfig};
 use swc_common::{FilePathMapping, SourceMap};
 use swc_ecma_utils::swc_common::GLOBALS;
@@ -37,27 +31,26 @@ fn bench_minify(b:&mut Bencher, filename:&str) {
 			.unwrap(),
 		);
 
-		let res =
-			try_with_handler(c.cm.clone(), Default::default(), |handler| {
-				GLOBALS.set(&Default::default(), || {
-					c.minify(
-						fm,
-						handler,
-						&JsMinifyOptions {
-							compress:BoolOrDataConfig::from_bool(true),
-							mangle:BoolOrDataConfig::from_bool(true),
-							toplevel:Some(true),
-							source_map:BoolOrDataConfig::from_bool(true),
-							output_path:Default::default(),
-							inline_sources_content:true,
-							emit_source_map_columns:true,
-							..Default::default()
-						},
-						Default::default(),
-					)
-				})
+		let res = try_with_handler(c.cm.clone(), Default::default(), |handler| {
+			GLOBALS.set(&Default::default(), || {
+				c.minify(
+					fm,
+					handler,
+					&JsMinifyOptions {
+						compress:BoolOrDataConfig::from_bool(true),
+						mangle:BoolOrDataConfig::from_bool(true),
+						toplevel:Some(true),
+						source_map:BoolOrDataConfig::from_bool(true),
+						output_path:Default::default(),
+						inline_sources_content:true,
+						emit_source_map_columns:true,
+						..Default::default()
+					},
+					Default::default(),
+				)
 			})
-			.unwrap();
+		})
+		.unwrap();
 
 		black_box(res);
 

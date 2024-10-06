@@ -14,9 +14,7 @@ impl Parse for VariantAttr {
 	}
 }
 
-pub fn expand(
-	DeriveInput { generics, ident, data, .. }:DeriveInput,
-) -> ItemImpl {
+pub fn expand(DeriveInput { generics, ident, data, .. }:DeriveInput) -> ItemImpl {
 	let data = match data {
 		Data::Enum(data) => data,
 		_ => unreachable!("expand_enum is called with none-enum item"),
@@ -35,17 +33,13 @@ pub fn expand(
 						assert_eq!(
 							fields.unnamed.len(),
 							1,
-							"#[ast_node] enum cannot contain variant with \
-							 multiple fields"
+							"#[ast_node] enum cannot contain variant with multiple fields"
 						);
 
 						fields.unnamed.last().unwrap().ty.clone()
 					},
 					_ => {
-						unreachable!(
-							"#[ast_node] enum cannot contain named fields or \
-							 unit variant"
-						)
+						unreachable!("#[ast_node] enum cannot contain named fields or unit variant")
 					},
 				};
 				let tags = variant
@@ -58,24 +52,17 @@ pub fn expand(
 						let tokens = match &attr.meta {
 							Meta::List(meta) => meta.tokens.clone(),
 							_ => {
-								panic!(
-									"#[tag] attribute must be in form of \
-									 #[tag(..)]"
-								)
+								panic!("#[tag] attribute must be in form of #[tag(..)]")
 							},
 						};
-						let tags = parse2(tokens)
-							.expect("failed to parse #[tag] attribute");
+						let tags = parse2(tokens).expect("failed to parse #[tag] attribute");
 
 						Some(tags)
 					})
 					.flat_map(|v| v.tags)
 					.collect::<Punctuated<_, token::Comma>>();
 
-				assert!(
-					!tags.is_empty(),
-					"All #[ast_node] enum variants have one or more tag"
-				);
+				assert!(!tags.is_empty(), "All #[ast_node] enum variants have one or more tag");
 
 				// TODO: Clean up this code
 				if tags.len() == 1
@@ -127,24 +114,17 @@ pub fn expand(
 						let tokens = match &attr.meta {
 							Meta::List(meta) => meta.tokens.clone(),
 							_ => {
-								panic!(
-									"#[tag] attribute must be in form of \
-									 #[tag(..)]"
-								)
+								panic!("#[tag] attribute must be in form of #[tag(..)]")
 							},
 						};
-						let tags = parse2(tokens)
-							.expect("failed to parse #[tag] attribute");
+						let tags = parse2(tokens).expect("failed to parse #[tag] attribute");
 
 						Some(tags)
 					})
 					.flat_map(|v| v.tags)
 					.collect::<Punctuated<_, token::Comma>>();
 
-				assert!(
-					!tags.is_empty(),
-					"All #[ast_node] enum variants have one or more tag"
-				);
+				assert!(!tags.is_empty(), "All #[ast_node] enum variants have one or more tag");
 				let (str_pat, bytes_pat) = {
 					if tags.len() == 1
 						&& match tags.first() {
@@ -154,15 +134,11 @@ pub fn expand(
 						(
 							Pat::Wild(PatWild {
 								attrs:Default::default(),
-								underscore_token:Token![_](
-									variant.ident.span(),
-								),
+								underscore_token:Token![_](variant.ident.span()),
 							}),
 							Pat::Wild(PatWild {
 								attrs:Default::default(),
-								underscore_token:Token![_](
-									variant.ident.span(),
-								),
+								underscore_token:Token![_](variant.ident.span()),
 							}),
 						)
 					} else {
@@ -174,16 +150,10 @@ pub fn expand(
 								},
 							};
 							(
+								Pat::Lit(PatLit { attrs:Default::default(), lit }),
 								Pat::Lit(PatLit {
 									attrs:Default::default(),
-									lit,
-								}),
-								Pat::Lit(PatLit {
-									attrs:Default::default(),
-									lit:Lit::ByteStr(LitByteStr::new(
-										s.as_bytes(),
-										call_site(),
-									)),
+									lit:Lit::ByteStr(LitByteStr::new(s.as_bytes(), call_site())),
 								}),
 							)
 						}
@@ -194,8 +164,7 @@ pub fn expand(
 							let mut bytes_cases = Punctuated::new();
 
 							for tag in tags {
-								let (str_pat, bytes_pat) =
-									make_pat(tag.clone());
+								let (str_pat, bytes_pat) = make_pat(tag.clone());
 								str_cases.push(str_pat);
 								bytes_cases.push(bytes_pat);
 							}
@@ -264,15 +233,10 @@ pub fn expand(
 					guard:None,
 					fat_arrow_token:Token![=>](ident.span()),
 					body:parse_quote!({
-						let __value =
-							&swc_common::private::serde::from_utf8_lossy(
-								__value,
-							);
-						swc_common::private::serde::Err(
-							serde::de::Error::unknown_variant(
-								__value, VARIANTS,
-							),
-						)
+						let __value = &swc_common::private::serde::from_utf8_lossy(__value);
+						swc_common::private::serde::Err(serde::de::Error::unknown_variant(
+							__value, VARIANTS,
+						))
 					}),
 					comma:Some(Token![,](ident.span())),
 				});
@@ -375,13 +339,7 @@ pub fn expand(
 			data.variants
 				.iter()
 				.cloned()
-				.map(|variant| {
-					Variant {
-						attrs:Default::default(),
-						fields:Fields::Unit,
-						..variant
-					}
-				})
+				.map(|variant| Variant { attrs:Default::default(), fields:Fields::Unit, ..variant })
 				.collect()
 		};
 		let item:ItemImpl = parse_quote!(

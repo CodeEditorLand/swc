@@ -23,10 +23,7 @@ pub fn transform(input:JsString, options:JsValue) -> Promise {
 }
 
 #[wasm_bindgen(js_name = "transformSync", skip_typescript)]
-pub fn transform_sync(
-	input:JsString,
-	options:JsValue,
-) -> Result<JsValue, JsValue> {
+pub fn transform_sync(input:JsString, options:JsValue) -> Result<JsValue, JsValue> {
 	let options:Options = if options.is_falsy() {
 		Default::default()
 	} else {
@@ -52,6 +49,4 @@ fn operate(input:String, options:Options) -> Result<TransformOutput, Error> {
 	)
 }
 
-pub fn convert_err(err:Error) -> wasm_bindgen::prelude::JsValue {
-	format!("{:?}", err).into()
-}
+pub fn convert_err(err:Error) -> wasm_bindgen::prelude::JsValue { format!("{:?}", err).into() }

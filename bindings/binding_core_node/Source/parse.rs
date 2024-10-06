@@ -43,22 +43,52 @@ impl Task for ParseTask {
 
 	fn compute(&mut self) -> napi::Result<Self::Output> {
 		let options:ParseOptions = deserialize_json(&self.options)?;
-		let fm = self
-			.c
-			.cm
-			.new_source_file(self.filename.clone().into(), self.src.clone());
+		let fm = self.c.cm.new_source_file(self.filename.clone().into(), self.src.clone());
 
-		let comments = if options.comments {
-			Some(self.c.comments() as &dyn Comments)
-		} else {
-			None
-		};
+		let comments =
+			if options.comments { Some(self.c.comments() as &dyn Comments) } else { None };
 
-		let program = try_with(
-			self.c.cm.clone(),
-			false,
-			ErrorFormat::Normal,
-			|handler| {
+		let program = try_with(self.c.cm.clone(), false, ErrorFormat::Normal, |handler| {
+			let mut p = self.c.parse_js(
+				fm,
+				handler,
+				options.target,
+				options.syntax,
+				options.is_module,
+				comments,
+			)?;
+
+			p.visit_mut_with(&mut resolver(Mark::new(), Mark::new(), options.syntax.typescript()));
+
+			Ok(p)
+		})
+		.convert_err()?;
+
+		let ast_json = serde_json::to_string(&program)?;
+
+		Ok(ast_json)
+	}
+
+	fn resolve(&mut self, _env:Env, result:Self::Output) -> napi::Result<Self::JsValue> {
+		Ok(result)
+	}
+}
+
+#[napi]
+impl Task for ParseFileTask {
+	type JsValue = String;
+	type Output = String;
+
+	fn compute(&mut self) -> napi::Result<Self::Output> {
+		let program = try_with(self.c.cm.clone(), false, ErrorFormat::Normal, |handler| {
+			self.c.run(|| {
+				let options:ParseOptions = deserialize_json(&self.options)?;
+
+				let fm = self.c.cm.load_file(&self.path).context("failed to read module")?;
+
+				let c = self.c.comments().clone();
+				let comments = if options.comments { Some(&c as &dyn Comments) } else { None };
+
 				let mut p = self.c.parse_js(
 					fm,
 					handler,
@@ -75,8 +105,8 @@ impl Task for ParseTask {
 				));
 
 				Ok(p)
-			},
-		)
+			})
+		})
 		.convert_err()?;
 
 		let ast_json = serde_json::to_string(&program)?;
@@ -84,73 +114,7 @@ impl Task for ParseTask {
 		Ok(ast_json)
 	}
 
-	fn resolve(
-		&mut self,
-		_env:Env,
-		result:Self::Output,
-	) -> napi::Result<Self::JsValue> {
-		Ok(result)
-	}
-}
-
-#[napi]
-impl Task for ParseFileTask {
-	type JsValue = String;
-	type Output = String;
-
-	fn compute(&mut self) -> napi::Result<Self::Output> {
-		let program = try_with(
-			self.c.cm.clone(),
-			false,
-			ErrorFormat::Normal,
-			|handler| {
-				self.c.run(|| {
-					let options:ParseOptions = deserialize_json(&self.options)?;
-
-					let fm = self
-						.c
-						.cm
-						.load_file(&self.path)
-						.context("failed to read module")?;
-
-					let c = self.c.comments().clone();
-					let comments = if options.comments {
-						Some(&c as &dyn Comments)
-					} else {
-						None
-					};
-
-					let mut p = self.c.parse_js(
-						fm,
-						handler,
-						options.target,
-						options.syntax,
-						options.is_module,
-						comments,
-					)?;
-
-					p.visit_mut_with(&mut resolver(
-						Mark::new(),
-						Mark::new(),
-						options.syntax.typescript(),
-					));
-
-					Ok(p)
-				})
-			},
-		)
-		.convert_err()?;
-
-		let ast_json = serde_json::to_string(&program)?;
-
-		Ok(ast_json)
-	}
-
-	fn resolve(
-		&mut self,
-		_env:Env,
-		result:Self::Output,
-	) -> napi::Result<Self::JsValue> {
+	fn resolve(&mut self, _env:Env, result:Self::Output) -> napi::Result<Self::JsValue> {
 		Ok(result)
 	}
 }
@@ -172,18 +136,11 @@ pub fn parse(
 		FileName::Anon
 	};
 
-	AsyncTask::with_optional_signal(
-		ParseTask { c, filename, src, options },
-		signal,
-	)
+	AsyncTask::with_optional_signal(ParseTask { c, filename, src, options }, signal)
 }
 
 #[napi]
-pub fn parse_sync(
-	src:String,
-	opts:Buffer,
-	filename:Option<String>,
-) -> napi::Result<String> {
+pub fn parse_sync(src:String, opts:Buffer, filename:Option<String>) -> napi::Result<String> {
 	crate::util::init_default_trace_subscriber();
 	let c = get_compiler();
 
@@ -194,36 +151,28 @@ pub fn parse_sync(
 		FileName::Anon
 	};
 
-	let program =
-		try_with(c.cm.clone(), false, ErrorFormat::Normal, |handler| {
-			c.run(|| {
-				let fm = c.cm.new_source_file(filename.into(), src);
+	let program = try_with(c.cm.clone(), false, ErrorFormat::Normal, |handler| {
+		c.run(|| {
+			let fm = c.cm.new_source_file(filename.into(), src);
 
-				let comments = if options.comments {
-					Some(c.comments() as &dyn Comments)
-				} else {
-					None
-				};
+			let comments =
+				if options.comments { Some(c.comments() as &dyn Comments) } else { None };
 
-				let mut p = c.parse_js(
-					fm,
-					handler,
-					options.target,
-					options.syntax,
-					options.is_module,
-					comments,
-				)?;
+			let mut p = c.parse_js(
+				fm,
+				handler,
+				options.target,
+				options.syntax,
+				options.is_module,
+				comments,
+			)?;
 
-				p.visit_mut_with(&mut resolver(
-					Mark::new(),
-					Mark::new(),
-					options.syntax.typescript(),
-				));
+			p.visit_mut_with(&mut resolver(Mark::new(), Mark::new(), options.syntax.typescript()));
 
-				Ok(p)
-			})
+			Ok(p)
 		})
-		.convert_err()?;
+	})
+	.convert_err()?;
 
 	Ok(serde_json::to_string(&program)?)
 }
@@ -236,15 +185,10 @@ pub fn parse_file_sync(path:String, opts:Buffer) -> napi::Result<String> {
 
 	let program = {
 		try_with(c.cm.clone(), false, ErrorFormat::Normal, |handler| {
-			let fm =
-				c.cm.load_file(Path::new(path.as_str()))
-					.expect("failed to read program file");
+			let fm = c.cm.load_file(Path::new(path.as_str())).expect("failed to read program file");
 
-			let comments = if options.comments {
-				Some(c.comments() as &dyn Comments)
-			} else {
-				None
-			};
+			let comments =
+				if options.comments { Some(c.comments() as &dyn Comments) } else { None };
 
 			let mut p = c.parse_js(
 				fm,
@@ -254,11 +198,7 @@ pub fn parse_file_sync(path:String, opts:Buffer) -> napi::Result<String> {
 				options.is_module,
 				comments,
 			)?;
-			p.visit_mut_with(&mut resolver(
-				Mark::new(),
-				Mark::new(),
-				options.syntax.typescript(),
-			));
+			p.visit_mut_with(&mut resolver(Mark::new(), Mark::new(), options.syntax.typescript()));
 
 			Ok(p)
 		})

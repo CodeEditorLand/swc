@@ -32,11 +32,7 @@ impl PartialEq<str> for Ident {
 impl Take for Ident {
 	#[inline]
 	fn dummy() -> Self {
-		Self {
-			span:Default::default(),
-			value:Default::default(),
-			raw:Default::default(),
-		}
+		Self { span:Default::default(), value:Default::default(), raw:Default::default() }
 	}
 }
 
@@ -100,27 +96,11 @@ impl EqIgnoreSpan for Str {
 	fn eq_ignore_span(&self, other:&Self) -> bool { self.value == other.value }
 }
 
-#[derive(
-	StringEnum,
-	Clone,
-	Copy,
-	Eq,
-	PartialEq,
-	PartialOrd,
-	Ord,
-	Hash,
-	Is,
-	EqIgnoreSpan,
-)]
+#[derive(StringEnum, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash, Is, EqIgnoreSpan)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(
 	feature = "rkyv",
-	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
-)]
-#[cfg_attr(
-	feature = "rkyv",
-	archive(bound(
-		serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"
-	))
+	archive(bound(serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"))
 )]
 #[cfg_attr(feature = "rkyv", archive(check_bytes))]
 #[cfg_attr(feature = "rkyv", archive_attr(repr(u32)))]
@@ -385,27 +365,11 @@ pub struct Ratio {
 	pub right:Option<Number>,
 }
 
-#[derive(
-	StringEnum,
-	Clone,
-	Copy,
-	Eq,
-	PartialEq,
-	PartialOrd,
-	Ord,
-	Hash,
-	Is,
-	EqIgnoreSpan,
-)]
+#[derive(StringEnum, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash, Is, EqIgnoreSpan)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(
 	feature = "rkyv",
-	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
-)]
-#[cfg_attr(
-	feature = "rkyv",
-	archive(bound(
-		serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"
-	))
+	archive(bound(serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"))
 )]
 #[cfg_attr(feature = "rkyv", archive(check_bytes))]
 #[cfg_attr(feature = "rkyv", archive_attr(repr(u32)))]
@@ -504,27 +468,11 @@ pub struct CalcOperator {
 	pub value:CalcOperatorType,
 }
 
-#[derive(
-	StringEnum,
-	Clone,
-	Copy,
-	Eq,
-	PartialEq,
-	PartialOrd,
-	Ord,
-	Hash,
-	Is,
-	EqIgnoreSpan,
-)]
+#[derive(StringEnum, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash, Is, EqIgnoreSpan)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(
 	feature = "rkyv",
-	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
-)]
-#[cfg_attr(
-	feature = "rkyv",
-	archive(bound(
-		serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"
-	))
+	archive(bound(serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"))
 )]
 #[cfg_attr(feature = "rkyv-impl", archive(check_bytes))]
 #[cfg_attr(feature = "rkyv-impl", archive_attr(repr(u32)))]

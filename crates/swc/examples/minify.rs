@@ -1,12 +1,7 @@
 use std::{path::Path, sync::Arc};
 
 use anyhow::Context;
-use swc::{
-	config::JsMinifyOptions,
-	try_with_handler,
-	BoolOrDataConfig,
-	JsMinifyExtras,
-};
+use swc::{config::JsMinifyOptions, try_with_handler, BoolOrDataConfig, JsMinifyExtras};
 use swc_common::{SourceMap, GLOBALS};
 use swc_ecma_minifier::option::SimpleMangleCache;
 
@@ -30,9 +25,8 @@ fn main() {
 						..Default::default()
 					},
 					// Mangle name cache example. You may not need this.
-					JsMinifyExtras::default().with_mangle_name_cache(Some(
-						Arc::new(SimpleMangleCache::default()),
-					)),
+					JsMinifyExtras::default()
+						.with_mangle_name_cache(Some(Arc::new(SimpleMangleCache::default()))),
 				)
 				.context("failed to minify")
 			})

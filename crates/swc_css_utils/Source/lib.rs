@@ -41,15 +41,11 @@ impl VisitMut for FunctionNameReplacer<'_> {
 		n.visit_mut_children_with(self);
 
 		match &mut n.name {
-			FunctionName::Ident(name)
-				if name.value.eq_ignore_ascii_case(self.from) =>
-			{
+			FunctionName::Ident(name) if name.value.eq_ignore_ascii_case(self.from) => {
 				name.value = self.to.into();
 				name.raw = None;
 			},
-			FunctionName::DashedIdent(name)
-				if name.value.eq_ignore_ascii_case(self.from) =>
-			{
+			FunctionName::DashedIdent(name) if name.value.eq_ignore_ascii_case(self.from) => {
 				name.value = self.to.into();
 				name.raw = None;
 			},
@@ -92,10 +88,7 @@ pub struct PseudoElementSelectorNameReplacer<'a> {
 }
 
 impl VisitMut for PseudoElementSelectorNameReplacer<'_> {
-	fn visit_mut_pseudo_element_selector(
-		&mut self,
-		n:&mut PseudoElementSelector,
-	) {
+	fn visit_mut_pseudo_element_selector(&mut self, n:&mut PseudoElementSelector) {
 		n.visit_mut_children_with(self);
 
 		if &*n.name.value == self.from {
@@ -105,11 +98,8 @@ impl VisitMut for PseudoElementSelectorNameReplacer<'_> {
 	}
 }
 
-pub fn replace_pseudo_element_selector_name<N>(
-	node:&mut N,
-	from:&str,
-	to:&str,
-) where
+pub fn replace_pseudo_element_selector_name<N>(node:&mut N, from:&str, to:&str)
+where
 	N: for<'aa> VisitMutWith<PseudoElementSelectorNameReplacer<'aa>>, {
 	node.visit_mut_with(&mut PseudoElementSelectorNameReplacer { from, to });
 }
@@ -124,18 +114,12 @@ impl VisitMut for PseudoElementOnPseudoClassReplacer<'_> {
 		n.visit_mut_children_with(self);
 
 		match n {
-			SubclassSelector::PseudoElement(PseudoElementSelector {
-				name,
-				span,
-				..
-			}) if &*name.value == self.from => {
+			SubclassSelector::PseudoElement(PseudoElementSelector { name, span, .. })
+				if &*name.value == self.from =>
+			{
 				*n = SubclassSelector::PseudoClass(PseudoClassSelector {
 					span:*span,
-					name:Ident {
-						span:name.span,
-						value:self.to.into(),
-						raw:None,
-					},
+					name:Ident { span:name.span, value:self.to.into(), raw:None },
 					children:None,
 				})
 			},
@@ -159,11 +143,10 @@ pub struct NamedColor {
 	pub rgb:Vec<u8>,
 }
 
-pub static NAMED_COLORS:Lazy<AHashMap<StaticString, NamedColor>> =
-	Lazy::new(|| {
-		serde_json::from_str(include_str!("./named-colors.json"))
-			.expect("failed to parse named-colors.json for html entities")
-	});
+pub static NAMED_COLORS:Lazy<AHashMap<StaticString, NamedColor>> = Lazy::new(|| {
+	serde_json::from_str(include_str!("./named-colors.json"))
+		.expect("failed to parse named-colors.json for html entities")
+});
 
 #[inline]
 fn is_escape_not_required(value:&str) -> bool {
@@ -179,10 +162,7 @@ fn is_escape_not_required(value:&str) -> bool {
 		return false;
 	}
 
-	if value.len() >= 2
-		&& value.as_bytes()[0] == b'-'
-		&& value.as_bytes()[1].is_ascii_digit()
-	{
+	if value.len() >= 2 && value.as_bytes()[0] == b'-' && value.as_bytes()[1].is_ascii_digit() {
 		return false;
 	}
 
@@ -286,24 +266,11 @@ fn hex_escape(ascii_byte:u8, _minify:bool) -> String {
 	if ascii_byte > 0x0F {
 		let high = (ascii_byte >> 4) as usize;
 		let low = (ascii_byte & 0x0F) as usize;
-		unsafe {
-			str::from_utf8_unchecked(&[
-				b'\\',
-				HEX_DIGITS[high],
-				HEX_DIGITS[low],
-				b' ',
-			])
-		}
-		.to_string()
+		unsafe { str::from_utf8_unchecked(&[b'\\', HEX_DIGITS[high], HEX_DIGITS[low], b' ']) }
+			.to_string()
 	} else {
-		unsafe {
-			str::from_utf8_unchecked(&[
-				b'\\',
-				HEX_DIGITS[ascii_byte as usize],
-				b' ',
-			])
-		}
-		.to_string()
+		unsafe { str::from_utf8_unchecked(&[b'\\', HEX_DIGITS[ascii_byte as usize], b' ']) }
+			.to_string()
 	}
 }
 
@@ -363,9 +330,7 @@ pub fn to_rgb255(abc:[f64; 3]) -> [f64; 3] {
 	abc255
 }
 
-pub fn clamp_unit_f64(val:f64) -> u8 {
-	(val * 255.).round().clamp(0., 255.) as u8
-}
+pub fn clamp_unit_f64(val:f64) -> u8 { (val * 255.).round().clamp(0., 255.) as u8 }
 
 pub fn round_alpha(alpha:f64) -> f64 {
 	let mut rounded_alpha = (alpha * 100.).round() / 100.;

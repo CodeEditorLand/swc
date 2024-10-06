@@ -93,10 +93,8 @@ pub trait Comments {
 
 							//
 							if line.len() == (flag.len() + 5)
-								&& (line.starts_with("#__")
-									|| line.starts_with("@__"))
-								&& line.ends_with("__") && flag
-								== &line[3..line.len() - 2]
+								&& (line.starts_with("#__") || line.starts_with("@__"))
+								&& line.ends_with("__") && flag == &line[3..line.len() - 2]
 							{
 								return true;
 							}
@@ -120,9 +118,7 @@ pub trait Comments {
 
 macro_rules! delegate {
 	() => {
-		fn add_leading(&self, pos:BytePos, cmt:Comment) {
-			(**self).add_leading(pos, cmt)
-		}
+		fn add_leading(&self, pos:BytePos, cmt:Comment) { (**self).add_leading(pos, cmt) }
 
 		fn add_leading_comments(&self, pos:BytePos, comments:Vec<Comment>) {
 			(**self).add_leading_comments(pos, comments)
@@ -130,49 +126,29 @@ macro_rules! delegate {
 
 		fn has_leading(&self, pos:BytePos) -> bool { (**self).has_leading(pos) }
 
-		fn move_leading(&self, from:BytePos, to:BytePos) {
-			(**self).move_leading(from, to)
-		}
+		fn move_leading(&self, from:BytePos, to:BytePos) { (**self).move_leading(from, to) }
 
-		fn take_leading(&self, pos:BytePos) -> Option<Vec<Comment>> {
-			(**self).take_leading(pos)
-		}
+		fn take_leading(&self, pos:BytePos) -> Option<Vec<Comment>> { (**self).take_leading(pos) }
 
-		fn get_leading(&self, pos:BytePos) -> Option<Vec<Comment>> {
-			(**self).get_leading(pos)
-		}
+		fn get_leading(&self, pos:BytePos) -> Option<Vec<Comment>> { (**self).get_leading(pos) }
 
-		fn add_trailing(&self, pos:BytePos, cmt:Comment) {
-			(**self).add_trailing(pos, cmt)
-		}
+		fn add_trailing(&self, pos:BytePos, cmt:Comment) { (**self).add_trailing(pos, cmt) }
 
 		fn add_trailing_comments(&self, pos:BytePos, comments:Vec<Comment>) {
 			(**self).add_trailing_comments(pos, comments)
 		}
 
-		fn has_trailing(&self, pos:BytePos) -> bool {
-			(**self).has_trailing(pos)
-		}
+		fn has_trailing(&self, pos:BytePos) -> bool { (**self).has_trailing(pos) }
 
-		fn move_trailing(&self, from:BytePos, to:BytePos) {
-			(**self).move_trailing(from, to)
-		}
+		fn move_trailing(&self, from:BytePos, to:BytePos) { (**self).move_trailing(from, to) }
 
-		fn take_trailing(&self, pos:BytePos) -> Option<Vec<Comment>> {
-			(**self).take_trailing(pos)
-		}
+		fn take_trailing(&self, pos:BytePos) -> Option<Vec<Comment>> { (**self).take_trailing(pos) }
 
-		fn get_trailing(&self, pos:BytePos) -> Option<Vec<Comment>> {
-			(**self).get_trailing(pos)
-		}
+		fn get_trailing(&self, pos:BytePos) -> Option<Vec<Comment>> { (**self).get_trailing(pos) }
 
-		fn add_pure_comment(&self, pos:BytePos) {
-			(**self).add_pure_comment(pos)
-		}
+		fn add_pure_comment(&self, pos:BytePos) { (**self).add_pure_comment(pos) }
 
-		fn has_flag(&self, lo:BytePos, flag:&str) -> bool {
-			(**self).has_flag(lo, flag)
-		}
+		fn has_flag(&self, lo:BytePos, flag:&str) -> bool { (**self).has_flag(lo, flag) }
 	};
 }
 
@@ -346,8 +322,7 @@ where
 }
 
 pub type SingleThreadedCommentsMapInner = FxHashMap<BytePos, Vec<Comment>>;
-pub type SingleThreadedCommentsMap =
-	Rc<RefCell<SingleThreadedCommentsMapInner>>;
+pub type SingleThreadedCommentsMap = Rc<RefCell<SingleThreadedCommentsMapInner>>;
 
 /// Single-threaded storage for comments.
 #[derive(Debug, Clone, Default)]
@@ -434,11 +409,8 @@ impl Comments for SingleThreadedComments {
 
 		let mut leading_map = self.leading.borrow_mut();
 		let leading = leading_map.entry(pos).or_default();
-		let pure_comment = Comment {
-			kind:CommentKind::Block,
-			span:DUMMY_SP,
-			text:atom!("#__PURE__"),
-		};
+		let pure_comment =
+			Comment { kind:CommentKind::Block, span:DUMMY_SP, text:atom!("#__PURE__") };
 
 		if !leading.iter().any(|c| c.text == pure_comment.text) {
 			leading.push(pure_comment);
@@ -476,8 +448,7 @@ impl Comments for SingleThreadedComments {
 
 						//
 						if line.len() == (flag.len() + 5)
-							&& (line.starts_with("#__")
-								|| line.starts_with("@__"))
+							&& (line.starts_with("#__") || line.starts_with("@__"))
 							&& line.ends_with("__")
 							&& flag == &line[3..line.len() - 2]
 						{
@@ -503,29 +474,21 @@ impl SingleThreadedComments {
 	}
 
 	/// Takes all the comments as (leading, trailing).
-	pub fn take_all(
-		self,
-	) -> (SingleThreadedCommentsMap, SingleThreadedCommentsMap) {
+	pub fn take_all(self) -> (SingleThreadedCommentsMap, SingleThreadedCommentsMap) {
 		(self.leading, self.trailing)
 	}
 
 	/// Borrows all the comments as (leading, trailing).
 	pub fn borrow_all(
 		&self,
-	) -> (
-		Ref<SingleThreadedCommentsMapInner>,
-		Ref<SingleThreadedCommentsMapInner>,
-	) {
+	) -> (Ref<SingleThreadedCommentsMapInner>, Ref<SingleThreadedCommentsMapInner>) {
 		(self.leading.borrow(), self.trailing.borrow())
 	}
 
 	/// Borrows all the comments as (leading, trailing).
 	pub fn borrow_all_mut(
 		&self,
-	) -> (
-		RefMut<SingleThreadedCommentsMapInner>,
-		RefMut<SingleThreadedCommentsMapInner>,
-	) {
+	) -> (RefMut<SingleThreadedCommentsMapInner>, RefMut<SingleThreadedCommentsMapInner>) {
 		(self.leading.borrow_mut(), self.trailing.borrow_mut())
 	}
 
@@ -568,9 +531,7 @@ impl Spanned for Comment {
 	fn span(&self) -> Span { self.span }
 }
 
-#[derive(
-	Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(
 	any(feature = "rkyv-impl"),
 	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
@@ -581,19 +542,12 @@ pub enum CommentKind {
 	Block = 1,
 }
 
-#[deprecated(
-	since = "0.13.5",
-	note = "helper methods are merged into Comments itself"
-)]
+#[deprecated(since = "0.13.5", note = "helper methods are merged into Comments itself")]
 pub trait CommentsExt: Comments {
 	fn with_leading<F, Ret>(&self, pos:BytePos, op:F) -> Ret
 	where
 		F: FnOnce(&[Comment]) -> Ret, {
-		if let Some(comments) = self.get_leading(pos) {
-			op(&comments)
-		} else {
-			op(&[])
-		}
+		if let Some(comments) = self.get_leading(pos) { op(&comments) } else { op(&[]) }
 	}
 
 	fn with_trailing<F, Ret>(&self, pos:BytePos, op:F) -> Ret

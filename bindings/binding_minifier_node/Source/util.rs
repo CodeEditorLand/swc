@@ -21,14 +21,11 @@ use tracing_subscriber::{
 	Layer,
 };
 
-static TARGET_TRIPLE:&str =
-	include_str!(concat!(env!("OUT_DIR"), "/triple.txt"));
+static TARGET_TRIPLE:&str = include_str!(concat!(env!("OUT_DIR"), "/triple.txt"));
 static CUSTOM_TRACE_SUBSCRIBER:OnceCell<bool> = OnceCell::new();
 
 #[napi]
-pub fn get_target_triple() -> napi::Result<String> {
-	Ok(TARGET_TRIPLE.to_string())
-}
+pub fn get_target_triple() -> napi::Result<String> { Ok(TARGET_TRIPLE.to_string()) }
 
 #[napi]
 pub fn init_custom_trace_subscriber(
@@ -44,8 +41,7 @@ pub fn init_custom_trace_subscriber(
 		let (chrome_layer, guard) = layer.build();
 		tracing_subscriber::registry()
 			.with(chrome_layer.with_filter(filter::filter_fn(|metadata| {
-				!metadata.target().contains("cranelift")
-					&& !metadata.name().contains("log ")
+				!metadata.target().contains("cranelift") && !metadata.name().contains("log ")
 			})))
 			.try_init()
 			.expect("Failed to register tracing subscriber");
@@ -54,9 +50,7 @@ pub fn init_custom_trace_subscriber(
 			flush_guard.flush();
 			drop(flush_guard);
 		})
-		.expect(
-			"Should able to initialize cleanup for custom trace subscriber",
-		);
+		.expect("Should able to initialize cleanup for custom trace subscriber");
 
 		true
 	});
@@ -65,35 +59,27 @@ pub fn init_custom_trace_subscriber(
 }
 
 #[instrument(level = "trace", skip_all)]
-pub fn try_with<F, Ret>(
-	cm:Lrc<SourceMap>,
-	skip_filename:bool,
-	op:F,
-) -> Result<Ret, Error>
+pub fn try_with<F, Ret>(cm:Lrc<SourceMap>, skip_filename:bool, op:F) -> Result<Ret, Error>
 where
 	F: FnOnce(&Handler) -> Result<Ret, Error>, {
 	GLOBALS.set(&Default::default(), || {
-		try_with_handler(
-			cm,
-			HandlerOpts { skip_filename, ..Default::default() },
-			|handler| {
-				//
-				let result = catch_unwind(AssertUnwindSafe(|| op(handler)));
+		try_with_handler(cm, HandlerOpts { skip_filename, ..Default::default() }, |handler| {
+			//
+			let result = catch_unwind(AssertUnwindSafe(|| op(handler)));
 
-				let p = match result {
-					Ok(v) => return v,
-					Err(v) => v,
-				};
+			let p = match result {
+				Ok(v) => return v,
+				Err(v) => v,
+			};
 
-				if let Some(s) = p.downcast_ref::<String>() {
-					Err(anyhow!("failed to handle: {}", s))
-				} else if let Some(s) = p.downcast_ref::<&str>() {
-					Err(anyhow!("failed to handle: {}", s))
-				} else {
-					Err(anyhow!("failed to handle with unknown panic message"))
-				}
-			},
-		)
+			if let Some(s) = p.downcast_ref::<String>() {
+				Err(anyhow!("failed to handle: {}", s))
+			} else if let Some(s) = p.downcast_ref::<&str>() {
+				Err(anyhow!("failed to handle: {}", s))
+			} else {
+				Err(anyhow!("failed to handle with unknown panic message"))
+			}
+		})
 	})
 }
 

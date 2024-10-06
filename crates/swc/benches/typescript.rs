@@ -5,13 +5,7 @@ use std::{
 	sync::Arc,
 };
 
-use codspeed_criterion_compat::{
-	black_box,
-	criterion_group,
-	criterion_main,
-	Bencher,
-	Criterion,
-};
+use codspeed_criterion_compat::{black_box, criterion_group, criterion_main, Bencher, Criterion};
 use swc::config::{Config, IsModule, JscConfig, Options};
 use swc_common::{
 	errors::Handler,
@@ -41,10 +35,7 @@ fn parse(c:&swc::Compiler) -> (Arc<SourceFile>, Program) {
 		FileName::Real("rxjs/src/internal/Observable.ts".into()).into(),
 		SOURCE.to_string(),
 	);
-	let handler = Handler::with_emitter_writer(
-		Box::new(io::stderr()),
-		Some(c.cm.clone()),
-	);
+	let handler = Handler::with_emitter_writer(Box::new(io::stderr()), Some(c.cm.clone()));
 
 	let comments = c.comments().clone();
 	(
@@ -86,10 +77,7 @@ fn base_tr_fixer(b:&mut Bencher) {
 
 		b.iter(|| {
 			GLOBALS.set(&Default::default(), || {
-				let handler = Handler::with_emitter_writer(
-					Box::new(stderr()),
-					Some(c.cm.clone()),
-				);
+				let handler = Handler::with_emitter_writer(Box::new(stderr()), Some(c.cm.clone()));
 				black_box(c.run_transform(&handler, true, || {
 					module.clone().fold_with(&mut fixer(Some(c.comments())))
 				}))
@@ -147,12 +135,9 @@ fn bench_codegen(b:&mut Bencher, _target:EsVersion) {
 fn codegen_group(c:&mut Criterion) {
 	macro_rules! codegen {
 		($name:ident, $target:expr) => {
-			c.bench_function(
-				&format!("es/full/codegen/{}", stringify!($name)),
-				|b| {
-					bench_codegen(b, $target);
-				},
-			);
+			c.bench_function(&format!("es/full/codegen/{}", stringify!($name)), |b| {
+				bench_codegen(b, $target);
+			});
 		};
 	}
 
@@ -172,14 +157,10 @@ fn bench_full(b:&mut Bencher, opts:&Options) {
 	b.iter(|| {
 		for _ in 0..100 {
 			GLOBALS.set(&Default::default(), || {
-				let handler = Handler::with_emitter_writer(
-					Box::new(stderr()),
-					Some(c.cm.clone()),
-				);
+				let handler = Handler::with_emitter_writer(Box::new(stderr()), Some(c.cm.clone()));
 
 				let fm = c.cm.new_source_file(
-					FileName::Real("rxjs/src/internal/Observable.ts".into())
-						.into(),
+					FileName::Real("rxjs/src/internal/Observable.ts".into()).into(),
 					SOURCE.to_string(),
 				);
 				let _ = c.process_js_file(fm, &handler, opts).unwrap();
@@ -191,29 +172,24 @@ fn bench_full(b:&mut Bencher, opts:&Options) {
 fn full_group(c:&mut Criterion) {
 	macro_rules! compat {
 		($name:ident, $target:expr) => {
-			c.bench_function(
-				&format!("es/full/all/{}", stringify!($name)),
-				|b| {
-					bench_full(
-						b,
-						&Options {
-							config:Config {
-								jsc:JscConfig {
-									target:Some($target),
-									syntax:Some(Syntax::Typescript(
-										Default::default(),
-									)),
-									..Default::default()
-								},
-								module:None,
+			c.bench_function(&format!("es/full/all/{}", stringify!($name)), |b| {
+				bench_full(
+					b,
+					&Options {
+						config:Config {
+							jsc:JscConfig {
+								target:Some($target),
+								syntax:Some(Syntax::Typescript(Default::default())),
 								..Default::default()
 							},
-							swcrc:false,
+							module:None,
 							..Default::default()
 						},
-					);
-				},
-			);
+						swcrc:false,
+						..Default::default()
+					},
+				);
+			});
 		};
 	}
 
@@ -227,9 +203,7 @@ fn full_group(c:&mut Criterion) {
 	compat!(es2020, EsVersion::Es2020);
 }
 
-fn parser_group(c:&mut Criterion) {
-	c.bench_function("es/full/parser", parser);
-}
+fn parser_group(c:&mut Criterion) { c.bench_function("es/full/parser", parser); }
 
 fn parser(b:&mut Bencher) {
 	let c = mk();
@@ -241,11 +215,5 @@ fn parser(b:&mut Bencher) {
 	})
 }
 
-criterion_group!(
-	benches,
-	codegen_group,
-	full_group,
-	parser_group,
-	base_tr_group
-);
+criterion_group!(benches, codegen_group, full_group, parser_group, base_tr_group);
 criterion_main!(benches);

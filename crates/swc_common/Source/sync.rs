@@ -169,9 +169,7 @@ pub trait HashMapExt<K, V> {
 
 impl<K:Eq + Hash, V:Eq, S:BuildHasher> HashMapExt<K, V> for HashMap<K, V, S> {
 	fn insert_same(&mut self, key:K, value:V) {
-		self.entry(key)
-			.and_modify(|old| assert!(*old == value))
-			.or_insert(value);
+		self.entry(key).and_modify(|old| assert!(*old == value)).or_insert(value);
 	}
 }
 
@@ -215,9 +213,7 @@ impl<T:PartialOrd + Copy> PartialOrd for LockCell<T> {
 
 impl<T:Ord + Copy> Ord for LockCell<T> {
 	#[inline]
-	fn cmp(&self, other:&LockCell<T>) -> Ordering {
-		self.get().cmp(&other.get())
-	}
+	fn cmp(&self, other:&LockCell<T>) -> Ordering { self.get().cmp(&other.get()) }
 }
 
 #[derive(Debug, Default)]
@@ -242,9 +238,7 @@ impl<T> RwLock<T> {
 	pub fn get_mut(&mut self) -> &mut T { self.0.get_mut() }
 
 	#[inline(always)]
-	pub fn with_read_lock<F:FnOnce(&T) -> R, R>(&self, f:F) -> R {
-		f(&*self.read())
-	}
+	pub fn with_read_lock<F:FnOnce(&T) -> R, R>(&self, f:F) -> R { f(&*self.read()) }
 
 	#[allow(clippy::result_unit_err)]
 	#[cfg(not(feature = "concurrent"))]
@@ -256,9 +250,7 @@ impl<T> RwLock<T> {
 	#[allow(clippy::result_unit_err)]
 	#[cfg(feature = "concurrent")]
 	#[inline(always)]
-	pub fn try_write(&self) -> Result<WriteGuard<'_, T>, ()> {
-		self.0.try_write().ok_or(())
-	}
+	pub fn try_write(&self) -> Result<WriteGuard<'_, T>, ()> { self.0.try_write().ok_or(()) }
 
 	#[cfg(not(feature = "concurrent"))]
 	#[inline(always)]
@@ -269,9 +261,7 @@ impl<T> RwLock<T> {
 	pub fn write(&self) -> WriteGuard<'_, T> { self.0.write() }
 
 	#[inline(always)]
-	pub fn with_write_lock<F:FnOnce(&mut T) -> R, R>(&self, f:F) -> R {
-		f(&mut *self.write())
-	}
+	pub fn with_write_lock<F:FnOnce(&mut T) -> R, R>(&self, f:F) -> R { f(&mut *self.write()) }
 
 	#[inline(always)]
 	pub fn borrow_mut(&self) -> WriteGuard<'_, T> { self.write() }

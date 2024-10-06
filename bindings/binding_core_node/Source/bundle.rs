@@ -69,118 +69,99 @@ impl Task for BundleTask {
 	type Output = AHashMap<String, TransformOutput>;
 
 	fn compute(&mut self) -> napi::Result<Self::Output> {
-		let builtins = if let TargetEnv::Node =
-			self.config.static_items.config.target
-		{
+		let builtins = if let TargetEnv::Node = self.config.static_items.config.target {
 			NODE_BUILTINS.iter().copied().map(JsWord::from).collect::<Vec<_>>()
 		} else {
 			Vec::new()
 		};
 
 		// Defaults to es3
-		let codegen_target = self
-			.config
-			.static_items
-			.config
-			.codegen_target()
-			.unwrap_or_default();
+		let codegen_target = self.config.static_items.config.codegen_target().unwrap_or_default();
 
 		let globals = Globals::default();
 		GLOBALS.set(&globals, || {
-            let res = catch_unwind(AssertUnwindSafe(|| {
-                let mut bundler = Bundler::new(
-                    &globals,
-                    self.swc.cm.clone(),
-                    &self.config.loader,
-                    &self.config.resolver,
-                    swc_core::bundler::Config {
-                        require: true,
-                        external_modules: builtins
-                            .into_iter()
-                            .chain(
-                                self.config
-                                    .static_items
-                                    .config
-                                    .external_modules
-                                    .iter()
-                                    .cloned(),
-                            )
-                            .collect(),
-                        ..Default::default()
-                    },
-                    Box::new(Hook),
-                );
+			let res = catch_unwind(AssertUnwindSafe(|| {
+				let mut bundler = Bundler::new(
+					&globals,
+					self.swc.cm.clone(),
+					&self.config.loader,
+					&self.config.resolver,
+					swc_core::bundler::Config {
+						require:true,
+						external_modules:builtins
+							.into_iter()
+							.chain(self.config.static_items.config.external_modules.iter().cloned())
+							.collect(),
+						..Default::default()
+					},
+					Box::new(Hook),
+				);
 
-                let result = bundler
-                    .bundle(self.config.static_items.config.entry.clone().into())
-                    .convert_err()?;
+				let result = bundler
+					.bundle(self.config.static_items.config.entry.clone().into())
+					.convert_err()?;
 
-                let result = result
-                    .into_iter()
-                    .map(|bundle| match bundle.kind {
-                        BundleKind::Named { name } | BundleKind::Lib { name } => {
-                            Ok((name, bundle.module))
-                        }
-                        BundleKind::Dynamic => bail!("unimplemented: dynamic code splitting"),
-                    })
-                    .map(|res| {
-                        res.and_then(|(k, m)| {
-                            // TODO: Source map
-                            let minify = self
-                                .config
-                                .static_items
-                                .config
-                                .options
-                                .as_ref()
-                                .map(|v| v.config.minify.into_bool())
-                                .unwrap_or(false);
+				let result = result
+					.into_iter()
+					.map(|bundle| {
+						match bundle.kind {
+							BundleKind::Named { name } | BundleKind::Lib { name } => {
+								Ok((name, bundle.module))
+							},
+							BundleKind::Dynamic => bail!("unimplemented: dynamic code splitting"),
+						}
+					})
+					.map(|res| {
+						res.and_then(|(k, m)| {
+							// TODO: Source map
+							let minify = self
+								.config
+								.static_items
+								.config
+								.options
+								.as_ref()
+								.map(|v| v.config.minify.into_bool())
+								.unwrap_or(false);
 
-                            let output = self.swc.print(
-                                &m,
-                                PrintArgs {
-                                    inline_sources_content: true,
-                                    source_map: SourceMapsConfig::Bool(true),
-                                    emit_source_map_columns: true,
-                                    codegen_config: swc_core::ecma::codegen::Config::default()
-                                        .with_target(codegen_target)
-                                        .with_minify(minify),
-                                    ..Default::default()
-                                },
-                            )?;
+							let output = self.swc.print(
+								&m,
+								PrintArgs {
+									inline_sources_content:true,
+									source_map:SourceMapsConfig::Bool(true),
+									emit_source_map_columns:true,
+									codegen_config:swc_core::ecma::codegen::Config::default()
+										.with_target(codegen_target)
+										.with_minify(minify),
+									..Default::default()
+								},
+							)?;
 
-                            Ok((k, output))
-                        })
-                    })
-                    .collect::<Result<_, _>>()
-                    .convert_err()?;
+							Ok((k, output))
+						})
+					})
+					.collect::<Result<_, _>>()
+					.convert_err()?;
 
-                Ok(result)
-            }));
+				Ok(result)
+			}));
 
-            let err = match res {
-                Ok(v) => return v,
-                Err(err) => err,
-            };
+			let err = match res {
+				Ok(v) => return v,
+				Err(err) => err,
+			};
 
-            if let Some(s) = err.downcast_ref::<String>() {
-                return Err(napi::Error::new(
-                    Status::GenericFailure,
-                    format!("panic detected: {}", s),
-                ));
-            }
+			if let Some(s) = err.downcast_ref::<String>() {
+				return Err(napi::Error::new(
+					Status::GenericFailure,
+					format!("panic detected: {}", s),
+				));
+			}
 
-            Err(napi::Error::new(
-                Status::GenericFailure,
-                "panic detected".to_string(),
-            ))
-        })
+			Err(napi::Error::new(Status::GenericFailure, "panic detected".to_string()))
+		})
 	}
 
-	fn resolve(
-		&mut self,
-		_env:Env,
-		output:Self::Output,
-	) -> napi::Result<Self::JsValue> {
+	fn resolve(&mut self, _env:Env, output:Self::Output) -> napi::Result<Self::JsValue> {
 		Ok(output)
 	}
 }
@@ -192,18 +173,11 @@ impl Task for BundleTask {
 
 	fn compute(&mut self) -> napi::Result<Self::Output> { todo!() }
 
-	fn resolve(
-		&mut self,
-		env:Env,
-		output:Self::Output,
-	) -> napi::Result<Self::JsValue> {
-		todo!()
-	}
+	fn resolve(&mut self, env:Env, output:Self::Output) -> napi::Result<Self::JsValue> { todo!() }
 }
 
 #[cfg(feature = "swc_v1")]
-#[napi(ts_return_type = "Promise<{ [index: string]: { code: string, map?: \
-                         string } }>")]
+#[napi(ts_return_type = "Promise<{ [index: string]: { code: string, map?: string } }>")]
 pub(crate) fn bundle(
 	conf_items:Buffer,
 	signal:Option<AbortSignal>,
@@ -214,34 +188,22 @@ pub(crate) fn bundle(
 
 	let static_items:StaticConfigItem = get_deserialized(&conf_items)?;
 
-	let loader =
-		Box::new(swc_core::bundler::node::loaders::swc::SwcLoader::new(
-			c.clone(),
-			static_items.config.options.as_ref().cloned().unwrap_or_else(
-				|| {
-					serde_json::from_value(serde_json::Value::Object(
-						Default::default(),
-					))
-					.unwrap()
-				},
-			),
-		));
+	let loader = Box::new(swc_core::bundler::node::loaders::swc::SwcLoader::new(
+		c.clone(),
+		static_items.config.options.as_ref().cloned().unwrap_or_else(|| {
+			serde_json::from_value(serde_json::Value::Object(Default::default())).unwrap()
+		}),
+	));
 
 	let target_env = static_items.config.target;
 
 	let paths = static_items.config.options.as_ref().map(|options| {
-		let paths:Vec<(String, Vec<String>)> = options
-			.config
-			.jsc
-			.paths
-			.iter()
-			.map(|(k, v)| (k.clone(), v.clone()))
-			.collect();
+		let paths:Vec<(String, Vec<String>)> =
+			options.config.jsc.paths.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
 		(options.config.jsc.base_url.clone(), paths)
 	});
 
-	let alias =
-		static_items.config.alias.get(&target_env).cloned().unwrap_or_default();
+	let alias = static_items.config.alias.get(&target_env).cloned().unwrap_or_default();
 
 	let resolver:Box<dyn Resolve> = if let Some((base_url, paths)) = paths {
 		Box::new(paths_resolver(
@@ -252,18 +214,11 @@ pub(crate) fn bundle(
 			static_items.config.preserve_symlinks,
 		))
 	} else {
-		Box::new(environment_resolver(
-			target_env,
-			alias,
-			static_items.config.preserve_symlinks,
-		))
+		Box::new(environment_resolver(target_env, alias, static_items.config.preserve_symlinks))
 	};
 
 	Ok(AsyncTask::with_optional_signal(
-		BundleTask {
-			swc:c,
-			config:ConfigItem { loader, resolver, static_items },
-		},
+		BundleTask { swc:c, config:ConfigItem { loader, resolver, static_items } },
 		signal,
 	))
 }
@@ -285,11 +240,7 @@ impl swc_core::bundler::Hook for Hook {
 		Ok(vec![
 			KeyValueProp {
 				key:PropName::Ident(IdentName::new("url".into(), span)),
-				value:Box::new(Expr::Lit(Lit::Str(Str {
-					span,
-					raw:None,
-					value:file_name.into(),
-				}))),
+				value:Box::new(Expr::Lit(Lit::Str(Str { span, raw:None, value:file_name.into() }))),
 			},
 			KeyValueProp {
 				key:PropName::Ident(IdentName::new("main".into(), span)),
@@ -300,10 +251,7 @@ impl swc_core::bundler::Hook for Hook {
 							span,
 							kind:MetaPropKind::ImportMeta,
 						})),
-						prop:MemberProp::Ident(IdentName::new(
-							"main".into(),
-							span,
-						)),
+						prop:MemberProp::Ident(IdentName::new("main".into(), span)),
 					})
 				} else {
 					Expr::Lit(Lit::Bool(Bool { span, value:false }))

@@ -1,10 +1,7 @@
 //! This module always exists because cfg attributes are not stabilized in
 //! expressions at the moment.
 
-#![cfg_attr(
-	any(not(any(feature = "plugin")), target_arch = "wasm32"),
-	allow(unused)
-)]
+#![cfg_attr(any(not(any(feature = "plugin")), target_arch = "wasm32"), allow(unused))]
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "plugin")]
@@ -25,9 +22,7 @@ pub struct PluginConfig(pub String, pub serde_json::Value);
 
 pub fn plugins(
 	configured_plugins:Option<Vec<PluginConfig>>,
-	metadata_context:std::sync::Arc<
-		swc_common::plugin::metadata::TransformPluginMetadataContext,
-	>,
+	metadata_context:std::sync::Arc<swc_common::plugin::metadata::TransformPluginMetadataContext>,
 	comments:Option<swc_common::comments::SingleThreadedComments>,
 	source_map:std::sync::Arc<swc_common::SourceMap>,
 	unresolved_mark:swc_common::Mark,
@@ -43,9 +38,7 @@ pub fn plugins(
 
 struct RustPlugins {
 	plugins:Option<Vec<PluginConfig>>,
-	metadata_context: std::sync::Arc<
-		swc_common::plugin::metadata::TransformPluginMetadataContext,
-	>,
+	metadata_context:std::sync::Arc<swc_common::plugin::metadata::TransformPluginMetadataContext>,
 	comments:Option<swc_common::comments::SingleThreadedComments>,
 	source_map:std::sync::Arc<swc_common::SourceMap>,
 	unresolved_mark:swc_common::Mark,
@@ -61,10 +54,7 @@ impl RustPlugins {
 
 		let fut = async move {
 			self.apply_inner(n).with_context(|| {
-				format!(
-					"failed to invoke plugin on '{:?}'",
-					self.metadata_context.filename
-				)
+				format!("failed to invoke plugin on '{:?}'", self.metadata_context.filename)
 			})
 		};
 		if let Ok(handle) = tokio::runtime::Handle::try_current() {
@@ -86,19 +76,11 @@ impl RustPlugins {
 
 		// Set comments once per whole plugin transform execution.
 		swc_plugin_proxy::COMMENTS.set(
-			&swc_plugin_proxy::HostCommentsStorage {
-				inner:self.comments.clone(),
-			},
+			&swc_plugin_proxy::HostCommentsStorage { inner:self.comments.clone() },
 			|| {
-				let span =
-					tracing::span!(tracing::Level::INFO, "serialize_program")
-						.entered();
-				let program =
-					swc_common::plugin::serialized::VersionedSerializable::new(
-						n,
-					);
-				let mut serialized =
-					PluginSerializedBytes::try_serialize(&program)?;
+				let span = tracing::span!(tracing::Level::INFO, "serialize_program").entered();
+				let program = swc_common::plugin::serialized::VersionedSerializable::new(n);
+				let mut serialized = PluginSerializedBytes::try_serialize(&program)?;
 				drop(span);
 
 				// Run plugin transformation against current program.
@@ -110,26 +92,24 @@ impl RustPlugins {
 				// transform.
 				if let Some(plugins) = &mut self.plugins {
 					for p in plugins.drain(..) {
-						let plugin_module_bytes =
+						let plugin_module_bytes = crate::config::PLUGIN_MODULE_CACHE
+							.inner
+							.get()
+							.unwrap()
+							.lock()
+							.get(&p.0)
+							.expect("plugin module should be loaded");
+
+						let plugin_name = plugin_module_bytes.get_module_name().to_string();
+						let runtime = swc_plugin_runner::wasix_runtime::build_wasi_runtime(
 							crate::config::PLUGIN_MODULE_CACHE
 								.inner
 								.get()
 								.unwrap()
 								.lock()
-								.get(&p.0)
-								.expect("plugin module should be loaded");
-
-						let plugin_name =
-							plugin_module_bytes.get_module_name().to_string();
-						let runtime = swc_plugin_runner::wasix_runtime::build_wasi_runtime(
-                            crate::config::PLUGIN_MODULE_CACHE
-                                .inner
-                                .get()
-                                .unwrap()
-                                .lock()
-                                .get_fs_cache_root()
-                                .map(|v| std::path::PathBuf::from(v)),
-                        );
+								.get_fs_cache_root()
+								.map(|v| std::path::PathBuf::from(v)),
+						);
 						let mut transform_plugin_executor =
 							swc_plugin_runner::create_plugin_transform_executor(
 								&self.source_map,
@@ -148,14 +128,10 @@ impl RustPlugins {
 						.entered();
 
 						serialized = transform_plugin_executor
-							.transform(
-								&serialized,
-								Some(should_enable_comments_proxy),
-							)
+							.transform(&serialized, Some(should_enable_comments_proxy))
 							.with_context(|| {
 								format!(
-									"failed to invoke `{}` as js transform \
-									 plugin at {}",
+									"failed to invoke `{}` as js transform plugin at {}",
 									&p.0, plugin_name
 								)
 							})?;
@@ -183,15 +159,11 @@ impl Fold for RustPlugins {
 
 	#[cfg(feature = "plugin")]
 	fn fold_module(&mut self, n:Module) -> Module {
-		self.apply(Program::Module(n))
-			.expect("failed to invoke plugin")
-			.expect_module()
+		self.apply(Program::Module(n)).expect("failed to invoke plugin").expect_module()
 	}
 
 	#[cfg(feature = "plugin")]
 	fn fold_script(&mut self, n:Script) -> Script {
-		self.apply(Program::Script(n))
-			.expect("failed to invoke plugin")
-			.expect_script()
+		self.apply(Program::Script(n)).expect("failed to invoke plugin").expect_script()
 	}
 }

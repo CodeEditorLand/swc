@@ -41,109 +41,96 @@ use crate::hygiene::Config;
 // }
 
 fn run_test_with_config<F, V>(
-    syntax: Syntax,
-    tr: F,
-    src: &str,
-    to: &str,
-    config: impl FnOnce() -> crate::hygiene::Config,
+	syntax:Syntax,
+	tr:F,
+	src:&str,
+	to:&str,
+	config:impl FnOnce() -> crate::hygiene::Config,
 ) where
-    F: FnOnce() -> V,
-    V: Fold,
-{
-    crate::tests::test_transform(syntax, |_| tr(), src, to, true, config);
+	F: FnOnce() -> V,
+	V: Fold, {
+	crate::tests::test_transform(syntax, |_| tr(), src, to, true, config);
 }
 
 #[test]
 fn test_mark_for() {
-    ::testing::run_test(false, |_, _| {
-        let mark1 = Mark::fresh(Mark::root());
-        let mark2 = Mark::fresh(mark1);
-        let mark3 = Mark::fresh(mark2);
-        let mark4 = Mark::fresh(mark3);
+	::testing::run_test(false, |_, _| {
+		let mark1 = Mark::fresh(Mark::root());
+		let mark2 = Mark::fresh(mark1);
+		let mark3 = Mark::fresh(mark2);
+		let mark4 = Mark::fresh(mark3);
 
-        let folder1 = Resolver::new(
-            Scope::new(ScopeKind::Block, mark1, None),
-            InnerConfig {
-                handle_types: true,
-                unresolved_mark: Mark::fresh(Mark::root()),
-                top_level_mark: mark1,
-            },
-        );
-        let mut folder2 = Resolver::new(
-            Scope::new(ScopeKind::Block, mark2, Some(&folder1.current)),
-            InnerConfig {
-                handle_types: true,
-                unresolved_mark: Mark::fresh(Mark::root()),
-                top_level_mark: mark2,
-            },
-        );
-        folder2
-            .current
-            .declared_symbols
-            .insert("foo".into(), DeclKind::Var);
+		let folder1 = Resolver::new(
+			Scope::new(ScopeKind::Block, mark1, None),
+			InnerConfig {
+				handle_types:true,
+				unresolved_mark:Mark::fresh(Mark::root()),
+				top_level_mark:mark1,
+			},
+		);
+		let mut folder2 = Resolver::new(
+			Scope::new(ScopeKind::Block, mark2, Some(&folder1.current)),
+			InnerConfig {
+				handle_types:true,
+				unresolved_mark:Mark::fresh(Mark::root()),
+				top_level_mark:mark2,
+			},
+		);
+		folder2.current.declared_symbols.insert("foo".into(), DeclKind::Var);
 
-        let mut folder3 = Resolver::new(
-            Scope::new(ScopeKind::Block, mark3, Some(&folder2.current)),
-            InnerConfig {
-                handle_types: true,
-                unresolved_mark: Mark::fresh(Mark::root()),
-                top_level_mark: mark3,
-            },
-        );
-        folder3
-            .current
-            .declared_symbols
-            .insert("bar".into(), DeclKind::Var);
-        assert_eq!(folder3.mark_for_ref(&"bar".into()), Some(mark3));
+		let mut folder3 = Resolver::new(
+			Scope::new(ScopeKind::Block, mark3, Some(&folder2.current)),
+			InnerConfig {
+				handle_types:true,
+				unresolved_mark:Mark::fresh(Mark::root()),
+				top_level_mark:mark3,
+			},
+		);
+		folder3.current.declared_symbols.insert("bar".into(), DeclKind::Var);
+		assert_eq!(folder3.mark_for_ref(&"bar".into()), Some(mark3));
 
-        let mut folder4 = Resolver::new(
-            Scope::new(ScopeKind::Block, mark4, Some(&folder3.current)),
-            InnerConfig {
-                handle_types: true,
-                unresolved_mark: Mark::fresh(Mark::root()),
-                top_level_mark: mark4,
-            },
-        );
-        folder4
-            .current
-            .declared_symbols
-            .insert("foo".into(), DeclKind::Var);
+		let mut folder4 = Resolver::new(
+			Scope::new(ScopeKind::Block, mark4, Some(&folder3.current)),
+			InnerConfig {
+				handle_types:true,
+				unresolved_mark:Mark::fresh(Mark::root()),
+				top_level_mark:mark4,
+			},
+		);
+		folder4.current.declared_symbols.insert("foo".into(), DeclKind::Var);
 
-        assert_eq!(folder4.mark_for_ref(&"foo".into()), Some(mark4));
-        assert_eq!(folder4.mark_for_ref(&"bar".into()), Some(mark3));
-        Ok(())
-    })
-    .unwrap();
+		assert_eq!(folder4.mark_for_ref(&"foo".into()), Some(mark4));
+		assert_eq!(folder4.mark_for_ref(&"bar".into()), Some(mark3));
+		Ok(())
+	})
+	.unwrap();
 }
 
 #[test]
 fn issue_1279_1() {
-    run_test_with_config(
-        Default::default(),
-        || resolver(Mark::new(), Mark::new(), false),
-        "class Foo {
+	run_test_with_config(
+		Default::default(),
+		|| resolver(Mark::new(), Mark::new(), false),
+		"class Foo {
             static f = 1;
             static g = Foo.f;
         }",
-        "
+		"
         let Foo = class Foo {
             static f = 1;
             static g = Foo.f;
         };
         ",
-        || Config {
-            keep_class_names: true,
-            ..Default::default()
-        },
-    );
+		|| Config { keep_class_names:true, ..Default::default() },
+	);
 }
 
 #[test]
 fn issue_1279_2() {
-    run_test_with_config(
-        Default::default(),
-        || resolver(Mark::new(), Mark::new(), false),
-        "class Foo {
+	run_test_with_config(
+		Default::default(),
+		|| resolver(Mark::new(), Mark::new(), false),
+		"class Foo {
             static f = 1;
             static g = Foo.f;
             method() {
@@ -153,7 +140,7 @@ fn issue_1279_2() {
                 }
             }
         }",
-        "
+		"
         let Foo = class Foo {
             static f = 1;
             static g = Foo.f;
@@ -165,29 +152,23 @@ fn issue_1279_2() {
             }
         };
         ",
-        || Config {
-            keep_class_names: true,
-            ..Default::default()
-        },
-    );
+		|| Config { keep_class_names:true, ..Default::default() },
+	);
 }
 
 #[test]
 fn issue_2516() {
-    run_test_with_config(
-        Default::default(),
-        || resolver(Mark::new(), Mark::new(), false),
-        "class A {
+	run_test_with_config(
+		Default::default(),
+		|| resolver(Mark::new(), Mark::new(), false),
+		"class A {
             static A = class {}
           }",
-        "
+		"
         let A = class A {
             static A = class {}
           };
         ",
-        || Config {
-            keep_class_names: true,
-            ..Default::default()
-        },
-    );
+		|| Config { keep_class_names:true, ..Default::default() },
+	);
 }

@@ -36,8 +36,8 @@ enum Cmd {
 }
 
 fn init() -> Result<()> {
-	let log_env = env::var("RUST_LOG")
-		.unwrap_or_else(|_| "info,swc_ecma_minifier=warn,swc_timer=off".into());
+	let log_env =
+		env::var("RUST_LOG").unwrap_or_else(|_| "info,swc_ecma_minifier=warn,swc_timer=off".into());
 
 	let logger = tracing_subscriber::FmtSubscriber::builder()
 		.without_time()
@@ -67,24 +67,17 @@ fn main() -> Result<()> {
 					HANDLER.set(handler, || {
 						//
 						let input = PathBuf::from(
-							env::var(CREDUCE_INPUT_ENV_VAR).expect(
-								"creduce is invoked without the name of input \
-								 file",
-							),
+							env::var(CREDUCE_INPUT_ENV_VAR)
+								.expect("creduce is invoked without the name of input file"),
 						);
 
 						if mode == "SIZE" {
-							let m =
-								get_minified(cm.clone(), &input, true, true)?;
+							let m = get_minified(cm.clone(), &input, true, true)?;
 
-							let swc_output =
-								print_js(cm.clone(), &m.module, true)?;
+							let swc_output = print_js(cm.clone(), &m.module, true)?;
 
-							let terser_output =
-								get_terser_output(&input, true, true)?;
-							if swc_output.trim().len()
-								> terser_output.trim().len()
-							{
+							let terser_output = get_terser_output(&input, true, true)?;
+							if swc_output.trim().len() > terser_output.trim().len() {
 								// It's interesting, as our output is larger
 								// than terser's.
 								return Ok(());
@@ -92,14 +85,11 @@ fn main() -> Result<()> {
 
 							bail!("We don't care about this file")
 						} else if mode == "SEMANTICS" {
-							let m =
-								get_minified(cm.clone(), &input, true, false)?;
+							let m = get_minified(cm.clone(), &input, true, false)?;
 
-							let swc_output =
-								print_js(cm.clone(), &m.module, true)?;
+							let swc_output = print_js(cm.clone(), &m.module, true)?;
 
-							let terser_output =
-								get_terser_output(&input, true, false)?;
+							let terser_output = get_terser_output(&input, true, false)?;
 
 							if swc_output.trim() == terser_output.trim() {
 								bail!("We don't care about this file")

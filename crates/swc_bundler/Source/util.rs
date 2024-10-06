@@ -16,11 +16,7 @@ pub(crate) type Readonly<T> = T;
 const TRACK:bool = false;
 
 pub(crate) trait VarDeclaratorExt: Into<VarDeclarator> {
-	fn into_module_item(
-		self,
-		injected_ctxt:SyntaxContext,
-		name:&str,
-	) -> ModuleItem {
+	fn into_module_item(self, injected_ctxt:SyntaxContext, name:&str) -> ModuleItem {
 		VarDecl {
 			span:DUMMY_SP,
 			ctxt:injected_ctxt,
@@ -30,10 +26,7 @@ pub(crate) trait VarDeclaratorExt: Into<VarDeclarator> {
 				vec![
 					self.into(),
 					Str { span:DUMMY_SP, raw:None, value:name.into() }
-						.assign_to(Ident::new_no_ctxt(
-							"INJECTED_FROM".into(),
-							DUMMY_SP,
-						)),
+						.assign_to(Ident::new_no_ctxt("INJECTED_FROM".into(), DUMMY_SP)),
 				]
 			} else {
 				vec![self.into()]
@@ -118,22 +111,16 @@ where
 	V: Clone,
 {
 	#[cfg(feature = "concurrent")]
-	pub fn get(&self, k:&K) -> Option<V> {
-		self.inner.get(k).map(|v| v.value().clone())
-	}
+	pub fn get(&self, k:&K) -> Option<V> { self.inner.get(k).map(|v| v.value().clone()) }
 
 	#[cfg(not(feature = "concurrent"))]
-	pub fn get(&self, k:&K) -> Option<V> {
-		self.inner.borrow().get(k).map(|v| v.clone())
-	}
+	pub fn get(&self, k:&K) -> Option<V> { self.inner.borrow().get(k).map(|v| v.clone()) }
 
 	#[cfg(feature = "concurrent")]
 	pub fn insert(&self, k:K, v:V) -> Option<V> { self.inner.insert(k, v) }
 
 	#[cfg(not(feature = "concurrent"))]
-	pub fn insert(&self, k:K, v:V) -> Option<V> {
-		self.inner.borrow_mut().insert(k, v)
-	}
+	pub fn insert(&self, k:K, v:V) -> Option<V> { self.inner.borrow_mut().insert(k, v) }
 }
 
 pub(crate) struct HygieneRemover;
@@ -141,9 +128,7 @@ pub(crate) struct HygieneRemover;
 impl VisitMut for HygieneRemover {
 	noop_visit_mut_type!(fail);
 
-	fn visit_mut_syntax_context(&mut self, n:&mut SyntaxContext) {
-		*n = SyntaxContext::empty();
-	}
+	fn visit_mut_syntax_context(&mut self, n:&mut SyntaxContext) { *n = SyntaxContext::empty(); }
 }
 
 #[cfg(feature = "rayon")]
@@ -163,9 +148,7 @@ pub(crate) use rayon::iter::IntoParallelIterator;
 /// Fake trait
 #[cfg(not(feature = "rayon"))]
 pub(crate) trait IntoParallelIterator: Sized + IntoIterator {
-	fn into_par_iter(self) -> <Self as IntoIterator>::IntoIter {
-		self.into_iter()
-	}
+	fn into_par_iter(self) -> <Self as IntoIterator>::IntoIter { self.into_iter() }
 }
 
 #[cfg(not(feature = "rayon"))]
@@ -174,8 +157,7 @@ impl<T> IntoParallelIterator for T where T: IntoIterator {}
 fn metadata(key:&str, value:&str) -> PropOrSpread {
 	PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
 		key:PropName::Ident(IdentName::new(key.into(), DUMMY_SP)),
-		value:Lit::Str(Str { span:DUMMY_SP, value:value.into(), raw:None })
-			.into(),
+		value:Lit::Str(Str { span:DUMMY_SP, value:value.into(), raw:None }).into(),
 	})))
 }
 
@@ -187,8 +169,7 @@ pub(crate) struct ExportMetadata {
 
 impl ExportMetadata {
 	pub fn into_with(self) -> Box<ObjectLit> {
-		let mut obj =
-			Some(Box::new(ObjectLit { span:DUMMY_SP, props:Vec::new() }));
+		let mut obj = Some(Box::new(ObjectLit { span:DUMMY_SP, props:Vec::new() }));
 
 		self.encode(&mut obj);
 
@@ -203,10 +184,7 @@ impl ExportMetadata {
 		}
 
 		if let Some(export_ctxt) = self.export_ctxt {
-			props.push(metadata(
-				"__swc_bundler__export_ctxt__",
-				&export_ctxt.as_u32().to_string(),
-			));
+			props.push(metadata("__swc_bundler__export_ctxt__", &export_ctxt.as_u32().to_string()));
 		}
 
 		if to.is_none() {
@@ -230,20 +208,15 @@ impl ExportMetadata {
 					}) = &**p
 					{
 						if *sym == "__swc_bundler__injected__" {
-							if let Expr::Lit(Lit::Str(Str { value, .. })) =
-								&**value
-							{
+							if let Expr::Lit(Lit::Str(Str { value, .. })) = &**value {
 								if value == "1" {
 									data.injected = true;
 								}
 							}
 						} else if *sym == "__swc_bundler__export_ctxt__" {
-							if let Expr::Lit(Lit::Str(Str { value, .. })) =
-								&**value
-							{
+							if let Expr::Lit(Lit::Str(Str { value, .. })) = &**value {
 								if let Ok(v) = value.parse() {
-									data.export_ctxt =
-										Some(SyntaxContext::from_u32(v));
+									data.export_ctxt = Some(SyntaxContext::from_u32(v));
 								}
 							}
 						}
@@ -256,6 +229,4 @@ impl ExportMetadata {
 	}
 }
 
-pub(crate) fn is_injected(with:&ObjectLit) -> bool {
-	ExportMetadata::decode(Some(with)).injected
-}
+pub(crate) fn is_injected(with:&ObjectLit) -> bool { ExportMetadata::decode(Some(with)).injected }

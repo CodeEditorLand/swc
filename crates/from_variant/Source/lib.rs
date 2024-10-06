@@ -6,24 +6,18 @@ use syn::*;
 /// Derives [`From`] for all variants. This only supports an enum where every
 /// variant has a single field.
 #[proc_macro_derive(FromVariant)]
-pub fn derive_from_variant(
-	input:proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-	let input = parse::<DeriveInput>(input)
-		.expect("failed to parse input as DeriveInput");
+pub fn derive_from_variant(input:proc_macro::TokenStream) -> proc_macro::TokenStream {
+	let input = parse::<DeriveInput>(input).expect("failed to parse input as DeriveInput");
 
-	let item =
-		derive(input).into_iter().fold(TokenStream::new(), |mut t, item| {
-			item.to_tokens(&mut t);
-			t
-		});
+	let item = derive(input).into_iter().fold(TokenStream::new(), |mut t, item| {
+		item.to_tokens(&mut t);
+		t
+	});
 
 	print("derive(FromVariant)", item)
 }
 
-fn derive(
-	DeriveInput { generics, data, ident, .. }:DeriveInput,
-) -> Vec<ItemImpl> {
+fn derive(DeriveInput { generics, data, ident, .. }:DeriveInput) -> Vec<ItemImpl> {
 	let variants = match data {
 		Data::Enum(DataEnum { variants, .. }) => variants,
 		_ => panic!("#[derive(FromVariant)] only works for an enum."),
@@ -37,8 +31,8 @@ fn derive(
 			Fields::Unnamed(FieldsUnnamed { unnamed, .. }) => {
 				if unnamed.len() != 1 {
 					panic!(
-						"#[derive(FromVariant)] requires all variants to be \
-						 tuple with exactly one field"
+						"#[derive(FromVariant)] requires all variants to be tuple with exactly \
+						 one field"
 					)
 				}
 				let field = unnamed.into_iter().next().unwrap();
@@ -59,8 +53,8 @@ fn derive(
 			},
 			_ => {
 				panic!(
-					"#[derive(FromVariant)] requires all variants to be tuple \
-					 with exactly one field"
+					"#[derive(FromVariant)] requires all variants to be tuple with exactly one \
+					 field"
 				)
 			},
 		}

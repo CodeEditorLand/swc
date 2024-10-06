@@ -21,10 +21,7 @@ impl Take for TokenAndSpan {
 }
 
 #[derive(Debug, Clone, PartialEq, EqIgnoreSpan, Hash)]
-#[cfg_attr(
-	feature = "serde-impl",
-	derive(serde::Serialize, serde::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impl", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(
 	any(feature = "rkyv-impl"),
 	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
@@ -34,17 +31,12 @@ impl Take for TokenAndSpan {
 pub struct UrlKeyValue(pub Atom, pub Atom);
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Is, EqIgnoreSpan)]
-#[cfg_attr(
-	feature = "rkyv",
-	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
-)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "rkyv", archive(check_bytes))]
 #[cfg_attr(feature = "rkyv", archive_attr(repr(u32)))]
 #[cfg_attr(
 	feature = "rkyv",
-	archive(bound(
-		serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"
-	))
+	archive(bound(serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"))
 )]
 #[cfg_attr(feature = "serde-impl", derive(Serialize, Deserialize))]
 pub enum NumberType {
@@ -55,10 +47,7 @@ pub enum NumberType {
 }
 
 #[derive(Debug, Clone, PartialEq, EqIgnoreSpan)]
-#[cfg_attr(
-	feature = "rkyv",
-	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
-)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "rkyv", archive(check_bytes))]
 #[cfg_attr(feature = "rkyv", archive_attr(repr(C)))]
 #[cfg_attr(feature = "serde-impl", derive(Serialize, Deserialize))]
@@ -74,22 +63,14 @@ pub struct DimensionToken {
 }
 
 #[derive(Debug, Clone, PartialEq, EqIgnoreSpan)]
-#[cfg_attr(
-	feature = "rkyv",
-	derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
-)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "rkyv", archive(check_bytes))]
 #[cfg_attr(feature = "rkyv", archive_attr(repr(u32)))]
 #[cfg_attr(
 	feature = "rkyv",
-	archive(bound(
-		serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"
-	))
+	archive(bound(serialize = "__S: rkyv::ser::ScratchSpace + rkyv::ser::Serializer"))
 )]
-#[cfg_attr(
-	feature = "serde-impl",
-	derive(serde::Serialize, serde::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impl", derive(serde::Serialize, serde::Deserialize))]
 pub enum Token {
 	Ident {
 		value:Atom,

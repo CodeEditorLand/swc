@@ -73,10 +73,7 @@ impl Default for FastAlloc {
 impl FastAlloc {
 	/// `true` is passed to `f` if the box is allocated with a custom allocator.
 	#[cfg(feature = "nightly")]
-	fn with_allocator<T>(
-		&self,
-		f:impl FnOnce(&dyn std::alloc::Allocator, bool) -> T,
-	) -> T {
+	fn with_allocator<T>(&self, f:impl FnOnce(&dyn std::alloc::Allocator, bool) -> T) -> T {
 		#[cfg(feature = "scoped")]
 		if let Some(arena) = &self.alloc {
 			return f((&&arena.alloc) as &dyn std::alloc::Allocator, true);
@@ -96,27 +93,16 @@ unsafe impl std::alloc::Allocator for FastAlloc {
 		self.with_allocator(|a, is_arena_mode| {
 			let ptr = a.allocate(layout)?;
 
-			if is_arena_mode {
-				Ok(mark_ptr_as_arena_mode(ptr))
-			} else {
-				Ok(ptr)
-			}
+			if is_arena_mode { Ok(mark_ptr_as_arena_mode(ptr)) } else { Ok(ptr) }
 		})
 	}
 
 	#[inline]
-	fn allocate_zeroed(
-		&self,
-		layout:Layout,
-	) -> Result<NonNull<[u8]>, AllocError> {
+	fn allocate_zeroed(&self, layout:Layout) -> Result<NonNull<[u8]>, AllocError> {
 		self.with_allocator(|a, is_arena_mode| {
 			let ptr = a.allocate_zeroed(layout)?;
 
-			if is_arena_mode {
-				Ok(mark_ptr_as_arena_mode(ptr))
-			} else {
-				Ok(ptr)
-			}
+			if is_arena_mode { Ok(mark_ptr_as_arena_mode(ptr)) } else { Ok(ptr) }
 		})
 	}
 
@@ -141,11 +127,7 @@ unsafe impl std::alloc::Allocator for FastAlloc {
 		self.with_allocator(|alloc, is_arena_mode| {
 			let ptr = alloc.grow(ptr, old_layout, new_layout)?;
 
-			if is_arena_mode {
-				Ok(mark_ptr_as_arena_mode(ptr))
-			} else {
-				Ok(ptr)
-			}
+			if is_arena_mode { Ok(mark_ptr_as_arena_mode(ptr)) } else { Ok(ptr) }
 		})
 	}
 
@@ -159,11 +141,7 @@ unsafe impl std::alloc::Allocator for FastAlloc {
 		self.with_allocator(|alloc, is_arena_mode| {
 			let ptr = alloc.grow_zeroed(ptr, old_layout, new_layout)?;
 
-			if is_arena_mode {
-				Ok(mark_ptr_as_arena_mode(ptr))
-			} else {
-				Ok(ptr)
-			}
+			if is_arena_mode { Ok(mark_ptr_as_arena_mode(ptr)) } else { Ok(ptr) }
 		})
 	}
 
@@ -177,11 +155,7 @@ unsafe impl std::alloc::Allocator for FastAlloc {
 		self.with_allocator(|alloc, is_arena_mode| {
 			let ptr = alloc.shrink(ptr, old_layout, new_layout)?;
 
-			if is_arena_mode {
-				Ok(mark_ptr_as_arena_mode(ptr))
-			} else {
-				Ok(ptr)
-			}
+			if is_arena_mode { Ok(mark_ptr_as_arena_mode(ptr)) } else { Ok(ptr) }
 		})
 	}
 

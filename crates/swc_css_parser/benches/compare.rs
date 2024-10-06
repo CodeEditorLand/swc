@@ -1,19 +1,7 @@
 extern crate swc_malloc;
 
-use codspeed_criterion_compat::{
-	black_box,
-	criterion_group,
-	criterion_main,
-	Bencher,
-	Criterion,
-};
-use swc_common::{
-	comments::SingleThreadedComments,
-	input::StringInput,
-	FileName,
-	Span,
-	DUMMY_SP,
-};
+use codspeed_criterion_compat::{black_box, criterion_group, criterion_main, Bencher, Criterion};
+use swc_common::{comments::SingleThreadedComments, input::StringInput, FileName, Span, DUMMY_SP};
 use swc_css_ast::Stylesheet;
 use swc_css_parser::{lexer::Lexer, parser::Parser};
 use swc_css_visit::{Fold, FoldWith, VisitMut, VisitMutWith};
@@ -28,11 +16,7 @@ where
 
 		let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
-		let lexer = Lexer::new(
-			StringInput::from(&*fm),
-			Some(&comments),
-			Default::default(),
-		);
+		let lexer = Lexer::new(StringInput::from(&*fm), Some(&comments), Default::default());
 		let mut parser = Parser::new(lexer, Default::default());
 		let stylesheet:Stylesheet = parser.parse_all().unwrap();
 
