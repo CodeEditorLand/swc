@@ -199,4 +199,87 @@ suite("transform", () => {
 			console.log(`Cannot load ${requirePath}: ${e.message}`);
 		}
 	});
+  [
+    "swc (es3)",
+    "../",
+    module =>
+      module.transformSync(SOURCE, {
+        jsc: { target: "es3" }
+      })
+  ],
+  [
+    "swc (es2015)",
+    "../",
+    module =>
+      module.transformSync(SOURCE, {
+        jsc: { target: "es2015" }
+      })
+  ],
+  [
+    "swc (es2016)",
+    "../",
+    module =>
+      module.transformSync(SOURCE, {
+        jsc: { target: "es2016" }
+      })
+  ],
+  [
+    "swc (es2017)",
+    "../",
+    module =>
+      module.transformSync(SOURCE, {
+        jsc: { target: "es2017" }
+      })
+  ],
+  [
+    "swc (es2018)",
+    "../",
+    module =>
+      module.transformSync(SOURCE, {
+        jsc: { target: "es2018" }
+      })
+  ],
+  [
+    "swc-optimize (es3)",
+    "../",
+    module =>
+      module.transformSync(SOURCE, {
+        jsc: {
+          transform: {
+            optimizer: {}
+          }
+        }
+      })
+  ],
+  [
+    "babel (es5)",
+    "@babel/core",
+    module =>
+      module.transformSync(SOURCE, {
+        presets: ["@babel/preset-env", "@babel/preset-react"],
+        // This does less work than swc's InlineGlobals pass, but it's ok.
+        // swc is faster than babel anyway.
+        plugins: [
+          "transform-node-env-inline",
+          "@babel/plugin-proposal-class-properties",
+          "@babel/proposal-object-rest-spread",
+          [
+            "@babel/plugin-proposal-decorators",
+            { decoratorsBeforeExport: true }
+          ]
+        ]
+      })
+  ]
+];
+
+suite("transform", () => {
+  PARSERS.map(args => {
+    const [name, requirePath, fn] = args;
+    try {
+      const func = fn.bind(null, require(requirePath));
+      bench(name, func);
+    } catch (e) {
+      console.log(`Cannot load ${requirePath}: ${e.message}`);
+    }
+  });
 });

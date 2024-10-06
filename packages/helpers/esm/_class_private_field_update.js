@@ -8,5 +8,7 @@ function _class_private_field_update(receiver, privateMap) {
 		"update",
 	);
 	return _class_apply_descriptor_update(receiver, descriptor);
+    var descriptor = _class_extract_field_descriptor(receiver, privateMap, "update");
+    return _class_apply_descriptor_update(receiver, descriptor);
 }
 export { _class_private_field_update as _ };

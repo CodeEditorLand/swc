@@ -19,6 +19,28 @@ fn fast_typescript(b:&mut Bencher) {
 		})
 		.unwrap();
 	});
+static SOURCE: &str = include_str!("assets/test.ts");
+
+fn fast_ts(c: &mut Criterion) {
+    c.bench_function("typescript/fast-strip", fast_typescript);
+}
+fn fast_typescript(b: &mut Bencher) {
+    b.iter(|| {
+        ::testing::run_test(false, |cm, handler| {
+            black_box(operate(
+                &cm,
+                handler,
+                black_box(SOURCE.to_string()),
+                Options {
+                    ..Default::default()
+                },
+            ))
+            .unwrap();
+
+            Ok(())
+        })
+        .unwrap();
+    });
 }
 
 criterion_group!(benches, fast_ts);

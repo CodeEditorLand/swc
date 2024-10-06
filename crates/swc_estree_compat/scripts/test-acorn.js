@@ -6,6 +6,11 @@ const parserOptions = {
 	ecmaVersion: "latest",
 	// https://github.com/tc39/proposal-hashbang
 	allowHashBang: true,
+    ranges: true,
+    locations: true,
+    ecmaVersion: "latest",
+    // https://github.com/tc39/proposal-hashbang
+    allowHashBang: true,
 };
 
 const acorn = require("acorn");

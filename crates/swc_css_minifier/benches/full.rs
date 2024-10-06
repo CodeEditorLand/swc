@@ -26,6 +26,25 @@ pub fn bench_files(c:&mut Criterion) {
 	};
 
 	bench_file("bootstrap", Path::new("../../node_modules/bootstrap/dist/css/bootstrap.css"));
+pub fn bench_files(c: &mut Criterion) {
+    let mut group = c.benchmark_group("css/minify/libraries");
+    group.sample_size(10);
+
+    let mut bench_file = |name: &str, path: &Path| {
+        let src = read_to_string(path).unwrap();
+
+        group.bench_function(name, |b| {
+            b.iter(|| {
+                // We benchmark full time, including time for creating cm, handler
+                run(&src)
+            })
+        });
+    };
+
+    bench_file(
+        "bootstrap",
+        Path::new("../../node_modules/bootstrap/dist/css/bootstrap.css"),
+    );
 }
 
 criterion_group!(files, bench_files);
@@ -57,4 +76,31 @@ fn run(src:&str) {
 		})
 	})
 	.unwrap();
+fn run(src: &str) {
+    testing::run_test2(false, |cm, handler| {
+        HANDLER.set(&handler, || {
+            let fm = cm.new_source_file(FileName::Anon.into(), src.into());
+
+            let mut errors = Vec::new();
+            let mut ss: Stylesheet =
+                parse_file(&fm, None, Default::default(), &mut errors).unwrap();
+
+            minify(&mut ss, Default::default());
+
+            let mut buf = String::new();
+            {
+                let wr = BasicCssWriter::new(&mut buf, None, Default::default());
+                let mut generator = swc_css_codegen::CodeGenerator::new(
+                    wr,
+                    swc_css_codegen::CodegenConfig { minify: true },
+                );
+
+                generator.emit(&ss).unwrap();
+            }
+
+            black_box(buf);
+            Ok(())
+        })
+    })
+    .unwrap();
 }

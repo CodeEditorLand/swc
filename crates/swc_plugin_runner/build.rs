@@ -18,4 +18,16 @@ fn main() -> Result<(), Box<dyn Error>> {
 		.emit()?;
 
 	Ok(())
+    let build = BuildBuilder::all_build()?;
+    let cargo = CargoBuilder::default()
+        .dependencies(true)
+        .name_filter("*_ast")
+        .build()?;
+
+    Emitter::default()
+        .add_instructions(&build)?
+        .add_instructions(&cargo)?
+        .emit()?;
+
+    Ok(())
 }

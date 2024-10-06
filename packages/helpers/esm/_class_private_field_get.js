@@ -8,5 +8,7 @@ function _class_private_field_get(receiver, privateMap) {
 		"get",
 	);
 	return _class_apply_descriptor_get(receiver, descriptor);
+    var descriptor = _class_extract_field_descriptor(receiver, privateMap, "get");
+    return _class_apply_descriptor_get(receiver, descriptor);
 }
 export { _class_private_field_get as _ };

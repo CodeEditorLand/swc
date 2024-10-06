@@ -11,6 +11,12 @@ const getPkgRoot = (() => () => {
 		ret = path.resolve(__dirname, "..");
 	}
 	return ret;
+    let ret;
+
+    if (!ret) {
+        ret = path.resolve(__dirname, "..");
+    }
+    return ret;
 })();
 
 /**
@@ -40,4 +46,27 @@ const preserveBinaries = async (fromExt, toExt) => {
 module.exports = {
 	getPkgRoot,
 	preserveBinaries,
+    const existingBinary = glob.sync(`${getPkgRoot()}/*.${fromExt}`);
+    assert.equal(
+        existingBinary.length <= 1,
+        true,
+        "There are more than one prebuilt binaries, current test fixture setup cannot handle this"
+    );
+
+    const binaryPath = existingBinary[0];
+    if (!binaryPath) {
+        return;
+    }
+
+    const tmpBinaryPath = path.join(
+        path.dirname(binaryPath),
+        `${path.basename(binaryPath, `.${fromExt}`)}.${toExt}`
+    );
+
+    await promisify(fs.rename)(binaryPath, tmpBinaryPath);
+};
+
+module.exports = {
+    getPkgRoot,
+    preserveBinaries,
 };

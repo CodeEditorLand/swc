@@ -7,24 +7,32 @@ use swc_common::{Span, DUMMY_SP};
 pub struct SerdeStr {
 	span:Span,
 	value:String,
+    span: Span,
+    value: String,
 }
 
 #[ast_node("String")]
 pub struct Str {
 	span:Span,
 	value:String,
+    span: Span,
+    value: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct SerdeNum {
 	span:Span,
 	value:u64,
+    span: Span,
+    value: u64,
 }
 
 #[ast_node("Number")]
 pub struct Num {
 	span:Span,
 	value:u64,
+    span: Span,
+    value: u64,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -32,6 +40,8 @@ pub struct Num {
 pub enum Serde {
 	Number(SerdeNum),
 	String(SerdeStr),
+    Number(SerdeNum),
+    String(SerdeStr),
 }
 
 #[ast_node]
@@ -58,6 +68,31 @@ fn bench_serde(c:&mut Criterion) {
 
 		b.iter(|| black_box(serde_json::to_string(&src).unwrap()));
 	});
+    #[tag("Number")]
+    Number(Num),
+    #[tag("String")]
+    String(Str),
+}
+
+fn bench_serde(c: &mut Criterion) {
+    let src = Serde::String(SerdeStr {
+        span: DUMMY_SP,
+        value: String::from("perf-diff"),
+    });
+
+    c.bench_function("serialization of serde", |b| {
+        b.iter(|| black_box(serde_json::to_string(&src).unwrap()));
+    });
+    c.bench_function("deserialization of serde", |b| {
+        let src = serde_json::to_string(&Serde::String(SerdeStr {
+            span: DUMMY_SP,
+            value: String::from("perf-diff"),
+        }))
+        .unwrap();
+        println!("{}", src);
+
+        b.iter(|| black_box(serde_json::to_string(&src).unwrap()));
+    });
 }
 
 criterion_group!(benches, bench_serde);

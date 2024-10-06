@@ -7,6 +7,11 @@ const nodeModulesDirectory = path.join(
 	"..",
 	"..",
 	"node_modules",
+    __dirname,
+    "..",
+    "..",
+    "..",
+    "node_modules"
 );
 /**
  *
@@ -21,6 +26,14 @@ function copy(s) {
 	fs.mkdirSync(targetDir, { recursive: true });
 
 	fs.copyFileSync(path.join(nodeModulesDirectory, s), targetPath);
+    console.log(`es/preset-env: Copying ${s}`);
+
+    const targetPath = path.join(__dirname, "..", "data", s);
+    const targetDir = path.dirname(targetPath);
+
+    fs.mkdirSync(targetDir, { recursive: true });
+
+    fs.copyFileSync(path.join(nodeModulesDirectory, s), targetPath);
 }
 
 copy("@babel/compat-data/data/plugins.json");
