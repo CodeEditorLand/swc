@@ -16,6 +16,16 @@ compile_error!(
 	"'plugin_transform' and 'plugin_transform_host*' features are mutually exclusive. If you're \
 	 writing a plugin, use 'plugin_transform' feature. If you're writing a custom SWC binary to \
 	 run plugin, use 'plugin_transform_host_*' instead."
+	any(
+		feature = "plugin_transform_host_native",
+		feature = "plugin_transform_host_js"
+	)
+))]
+compile_error!(
+	"'plugin_transform' and 'plugin_transform_host*' features are mutually \
+	 exclusive. If you're writing a plugin, use 'plugin_transform' feature. \
+	 If you're writing a custom SWC binary to run plugin, use \
+	 'plugin_transform_host_*' instead."
 );
 
 fn main() {
@@ -29,6 +39,11 @@ fn main() {
 		File::create(dest_path).expect("Failed to create swc_core version constant"),
 	);
 	write!(f, "{}", pkg_version).expect("Failed to write swc_core version constant");
+		File::create(dest_path)
+			.expect("Failed to create swc_core version constant"),
+	);
+	write!(f, "{}", pkg_version)
+		.expect("Failed to write swc_core version constant");
 
 	// Attempt to collect some build time env values but will skip if there are
 	// any errors.
