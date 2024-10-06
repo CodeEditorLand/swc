@@ -12,9 +12,11 @@ use wasmer::Memory;
 /// ref: https://docs.wasmer.io/integrations/examples/host-functions#declaring-the-data
 #[derive(Clone)]
 pub struct BaseHostEnvironment {
-	pub memory:Option<Memory>,
+    pub memory: Option<Memory>,
 }
 
 impl BaseHostEnvironment {
-	pub fn new() -> BaseHostEnvironment { BaseHostEnvironment { memory:None } }
+    pub fn new() -> BaseHostEnvironment {
+        BaseHostEnvironment { memory: None }
+    }
 }

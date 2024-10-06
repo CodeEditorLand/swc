@@ -6,7 +6,7 @@ pub struct LintOptions {}
 
 #[swc_trace]
 impl super::CommandRunner for LintOptions {
-	fn execute(&self) -> anyhow::Result<()> {
-		unimplemented!("Lint command is not yet implemented")
-	}
+    fn execute(&self) -> anyhow::Result<()> {
+        unimplemented!("Lint command is not yet implemented")
+    }
 }

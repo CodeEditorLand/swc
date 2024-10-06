@@ -12,14 +12,17 @@ use crate::memory_interop::copy_bytes_into_host;
 /// serialized result. Host will reconstruct AST from those value.
 #[derive(Clone)]
 pub struct TransformResultHostEnvironment {
-	pub memory:Option<Memory>,
-	pub transform_result:Arc<Mutex<Vec<u8>>>,
+    pub memory: Option<Memory>,
+    pub transform_result: Arc<Mutex<Vec<u8>>>,
 }
 
 impl TransformResultHostEnvironment {
-	pub fn new(transform_result:&Arc<Mutex<Vec<u8>>>) -> TransformResultHostEnvironment {
-		TransformResultHostEnvironment { memory:None, transform_result:transform_result.clone() }
-	}
+    pub fn new(transform_result: &Arc<Mutex<Vec<u8>>>) -> TransformResultHostEnvironment {
+        TransformResultHostEnvironment {
+            memory: None,
+            transform_result: transform_result.clone(),
+        }
+    }
 }
 
 /// Set plugin's transformed result into host's environment.
@@ -28,16 +31,16 @@ impl TransformResultHostEnvironment {
 /// this to set its result back to host.
 #[tracing::instrument(level = "info", skip_all)]
 pub fn set_transform_result(
-	mut env:FunctionEnvMut<TransformResultHostEnvironment>,
-	bytes_ptr:i32,
-	bytes_ptr_len:i32,
+    mut env: FunctionEnvMut<TransformResultHostEnvironment>,
+    bytes_ptr: i32,
+    bytes_ptr_len: i32,
 ) {
-	let memory = env
-		.data()
-		.memory
-		.as_ref()
-		.expect("Memory instance should be available, check initialization");
+    let memory = env
+        .data()
+        .memory
+        .as_ref()
+        .expect("Memory instance should be available, check initialization");
 
-	(*env.data_mut().transform_result.lock()) =
-		copy_bytes_into_host(&memory.view(&env), bytes_ptr, bytes_ptr_len);
+    (*env.data_mut().transform_result.lock()) =
+        copy_bytes_into_host(&memory.view(&env), bytes_ptr, bytes_ptr_len);
 }

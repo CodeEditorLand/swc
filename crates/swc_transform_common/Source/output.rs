@@ -13,23 +13,23 @@ scoped_tls!(static OUTPUT: RefCell<FxHashMap<String, serde_json::Value>>);
 /// (Experimental) Captures output.
 ///
 /// This is not stable and may be removed in the future.
-pub fn capture<Ret>(f:impl FnOnce() -> Ret) -> (Ret, FxHashMap<String, serde_json::Value>) {
-	let output = RefCell::new(Default::default());
+pub fn capture<Ret>(f: impl FnOnce() -> Ret) -> (Ret, FxHashMap<String, serde_json::Value>) {
+    let output = RefCell::new(Default::default());
 
-	let ret = OUTPUT.set(&output, f);
+    let ret = OUTPUT.set(&output, f);
 
-	(ret, output.into_inner())
+    (ret, output.into_inner())
 }
 
 /// (Experimental) Emits a value to the JS caller.
 ///
 /// This is not stable and may be removed in the future.
-pub fn emit(key:String, value:Value) {
-	OUTPUT.with(|output| {
-		let previous = output.borrow_mut().insert(key, value);
+pub fn emit(key: String, value: Value) {
+    OUTPUT.with(|output| {
+        let previous = output.borrow_mut().insert(key, value);
 
-		if let Some(previous) = previous {
-			panic!("Key already set. Previous value: {previous:?}");
-		}
-	});
+        if let Some(previous) = previous {
+            panic!("Key already set. Previous value: {previous:?}");
+        }
+    });
 }

@@ -1,45 +1,45 @@
 macro_rules! emit {
-	($g:expr, $n:expr) => {{
-		use crate::Emit;
+    ($g:expr,$n:expr) => {{
+        use crate::Emit;
 
-		$g.emit(&$n)?;
-	}};
+        $g.emit(&$n)?;
+    }};
 }
 
 macro_rules! write_raw {
-	($g:expr, $span:expr, $n:expr) => {{
-		$g.wr.write_raw(Some($span), $n)?;
-	}};
+    ($g:expr,$span:expr,$n:expr) => {{
+        $g.wr.write_raw(Some($span), $n)?;
+    }};
 
-	($g:expr, $n:expr) => {{
-		$g.wr.write_raw(None, $n)?;
-	}};
+    ($g:expr,$n:expr) => {{
+        $g.wr.write_raw(None, $n)?;
+    }};
 }
 
 macro_rules! write_multiline_raw {
-	($g:expr, $span:expr, $n:expr) => {{
-		$g.wr.write_multiline_raw($span, $n)?;
-	}};
+    ($g:expr,$span:expr,$n:expr) => {{
+        $g.wr.write_multiline_raw($span, $n)?;
+    }};
 }
 
 macro_rules! newline {
-	($g:expr) => {{
-		$g.wr.write_newline()?;
-	}};
+    ($g:expr) => {{
+        $g.wr.write_newline()?;
+    }};
 }
 
 macro_rules! formatting_newline {
-	($g:expr) => {{
-		if !$g.config.minify {
-			$g.wr.write_newline()?;
-		}
-	}};
+    ($g:expr) => {{
+        if !$g.config.minify {
+            $g.wr.write_newline()?;
+        }
+    }};
 }
 
 macro_rules! space {
-	($g:expr) => {{
-		$g.wr.write_space()?;
-	}};
+    ($g:expr) => {{
+        $g.wr.write_space()?;
+    }};
 }
 
 // macro_rules! increase_indent {

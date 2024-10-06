@@ -3,588 +3,594 @@ use swc_atoms::JsWord;
 use swc_common::ast_serde;
 
 use crate::{
-	class::*,
-	comment::Comment,
-	decl::*,
-	expr::*,
-	flow::*,
-	jsx::*,
-	lit::*,
-	module::*,
-	object::*,
-	pat::*,
-	stmt::*,
-	typescript::*,
+    class::*, comment::Comment, decl::*, expr::*, flow::*, jsx::*, lit::*, module::*, object::*,
+    pat::*, stmt::*, typescript::*,
 };
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct LineCol {
-	pub line:usize,
-	pub column:usize,
+    pub line: usize,
+    pub column: usize,
 }
 
 impl LineCol {
-	pub fn dummy() -> Self { LineCol { line:0, column:0 } }
+    pub fn dummy() -> Self {
+        LineCol { line: 0, column: 0 }
+    }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Loc {
-	pub start:LineCol,
-	pub end:LineCol,
+    pub start: LineCol,
+    pub end: LineCol,
 }
 
 impl Loc {
-	pub fn dummy() -> Self { Loc { start:LineCol::dummy(), end:LineCol::dummy() } }
+    pub fn dummy() -> Self {
+        Loc {
+            start: LineCol::dummy(),
+            end: LineCol::dummy(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde-impl", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde-impl", serde(rename_all = "camelCase"))]
 pub struct BaseNode {
-	#[serde(default, skip_serializing_if = "Vec::is_empty")]
-	pub leading_comments:Vec<Comment>,
-	#[serde(default, skip_serializing_if = "Vec::is_empty")]
-	pub inner_comments:Vec<Comment>,
-	#[serde(default, skip_serializing_if = "Vec::is_empty")]
-	pub trailing_comments:Vec<Comment>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub leading_comments: Vec<Comment>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inner_comments: Vec<Comment>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub trailing_comments: Vec<Comment>,
 
-	#[serde(default)]
-	pub start:Option<u32>,
-	#[serde(default)]
-	pub end:Option<u32>,
+    #[serde(default)]
+    pub start: Option<u32>,
+    #[serde(default)]
+    pub end: Option<u32>,
 
-	#[serde(default, skip_serializing_if = "crate::flavor::Flavor::skip_range")]
-	pub range:Option<[u32; 2]>,
+    #[serde(default, skip_serializing_if = "crate::flavor::Flavor::skip_range")]
+    pub range: Option<[u32; 2]>,
 
-	#[serde(default)]
-	pub loc:Option<Loc>,
+    #[serde(default)]
+    pub loc: Option<Loc>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum Binary {
-	#[tag("BinaryExpression")]
-	BinaryExpr(BinaryExpression),
-	#[tag("LogicalExpression")]
-	LogicalExpr(LogicalExpression),
+    #[tag("BinaryExpression")]
+    BinaryExpr(BinaryExpression),
+    #[tag("LogicalExpression")]
+    LogicalExpr(LogicalExpression),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum Conditional {
-	#[tag("ConditionalExpression")]
-	Expr(ConditionalExpression),
-	#[tag("IfStatement")]
-	If(IfStatement),
+    #[tag("ConditionalExpression")]
+    Expr(ConditionalExpression),
+    #[tag("IfStatement")]
+    If(IfStatement),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum Function {
-	#[tag("FunctionDeclaration")]
-	Decl(FunctionDeclaration),
-	#[tag("FunctionExpression")]
-	Expr(FunctionExpression),
-	#[tag("ObjectMethod")]
-	ObjectMethod(ObjectMethod),
-	#[tag("ArrowFunctionExpression")]
-	Arrow(ArrowFunctionExpression),
-	#[tag("ClassMethod")]
-	ClassMethod(ClassMethod),
-	#[tag("ClassPrivateMethod")]
-	ClassPrivateMethod(ClassPrivateMethod),
+    #[tag("FunctionDeclaration")]
+    Decl(FunctionDeclaration),
+    #[tag("FunctionExpression")]
+    Expr(FunctionExpression),
+    #[tag("ObjectMethod")]
+    ObjectMethod(ObjectMethod),
+    #[tag("ArrowFunctionExpression")]
+    Arrow(ArrowFunctionExpression),
+    #[tag("ClassMethod")]
+    ClassMethod(ClassMethod),
+    #[tag("ClassPrivateMethod")]
+    ClassPrivateMethod(ClassPrivateMethod),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum FunctionParent {
-	#[tag("FunctionDeclaration")]
-	Decl(FunctionDeclaration),
-	#[tag("FunctionExpression")]
-	Expr(FunctionExpression),
-	#[tag("ObjectMethod")]
-	ObjectMethod(ObjectMethod),
-	#[tag("ArrowFunctionExpression")]
-	Arrow(ArrowFunctionExpression),
-	#[tag("ClassMethod")]
-	ClassMethod(ClassMethod),
-	#[tag("ClassPrivateMethod")]
-	ClassPrivateMethod(ClassPrivateMethod),
+    #[tag("FunctionDeclaration")]
+    Decl(FunctionDeclaration),
+    #[tag("FunctionExpression")]
+    Expr(FunctionExpression),
+    #[tag("ObjectMethod")]
+    ObjectMethod(ObjectMethod),
+    #[tag("ArrowFunctionExpression")]
+    Arrow(ArrowFunctionExpression),
+    #[tag("ClassMethod")]
+    ClassMethod(ClassMethod),
+    #[tag("ClassPrivateMethod")]
+    ClassPrivateMethod(ClassPrivateMethod),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum Immutable {
-	#[tag("StringLiteral")]
-	#[tag("DecimalLiteral")]
-	#[tag("NumericLiteral")]
-	#[tag("NullLiteral")]
-	#[tag("BooleanLiteral")]
-	#[tag("BigIntLiteral")]
-	Literal(Literal),
-	#[tag("JSXAttribute")]
-	JSXAttribute(JSXAttribute),
-	#[tag("JSXClosingElement")]
-	JSXClosingElement(JSXClosingElement),
-	#[tag("JSXElement")]
-	JSXElement(JSXElement),
-	#[tag("JSXExpressionContainer")]
-	JSXExpressionContainer(JSXExpressionContainer),
-	#[tag("JSXSpreadChild")]
-	JSXSpreadChild(JSXSpreadChild),
-	#[tag("JSXOpeningElement")]
-	JSXOpeningElement(JSXOpeningElement),
-	#[tag("JSXText")]
-	JSXText(JSXText),
-	#[tag("JSXFragment")]
-	JSXFragment(JSXFragment),
-	#[tag("JSXOpeningFragment")]
-	JSXOpeningFragment(JSXOpeningFragment),
-	#[tag("JSXClosingFragment")]
-	JSXClosingFragment(JSXClosingFragment),
+    #[tag("StringLiteral")]
+    #[tag("DecimalLiteral")]
+    #[tag("NumericLiteral")]
+    #[tag("NullLiteral")]
+    #[tag("BooleanLiteral")]
+    #[tag("BigIntLiteral")]
+    Literal(Literal),
+    #[tag("JSXAttribute")]
+    JSXAttribute(JSXAttribute),
+    #[tag("JSXClosingElement")]
+    JSXClosingElement(JSXClosingElement),
+    #[tag("JSXElement")]
+    JSXElement(JSXElement),
+    #[tag("JSXExpressionContainer")]
+    JSXExpressionContainer(JSXExpressionContainer),
+    #[tag("JSXSpreadChild")]
+    JSXSpreadChild(JSXSpreadChild),
+    #[tag("JSXOpeningElement")]
+    JSXOpeningElement(JSXOpeningElement),
+    #[tag("JSXText")]
+    JSXText(JSXText),
+    #[tag("JSXFragment")]
+    JSXFragment(JSXFragment),
+    #[tag("JSXOpeningFragment")]
+    JSXOpeningFragment(JSXOpeningFragment),
+    #[tag("JSXClosingFragment")]
+    JSXClosingFragment(JSXClosingFragment),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum Method {
-	#[tag("ObjectMethod")]
-	Object(ObjectMethod),
-	#[tag("ClassMethod")]
-	Class(ClassMethod),
-	#[tag("ClassPrivateMethod")]
-	ClassPrivate(ClassPrivateMethod),
+    #[tag("ObjectMethod")]
+    Object(ObjectMethod),
+    #[tag("ClassMethod")]
+    Class(ClassMethod),
+    #[tag("ClassPrivateMethod")]
+    ClassPrivate(ClassPrivateMethod),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum Private {
-	#[tag("ClassPrivateProperty")]
-	ClassProp(ClassPrivateProperty),
-	#[tag("ClassPrivateMethod")]
-	ClassMethod(ClassPrivateMethod),
-	#[tag("PrivateName")]
-	Name(PrivateName),
+    #[tag("ClassPrivateProperty")]
+    ClassProp(ClassPrivateProperty),
+    #[tag("ClassPrivateMethod")]
+    ClassMethod(ClassPrivateMethod),
+    #[tag("PrivateName")]
+    Name(PrivateName),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum Property {
-	#[tag("ObjectProperty")]
-	ObjectProp(ObjectProperty),
-	#[tag("ClassProperty")]
-	ClassProp(ClassProperty),
-	#[tag("ClassPrivateProperty")]
-	ClassPrivateProp(ClassPrivateProperty),
+    #[tag("ObjectProperty")]
+    ObjectProp(ObjectProperty),
+    #[tag("ClassProperty")]
+    ClassProp(ClassProperty),
+    #[tag("ClassPrivateProperty")]
+    ClassPrivateProp(ClassPrivateProperty),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum Pureish {
-	#[tag("FunctionDeclaration")]
-	FunctionDecl(FunctionDeclaration),
-	#[tag("FunctionExpression")]
-	FunctionExpr(FunctionExpression),
-	#[tag("StringLiteral")]
-	#[tag("NumericLiteral")]
-	#[tag("NullLiteral")]
-	#[tag("BooleanLiteral")]
-	#[tag("RegExpLiteral")]
-	#[tag("BigIntLiteral")]
-	#[tag("DecimalLiteral")]
-	Literal(Literal),
-	#[tag("ArrowFunctionExpression")]
-	ArrowFuncExpr(ArrowFunctionExpression),
+    #[tag("FunctionDeclaration")]
+    FunctionDecl(FunctionDeclaration),
+    #[tag("FunctionExpression")]
+    FunctionExpr(FunctionExpression),
+    #[tag("StringLiteral")]
+    #[tag("NumericLiteral")]
+    #[tag("NullLiteral")]
+    #[tag("BooleanLiteral")]
+    #[tag("RegExpLiteral")]
+    #[tag("BigIntLiteral")]
+    #[tag("DecimalLiteral")]
+    Literal(Literal),
+    #[tag("ArrowFunctionExpression")]
+    ArrowFuncExpr(ArrowFunctionExpression),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum Scopable {
-	#[tag("BlockStatement")]
-	BlockStmt(BlockStatement),
-	#[tag("CatchClause")]
-	CatchClause(CatchClause),
-	#[tag("DoWhileStatement")]
-	DoWhileStmt(DoWhileStatement),
-	#[tag("ForInStatement")]
-	ForInStmt(ForInStatement),
-	#[tag("ForStatement")]
-	ForStmt(ForStatement),
-	#[tag("FunctionDeclaration")]
-	FuncDecl(FunctionDeclaration),
-	#[tag("FunctionExpression")]
-	FuncExpr(FunctionExpression),
-	#[tag("Program")]
-	Program(Program),
-	#[tag("ObjectMethod")]
-	ObjectMethod(ObjectMethod),
-	#[tag("SwitchStatement")]
-	SwitchStmt(SwitchStatement),
-	#[tag("WhileStatement")]
-	WhileStmt(WhileStatement),
-	#[tag("ArrowFunctionExpression")]
-	ArrowFuncExpr(ArrowFunctionExpression),
-	#[tag("ClassExpression")]
-	ClassExpr(ClassExpression),
-	#[tag("ClassDeclaration")]
-	ClassDecl(ClassDeclaration),
-	#[tag("ForOfStatement")]
-	ForOfStmt(ForOfStatement),
-	#[tag("ClassMethod")]
-	ClassMethod(ClassMethod),
-	#[tag("ClassPrivateMethod")]
-	ClassPrivateMethod(ClassPrivateMethod),
-	#[tag("StaticBlock")]
-	StaticBlock(StaticBlock),
-	#[tag("TSModuleBlock")]
-	TSModuleBlock(TSModuleBlock),
+    #[tag("BlockStatement")]
+    BlockStmt(BlockStatement),
+    #[tag("CatchClause")]
+    CatchClause(CatchClause),
+    #[tag("DoWhileStatement")]
+    DoWhileStmt(DoWhileStatement),
+    #[tag("ForInStatement")]
+    ForInStmt(ForInStatement),
+    #[tag("ForStatement")]
+    ForStmt(ForStatement),
+    #[tag("FunctionDeclaration")]
+    FuncDecl(FunctionDeclaration),
+    #[tag("FunctionExpression")]
+    FuncExpr(FunctionExpression),
+    #[tag("Program")]
+    Program(Program),
+    #[tag("ObjectMethod")]
+    ObjectMethod(ObjectMethod),
+    #[tag("SwitchStatement")]
+    SwitchStmt(SwitchStatement),
+    #[tag("WhileStatement")]
+    WhileStmt(WhileStatement),
+    #[tag("ArrowFunctionExpression")]
+    ArrowFuncExpr(ArrowFunctionExpression),
+    #[tag("ClassExpression")]
+    ClassExpr(ClassExpression),
+    #[tag("ClassDeclaration")]
+    ClassDecl(ClassDeclaration),
+    #[tag("ForOfStatement")]
+    ForOfStmt(ForOfStatement),
+    #[tag("ClassMethod")]
+    ClassMethod(ClassMethod),
+    #[tag("ClassPrivateMethod")]
+    ClassPrivateMethod(ClassPrivateMethod),
+    #[tag("StaticBlock")]
+    StaticBlock(StaticBlock),
+    #[tag("TSModuleBlock")]
+    TSModuleBlock(TSModuleBlock),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum BlockParent {
-	#[tag("BlockStatement")]
-	BlockStmt(BlockStatement),
-	#[tag("CatchClause")]
-	CatchClause(CatchClause),
-	#[tag("DoWhileStatement")]
-	DoWhileStmt(DoWhileStatement),
-	#[tag("ForInStatement")]
-	ForInStmt(ForInStatement),
-	#[tag("ForStatement")]
-	ForStmt(ForStatement),
-	#[tag("FunctionDeclaration")]
-	FuncDecl(FunctionDeclaration),
-	#[tag("FunctionExpression")]
-	FuncExpr(FunctionExpression),
-	#[tag("Program")]
-	Program(Program),
-	#[tag("ObjectMethod")]
-	ObjectMethod(ObjectMethod),
-	#[tag("SwitchStatement")]
-	SwitchStmt(SwitchStatement),
-	#[tag("WhileStatement")]
-	WhileStmt(WhileStatement),
-	#[tag("ArrowFunctionExpression")]
-	ArrowFuncExpr(ArrowFunctionExpression),
-	#[tag("ForOfStatement")]
-	ForOfStmt(ForOfStatement),
-	#[tag("ClassMethod")]
-	ClassMethod(ClassMethod),
-	#[tag("ClassPrivateMethod")]
-	ClassPrivateMethod(ClassPrivateMethod),
-	#[tag("StaticBlock")]
-	StaticBlock(StaticBlock),
-	#[tag("TSModuleBlock")]
-	TSModuleBlock(TSModuleBlock),
+    #[tag("BlockStatement")]
+    BlockStmt(BlockStatement),
+    #[tag("CatchClause")]
+    CatchClause(CatchClause),
+    #[tag("DoWhileStatement")]
+    DoWhileStmt(DoWhileStatement),
+    #[tag("ForInStatement")]
+    ForInStmt(ForInStatement),
+    #[tag("ForStatement")]
+    ForStmt(ForStatement),
+    #[tag("FunctionDeclaration")]
+    FuncDecl(FunctionDeclaration),
+    #[tag("FunctionExpression")]
+    FuncExpr(FunctionExpression),
+    #[tag("Program")]
+    Program(Program),
+    #[tag("ObjectMethod")]
+    ObjectMethod(ObjectMethod),
+    #[tag("SwitchStatement")]
+    SwitchStmt(SwitchStatement),
+    #[tag("WhileStatement")]
+    WhileStmt(WhileStatement),
+    #[tag("ArrowFunctionExpression")]
+    ArrowFuncExpr(ArrowFunctionExpression),
+    #[tag("ForOfStatement")]
+    ForOfStmt(ForOfStatement),
+    #[tag("ClassMethod")]
+    ClassMethod(ClassMethod),
+    #[tag("ClassPrivateMethod")]
+    ClassPrivateMethod(ClassPrivateMethod),
+    #[tag("StaticBlock")]
+    StaticBlock(StaticBlock),
+    #[tag("TSModuleBlock")]
+    TSModuleBlock(TSModuleBlock),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum Block {
-	#[tag("BlockStatement")]
-	BlockStmt(BlockStatement),
-	#[tag("Program")]
-	Program(Program),
-	#[tag("TSModuleBlock")]
-	TSModuleBlock(TSModuleBlock),
+    #[tag("BlockStatement")]
+    BlockStmt(BlockStatement),
+    #[tag("Program")]
+    Program(Program),
+    #[tag("TSModuleBlock")]
+    TSModuleBlock(TSModuleBlock),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum Terminatorless {
-	#[tag("BreakStatement")]
-	Break(BreakStatement),
-	#[tag("ContinueStatement")]
-	Continue(ContinueStatement),
-	#[tag("ReturnStatement")]
-	Return(ReturnStatement),
-	#[tag("ThrowStatement")]
-	Throw(ThrowStatement),
-	#[tag("YieldExpression")]
-	Yield(YieldExpression),
-	#[tag("AwaitExpression")]
-	Await(AwaitExpression),
+    #[tag("BreakStatement")]
+    Break(BreakStatement),
+    #[tag("ContinueStatement")]
+    Continue(ContinueStatement),
+    #[tag("ReturnStatement")]
+    Return(ReturnStatement),
+    #[tag("ThrowStatement")]
+    Throw(ThrowStatement),
+    #[tag("YieldExpression")]
+    Yield(YieldExpression),
+    #[tag("AwaitExpression")]
+    Await(AwaitExpression),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum UnaryLike {
-	#[tag("UnaryExpression")]
-	Expr(UnaryExpression),
-	#[tag("SpreadElement")]
-	Spread(SpreadElement),
+    #[tag("UnaryExpression")]
+    Expr(UnaryExpression),
+    #[tag("SpreadElement")]
+    Spread(SpreadElement),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde("SpreadElement")]
 pub struct SpreadElement {
-	#[serde(flatten)]
-	pub base:BaseNode,
-	pub argument:Box<Expression>,
+    #[serde(flatten)]
+    pub base: BaseNode,
+    pub argument: Box<Expression>,
 }
 
 /// Deprecated. Use SpreadElement instead.
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde("SpreadProperty")]
 pub struct SpreadProperty {
-	#[serde(flatten)]
-	pub base:BaseNode,
-	pub argument:Box<Expression>,
+    #[serde(flatten)]
+    pub base: BaseNode,
+    pub argument: Box<Expression>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde("RestElement")]
 pub struct RestElement {
-	#[serde(flatten)]
-	pub base:BaseNode,
-	pub argument:Box<LVal>,
-	#[serde(default, skip_serializing_if = "crate::flavor::Flavor::skip_empty")]
-	pub decorators:Option<Vec<Decorator>>,
-	#[serde(default, skip_serializing_if = "crate::flavor::Flavor::skip_none")]
-	pub type_annotation:Option<Box<TypeAnnotOrNoop>>,
+    #[serde(flatten)]
+    pub base: BaseNode,
+    pub argument: Box<LVal>,
+    #[serde(default, skip_serializing_if = "crate::flavor::Flavor::skip_empty")]
+    pub decorators: Option<Vec<Decorator>>,
+    #[serde(default, skip_serializing_if = "crate::flavor::Flavor::skip_none")]
+    pub type_annotation: Option<Box<TypeAnnotOrNoop>>,
 }
 
 /// Deprecated. Use RestElement element.
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde("RestProperty")]
 pub struct RestProperty {
-	#[serde(flatten)]
-	pub base:BaseNode,
-	pub argument:LVal,
-	#[serde(default)]
-	pub decorators:Option<Vec<Decorator>>,
-	#[serde(default)]
-	pub type_annotation:Option<Box<TypeAnnotOrNoop>>,
+    #[serde(flatten)]
+    pub base: BaseNode,
+    pub argument: LVal,
+    #[serde(default)]
+    pub decorators: Option<Vec<Decorator>>,
+    #[serde(default)]
+    pub type_annotation: Option<Box<TypeAnnotOrNoop>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde("Identifier")]
 pub struct Identifier {
-	#[serde(flatten)]
-	pub base:BaseNode,
-	#[serde(default)]
-	pub name:JsWord,
-	#[serde(default, skip_serializing_if = "crate::flavor::Flavor::skip_empty")]
-	pub decorators:Option<Vec<Decorator>>,
-	#[serde(default, skip_serializing_if = "crate::flavor::Flavor::skip_none_and_false")]
-	pub optional:Option<bool>,
-	#[serde(default, skip_serializing_if = "crate::flavor::Flavor::skip_none")]
-	pub type_annotation:Option<Box<TypeAnnotOrNoop>>,
+    #[serde(flatten)]
+    pub base: BaseNode,
+    #[serde(default)]
+    pub name: JsWord,
+    #[serde(default, skip_serializing_if = "crate::flavor::Flavor::skip_empty")]
+    pub decorators: Option<Vec<Decorator>>,
+    #[serde(
+        default,
+        skip_serializing_if = "crate::flavor::Flavor::skip_none_and_false"
+    )]
+    pub optional: Option<bool>,
+    #[serde(default, skip_serializing_if = "crate::flavor::Flavor::skip_none")]
+    pub type_annotation: Option<Box<TypeAnnotOrNoop>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum IdOrQualifiedId {
-	#[tag("Identifier")]
-	Id(Identifier),
-	#[tag("QualifiedTypeIdentifier")]
-	QualifiedId(QualifiedTypeIdentifier),
+    #[tag("Identifier")]
+    Id(Identifier),
+    #[tag("QualifiedTypeIdentifier")]
+    QualifiedId(QualifiedTypeIdentifier),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum IdOrString {
-	#[tag("Identifier")]
-	Id(Identifier),
-	#[tag("StringLiteral")]
-	String(StringLiteral),
+    #[tag("Identifier")]
+    Id(Identifier),
+    #[tag("StringLiteral")]
+    String(StringLiteral),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum IdOrRest {
-	#[tag("Identifier")]
-	Id(Identifier),
-	#[tag("RestElement")]
-	Rest(RestElement),
+    #[tag("Identifier")]
+    Id(Identifier),
+    #[tag("RestElement")]
+    Rest(RestElement),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde("Decorator")]
 pub struct Decorator {
-	#[serde(flatten)]
-	pub base:BaseNode,
-	pub expression:Box<Expression>,
+    #[serde(flatten)]
+    pub base: BaseNode,
+    pub expression: Box<Expression>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[ast_serde("Noop")]
 pub struct Noop {
-	#[serde(flatten)]
-	pub base:BaseNode,
+    #[serde(flatten)]
+    pub base: BaseNode,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum Param {
-	#[tag("Identifier")]
-	Id(Identifier),
-	#[tag("AssignmentPattern")]
-	#[tag("ArrayPattern")]
-	#[tag("ObjectPattern")]
-	Pat(Pattern),
-	#[tag("RestElement")]
-	Rest(RestElement),
-	#[tag("TSParameterProperty")]
-	TSProp(TSParameterProperty),
+    #[tag("Identifier")]
+    Id(Identifier),
+    #[tag("AssignmentPattern")]
+    #[tag("ArrayPattern")]
+    #[tag("ObjectPattern")]
+    Pat(Pattern),
+    #[tag("RestElement")]
+    Rest(RestElement),
+    #[tag("TSParameterProperty")]
+    TSProp(TSParameterProperty),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum LVal {
-	#[tag("Identifier")]
-	Id(Identifier),
-	#[tag("MemberExpression")]
-	MemberExpr(MemberExpression),
-	#[tag("RestElement")]
-	RestEl(RestElement),
-	#[tag("AssignmentPattern")]
-	AssignmentPat(AssignmentPattern),
-	#[tag("ArrayPattern")]
-	ArrayPat(ArrayPattern),
-	#[tag("ObjectPattern")]
-	ObjectPat(ObjectPattern),
-	#[tag("TSParameterProperty")]
-	TSParamProp(TSParameterProperty),
+    #[tag("Identifier")]
+    Id(Identifier),
+    #[tag("MemberExpression")]
+    MemberExpr(MemberExpression),
+    #[tag("RestElement")]
+    RestEl(RestElement),
+    #[tag("AssignmentPattern")]
+    AssignmentPat(AssignmentPattern),
+    #[tag("ArrayPattern")]
+    ArrayPat(ArrayPattern),
+    #[tag("ObjectPattern")]
+    ObjectPat(ObjectPattern),
+    #[tag("TSParameterProperty")]
+    TSParamProp(TSParameterProperty),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum PatternLike {
-	#[tag("Identifier")]
-	Id(Identifier),
-	#[tag("RestElement")]
-	RestEl(RestElement),
-	#[tag("AssignmentPattern")]
-	AssignmentPat(AssignmentPattern),
-	#[tag("ArrayPattern")]
-	ArrayPat(ArrayPattern),
-	#[tag("ObjectPattern")]
-	ObjectPat(ObjectPattern),
+    #[tag("Identifier")]
+    Id(Identifier),
+    #[tag("RestElement")]
+    RestEl(RestElement),
+    #[tag("AssignmentPattern")]
+    AssignmentPat(AssignmentPattern),
+    #[tag("ArrayPattern")]
+    ArrayPat(ArrayPattern),
+    #[tag("ObjectPattern")]
+    ObjectPat(ObjectPattern),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum TypeAnnotOrNoop {
-	#[tag("TypeAnnotation")]
-	Flow(TypeAnnotation),
-	#[tag("TSTypeAnnotation")]
-	TS(Box<TSTypeAnnotation>),
-	#[tag("Noop")]
-	Noop(Noop),
+    #[tag("TypeAnnotation")]
+    Flow(TypeAnnotation),
+    #[tag("TSTypeAnnotation")]
+    TS(Box<TSTypeAnnotation>),
+    #[tag("Noop")]
+    Noop(Noop),
 }
 
 impl From<TSTypeAnnotation> for TypeAnnotOrNoop {
-	fn from(annot:TSTypeAnnotation) -> Self { TypeAnnotOrNoop::TS(Box::new(annot)) }
+    fn from(annot: TSTypeAnnotation) -> Self {
+        TypeAnnotOrNoop::TS(Box::new(annot))
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum TypeParamDeclOrNoop {
-	#[tag("TypeParameterDeclaration")]
-	Flow(TypeParameterDeclaration),
-	#[tag("TSTypeParameterDeclaration")]
-	TS(TSTypeParameterDeclaration),
-	#[tag("Noop")]
-	Noop(Noop),
+    #[tag("TypeParameterDeclaration")]
+    Flow(TypeParameterDeclaration),
+    #[tag("TSTypeParameterDeclaration")]
+    TS(TSTypeParameterDeclaration),
+    #[tag("Noop")]
+    Noop(Noop),
 }
 
 impl From<TSTypeParameterDeclaration> for TypeParamDeclOrNoop {
-	fn from(decl:TSTypeParameterDeclaration) -> Self { TypeParamDeclOrNoop::TS(decl) }
+    fn from(decl: TSTypeParameterDeclaration) -> Self {
+        TypeParamDeclOrNoop::TS(decl)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde]
 pub enum SuperTypeParams {
-	#[tag("TypeParameterInstantiation")]
-	Flow(TypeParameterInstantiation),
-	#[tag("TSTypeParameterInstantiation")]
-	TS(TSTypeParameterInstantiation),
+    #[tag("TypeParameterInstantiation")]
+    Flow(TypeParameterInstantiation),
+    #[tag("TSTypeParameterInstantiation")]
+    TS(TSTypeParameterInstantiation),
 }
 
 impl From<TSTypeParameterInstantiation> for SuperTypeParams {
-	fn from(param:TSTypeParameterInstantiation) -> Self { SuperTypeParams::TS(param) }
+    fn from(param: TSTypeParameterInstantiation) -> Self {
+        SuperTypeParams::TS(param)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde("PrivateName")]
 pub struct PrivateName {
-	#[serde(flatten)]
-	pub base:BaseNode,
-	pub id:Identifier,
+    #[serde(flatten)]
+    pub base: BaseNode,
+    pub id: Identifier,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Access {
-	Public,
-	Private,
-	Protected,
+    Public,
+    Private,
+    Protected,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde("MetaProperty")]
 pub struct MetaProperty {
-	#[serde(flatten)]
-	pub base:BaseNode,
-	pub meta:Identifier,
-	pub property:Identifier,
+    #[serde(flatten)]
+    pub base: BaseNode,
+    pub meta: Identifier,
+    pub property: Identifier,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[ast_serde("Directive")]
 pub struct Directive {
-	#[serde(flatten)]
-	pub base:BaseNode,
-	pub value:DirectiveLiteral,
+    #[serde(flatten)]
+    pub base: BaseNode,
+    pub value: DirectiveLiteral,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[ast_serde("DirectiveLiteral")]
 pub struct DirectiveLiteral {
-	#[serde(flatten)]
-	pub base:BaseNode,
-	#[serde(default)]
-	pub value:JsWord,
+    #[serde(flatten)]
+    pub base: BaseNode,
+    #[serde(default)]
+    pub value: JsWord,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde("PipelineBareFunction")]
 pub struct PipelineBareFunction {
-	#[serde(flatten)]
-	pub base:BaseNode,
-	pub callee:Box<Expression>,
+    #[serde(flatten)]
+    pub base: BaseNode,
+    pub callee: Box<Expression>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde("PipelineTopicExpression")]
 pub struct PipelineTopicExpression {
-	#[serde(flatten)]
-	pub base:BaseNode,
-	pub expression:Box<Expression>,
+    #[serde(flatten)]
+    pub base: BaseNode,
+    pub expression: Box<Expression>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum PlaceholderExpectedNode {
-	Identifier,
-	StringLiteral,
-	Expression,
-	Statement,
-	Declaration,
-	BlockStatement,
-	ClassBody,
-	Pattern,
+    Identifier,
+    StringLiteral,
+    Expression,
+    Statement,
+    Declaration,
+    BlockStatement,
+    ClassBody,
+    Pattern,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[ast_serde("Placeholder")]
 pub struct Placeholder {
-	#[serde(flatten)]
-	pub base:BaseNode,
-	pub expected_node:PlaceholderExpectedNode,
-	pub name:Identifier,
+    #[serde(flatten)]
+    pub base: BaseNode,
+    pub expected_node: PlaceholderExpectedNode,
+    pub name: Identifier,
 }
 
 // NOTE(dwoznicki): Node is part of the babel node definitions, but it's never

@@ -6,8 +6,8 @@ use serde::Deserialize;
 #[serde(rename = "Output")]
 #[serde(rename_all = "camelCase")]
 pub struct OutputConfig {
-	pub path:PathBuf,
+    pub path: PathBuf,
 
-	#[serde(default)]
-	pub name:String,
+    #[serde(default)]
+    pub name: String,
 }

@@ -1,6 +1,18 @@
 use swc_ecma_ast::*;
 
-impl_enum!(Decl, [Class, Fn, Var, TsInterface, TsTypeAlias, TsEnum, TsModule, Using]);
+impl_enum!(
+    Decl,
+    [
+        Class,
+        Fn,
+        Var,
+        TsInterface,
+        TsTypeAlias,
+        TsEnum,
+        TsModule,
+        Using
+    ]
+);
 
 impl_struct!(ClassDecl, [ident, declare, class]);
 impl_struct!(FnDecl, [ident, declare, function]);

@@ -11,7 +11,7 @@ use wasm_bindgen::prelude::wasm_bindgen;
 /// all of runtime feature parity is gauranteed. There will be some improvement
 /// to handle those differences.
 #[wasm_bindgen(typescript_custom_section)]
-const SWC_TYPES_DEFINITION:&'static str = r#"
+const SWC_TYPES_DEFINITION: &'static str = r#"
 export interface Plugin {
   (module: Program): Program;
 }

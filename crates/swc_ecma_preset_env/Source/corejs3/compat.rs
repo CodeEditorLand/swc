@@ -5,7 +5,7 @@ use swc_common::collections::AHashMap;
 
 use crate::Versions;
 
-pub static DATA:Lazy<AHashMap<String, Versions>> = Lazy::new(|| {
-	serde_json::from_str(include_str!("../../data/core-js-compat/data.json"))
-		.expect("failed parse corejs3-compat data.json")
+pub static DATA: Lazy<AHashMap<String, Versions>> = Lazy::new(|| {
+    serde_json::from_str(include_str!("../../data/core-js-compat/data.json"))
+        .expect("failed parse corejs3-compat data.json")
 });

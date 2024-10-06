@@ -6,41 +6,44 @@ use swc_ecma_visit::{noop_visit_mut_type, VisitMut, VisitMutWith};
 use swc_trace_macro::swc_trace;
 
 pub(super) struct ClassNameTdzFolder<'a> {
-	pub class_name:&'a Ident,
+    pub class_name: &'a Ident,
 }
 
 #[swc_trace]
 impl<'a> VisitMut for ClassNameTdzFolder<'a> {
-	noop_visit_mut_type!(fail);
+    noop_visit_mut_type!(fail);
 
-	fn visit_mut_expr(&mut self, expr:&mut Expr) {
-		match expr {
-			Expr::Ident(i) => {
-				//
+    fn visit_mut_expr(&mut self, expr: &mut Expr) {
+        match expr {
+            Expr::Ident(i) => {
+                //
 
-				if i.sym == self.class_name.sym {
-					*expr = SeqExpr {
-						span:DUMMY_SP,
-						exprs:vec![
-							Box::new(Expr::Call(CallExpr {
-								span:DUMMY_SP,
-								callee:helper!(class_name_tdz_error),
-								args:vec![
-									Str { span:i.span, raw:None, value:i.sym.clone() }.as_arg(),
-								],
+                if i.sym == self.class_name.sym {
+                    *expr = SeqExpr {
+                        span: DUMMY_SP,
+                        exprs: vec![
+                            Box::new(Expr::Call(CallExpr {
+                                span: DUMMY_SP,
+                                callee: helper!(class_name_tdz_error),
+                                args: vec![Str {
+                                    span: i.span,
+                                    raw: None,
+                                    value: i.sym.clone(),
+                                }
+                                .as_arg()],
 
-								..Default::default()
-							})),
-							Box::new(Expr::Ident(i.clone())),
-						],
-					}
-					.into();
-				}
-			},
+                                ..Default::default()
+                            })),
+                            Box::new(Expr::Ident(i.clone())),
+                        ],
+                    }
+                    .into();
+                }
+            }
 
-			_ => {
-				expr.visit_mut_children_with(self);
-			},
-		}
-	}
+            _ => {
+                expr.visit_mut_children_with(self);
+            }
+        }
+    }
 }

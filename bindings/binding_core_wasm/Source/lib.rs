@@ -1,12 +1,6 @@
 use swc_core::binding_macros::{
-	build_minify,
-	build_minify_sync,
-	build_parse,
-	build_parse_sync,
-	build_print,
-	build_print_sync,
-	build_transform,
-	build_transform_sync,
+    build_minify, build_minify_sync, build_parse, build_parse_sync, build_print, build_print_sync,
+    build_transform, build_transform_sync,
 };
 use wasm_bindgen::prelude::*;
 mod types;
@@ -14,7 +8,7 @@ mod types;
 /// Custom interface definitions for the @swc/wasm's public interface instead of
 /// auto generated one, which is not reflecting most of types in detail.
 #[wasm_bindgen(typescript_custom_section)]
-const INTERFACE_DEFINITIONS:&'static str = r#"
+const INTERFACE_DEFINITIONS: &'static str = r#"
 export function minify(src: string, opts?: JsMinifyOptions): Promise<Output>;
 export function minifySync(code: string, opts?: JsMinifyOptions): Output;
 

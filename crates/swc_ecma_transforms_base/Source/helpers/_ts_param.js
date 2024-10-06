@@ -1,5 +1,3 @@
 function _ts_param(paramIndex, decorator) {
-	return function (target, key) {
-		decorator(target, key, paramIndex);
-	};
+    return function (target, key) { decorator(target, key, paramIndex); }
 }

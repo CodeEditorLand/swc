@@ -17,34 +17,36 @@ pub mod wasix_runtime;
 
 use plugin_module_bytes::PluginModuleBytes;
 
-/// Creates an executor to run plugin binaries.
+/**
+ * Creates an executor to run plugin binaries.
+ */
 #[cfg(feature = "__rkyv")]
 pub fn create_plugin_transform_executor(
-	source_map:&Arc<SourceMap>,
-	unresolved_mark:&swc_common::Mark,
-	metadata_context:&Arc<TransformPluginMetadataContext>,
-	plugin_module:Box<dyn PluginModuleBytes>,
-	plugin_config:Option<serde_json::Value>,
-	runtime:Option<Arc<dyn wasmer_wasix::Runtime + Send + Sync>>,
+    source_map: &Arc<SourceMap>,
+    unresolved_mark: &swc_common::Mark,
+    metadata_context: &Arc<TransformPluginMetadataContext>,
+    plugin_module: Box<dyn PluginModuleBytes>,
+    plugin_config: Option<serde_json::Value>,
+    runtime: Option<Arc<dyn wasmer_wasix::Runtime + Send + Sync>>,
 ) -> TransformExecutor {
-	TransformExecutor::new(
-		plugin_module,
-		source_map,
-		unresolved_mark,
-		metadata_context,
-		plugin_config,
-		runtime,
-	)
+    TransformExecutor::new(
+        plugin_module,
+        source_map,
+        unresolved_mark,
+        metadata_context,
+        plugin_config,
+        runtime,
+    )
 }
 
 #[cfg(not(feature = "__rkyv"))]
 pub fn create_plugin_transform_executor(
-	source_map:&Arc<SourceMap>,
-	unresolved_mark:&swc_common::Mark,
-	metadata_context:&Arc<TransformPluginMetadataContext>,
-	plugin_module:Box<dyn PluginModuleBytes>,
-	plugin_config:Option<serde_json::Value>,
-	runtime:Option<()>,
+    source_map: &Arc<SourceMap>,
+    unresolved_mark: &swc_common::Mark,
+    metadata_context: &Arc<TransformPluginMetadataContext>,
+    plugin_module: Box<dyn PluginModuleBytes>,
+    plugin_config: Option<serde_json::Value>,
+    runtime: Option<()>,
 ) -> TransformExecutor {
-	unimplemented!("Transform plugin cannot be used without serialization support")
+    unimplemented!("Transform plugin cannot be used without serialization support")
 }

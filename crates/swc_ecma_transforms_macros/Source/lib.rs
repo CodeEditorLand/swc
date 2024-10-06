@@ -24,12 +24,13 @@ mod parallel;
 ///
 /// where `ShouldWork` implements `swc_ecma_transforms::perf::Check`
 #[proc_macro_attribute]
-pub fn fast_path(attr:TokenStream, item:TokenStream) -> TokenStream {
-	let item = syn::parse(item).expect("failed to parse input as an item");
-	let expanded = fast::expand(attr.into(), item);
-	print("fast_path", expanded.into_token_stream())
+pub fn fast_path(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let item = syn::parse(item).expect("failed to parse input as an item");
+    let expanded = fast::expand(attr.into(), item);
+    print("fast_path", expanded.into_token_stream())
 }
 
+///
 /// # Input
 ///
 /// Basically, input for each types are wrapped in the suffix of the visitor
@@ -42,8 +43,8 @@ pub fn fast_path(attr:TokenStream, item:TokenStream) -> TokenStream {
 /// impl VisitMut for Pass {}
 /// ```
 #[proc_macro_attribute]
-pub fn parallel(attr:TokenStream, item:TokenStream) -> TokenStream {
-	let item = syn::parse(item).expect("failed to parse input as an item");
-	let expanded = parallel::expand(attr.into(), item);
-	print("parallel", expanded.into_token_stream())
+pub fn parallel(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let item = syn::parse(item).expect("failed to parse input as an item");
+    let expanded = parallel::expand(attr.into(), item);
+    print("parallel", expanded.into_token_stream())
 }

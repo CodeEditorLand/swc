@@ -12,7 +12,7 @@
 // TODO: This storage does not support mutable yet
 #[cfg(feature = "__plugin_rt")]
 pub struct HostCommentsStorage {
-	pub inner:Option<swc_common::comments::SingleThreadedComments>,
+    pub inner: Option<swc_common::comments::SingleThreadedComments>,
 }
 
 #[cfg(feature = "__plugin_rt")]

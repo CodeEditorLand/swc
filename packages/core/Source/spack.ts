@@ -1,4 +1,5 @@
 import * as path from "path";
+
 import { Options } from "@swc/types";
 
 export type BundleInput = BundleOptions | BundleOptions[];
@@ -6,41 +7,41 @@ export type BundleInput = BundleOptions | BundleOptions[];
 export const isLocalFile = /^\.{0,2}\//; // starts with '/' './' '../'
 
 export async function compileBundleOptions(
-	config: BundleInput | string | undefined,
+    config: BundleInput | string | undefined
 ): Promise<BundleInput> {
-	const f = config === undefined ? "." : config;
+    const f = config === undefined ? "." : config;
 
-	try {
-		const filepath = typeof f === "string" ? f : "spack.config.js";
-		const fileModule = isLocalFile.test(filepath)
-			? path.resolve(filepath)
-			: filepath;
-		let configFromFile: BundleInput = require(fileModule);
-		if ((configFromFile as any).default) {
-			configFromFile = (configFromFile as any).default;
-		}
-		if (Array.isArray(configFromFile)) {
-			if (Array.isArray(f)) {
-				return [...configFromFile, ...f];
-			}
-			if (typeof f !== "string") {
-				configFromFile.push(f);
-			}
-			return configFromFile;
-		}
+    try {
+        const filepath = typeof f === "string" ? f : "spack.config.js";
+        const fileModule = isLocalFile.test(filepath)
+            ? path.resolve(filepath)
+            : filepath;
+        let configFromFile: BundleInput = require(fileModule);
+        if ((configFromFile as any).default) {
+            configFromFile = (configFromFile as any).default;
+        }
+        if (Array.isArray(configFromFile)) {
+            if (Array.isArray(f)) {
+                return [...configFromFile, ...f];
+            }
+            if (typeof f !== "string") {
+                configFromFile.push(f);
+            }
+            return configFromFile;
+        }
 
-		return {
-			...configFromFile,
-			...(typeof config === "string" ? {} : config),
-		};
-	} catch (e) {
-		if (typeof f === "string") {
-			throw new Error(
-				`Error occurred while loading config file at ${config}: ${e}`,
-			);
-		}
-		return f;
-	}
+        return {
+            ...configFromFile,
+            ...(typeof config === "string" ? {} : config),
+        };
+    } catch (e) {
+        if (typeof f === "string") {
+            throw new Error(
+                `Error occurred while loading config file at ${config}: ${e}`
+            );
+        }
+        return f;
+    }
 }
 
 /**
@@ -58,41 +59,41 @@ export async function compileBundleOptions(
  *
  */
 export function config(c: BundleInput): BundleInput {
-	return c;
+    return c;
 }
 
 export interface BundleOptions extends SpackConfig {
-	workingDir?: string;
+    workingDir?: string;
 }
 
 /**
  * `spack.config,js`
  */
 export interface SpackConfig {
-	/**
-	 * @default process.env.NODE_ENV
-	 */
-	mode?: Mode;
+    /**
+     * @default process.env.NODE_ENV
+     */
+    mode?: Mode;
 
-	target?: Target;
+    target?: Target;
 
-	entry: EntryConfig;
+    entry: EntryConfig;
 
-	output: OutputConfig;
+    output: OutputConfig;
 
-	module: ModuleConfig;
+    module: ModuleConfig;
 
-	options?: Options;
+    options?: Options;
 
-	/**
-	 * Modules to exclude from bundle.
-	 */
-	externalModules?: string[];
+    /**
+     * Modules to exclude from bundle.
+     */
+    externalModules?: string[];
 }
 
 export interface OutputConfig {
-	name: string;
-	path: string;
+    name: string;
+    path: string;
 }
 
 export interface ModuleConfig {}
@@ -101,8 +102,8 @@ export type Mode = "production" | "development" | "none";
 export type Target = "browser" | "node";
 
 export type EntryConfig =
-	| string
-	| string[]
-	| {
-			[name: string]: string;
-	  };
+    | string
+    | string[]
+    | {
+          [name: string]: string;
+      };

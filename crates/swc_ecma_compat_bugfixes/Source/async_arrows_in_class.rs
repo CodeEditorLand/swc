@@ -10,113 +10,119 @@ use swc_trace_macro::swc_trace;
 /// instance via `this` within those methods would also throw. This is fixed by
 /// converting arrow functions in class methods into equivalent function
 /// expressions. See https://bugs.webkit.org/show_bug.cgi?id=166879
-pub fn async_arrows_in_class(unresolved_mark:Mark) -> impl Fold {
-	AsyncArrowsInClass { unresolved_mark, ..Default::default() }
+pub fn async_arrows_in_class(unresolved_mark: Mark) -> impl Fold {
+    AsyncArrowsInClass {
+        unresolved_mark,
+        ..Default::default()
+    }
 }
 #[derive(Default, Clone)]
 struct AsyncArrowsInClass {
-	in_class_method:bool,
-	unresolved_mark:Mark,
-	vars:Vec<VarDeclarator>,
+    in_class_method: bool,
+    unresolved_mark: Mark,
+    vars: Vec<VarDeclarator>,
 }
 
 /// TODO: VisitMut
 #[swc_trace]
 impl Fold for AsyncArrowsInClass {
-	standard_only_fold!();
+    standard_only_fold!();
 
-	fn fold_class_method(&mut self, n:ClassMethod) -> ClassMethod {
-		self.in_class_method = true;
-		let res = n.fold_children_with(self);
-		self.in_class_method = false;
-		res
-	}
+    fn fold_class_method(&mut self, n: ClassMethod) -> ClassMethod {
+        self.in_class_method = true;
+        let res = n.fold_children_with(self);
+        self.in_class_method = false;
+        res
+    }
 
-	fn fold_constructor(&mut self, n:Constructor) -> Constructor {
-		self.in_class_method = true;
-		let res = n.fold_children_with(self);
-		self.in_class_method = false;
-		res
-	}
+    fn fold_constructor(&mut self, n: Constructor) -> Constructor {
+        self.in_class_method = true;
+        let res = n.fold_children_with(self);
+        self.in_class_method = false;
+        res
+    }
 
-	fn fold_expr(&mut self, n:Expr) -> Expr {
-		let n = n.fold_children_with(self);
-		if !self.in_class_method {
-			return n;
-		}
+    fn fold_expr(&mut self, n: Expr) -> Expr {
+        let n = n.fold_children_with(self);
+        if !self.in_class_method {
+            return n;
+        }
 
-		match n {
-			Expr::Arrow(ref a) => {
-				if a.is_async {
-					let mut v = arrow(self.unresolved_mark);
-					let n = n.fold_with(&mut v);
-					self.vars.extend(v.take_vars());
-					n
-				} else {
-					n
-				}
-			},
-			_ => n,
-		}
-	}
+        match n {
+            Expr::Arrow(ref a) => {
+                if a.is_async {
+                    let mut v = arrow(self.unresolved_mark);
+                    let n = n.fold_with(&mut v);
+                    self.vars.extend(v.take_vars());
+                    n
+                } else {
+                    n
+                }
+            }
+            _ => n,
+        }
+    }
 
-	fn fold_module_items(&mut self, stmts:Vec<ModuleItem>) -> Vec<ModuleItem> {
-		let mut stmts = stmts.fold_children_with(self);
-		if !self.vars.is_empty() {
-			prepend_stmt(
-				&mut stmts,
-				VarDecl {
-					span:DUMMY_SP,
-					kind:VarDeclKind::Var,
-					declare:false,
-					decls:self.vars.take(),
-					..Default::default()
-				}
-				.into(),
-			);
-		}
+    fn fold_module_items(&mut self, stmts: Vec<ModuleItem>) -> Vec<ModuleItem> {
+        let mut stmts = stmts.fold_children_with(self);
+        if !self.vars.is_empty() {
+            prepend_stmt(
+                &mut stmts,
+                VarDecl {
+                    span: DUMMY_SP,
+                    kind: VarDeclKind::Var,
+                    declare: false,
+                    decls: self.vars.take(),
+                    ..Default::default()
+                }
+                .into(),
+            );
+        }
 
-		stmts
-	}
+        stmts
+    }
 
-	fn fold_stmts(&mut self, stmts:Vec<Stmt>) -> Vec<Stmt> {
-		let mut stmts = stmts.fold_children_with(self);
-		if !self.vars.is_empty() {
-			prepend_stmt(
-				&mut stmts,
-				VarDecl {
-					span:DUMMY_SP,
-					kind:VarDeclKind::Var,
-					declare:false,
-					decls:self.vars.take(),
-					..Default::default()
-				}
-				.into(),
-			);
-		}
+    fn fold_stmts(&mut self, stmts: Vec<Stmt>) -> Vec<Stmt> {
+        let mut stmts = stmts.fold_children_with(self);
+        if !self.vars.is_empty() {
+            prepend_stmt(
+                &mut stmts,
+                VarDecl {
+                    span: DUMMY_SP,
+                    kind: VarDeclKind::Var,
+                    declare: false,
+                    decls: self.vars.take(),
+                    ..Default::default()
+                }
+                .into(),
+            );
+        }
 
-		stmts
-	}
+        stmts
+    }
 }
 
 #[cfg(test)]
 mod tests {
-	use swc_common::chain;
-	use swc_ecma_transforms_base::resolver;
-	use swc_ecma_transforms_testing::test;
+    use swc_common::chain;
+    use swc_ecma_transforms_base::resolver;
+    use swc_ecma_transforms_testing::test;
 
-	use super::*;
+    use super::*;
 
-	fn tr() -> impl Fold {
-		let unresolved = Mark::new();
-		chain!(resolver(unresolved, Mark::new(), false), async_arrows_in_class(unresolved))
-	}
+    fn tr() -> impl Fold {
+        let unresolved = Mark::new();
+        chain!(
+            resolver(unresolved, Mark::new(), false),
+            async_arrows_in_class(unresolved)
+        )
+    }
 
-	test!(
-		::swc_ecma_parser::Syntax::default(),
-		|_| tr(),
-		async_arrows,
-		r#"
+    test!(
+        ::swc_ecma_parser::Syntax::default(),
+        |_| tr(),
+        async_arrows,
+        r#"
         class Foo {
             constructor() {
                 this.x = async () => await 1;
@@ -125,51 +131,51 @@ mod tests {
                 (async () => { })();
             }
         }"#
-	);
+    );
 
-	test!(
-		::swc_ecma_parser::Syntax::default(),
-		|_| tr(),
-		callback,
-		r#"
+    test!(
+        ::swc_ecma_parser::Syntax::default(),
+        |_| tr(),
+        callback,
+        r#"
         class Foo {
             foo() {
                 bar(async () => await 1);
             }
         }"#
-	);
+    );
 
-	test!(
-		::swc_ecma_parser::Syntax::default(),
-		|_| tr(),
-		this,
-		r#"
+    test!(
+        ::swc_ecma_parser::Syntax::default(),
+        |_| tr(),
+        this,
+        r#"
         class Foo {
             constructor() {
                 this.x = () => async () => await this;
             }
         }"#
-	);
+    );
 
-	// TODO: handle arguments and super. This isn't handled in general for arrow
-	// functions atm...
+    // TODO: handle arguments and super. This isn't handled in general for arrow
+    // functions atm...
 
-	test!(
-		::swc_ecma_parser::Syntax::default(),
-		|_| tr(),
-		non_async_arrow,
-		r#"
+    test!(
+        ::swc_ecma_parser::Syntax::default(),
+        |_| tr(),
+        non_async_arrow,
+        r#"
         class Foo {
             constructor() {
                 this.x = () => {};
             }
         }"#
-	);
+    );
 
-	test!(
-		::swc_ecma_parser::Syntax::default(),
-		|_| tr(),
-		non_class_async_arrow,
-		"let x = async () => await 1;"
-	);
+    test!(
+        ::swc_ecma_parser::Syntax::default(),
+        |_| tr(),
+        non_class_async_arrow,
+        "let x = async () => await 1;"
+    );
 }

@@ -7,20 +7,20 @@ use crate::util::get_commit_for_core_version;
 /// and pull requests.
 #[derive(Debug, Args)]
 pub(super) struct CoreVerCmd {
-	from:String,
+    from: String,
 
-	to:String,
+    to: String,
 }
 
 impl CoreVerCmd {
-	pub fn run(self) -> Result<()> {
-		let from_commit = get_commit_for_core_version(&self.from, false)?;
-		let to_commit = get_commit_for_core_version(&self.to, true)?;
+    pub fn run(self) -> Result<()> {
+        let from_commit = get_commit_for_core_version(&self.from, false)?;
+        let to_commit = get_commit_for_core_version(&self.to, true)?;
 
-		eprintln!(
-			"GitHub diff: https://github.com/swc-project/swc/compare/{from_commit}...{to_commit}"
-		);
+        eprintln!(
+            "GitHub diff: https://github.com/swc-project/swc/compare/{from_commit}...{to_commit}"
+        );
 
-		Ok(())
-	}
+        Ok(())
+    }
 }

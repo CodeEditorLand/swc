@@ -12,17 +12,17 @@ mod minifier;
 /// Debug modules related to ECMAScript
 #[derive(Debug, Subcommand)]
 pub(crate) enum EsCommand {
-	#[clap(subcommand)]
-	Minifier(MinifierCommand),
-	#[clap(subcommand)]
-	ExecForTesting(ExecForTestingCommand),
+    #[clap(subcommand)]
+    Minifier(MinifierCommand),
+    #[clap(subcommand)]
+    ExecForTesting(ExecForTestingCommand),
 }
 
 impl EsCommand {
-	pub fn run(self, cm:Arc<SourceMap>) -> Result<()> {
-		match self {
-			Self::Minifier(cmd) => cmd.run(cm),
-			Self::ExecForTesting(cmd) => cmd.run(cm),
-		}
-	}
+    pub fn run(self, cm: Arc<SourceMap>) -> Result<()> {
+        match self {
+            Self::Minifier(cmd) => cmd.run(cm),
+            Self::ExecForTesting(cmd) => cmd.run(cm),
+        }
+    }
 }

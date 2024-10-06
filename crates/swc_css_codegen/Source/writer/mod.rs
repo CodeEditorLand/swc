@@ -7,15 +7,15 @@ pub mod basic;
 
 #[auto_impl(&mut, Box)]
 pub trait CssWriter {
-	fn write_space(&mut self) -> Result;
+    fn write_space(&mut self) -> Result;
 
-	fn write_newline(&mut self) -> Result;
+    fn write_newline(&mut self) -> Result;
 
-	fn write_raw(&mut self, span:Option<Span>, text:&str) -> Result;
+    fn write_raw(&mut self, span: Option<Span>, text: &str) -> Result;
 
-	fn write_str(&mut self, span:Span, s:&str) -> Result;
+    fn write_str(&mut self, span: Span, s: &str) -> Result;
 
-	fn increase_indent(&mut self);
+    fn increase_indent(&mut self);
 
-	fn decrease_indent(&mut self);
+    fn decrease_indent(&mut self);
 }

@@ -6,7 +6,7 @@ pub struct MinifyOptions {}
 
 #[swc_trace]
 impl super::CommandRunner for MinifyOptions {
-	fn execute(&self) -> anyhow::Result<()> {
-		unimplemented!("Minify command is not yet implemented")
-	}
+    fn execute(&self) -> anyhow::Result<()> {
+        unimplemented!("Minify command is not yet implemented")
+    }
 }
