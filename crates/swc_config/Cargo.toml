@@ -2,11 +2,11 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Types for configuring swc"
 documentation = "https://rustdoc.swc.rs/swc_config/"
-edition = "2021"
-license = "Apache-2.0"
-name = "swc_config"
-repository = "https://github.com/swc-project/swc.git"
-version = "0.1.14"
+edition       = "2021"
+license       = "Apache-2.0"
+name          = "swc_config"
+repository    = "https://github.com/swc-project/swc.git"
+version       = "0.1.15"
 
 [dependencies]
 anyhow = { workspace = true }

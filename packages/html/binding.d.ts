@@ -56,23 +56,26 @@ export interface Element {
 }
 
 export declare function minify(
-    code: Buffer,
+    code: Buffer | string,
     opts: Buffer,
     signal?: AbortSignal | undefined | null
 ): Promise<TransformOutput>;
 
 export declare function minifyFragment(
-    code: Buffer,
+    code: Buffer | string,
     opts: Buffer,
     signal?: AbortSignal | undefined | null
 ): Promise<TransformOutput>;
 
 export declare function minifyFragmentSync(
-    code: Buffer,
+    code: Buffer | string,
     opts: Buffer
 ): TransformOutput;
 
-export declare function minifySync(code: Buffer, opts: Buffer): TransformOutput;
+export declare function minifySync(
+    code: Buffer | string,
+    opts: Buffer
+): TransformOutput;
 
 export interface TransformOutput {
 	code: string;

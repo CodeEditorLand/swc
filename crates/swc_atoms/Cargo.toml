@@ -2,11 +2,11 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Atoms for the swc project."
 documentation = "https://rustdoc.swc.rs/swc_atoms/"
-edition = "2021"
-license = "Apache-2.0"
-name = "swc_atoms"
-repository = "https://github.com/swc-project/swc.git"
-version = "1.0.1"
+edition       = "2021"
+license       = "Apache-2.0"
+name          = "swc_atoms"
+repository    = "https://github.com/swc-project/swc.git"
+version       = "1.0.2"
 
 [lib]
 bench = false
