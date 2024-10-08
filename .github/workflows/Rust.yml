@@ -1,0 +1,1895 @@
+name: Rust
+
+concurrency:
+    group: Rust-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    security-events: write
+
+on:
+    workflow_dispatch:
+    push:
+        branches: [Current]
+    pull_request:
+        branches: [Current]
+    workflow_call:
+
+jobs:
+    Build:
+        runs-on: ubuntu-latest
+
+        env:
+            ADBLOCK: true
+            ASTRO_TELEMETRY_DISABLED: 1
+            AUTOMATEDLAB_TELEMETRY_OPTOUT: 1
+            AZURE_CORE_COLLECT_TELEMETRY: 0
+            CHOOSENIM_NO_ANALYTICS: 1
+            DIEZ_DO_NOT_TRACK: 1
+            DOTNET_CLI_TELEMETRY_OPTOUT: 1
+            DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT: 1
+            DO_NOT_TRACK: 1
+            ET_NO_TELEMETRY: 1
+            GATSBY_TELEMETRY_DISABLED: 1
+            GATSBY_TELEMETRY_OPTOUT: 1
+            GATSBY_TELEMETRY_OPT_OUT: 1
+            GRIT_TELEMETRY_DISABLED: 1
+            HASURA_GRAPHQL_ENABLE_TELEMETRY: false
+            HINT_TELEMETRY: off
+            HOMEBREW_NO_ANALYTICS: 1
+            INFLUXD_REPORTING_DISABLED: true
+            ITERATIVE_DO_NOT_TRACK: 1
+            NEXT_TELEMETRY_DEBUG: 1
+            NEXT_TELEMETRY_DISABLED: 1
+            NG_CLI_ANALYTICS: false
+            NUXT_TELEMETRY_DISABLED: 1
+            PIN_DO_NOT_TRACK: 1
+            POWERSHELL_TELEMETRY_OPTOUT: 1
+            SAM_CLI_TELEMETRY: 0
+            STNOUPGRADE: 1
+            STRIPE_CLI_TELEMETRY_OPTOUT: 1
+            TELEMETRY_DISABLED: 1
+            TERRAFORM_TELEMETRY: 0
+            VCPKG_DISABLE_METRICS: 1
+
+        strategy:
+            matrix:
+                toolchain: ["stable", "nightly"]
+
+        steps:
+            - uses: actions/checkout@v4.2.1
+
+            - uses: actions-rs/toolchain@v1.0.7
+              with:
+                  profile: minimal
+                  toolchain: ${{ matrix.toolchain }}
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./bindings/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./bindings/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./bindings/binding_core_node/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./bindings/binding_core_node/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./bindings/binding_core_wasm/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./bindings/binding_core_wasm/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./bindings/binding_html_node/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./bindings/binding_html_node/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./bindings/binding_minifier_node/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./bindings/binding_minifier_node/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./bindings/binding_minifier_wasm/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./bindings/binding_minifier_wasm/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./bindings/binding_typescript_wasm/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./bindings/binding_typescript_wasm/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./bindings/node_macro_deps/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./bindings/node_macro_deps/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./bindings/swc_cli/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./bindings/swc_cli/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/ast_node/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/ast_node/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/better_scoped_tls/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/better_scoped_tls/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/binding_macros/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/binding_macros/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/dbg-swc/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/dbg-swc/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/from_variant/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/from_variant/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/jsdoc/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/jsdoc/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/preset_env_base/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/preset_env_base/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/string_enum/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/string_enum/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_allocator/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_allocator/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_atoms/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_atoms/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_bundler/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_bundler/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_cached/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_cached/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_cli_impl/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_cli_impl/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_common/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_common/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_compiler_base/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_compiler_base/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_config/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_config/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_config_macro/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_config_macro/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_core/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_core/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_css/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_css/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_css_ast/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_css_ast/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_css_codegen/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_css_codegen/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_css_codegen_macros/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_css_codegen_macros/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_css_compat/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_css_compat/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_css_lints/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_css_lints/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_css_minifier/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_css_minifier/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_css_modules/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_css_modules/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_css_parser/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_css_parser/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_css_prefixer/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_css_prefixer/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_css_utils/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_css_utils/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_css_visit/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_css_visit/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_ast/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_ast/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_codegen/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_codegen/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_codegen_macros/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_codegen_macros/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_compat_bugfixes/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_compat_bugfixes/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_compat_common/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_compat_common/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_compat_es2015/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_compat_es2015/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_compat_es2016/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_compat_es2016/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_compat_es2017/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_compat_es2017/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_compat_es2018/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_compat_es2018/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_compat_es2019/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_compat_es2019/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_compat_es2020/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_compat_es2020/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_compat_es2021/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_compat_es2021/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_compat_es2022/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_compat_es2022/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_compat_es3/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_compat_es3/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_ext_transforms/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_ext_transforms/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_lints/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_lints/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_loader/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_loader/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_minifier/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_minifier/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_minifier/fuzz/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_minifier/fuzz/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_parser/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_parser/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_preset_env/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_preset_env/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_quote/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_quote/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_quote_macros/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_quote_macros/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_testing/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_testing/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_transforms/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_transforms/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_transforms_base/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_transforms_base/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_transforms_classes/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_transforms_classes/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_transforms_compat/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_transforms_compat/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_transforms_macros/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_transforms_macros/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_transforms_module/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_transforms_module/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_transforms_optimization/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_transforms_optimization/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_transforms_proposal/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_transforms_proposal/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_transforms_react/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_transforms_react/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_transforms_testing/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_transforms_testing/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_transforms_typescript/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_transforms_typescript/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_usage_analyzer/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_usage_analyzer/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_utils/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_utils/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecma_visit/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecma_visit/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_ecmascript/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_ecmascript/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_eq_ignore_macros/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_eq_ignore_macros/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_error_reporters/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_error_reporters/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_estree_ast/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_estree_ast/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_estree_compat/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_estree_compat/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_fast_graph/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_fast_graph/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_fast_ts_strip/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_fast_ts_strip/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_graph_analyzer/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_graph_analyzer/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_html/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_html/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_html_ast/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_html_ast/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_html_codegen/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_html_codegen/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_html_codegen_macros/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_html_codegen_macros/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_html_minifier/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_html_minifier/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_html_parser/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_html_parser/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_html_utils/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_html_utils/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_html_visit/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_html_visit/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_macros_common/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_macros_common/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_malloc/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_malloc/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_node_bundler/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_node_bundler/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_node_comments/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_node_comments/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_nodejs_common/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_nodejs_common/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_plugin/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_plugin/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_plugin_macro/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_plugin_macro/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_plugin_proxy/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_plugin_proxy/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_plugin_runner/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_plugin_runner/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_plugin_testing/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_plugin_testing/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_timer/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_timer/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_trace_macro/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_trace_macro/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_transform_common/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_transform_common/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_typescript/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_typescript/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_visit/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_visit/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_x_optimizer/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_x_optimizer/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_xml/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_xml/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_xml_ast/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_xml_ast/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_xml_codegen/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_xml_codegen/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_xml_codegen_macros/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_xml_codegen_macros/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_xml_parser/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_xml_parser/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/swc_xml_visit/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/swc_xml_visit/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/testing/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/testing/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./crates/testing_macros/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./crates/testing_macros/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./tools/generate-code/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./tools/generate-code/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./tools/swc-releaser/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./tools/swc-releaser/Cargo.toml
+
+            - uses: actions/cache@v4.0.2
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                      Target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('./xtask/Cargo.toml') }}
+            - uses: actions-rs/cargo@v1.0.3
+              with:
+                command: build
+                args: --release --all-features --manifest-path ./xtask/Cargo.toml
