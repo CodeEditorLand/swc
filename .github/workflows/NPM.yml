@@ -74,6 +74,30 @@ jobs:
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+            - name: Publish ./bindings/binding_core_wasm
+              continue-on-error: true
+              working-directory: ./bindings/binding_core_wasm
+              run: |
+                  npm publish --legacy-peer-deps --provenance --ignore-scripts
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Publish ./bindings/binding_minifier_wasm
+              continue-on-error: true
+              working-directory: ./bindings/binding_minifier_wasm
+              run: |
+                  npm publish --legacy-peer-deps --provenance --ignore-scripts
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Publish ./bindings/binding_typescript_wasm
+              continue-on-error: true
+              working-directory: ./bindings/binding_typescript_wasm
+              run: |
+                  npm publish --legacy-peer-deps --provenance --ignore-scripts
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
             - name: Publish .
               continue-on-error: true
               working-directory: .
@@ -93,6 +117,14 @@ jobs:
             - name: Publish ./packages/core/scripts/npm/darwin-arm64
               continue-on-error: true
               working-directory: ./packages/core/scripts/npm/darwin-arm64
+              run: |
+                  npm publish --legacy-peer-deps --provenance --ignore-scripts
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Publish ./packages/core/scripts/npm/darwin-x64
+              continue-on-error: true
+              working-directory: ./packages/core/scripts/npm/darwin-x64
               run: |
                   npm publish --legacy-peer-deps --provenance --ignore-scripts
               env:
@@ -122,6 +154,14 @@ jobs:
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+            - name: Publish ./packages/core/scripts/npm/linux-x64-gnu
+              continue-on-error: true
+              working-directory: ./packages/core/scripts/npm/linux-x64-gnu
+              run: |
+                  npm publish --legacy-peer-deps --provenance --ignore-scripts
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
             - name: Publish ./packages/core/scripts/npm/linux-x64-musl
               continue-on-error: true
               working-directory: ./packages/core/scripts/npm/linux-x64-musl
@@ -141,6 +181,14 @@ jobs:
             - name: Publish ./packages/core/scripts/npm/win32-ia32-msvc
               continue-on-error: true
               working-directory: ./packages/core/scripts/npm/win32-ia32-msvc
+              run: |
+                  npm publish --legacy-peer-deps --provenance --ignore-scripts
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Publish ./packages/core/scripts/npm/win32-x64-msvc
+              continue-on-error: true
+              working-directory: ./packages/core/scripts/npm/win32-x64-msvc
               run: |
                   npm publish --legacy-peer-deps --provenance --ignore-scripts
               env:

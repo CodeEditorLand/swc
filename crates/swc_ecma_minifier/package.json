@@ -37,7 +37,7 @@
 		"prepublishOnly": "Build 'Source/**/*.ts'"
 	},
 	"type": "module",
-	"version": "0.0.1"
+	"version": "0.0.1",
     "name": "minifier",
     "private": true,
     "version": "1.0.0",

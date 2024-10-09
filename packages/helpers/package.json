@@ -473,7 +473,7 @@
 	},
 	"sideEffects": false,
 	"type": "module",
-	"version": "0.0.1"
+	"version": "0.0.1",
     "name": "@swc/helpers",
     "packageManager": "yarn@4.0.2",
     "version": "0.5.13",

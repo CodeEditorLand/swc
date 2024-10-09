@@ -107,7 +107,7 @@
 		"./packages/minifier/scripts/npm/*",
 		"./bindings/*",
 		"./bindings/binding_core_wasm/*"
-	]
+	],
     "name": "@swc/workspace",
     "packageManager": "yarn@4.0.2",
     "private": true,

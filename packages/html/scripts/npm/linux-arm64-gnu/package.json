@@ -12,7 +12,7 @@
 	],
 	"description": "Super-fast HTML minifier",
 	"devDependencies": {
-		"@playform/build": "0.1.7"
+		"@playform/build": "0.1.7",
 		"@playform/build": ""
 	},
 	"files": [
