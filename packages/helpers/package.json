@@ -30,13 +30,13 @@
     "homepage": "https://swc.rs",
     "type": "module",
     "devDependencies": {
-        "@ast-grep/napi": "^0.28.0",
-        "dprint": "^0.47.2",
-        "magic-string": "^0.30.11",
-        "zx": "^8.1.9"
+        "@ast-grep/napi": "0.28.0",
+        "dprint": "0.47.2",
+        "magic-string": "0.30.11",
+        "zx": "8.1.9"
     },
     "dependencies": {
-        "tslib": "^2.7.0"
+        "tslib": "2.7.0"
     },
     "exports": {
         "./package.json": "./package.json",
