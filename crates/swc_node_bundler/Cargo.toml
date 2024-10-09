@@ -1,7 +1,7 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-build         = "build.rs"
-description   = "Speedy web compiler"
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+build = "build.rs"
+description = "Speedy web compiler"
 documentation = "https://rustdoc.swc.rs/swc/"
 edition       = "2021"
 license       = "Apache-2.0"
@@ -13,20 +13,20 @@ version       = "0.80.0"
 bench = false
 
 [features]
-default    = ["swc_v1"]
+default = ["swc_v1"]
 serde-impl = ["serde"]
-swc_v1     = ["serde-impl"]
-swc_v2     = ["serde-impl"]
+swc_v1 = ["serde-impl"]
+swc_v2 = ["serde-impl"]
 
 [dependencies]
-anyhow     = { workspace = true }
-dashmap    = { workspace = true }
-is-macro   = { workspace = true }
-once_cell  = { workspace = true }
-regex      = { workspace = true }
-serde      = { workspace = true, features = ["derive"], optional = true }
+anyhow = { workspace = true }
+dashmap = { workspace = true }
+is-macro = { workspace = true }
+once_cell = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true, features = ["derive"], optional = true }
 serde_json = { workspace = true }
-tracing    = { workspace = true }
+tracing = { workspace = true }
 
 string_enum = { version = "0.4.4", path = "../string_enum" }
 swc = { version = "0.290.1", path = "../swc" }

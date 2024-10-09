@@ -6,6 +6,7 @@ use swc_common::FileName;
 use swc_ecma_codegen::Emitter;
 use swc_ecma_parser::{Parser, StringInput, Syntax};
 
+const COLORS_JS:&str = r#"
 const COLORS_JS: &str = r#"
 'use strict';
 /**
@@ -78,6 +79,51 @@ module.exports = {
 };
 "#;
 
+const LARGE_PARTIAL_JS:&str = include_str!("large-partial.js");
+
+fn bench_emitter(b:&mut Bencher, s:&str) {
+	let _ = ::testing::run_test(true, |cm, handler| {
+		let fm = cm.new_source_file(FileName::Anon.into(), s.into());
+		let mut parser = Parser::new(Syntax::default(), StringInput::from(&*fm), None);
+
+		let module = parser.parse_module().map_err(|e| e.into_diagnostic(handler).emit()).unwrap();
+
+		for err in parser.take_errors() {
+			err.into_diagnostic(handler).emit();
+		}
+
+		b.iter(|| {
+			let alloc = Allocator::default();
+			let mut _guard = unsafe { alloc.guard() };
+
+			let mut src_map_buf = Vec::new();
+			let mut buf = Vec::new();
+			{
+				let mut emitter = Emitter {
+					cfg:Default::default(),
+					comments:None,
+					cm:cm.clone(),
+					wr:swc_ecma_codegen::text_writer::JsWriter::new(
+						cm.clone(),
+						"\n",
+						&mut buf,
+						Some(&mut src_map_buf),
+					),
+				};
+
+				let _ = emitter.emit_module(&module);
+			}
+			black_box(buf);
+			let srcmap = cm.build_source_map(&src_map_buf);
+			black_box(srcmap);
+		});
+		Ok(())
+	});
+}
+
+fn bench_cases(c:&mut Criterion) {
+	c.bench_function("es/codegen/colors", |b| bench_emitter(b, COLORS_JS));
+	c.bench_function("es/codegen/large", |b| bench_emitter(b, LARGE_PARTIAL_JS));
 const LARGE_PARTIAL_JS: &str = include_str!("large-partial.js");
 
 fn bench_emitter(b: &mut Bencher, s: &str) {

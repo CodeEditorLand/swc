@@ -1,6 +1,6 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "Compatibility fixes for browser bugs"
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "Compatibility fixes for browser bugs"
 documentation = "https://rustdoc.swc.rs/swc_ecma_compat_bugfixes/"
 edition       = "2021"
 include       = ["Cargo.toml", "src/**/*.rs"]

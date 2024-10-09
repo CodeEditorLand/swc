@@ -1,6 +1,11 @@
 // File to parse input as an AST using acorn
 
 const parserOptions = {
+	ranges: true,
+	locations: true,
+	ecmaVersion: "latest",
+	// https://github.com/tc39/proposal-hashbang
+	allowHashBang: true,
     ranges: true,
     locations: true,
     ecmaVersion: "latest",

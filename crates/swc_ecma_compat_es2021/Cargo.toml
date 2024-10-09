@@ -1,6 +1,6 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "ES2021 compatibility transforms"
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "ES2021 compatibility transforms"
 documentation = "https://rustdoc.swc.rs/swc_ecma_compat_es2021/"
 edition       = "2021"
 include       = ["Cargo.toml", "src/**/*.rs"]

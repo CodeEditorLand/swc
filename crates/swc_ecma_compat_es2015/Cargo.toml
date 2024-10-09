@@ -1,6 +1,6 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "ES2015 compatibility transforms"
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "ES2015 compatibility transforms"
 documentation = "https://rustdoc.swc.rs/swc_ecma_compat_es2015/"
 edition       = "2021"
 include       = ["Cargo.toml", "src/**/*.rs"]
@@ -13,11 +13,11 @@ version       = "0.17.1"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-arrayvec     = { workspace = true }
-indexmap     = { workspace = true }
-is-macro     = { workspace = true }
-rustc-hash   = { workspace = true }
-serde        = { workspace = true }
+arrayvec = { workspace = true }
+indexmap = { workspace = true }
+is-macro = { workspace = true }
+rustc-hash = { workspace = true }
+serde = { workspace = true }
 serde_derive = { workspace = true }
 smallvec     = { workspace = true }
 swc_atoms    = { version = "1.0.2", path = "../swc_atoms" }

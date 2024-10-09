@@ -1,12 +1,12 @@
 [workspace]
 members = [
-  "binding_core_node",
-  "binding_core_wasm",
-  "binding_html_node",
-  "binding_minifier_node",
-  "binding_minifier_wasm",
-  "binding_typescript_wasm",
-  "swc_cli",
+	"binding_core_node",
+	"binding_core_wasm",
+	"binding_html_node",
+	"binding_minifier_node",
+	"binding_minifier_wasm",
+	"binding_typescript_wasm",
+	"swc_cli",
 ]
 resolver = "2"
 
@@ -60,7 +60,6 @@ resolver = "2"
 
 # Strip debug symbols
 strip = "symbols"
-
 
 [profile.dev.package."*"]
 debug-assertions = false

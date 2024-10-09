@@ -1,6 +1,6 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "ES2018 compatibility transforms"
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "ES2018 compatibility transforms"
 documentation = "https://rustdoc.swc.rs/swc_ecma_compat_es2018/"
 edition       = "2021"
 include       = ["Cargo.toml", "src/**/*.rs"]
@@ -13,7 +13,7 @@ version       = "0.17.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde   = { workspace = true, features = ["derive"] }
+serde = { workspace = true, features = ["derive"] }
 tracing = { workspace = true }
 
 swc_atoms                  = { version = "1.0.2", path = "../swc_atoms" }

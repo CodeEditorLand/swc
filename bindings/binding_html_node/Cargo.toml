@@ -1,15 +1,15 @@
 [package]
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
-build   = "build.rs"
+build = "build.rs"
 edition = "2021"
 exclude = ["artifacts.json", "index.node"]
 license = "Apache-2.0"
-name    = "binding_html_node"
+name = "binding_html_node"
 publish = false
 version = "0.1.0"
 
 [lib]
-bench      = false
+bench = false
 crate-type = ["cdylib"]
 
 [features]
@@ -35,7 +35,7 @@ swc_error_reporters = { workspace = true }
 swc_html = { workspace = true, default-features = false }
 swc_html_ast = { workspace = true, features = ["serde"] }
 swc_html_minifier = { workspace = true, default-features = false, features = [
-  "custom-css-minifier",
+	"custom-css-minifier",
 ] }
 swc_nodejs_common = { workspace = true }
 tracing = { workspace = true, features = ["release_max_level_info"] }

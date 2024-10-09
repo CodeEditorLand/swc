@@ -1,6 +1,6 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "rust port of babel and closure compiler."
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "rust port of babel and closure compiler."
 documentation = "https://rustdoc.swc.rs/swc_ecma_transforms/"
 edition       = "2021"
 include       = ["Cargo.toml", "src/**/*.rs"]
@@ -9,9 +9,9 @@ name          = "swc_ecma_transforms"
 repository    = "https://github.com/swc-project/swc.git"
 version       = "0.244.0"
 
-  [package.metadata.docs.rs]
-  all-features = true
-  rustdoc-args = ["--cfg", "docsrs"]
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lib]
 bench = false
@@ -19,9 +19,9 @@ bench = false
 [features]
 compat = ["swc_ecma_transforms_compat"]
 concurrent = [
-  "swc_ecma_transforms_compat/concurrent",
-  "swc_ecma_transforms_optimization/concurrent",
-  "swc_ecma_transforms_react/concurrent",
+	"swc_ecma_transforms_compat/concurrent",
+	"swc_ecma_transforms_optimization/concurrent",
+	"swc_ecma_transforms_react/concurrent",
 ]
 module = ["swc_ecma_transforms_module"]
 multi-module-decorator = ["swc_ecma_transforms_proposal/multi-module"]
@@ -47,8 +47,8 @@ swc_ecma_visit                   = { version = "0.107.1", path = "../swc_ecma_vi
 
 [dev-dependencies]
 pretty_assertions = { workspace = true }
-sourcemap         = { workspace = true }
-tempfile          = { workspace = true }
+sourcemap = { workspace = true }
+tempfile = { workspace = true }
 
 swc_ecma_codegen            = { version = "0.158.2", path = "../swc_ecma_codegen" }
 swc_ecma_parser             = { version = "0.152.2", path = "../swc_ecma_parser" }

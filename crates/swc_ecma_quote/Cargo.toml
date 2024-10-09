@@ -1,12 +1,12 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "Quasi quotation system for ecmascript"
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "Quasi quotation system for ecmascript"
 documentation = "https://rustdoc.swc.rs/swc_ecma_quote/"
-edition       = "2021"
-license       = "Apache-2.0"
-name          = "swc_ecma_quote"
-repository    = "https://github.com/swc-project/swc.git"
-version       = "0.68.0"
+edition = "2021"
+license = "Apache-2.0"
+name = "swc_ecma_quote"
+repository = "https://github.com/swc-project/swc.git"
+version = "0.68.0"
 
 [lib]
 bench = false

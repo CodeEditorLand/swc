@@ -1,5 +1,5 @@
 [package]
-authors     = ["강동윤 <kdy1997.dev@gmail.com>", "OJ Kwon <kwon.ohjoong@gmail.com>"]
+authors = ["강동윤 <kdy1997.dev@gmail.com>", "OJ Kwon <kwon.ohjoong@gmail.com>"]
 description = "Commandline for SWC"
 edition     = "2021"
 include     = ["Cargo.toml", "src/**/*.rs"]
@@ -10,13 +10,13 @@ version     = "0.91.420"
 
 [[bin]]
 bench = false
-name  = "swc"
-path  = "./src/main.rs"
+name = "swc"
+path = "./src/main.rs"
 
 [features]
 default = ["swc_cli_impl/default"]
-plugin  = ["swc_cli_impl/plugin"]
+plugin = ["swc_cli_impl/plugin"]
 
 [dependencies]
-anyhow       = { workspace = true }
+anyhow = { workspace = true }
 swc_cli_impl = { workspace = true }

@@ -1,15 +1,15 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "String based enum."
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "String based enum."
 documentation = "https://rustdoc.swc.rs/string_enum/"
-edition       = "2021"
-license       = "Apache-2.0"
-name          = "string_enum"
-repository    = "https://github.com/swc-project/swc.git"
-version       = "0.4.4"
+edition = "2021"
+license = "Apache-2.0"
+name = "string_enum"
+repository = "https://github.com/swc-project/swc.git"
+version = "0.4.4"
 
 [lib]
-bench      = false
+bench = false
 proc-macro = true
 
 [dependencies]

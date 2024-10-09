@@ -1,5 +1,5 @@
 [package]
-authors     = ["강동윤 <kdy1997.dev@gmail.com>"]
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Linter for the swc project"
 edition     = "2021"
 include     = ["Cargo.toml", "src/**/*.rs"]
@@ -13,12 +13,12 @@ version     = "0.105.1"
 bench = false
 
 [dependencies]
-auto_impl   = { workspace = true }
-dashmap     = { workspace = true }
+auto_impl = { workspace = true }
+dashmap = { workspace = true }
 parking_lot = { workspace = true }
-rayon       = { workspace = true }
-regex       = { workspace = true }
-serde       = { workspace = true, features = ["derive"] }
+rayon = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 
 swc_atoms = { version = "1.0.2", path = "../swc_atoms" }
 swc_common = { version = "0.40.2", path = "../swc_common", features = [

@@ -107,6 +107,23 @@ const swc = require("../");
 const Visitor = require("../Visitor").default;
 
 const TESTS = [
+	["parse", () => swc.parseSync(SOURCE)],
+	["parse + print", () => swc.printSync(swc.parseSync(SOURCE))],
+	["parse + transform", () => swc.transformSync(swc.parseSync(SOURCE))],
+	[
+		"plugin",
+		() =>
+			swc.transformSync(SOURCE, {
+				plugin: (m) => new Visitor().visitModule(m),
+			}),
+	],
+];
+
+suite("plugin", () => {
+	TESTS.map((args) => {
+		const [name, fn] = args;
+		bench(name, fn);
+	});
   ["parse", () => swc.parseSync(SOURCE)],
   ["parse + print", () => swc.printSync(swc.parseSync(SOURCE))],
   ["parse + transform", () => swc.transformSync(swc.parseSync(SOURCE))],

@@ -1,5 +1,5 @@
 [package]
-authors     = ["강동윤 <kdy1997.dev@gmail.com>"]
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Debug utilities"
 edition     = "2021"
 license     = "Apache-2.0"
@@ -9,21 +9,21 @@ version     = "0.108.0"
 
 [[bin]]
 bench = false
-name  = "dbg-swc"
+name = "dbg-swc"
 
 [dependencies]
-anyhow     = { workspace = true }
-dialoguer  = { workspace = true }
-flate2     = { workspace = true }
-rayon      = { workspace = true }
-serde      = { workspace = true }
+anyhow = { workspace = true }
+dialoguer = { workspace = true }
+flate2 = { workspace = true }
+rayon = { workspace = true }
+serde = { workspace = true }
 serde_json = { workspace = true }
-sha1       = { workspace = true }
-tempfile   = { workspace = true }
-tracing    = { workspace = true }
-url        = { workspace = true }
+sha1 = { workspace = true }
+tempfile = { workspace = true }
+tracing = { workspace = true }
+url = { workspace = true }
 
-clap               = { version = "3", features = ["derive"] }
+clap = { version = "3", features = ["derive"] }
 tracing-subscriber = { workspace = true, features = ["fmt", "env-filter"] }
 
 swc_atoms = { version = "1.0.2", path = "../swc_atoms" }

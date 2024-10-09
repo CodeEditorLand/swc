@@ -1,6 +1,6 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "Ecmascript code generator for the swc project."
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "Ecmascript code generator for the swc project."
 documentation = "https://rustdoc.swc.rs/swc_ecma_codegen/"
 edition       = "2021"
 include       = ["Cargo.toml", "src/**/*.rs"]
@@ -17,13 +17,13 @@ serde-impl = ["swc_ecma_ast/serde"]
 bench = false
 
 [dependencies]
-memchr     = { workspace = true }
+memchr = { workspace = true }
 num-bigint = { workspace = true, features = ["serde"] }
-once_cell  = { workspace = true }
-regex      = { workspace = true }
-serde      = { workspace = true }
-sourcemap  = { workspace = true }
-tracing    = { workspace = true }
+once_cell = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true }
+sourcemap = { workspace = true }
+tracing = { workspace = true }
 
 swc_allocator           = { version = "0.1.10", path = "../swc_allocator", default-features = false }
 swc_atoms               = { version = "1.0.2", path = "../swc_atoms" }
@@ -32,10 +32,10 @@ swc_ecma_ast            = { version = "0.121.2", path = "../swc_ecma_ast" }
 swc_ecma_codegen_macros = { version = "0.7.6", path = "../swc_ecma_codegen_macros" }
 
 [dev-dependencies]
-base64                    = { workspace = true }
+base64 = { workspace = true }
 codspeed-criterion-compat = { workspace = true }
-criterion                 = { workspace = true }
-serde_json                = { workspace = true }
+criterion = { workspace = true }
+serde_json = { workspace = true }
 
 swc_allocator = { version = "0.1.10", path = "../swc_allocator" }
 swc_common = { version = "0.40.2", path = "../swc_common", features = [
@@ -48,8 +48,8 @@ testing = { version = "0.42.1", path = "../testing" }
 
 [[bench]]
 harness = false
-name    = "bench"
+name = "bench"
 
 [[bench]]
 harness = false
-name    = "with_parse"
+name = "with_parse"

@@ -1,13 +1,13 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "CSS modules"
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "CSS modules"
 documentation = "https://rustdoc.swc.rs/swc_css_modules/"
-edition       = "2021"
-include       = ["Cargo.toml", "src/**/*.rs"]
-license       = "Apache-2.0"
-name          = "swc_css_modules"
-repository    = "https://github.com/swc-project/swc.git"
-version       = "0.36.0"
+edition = "2021"
+include = ["Cargo.toml", "src/**/*.rs"]
+license = "Apache-2.0"
+name = "swc_css_modules"
+repository = "https://github.com/swc-project/swc.git"
+version = "0.36.0"
 
 [lib]
 bench = false
@@ -16,7 +16,7 @@ bench = false
 
 [dependencies]
 rustc-hash = { workspace = true }
-serde      = { workspace = true, features = ["derive"] }
+serde = { workspace = true, features = ["derive"] }
 
 swc_atoms       = { version = "1.0.2", path = "../swc_atoms" }
 swc_common      = { version = "0.40.2", path = "../swc_common" }
@@ -26,7 +26,7 @@ swc_css_parser  = { version = "0.157.1", path = "../swc_css_parser" }
 swc_css_visit   = { version = "0.146.0", path = "../swc_css_visit" }
 
 [dev-dependencies]
-indexmap   = { workspace = true, features = ["serde"] }
+indexmap = { workspace = true, features = ["serde"] }
 serde_json = { workspace = true }
 
 swc_css_compat = { version = "0.34.0", path = "../swc_css_compat" }

@@ -1,6 +1,6 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "rust port of babel and closure compiler."
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "rust port of babel and closure compiler."
 documentation = "https://rustdoc.swc.rs/swc_ecma_transforms_typescript/"
 edition       = "2021"
 include       = ["Cargo.toml", "src/**/*.rs"]
@@ -26,7 +26,7 @@ swc_ecma_visit            = { version = "0.107.1", path = "../swc_ecma_visit" }
 
 [dev-dependencies]
 codspeed-criterion-compat = { workspace = true }
-criterion                 = { workspace = true }
+criterion = { workspace = true }
 
 swc_ecma_codegen             = { version = "0.158.2", path = "../swc_ecma_codegen" }
 swc_ecma_parser              = { version = "0.152.2", path = "../swc_ecma_parser" }
@@ -37,4 +37,4 @@ testing                      = { version = "0.42.1", path = "../testing" }
 
 [[bench]]
 harness = false
-name    = "compat"
+name = "compat"

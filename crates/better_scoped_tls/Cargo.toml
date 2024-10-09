@@ -1,6 +1,6 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "scoped-tls, but with good error message"
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "scoped-tls, but with good error message"
 documentation = "https://rustdoc.swc.rs/better_scoped_tls/"
 edition       = "2021"
 license       = "Apache-2.0"

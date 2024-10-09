@@ -1,6 +1,6 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "Compatibility layer between estree and swc"
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "Compatibility layer between estree and swc"
 documentation = "https://rustdoc.swc.rs/swc_estree_compat/"
 edition       = "2021"
 include       = ["Cargo.toml", "src/**/*.rs"]
@@ -9,8 +9,8 @@ name          = "swc_estree_compat"
 repository    = "https://github.com/swc-project/swc.git"
 version       = "0.216.0"
 
-  [package.metadata.docs.rs]
-  all-features = true
+[package.metadata.docs.rs]
+all-features = true
 
 [lib]
 bench = false
@@ -18,10 +18,10 @@ bench = false
 [features]
 
 [dependencies]
-ahash      = { workspace = true, features = ["compile-time-rng"] }
-anyhow     = { workspace = true }
-copyless   = { workspace = true }
-serde      = { workspace = true, features = ["derive"] }
+ahash = { workspace = true, features = ["compile-time-rng"] }
+anyhow = { workspace = true }
+copyless = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 
 swc_atoms = { version = "1.0.2", path = "../swc_atoms" }
@@ -38,8 +38,8 @@ swc_node_comments = { version = "0.27.0", path = "../swc_node_comments/" }
 
 [dev-dependencies]
 codspeed-criterion-compat = { workspace = true }
-criterion                 = { workspace = true }
-pretty_assertions         = { workspace = true }
+criterion = { workspace = true }
+pretty_assertions = { workspace = true }
 
 swc                 = { version = "0.290.1", path = "../swc" }
 swc_ecma_ast        = { version = "0.121.2", path = "../swc_ecma_ast" }
@@ -50,4 +50,4 @@ walkdir             = { workspace = true }
 
 [[bench]]
 harness = false
-name    = "babelify"
+name = "babelify"

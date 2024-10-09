@@ -1,6 +1,6 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "EcmaScript variable usage analyzer"
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "EcmaScript variable usage analyzer"
 documentation = "https://rustdoc.swc.rs/swc_ecma_usage_analyzer/"
 edition       = "2021"
 include       = ["Cargo.toml", "src/**/*.rs"]
@@ -9,23 +9,23 @@ name          = "swc_ecma_usage_analyzer"
 repository    = "https://github.com/swc-project/swc.git"
 version       = "0.34.1"
 
-  [package.metadata.docs.rs]
-  all-features = true
-  rustdoc-args = ["--cfg", "docsrs"]
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lib]
 bench = false
 
 [features]
 # This enables global concurrent mode
-concurrent    = ["swc_common/concurrent", "indexmap/rayon"]
-trace-ast     = []
+concurrent = ["swc_common/concurrent", "indexmap/rayon"]
+trace-ast = []
 tracing-spans = []
 
 [dependencies]
-indexmap   = { workspace = true }
+indexmap = { workspace = true }
 rustc-hash = { workspace = true }
-tracing    = { workspace = true }
+tracing = { workspace = true }
 
 swc_atoms      = { version = "1.0.2", path = "../swc_atoms" }
 swc_common     = { version = "0.40.2", path = "../swc_common" }

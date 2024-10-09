@@ -8,6 +8,7 @@
  * @return {Number}
  */
 function red(color) {
+	return color >> 16;
     return color >> 16;
 }
 /**
@@ -19,6 +20,7 @@ function red(color) {
  * @return {Number}
  */
 function green(color) {
+	return (color >> 8) & 0xff;
     return (color >> 8) & 0xff;
 }
 /**
@@ -30,6 +32,7 @@ function green(color) {
  * @return {Number}
  */
 function blue(color) {
+	return color & 0xff;
     return color & 0xff;
 }
 /**
@@ -40,6 +43,9 @@ function blue(color) {
  * @return {String}
  */
 function intToHex(int) {
+	const mask = "#000000";
+	const hex = int.toString(16);
+	return mask.substring(0, 7 - hex.length) + hex;
     const mask = "#000000";
     const hex = int.toString(16);
     return mask.substring(0, 7 - hex.length) + hex;
@@ -52,6 +58,14 @@ function intToHex(int) {
  * @return {String}
  */
 function hexToInt(hex) {
+	return parseInt(hex.substring(1), 16);
+}
+module.exports = {
+	red,
+	green,
+	blue,
+	intToHex,
+	hexToInt,
     return parseInt(hex.substring(1), 16);
 }
 module.exports = {

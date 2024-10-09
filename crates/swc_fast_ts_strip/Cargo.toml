@@ -1,6 +1,6 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "Super-fast TypeScript stripper based on SWC"
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "Super-fast TypeScript stripper based on SWC"
 documentation = "https://rustdoc.swc.rs/swc_fast_type_strip/"
 edition       = "2021"
 include       = ["Cargo.toml", "src/**/*.rs"]
@@ -11,8 +11,8 @@ version       = "0.12.0"
 
 
 [dependencies]
-anyhow       = { workspace = true }
-serde        = { workspace = true, features = ["derive"] }
+anyhow = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 wasm-bindgen = { workspace = true, optional = true }
 
 swc_allocator = { version = "0.1.10", path = "../swc_allocator", default-features = false }
@@ -34,4 +34,4 @@ testing                   = { version = "0.42.1", path = "../testing" }
 
 [[bench]]
 harness = false
-name    = "assets"
+name = "assets"

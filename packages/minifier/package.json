@@ -9,6 +9,7 @@
 	},
 	"dependencies": {
 		"@swc/counter": "^0.1.3",
+		"@swc/counter": "0.1.3",
 		"@swc/types": "workspace:^"
 	},
 	"description": "Super-fast alternative for terser",
@@ -17,6 +18,10 @@
 		"@playform/build": "0.1.7",
 		"@types/node": "^20.7.1",
 		"cross-env": "^7.0.3"
+		"@napi-rs/cli": "3.0.0-alpha.22",
+		"@playform/build": "",
+		"@types/node": "22.7.5",
+		"cross-env": "7.0.3"
 	},
 	"funding": {
 		"type": "opencollective",

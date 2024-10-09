@@ -1,4 +1,5 @@
 function _identity(x) {
+	return x;
     return x;
 }
 

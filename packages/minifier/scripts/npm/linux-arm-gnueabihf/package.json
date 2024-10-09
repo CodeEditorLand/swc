@@ -13,6 +13,7 @@
 	"description": "Super-fast alternative for terser",
 	"devDependencies": {
 		"@playform/build": "0.1.7"
+		"@playform/build": ""
 	},
 	"files": [
 		"minifier.linux-arm-gnueabihf.node",

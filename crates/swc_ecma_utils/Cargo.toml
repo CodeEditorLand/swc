@@ -1,6 +1,6 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "Utilities for swc ecmascript ast nodes"
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "Utilities for swc ecmascript ast nodes"
 documentation = "https://rustdoc.swc.rs/swc_ecma_utils/"
 edition       = "2021"
 license       = "Apache-2.0"
@@ -8,9 +8,9 @@ name          = "swc_ecma_utils"
 repository    = "https://github.com/swc-project/swc.git"
 version       = "0.138.1"
 
-  [package.metadata.docs.rs]
-  all-features = true
-  rustdoc-args = ["--cfg", "docsrs"]
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lib]
 bench = false
@@ -20,13 +20,13 @@ bench = false
 concurrent = ["swc_common/concurrent", "rayon"]
 
 [dependencies]
-indexmap   = { workspace = true }
-num_cpus   = { workspace = true }
-once_cell  = { workspace = true }
-rayon      = { workspace = true, optional = true }
+indexmap = { workspace = true }
+num_cpus = { workspace = true }
+once_cell = { workspace = true }
+rayon = { workspace = true, optional = true }
 rustc-hash = { workspace = true }
-ryu-js     = { workspace = true }
-tracing    = { workspace = true }
+ryu-js = { workspace = true }
+tracing = { workspace = true }
 unicode-id = { workspace = true }
 
 swc_atoms      = { version = "1.0.2", path = "../swc_atoms" }

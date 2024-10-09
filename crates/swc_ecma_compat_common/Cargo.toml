@@ -1,6 +1,6 @@
 [package]
-authors       = ["강동윤 <kdy1997.dev@gmail.com>"]
-description   = "Commons for compat transforms"
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "Commons for compat transforms"
 documentation = "https://rustdoc.swc.rs/swc_ecma_compat_common/"
 edition       = "2021"
 include       = ["Cargo.toml", "src/**/*.rs"]
