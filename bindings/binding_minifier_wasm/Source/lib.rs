@@ -5,7 +5,7 @@ mod types;
 /// Custom interface definitions for the @swc/wasm's public interface instead of
 /// auto generated one, which is not reflecting most of types in detail.
 #[wasm_bindgen(typescript_custom_section)]
-const INTERFACE_DEFINITIONS: &'static str = r#"
+const INTERFACE_DEFINITIONS:&'static str = r#"
 export function minify(src: string, opts?: JsMinifyOptions): Promise<Output>;
 export function minifySync(code: string, opts?: JsMinifyOptions): Output;
 "#;

@@ -6,10 +6,8 @@ use serde::Deserialize;
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct Options {
-    #[serde(default = "default_targets")]
-    pub env: Option<Targets>,
+	#[serde(default = "default_targets")]
+	pub env:Option<Targets>,
 }
 
-fn default_targets() -> Option<Targets> {
-    Some(Targets::Query(Query::Single("".into())))
-}
+fn default_targets() -> Option<Targets> { Some(Targets::Query(Query::Single("".into()))) }

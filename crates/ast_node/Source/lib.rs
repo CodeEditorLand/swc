@@ -14,22 +14,22 @@ mod spanned;
 /// Derives [`swc_common::Spanned`]. See [`swc_common::Spanned`] for
 /// documentation.
 #[proc_macro_derive(Spanned, attributes(span))]
-pub fn derive_spanned(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input = parse::<DeriveInput>(input).expect("failed to parse input as DeriveInput");
+pub fn derive_spanned(input:proc_macro::TokenStream) -> proc_macro::TokenStream {
+	let input = parse::<DeriveInput>(input).expect("failed to parse input as DeriveInput");
 
-    let item = self::spanned::derive(input);
+	let item = self::spanned::derive(input);
 
-    print("derive(Spanned)", item.into_token_stream())
+	print("derive(Spanned)", item.into_token_stream())
 }
 
 /// Derives `serde::Deserialize` which is aware of `tag` based deserialization.
 #[proc_macro_derive(DeserializeEnum, attributes(tag))]
-pub fn derive_deserialize_enum(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input = parse::<DeriveInput>(input).expect("failed to parse input as DeriveInput");
+pub fn derive_deserialize_enum(input:proc_macro::TokenStream) -> proc_macro::TokenStream {
+	let input = parse::<DeriveInput>(input).expect("failed to parse input as DeriveInput");
 
-    let item = enum_deserialize::expand(input);
+	let item = enum_deserialize::expand(input);
 
-    print("derive(DeserializeEnum)", item.into_token_stream())
+	print("derive(DeserializeEnum)", item.into_token_stream())
 }
 
 /// Derives `serde::Serialize` and `serde::Deserialize`.
@@ -74,73 +74,66 @@ pub fn derive_deserialize_enum(input: proc_macro::TokenStream) -> proc_macro::To
 /// there are two many variants.
 #[proc_macro_attribute]
 pub fn ast_serde(
-    args: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
+	args:proc_macro::TokenStream,
+	input:proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let input: DeriveInput = parse(input).expect("failed to parse input as a DeriveInput");
+	let input:DeriveInput = parse(input).expect("failed to parse input as a DeriveInput");
 
-    // we should use call_site
-    let mut item = TokenStream::new();
-    match input.data {
-        Data::Enum(..) => {
-            if !args.is_empty() {
-                panic!("#[ast_serde] on enum does not accept any argument")
-            }
+	// we should use call_site
+	let mut item = TokenStream::new();
+	match input.data {
+		Data::Enum(..) => {
+			if !args.is_empty() {
+				panic!("#[ast_serde] on enum does not accept any argument")
+			}
 
-            item.extend(quote!(
-                #[derive(::serde::Serialize, ::swc_common::DeserializeEnum)]
-                #[serde(untagged)]
-                #input
-            ));
-        }
-        _ => {
-            let args: Option<ast_node_macro::Args> = if args.is_empty() {
-                None
-            } else {
-                Some(parse(args).expect("failed to parse args of #[ast_serde]"))
-            };
+			item.extend(quote!(
+				#[derive(::serde::Serialize, ::swc_common::DeserializeEnum)]
+				#[serde(untagged)]
+				#input
+			));
+		},
+		_ => {
+			let args:Option<ast_node_macro::Args> = if args.is_empty() {
+				None
+			} else {
+				Some(parse(args).expect("failed to parse args of #[ast_serde]"))
+			};
 
-            let serde_tag = match input.data {
-                Data::Struct(DataStruct {
-                    fields: Fields::Named(..),
-                    ..
-                }) => {
-                    if args.is_some() {
-                        Some(quote!(#[serde(tag = "type")]))
-                    } else {
-                        None
-                    }
-                }
-                _ => None,
-            };
+			let serde_tag =
+				match input.data {
+					Data::Struct(DataStruct { fields: Fields::Named(..), .. }) => {
+						if args.is_some() { Some(quote!(#[serde(tag = "type")])) } else { None }
+					},
+					_ => None,
+				};
 
-            let serde_rename = args.as_ref().map(|args| {
-                let name = &args.ty;
-                quote!(#[serde(rename = #name)])
-            });
+			let serde_rename = args.as_ref().map(|args| {
+				let name = &args.ty;
+				quote!(#[serde(rename = #name)])
+			});
 
-            item.extend(quote!(
-                #[derive(::serde::Serialize, ::serde::Deserialize)]
-                #serde_tag
-                #[serde(rename_all = "camelCase")]
-                #serde_rename
-                #input
-            ));
-        }
-    };
+			item.extend(quote!(
+				#[derive(::serde::Serialize, ::serde::Deserialize)]
+				#serde_tag
+				#[serde(rename_all = "camelCase")]
+				#serde_rename
+				#input
+			));
+		},
+	};
 
-    print("ast_serde", item)
+	print("ast_serde", item)
 }
 
 struct AddAttr;
 
 impl VisitMut for AddAttr {
-    fn visit_field_mut(&mut self, f: &mut Field) {
-        f.attrs
-            .push(parse_quote!(#[cfg_attr(feature = "__rkyv", omit_bounds)]));
-        f.attrs
-            .push(parse_quote!(#[cfg_attr(feature = "__rkyv", archive_attr(omit_bounds))]));
-    }
+	fn visit_field_mut(&mut self, f:&mut Field) {
+		f.attrs.push(parse_quote!(#[cfg_attr(feature = "__rkyv", omit_bounds)]));
+		f.attrs
+			.push(parse_quote!(#[cfg_attr(feature = "__rkyv", archive_attr(omit_bounds))]));
+	}
 }
 
 /// Alias for
@@ -149,42 +142,38 @@ impl VisitMut for AddAttr {
 /// enum.
 #[proc_macro_attribute]
 pub fn ast_node(
-    args: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
+	args:proc_macro::TokenStream,
+	input:proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let mut input: DeriveInput = parse(input).expect("failed to parse input as a DeriveInput");
+	let mut input:DeriveInput = parse(input).expect("failed to parse input as a DeriveInput");
 
-    AddAttr.visit_data_mut(&mut input.data);
+	AddAttr.visit_data_mut(&mut input.data);
 
-    // we should use call_site
-    let mut item = TokenStream::new();
-    match input.data {
-        Data::Enum(..) => {
-            struct EnumArgs {
-                clone: bool,
-            }
-            impl parse::Parse for EnumArgs {
-                fn parse(i: parse::ParseStream<'_>) -> syn::Result<Self> {
-                    let name: Ident = i.parse()?;
-                    if name != "no_clone" {
-                        return Err(i.error("unknown attribute"));
-                    }
-                    Ok(EnumArgs { clone: false })
-                }
-            }
-            let args = if args.is_empty() {
-                EnumArgs { clone: true }
-            } else {
-                parse(args).expect("failed to parse args of #[ast_node]")
-            };
+	// we should use call_site
+	let mut item = TokenStream::new();
+	match input.data {
+		Data::Enum(..) => {
+			struct EnumArgs {
+				clone:bool,
+			}
+			impl parse::Parse for EnumArgs {
+				fn parse(i:parse::ParseStream<'_>) -> syn::Result<Self> {
+					let name:Ident = i.parse()?;
+					if name != "no_clone" {
+						return Err(i.error("unknown attribute"));
+					}
+					Ok(EnumArgs { clone:false })
+				}
+			}
+			let args = if args.is_empty() {
+				EnumArgs { clone:true }
+			} else {
+				parse(args).expect("failed to parse args of #[ast_node]")
+			};
 
-            let clone = if args.clone {
-                Some(quote!(#[derive(Clone)]))
-            } else {
-                None
-            };
+			let clone = if args.clone { Some(quote!(#[derive(Clone)])) } else { None };
 
-            item.extend(quote!(
+			item.extend(quote!(
                 #[allow(clippy::derive_partial_eq_without_eq)]
                 #[cfg_attr(
                     feature = "serde-impl",
@@ -218,45 +207,42 @@ pub fn ast_node(
                 )]
                 #input
             ));
-        }
-        _ => {
-            let args: Option<ast_node_macro::Args> = if args.is_empty() {
-                None
-            } else {
-                Some(parse(args).expect("failed to parse args of #[ast_node]"))
-            };
+		},
+		_ => {
+			let args:Option<ast_node_macro::Args> = if args.is_empty() {
+				None
+			} else {
+				Some(parse(args).expect("failed to parse args of #[ast_node]"))
+			};
 
-            let serde_tag = match input.data {
-                Data::Struct(DataStruct {
-                    fields: Fields::Named(..),
-                    ..
-                }) => {
-                    if args.is_some() {
-                        Some(quote!(#[cfg_attr(
-                            feature = "serde-impl",
-                            serde(tag = "type")
-                        )]))
-                    } else {
-                        None
-                    }
-                }
-                _ => None,
-            };
+			let serde_tag = match input.data {
+				Data::Struct(DataStruct { fields: Fields::Named(..), .. }) => {
+					if args.is_some() {
+						Some(quote!(#[cfg_attr(
+							feature = "serde-impl",
+							serde(tag = "type")
+						)]))
+					} else {
+						None
+					}
+				},
+				_ => None,
+			};
 
-            let serde_rename = args.as_ref().map(|args| {
-                let name = &args.ty;
+			let serde_rename = args.as_ref().map(|args| {
+				let name = &args.ty;
 
-                quote!(#[cfg_attr(
-                    feature = "serde-impl",
-                    serde(rename = #name)
-                )])
-            });
+				quote!(#[cfg_attr(
+					feature = "serde-impl",
+					serde(rename = #name)
+				)])
+			});
 
-            let ast_node_impl = args
-                .as_ref()
-                .map(|args| ast_node_macro::expand_struct(args.clone(), input.clone()));
+			let ast_node_impl = args
+				.as_ref()
+				.map(|args| ast_node_macro::expand_struct(args.clone(), input.clone()));
 
-            item.extend(quote!(
+			item.extend(quote!(
                 #[allow(clippy::derive_partial_eq_without_eq)]
                 #[derive(::swc_common::Spanned, Clone, Debug, PartialEq)]
                 #[cfg_attr(
@@ -284,13 +270,13 @@ pub fn ast_node(
                 #input
             ));
 
-            if let Some(items) = ast_node_impl {
-                for item_impl in items {
-                    item.extend(item_impl.into_token_stream());
-                }
-            }
-        }
-    };
+			if let Some(items) = ast_node_impl {
+				for item_impl in items {
+					item.extend(item_impl.into_token_stream());
+				}
+			}
+		},
+	};
 
-    print("ast_node", item)
+	print("ast_node", item)
 }
