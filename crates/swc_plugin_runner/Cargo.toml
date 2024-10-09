@@ -63,7 +63,7 @@ wasmer = { workspace = true }
 wasmer-wasix = { workspace = true }
 
 swc_common = { version = "0.40.2", path = "../swc_common", features = [
-  "concurrent",
+	"concurrent",
 ] }
 swc_css_ast = { version = "0.147.0", path = "../swc_css_ast", optional = true }
 swc_ecma_ast = { version = "0.121.2", path = "../swc_ecma_ast", optional = true }
@@ -83,7 +83,7 @@ swc_css_ast = { version = "0.147.0", path = "../swc_css_ast", features = [
 ] }
 swc_css_parser = { version = "0.157.1", path = "../swc_css_parser" }
 swc_ecma_ast = { version = "0.121.2", path = "../swc_ecma_ast", features = [
-  "rkyv-impl",
+	"rkyv-impl",
 ] }
 swc_ecma_loader = { version = "0.52.1", path = "../swc_ecma_loader" }
 swc_ecma_parser = { version = "0.152.2", path = "../swc_ecma_parser" }

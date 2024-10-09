@@ -12,11 +12,11 @@ version = "0.29.0"
 bench = false
 
 [dependencies]
-auto_impl      = { workspace = true }
-petgraph       = { workspace = true }
-swc_common     = { version = "0.40.2", path = "../swc_common/" }
+auto_impl = { workspace = true }
+petgraph = { workspace = true }
+swc_common = { version = "0.40.2", path = "../swc_common/" }
 swc_fast_graph = { version = "1.0.1", path = "../swc_fast_graph/" }
-tracing        = { workspace = true }
+tracing = { workspace = true }
 
 [dev-dependencies]
 testing = { version = "0.42.1", path = "../testing" }

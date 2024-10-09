@@ -15,9 +15,9 @@ bench = false
 [dependencies]
 serde = { workspace = true }
 
-swc_atoms     = { version = "1.0.2", path = "../swc_atoms" }
-swc_common    = { version = "0.40.2", path = "../swc_common" }
-swc_css_ast   = { version = "0.147.0", path = "../swc_css_ast" }
+swc_atoms = { version = "1.0.2", path = "../swc_atoms" }
+swc_common = { version = "0.40.2", path = "../swc_common" }
+swc_css_ast = { version = "0.147.0", path = "../swc_css_ast" }
 swc_css_utils = { version = "0.144.0", path = "../swc_css_utils/" }
 swc_css_visit = { version = "0.146.0", path = "../swc_css_visit" }
 
@@ -26,9 +26,9 @@ codspeed-criterion-compat = { workspace = true }
 criterion = { workspace = true }
 
 swc_css_codegen = { version = "0.158.1", path = "../swc_css_codegen" }
-swc_css_parser  = { version = "0.157.1", path = "../swc_css_parser" }
-swc_malloc      = { version = "0.5.10", path = "../swc_malloc" }
-testing         = { version = "0.42.1", path = "../testing" }
+swc_css_parser = { version = "0.157.1", path = "../swc_css_parser" }
+swc_malloc = { version = "0.5.10", path = "../swc_malloc" }
+testing = { version = "0.42.1", path = "../testing" }
 
 [[bench]]
 harness = false

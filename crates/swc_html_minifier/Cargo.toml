@@ -39,10 +39,10 @@ swc_css_minifier = { version = "0.123.0", path = "../swc_css_minifier", optional
 swc_css_parser = { version = "0.157.1", path = "../swc_css_parser", optional = true }
 swc_ecma_ast = { version = "0.121.2", path = "../swc_ecma_ast" }
 swc_ecma_codegen = { version = "0.158.2", path = "../swc_ecma_codegen", features = [
-  "serde-impl",
+	"serde-impl",
 ] }
 swc_ecma_minifier = { version = "0.209.1", path = "../swc_ecma_minifier", features = [
-  "extra-serde",
+	"extra-serde",
 ] }
 swc_ecma_parser = { version = "0.152.2", path = "../swc_ecma_parser" }
 swc_ecma_transforms_base = { version = "0.150.1", path = "../swc_ecma_transforms_base" }
@@ -58,7 +58,7 @@ codspeed-criterion-compat = { workspace = true }
 criterion = { workspace = true }
 
 swc_malloc = { version = "0.5.10", path = "../swc_malloc" }
-testing    = { version = "0.42.1", path = "../testing" }
+testing = { version = "0.42.1", path = "../testing" }
 
 [[bench]]
 harness = false

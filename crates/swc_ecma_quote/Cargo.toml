@@ -12,9 +12,9 @@ version = "0.68.0"
 bench = false
 
 [dependencies]
-swc_atoms             = { version = "1.0.2", path = "../swc_atoms" }
-swc_common            = { version = "0.40.2", path = "../swc_common" }
-swc_ecma_ast          = { version = "0.121.2", path = "../swc_ecma_ast" }
+swc_atoms = { version = "1.0.2", path = "../swc_atoms" }
+swc_common = { version = "0.40.2", path = "../swc_common" }
+swc_ecma_ast = { version = "0.121.2", path = "../swc_ecma_ast" }
 swc_ecma_quote_macros = { version = "0.63.0", path = "../swc_ecma_quote_macros" }
 
 [dev-dependencies]

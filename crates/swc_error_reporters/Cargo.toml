@@ -18,5 +18,5 @@ once_cell = { workspace = true }
 parking_lot = { workspace = true }
 
 swc_common = { version = "0.40.2", path = "../swc_common", features = [
-  "concurrent",
+	"concurrent",
 ] }

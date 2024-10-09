@@ -2,12 +2,12 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Ecmascript code generator for the swc project."
 documentation = "https://rustdoc.swc.rs/swc_ecma_codegen/"
-edition       = "2021"
-include       = ["Cargo.toml", "src/**/*.rs"]
-license       = "Apache-2.0"
-name          = "swc_ecma_codegen"
-repository    = "https://github.com/swc-project/swc.git"
-version       = "0.158.2"
+edition = "2021"
+include = ["Cargo.toml", "src/**/*.rs"]
+license = "Apache-2.0"
+name = "swc_ecma_codegen"
+repository = "https://github.com/swc-project/swc.git"
+version = "0.158.2"
 
 [features]
 # This does not enable serde for ast nodes.
@@ -25,10 +25,10 @@ serde = { workspace = true }
 sourcemap = { workspace = true }
 tracing = { workspace = true }
 
-swc_allocator           = { version = "0.1.10", path = "../swc_allocator", default-features = false }
-swc_atoms               = { version = "1.0.2", path = "../swc_atoms" }
-swc_common              = { version = "0.40.2", path = "../swc_common" }
-swc_ecma_ast            = { version = "0.121.2", path = "../swc_ecma_ast" }
+swc_allocator = { version = "0.1.10", path = "../swc_allocator", default-features = false }
+swc_atoms = { version = "1.0.2", path = "../swc_atoms" }
+swc_common = { version = "0.40.2", path = "../swc_common" }
+swc_ecma_ast = { version = "0.121.2", path = "../swc_ecma_ast" }
 swc_ecma_codegen_macros = { version = "0.7.6", path = "../swc_ecma_codegen_macros" }
 
 [dev-dependencies]
@@ -39,7 +39,7 @@ serde_json = { workspace = true }
 
 swc_allocator = { version = "0.1.10", path = "../swc_allocator" }
 swc_common = { version = "0.40.2", path = "../swc_common", features = [
-  "sourcemap",
+	"sourcemap",
 ] }
 swc_ecma_parser = { version = "0.152.2", path = "../swc_ecma_parser" }
 swc_ecma_testing = { version = "0.29.0", path = "../swc_ecma_testing" }
