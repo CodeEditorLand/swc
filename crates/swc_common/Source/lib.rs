@@ -42,38 +42,22 @@ pub use swc_eq_ignore_macros::{EqIgnoreSpan, TypeEq};
 pub use swc_visit::chain;
 
 pub use self::{
-	eq::{EqIgnoreSpan, TypeEq},
-	errors::{SourceMapper, SourceMapperDyn},
-	pos::{
-		hygiene,
-		BytePos,
-		CharPos,
-		FileName,
-		Globals,
-		Loc,
-		LocWithOpt,
-		Mark,
-		MultiSpan,
-		SourceFile,
-		SourceFileAndBytePos,
-		SourceFileAndLine,
-		Span,
-		SpanLinesError,
-		Spanned,
-		SyntaxContext,
-		DUMMY_SP,
-		GLOBALS,
-		NO_EXPANSION,
-	},
-	source_map::{FileLines, FileLoader, FilePathMapping, SourceMap, SpanSnippetError},
-	syntax_pos::LineCol,
+    eq::{EqIgnoreSpan, TypeEq},
+    errors::{SourceMapper, SourceMapperDyn},
+    pos::{
+        hygiene, BytePos, CharPos, FileName, Globals, Loc, LocWithOpt, Mark, MultiSpan, SourceFile,
+        SourceFileAndBytePos, SourceFileAndLine, Span, SpanLinesError, Spanned, SyntaxContext,
+        DUMMY_SP, GLOBALS, NO_EXPANSION,
+    },
+    source_map::{FileLines, FileLoader, FilePathMapping, SourceMap, SpanSnippetError},
+    syntax_pos::LineCol,
 };
 #[doc(hidden)]
 pub mod private;
 
 /// A trait for ast nodes.
 pub trait AstNode: Debug + PartialEq + Clone + Spanned {
-	const TYPE:&'static str;
+    const TYPE: &'static str;
 }
 
 pub mod collections;
@@ -103,13 +87,6 @@ compile_error!("You can't enable `plugin-rt` and `plugin-mode` at the same time"
 #[cfg(feature = "rkyv-impl")]
 #[doc(hidden)]
 pub use self::syntax_pos::{
-	ArchivedBytePos,
-	ArchivedCharPos,
-	ArchivedFileName,
-	ArchivedMultiSpan,
-	ArchivedSourceFile,
-	ArchivedSourceFileAndBytePos,
-	ArchivedSpan,
-	ArchivedSpanLinesError,
-	ArchivedSpanSnippetError,
+    ArchivedBytePos, ArchivedCharPos, ArchivedFileName, ArchivedMultiSpan, ArchivedSourceFile,
+    ArchivedSourceFileAndBytePos, ArchivedSpan, ArchivedSpanLinesError, ArchivedSpanSnippetError,
 };

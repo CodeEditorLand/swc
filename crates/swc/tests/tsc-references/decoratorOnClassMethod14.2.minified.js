@@ -1,1 +1,0 @@
-//// [decoratorOnClassMethod14.ts]
