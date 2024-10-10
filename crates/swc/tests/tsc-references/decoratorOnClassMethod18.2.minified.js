@@ -1,0 +1,1 @@
+//// [decoratorOnClassMethod18.ts]
