@@ -12,8 +12,7 @@
 	],
 	"description": "Super-fast HTML minifier",
 	"devDependencies": {
-		"@playform/build": "0.1.7",
-		"@playform/build": ""
+		"@playform/build": "0.1.7"
 	},
 	"files": [
 		"swc-html.linux-x64-gnu.node"

@@ -12,8 +12,7 @@
 	],
 	"description": "Super-fast alternative for babel",
 	"devDependencies": {
-		"@playform/build": "0.1.7",
-		"@playform/build": ""
+		"@playform/build": "0.1.7"
 	},
 	"files": [
 		"swc.darwin-arm64.node",

@@ -12,8 +12,7 @@
 	],
 	"description": "Super-fast alternative for babel",
 	"devDependencies": {
-		"@playform/build": "0.1.7",
-		"@playform/build": ""
+		"@playform/build": "0.1.7"
 	},
 	"files": [
 		"minifier.linux-arm64-musl.node",
