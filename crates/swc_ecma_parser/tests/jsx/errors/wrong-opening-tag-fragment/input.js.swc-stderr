@@ -1,0 +1,4 @@
+  x Unexpected eof
+   ,-[$DIR/tests/jsx/errors/wrong-opening-tag-fragment/input.js:1:16]
+ 1 | <something></>
+   `----
