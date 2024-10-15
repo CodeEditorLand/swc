@@ -1,3 +1,0 @@
-@Injectable()
-export class MyService { }
-
