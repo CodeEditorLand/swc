@@ -197,3 +197,4 @@ type 任意の型 = any;
 /*comment-3*/任意の型/*comment-4*/ =>
   1;
   1;
+  1;

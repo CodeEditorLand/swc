@@ -1102,3 +1102,4 @@ function isObserver<T>(value: any): value is Observer<T> {
 function isSubscriber<T>(value: any): value is Subscriber<T> {
     return (value && value instanceof Subscriber) || (isObserver(value) && isSubscription(value));
 }
+}

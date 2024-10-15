@@ -630,6 +630,7 @@ export interface TerserMangleOptions {
      * Pass `true` to mangle names declared in the top level scope.
      */
     topLevel?: boolean
+    topLevel?: boolean;
 
     /**
      * @deprecated An alias for compatibility with terser.
@@ -674,6 +675,7 @@ export interface TerserMangleOptions {
 }
 
 export interface TerserManglePropertiesOptions { }
+export interface TerserManglePropertiesOptions {}
 
 /**
  * Programmatic options.
@@ -1421,6 +1423,13 @@ export interface JscConfig {
          * Second parameter of tuple is JSON based configuration for the plugin.
          */
         plugins?: Array<[string, Record<string, any>]>;
+
+        /**
+         * Run Wasm plugins before stripping TypeScript or decorators.
+         *
+         * See https://github.com/swc-project/swc/issues/9132 for more details.
+         */
+        runPluginFirst?: boolean;
 
         /**
          * Disable builtin transforms. If enabled, only Wasm plugins are used.
@@ -2252,6 +2261,7 @@ export interface Output {
 }
 
 export interface MatchPattern { }
+export interface MatchPattern {}
 
 // -------------------------------
 // ---------- Ast nodes ----------
@@ -2961,6 +2971,7 @@ export type Expression =
     | Invalid;
 
 interface ExpressionBase extends Node, HasSpan { }
+interface ExpressionBase extends Node, HasSpan {}
 
 export interface Identifier extends ExpressionBase {
     type: "Identifier";
