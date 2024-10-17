@@ -157,6 +157,7 @@ edition = "2021"
 
 [lib]
 crate-type = ["cdylib"]
+path = "Source/lib.rs"
 
 [profile.release]
 lto = true
