@@ -9,7 +9,7 @@ version = "0.1.0"
 [dependencies]
 Inflector = { workspace = true }
 anyhow = { workspace = true }
-clap = { version = "4.5.9", features = ["derive"] }
+clap = { version = "4.5.20", features = ["derive"] }
 proc-macro2 = { workspace = true }
 quote = { workspace = true }
 syn = { workspace = true, features = ["full", "visit-mut", "extra-traits"] }

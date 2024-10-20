@@ -43,7 +43,7 @@ swc_ecma_ast = { version = "1.0.0", path = "../swc_ecma_ast" }
 swc_ecma_visit = { version = "1.0.0", path = "../swc_ecma_visit", optional = true }
 
 [target.'cfg(not(any(target_arch = "wasm32", target_arch = "arm")))'.dependencies]
-stacker = { version = "0.1.15", optional = true }
+stacker = { version = "0.1.17", optional = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
