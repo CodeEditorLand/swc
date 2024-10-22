@@ -12,7 +12,7 @@
 	],
 	"description": "Super-fast alternative for babel",
 	"devDependencies": {
-		"@playform/build": "0.1.7"
+		"@playform/build": "0.1.8"
 	},
 	"files": [
 		"swc.linux-arm64-musl.node",

@@ -13,7 +13,7 @@
 	"description": "External helpers for the swc project.",
 	"devDependencies": {
 		"@ast-grep/napi": "0.28.1",
-		"@playform/build": "0.1.7",
+		"@playform/build": "0.1.8",
 		"dprint": "0.47.4",
 		"magic-string": "0.30.12",
 		"zx": "8.1.9"
