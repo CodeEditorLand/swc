@@ -4738,11 +4738,7 @@ export interface TsPropertySignature extends Node, HasSpan {
     computed: boolean;
     optional: boolean;
 
-    init?: Expression;
-    params: TsFnParameter[];
-
     typeAnnotation?: TsTypeAnnotation;
-    typeParams?: TsTypeParameterDeclaration;
 }
 
 export interface TsGetterSignature extends Node, HasSpan {
