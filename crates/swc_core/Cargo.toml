@@ -6,7 +6,7 @@ edition       = "2021"
 license       = "Apache-2.0"
 name          = "swc_core"
 repository    = "https://github.com/swc-project/swc.git"
-version       = "1.0.5"
+version       = "1.0.6"
   [package.metadata.docs.rs]
   features = [
     "allocator_node",
@@ -365,23 +365,23 @@ swc_ecma_transforms_base         = { optional = true, version = "1.0.1", path = 
 swc_ecma_transforms_compat       = { optional = true, version = "1.0.0", path = "../swc_ecma_transforms_compat" }
 swc_ecma_transforms_module       = { optional = true, version = "1.0.0", path = "../swc_ecma_transforms_module" }
 swc_ecma_transforms_optimization = { optional = true, version = "1.0.0", path = "../swc_ecma_transforms_optimization" }
-swc_ecma_transforms_proposal = { optional = true, version = "1.0.1", path = "../swc_ecma_transforms_proposal" }
-swc_ecma_transforms_react = { optional = true, version = "1.0.0", path = "../swc_ecma_transforms_react" }
-swc_ecma_transforms_testing = { optional = true, version = "1.0.0", path = "../swc_ecma_transforms_testing" }
-swc_ecma_transforms_typescript = { optional = true, version = "1.0.1", path = "../swc_ecma_transforms_typescript" }
-swc_ecma_usage_analyzer = { optional = true, version = "1.0.1", path = "../swc_ecma_usage_analyzer" }
-swc_ecma_utils = { optional = true, version = "1.0.1", path = "../swc_ecma_utils" }
-swc_ecma_visit = { optional = true, version = "1.0.0", path = "../swc_ecma_visit" }
-swc_malloc = { optional = true, version = "1.0.0", path = "../swc_malloc" }
-swc_node_bundler = { optional = true, version = "1.0.0", path = "../swc_node_bundler" }
-swc_nodejs_common = { optional = true, version = "1.0.0", path = "../swc_nodejs_common" }
-swc_plugin = { optional = true, version = "1.0.0", path = "../swc_plugin" }
-swc_plugin_macro = { optional = true, version = "1.0.0", path = "../swc_plugin_macro" }
-swc_plugin_proxy = { optional = true, version = "1.0.0", path = "../swc_plugin_proxy" }
-swc_trace_macro = { optional = true, version = "2.0.0", path = "../swc_trace_macro" }
-swc_transform_common = { optional = true, version = "1.0.0", path = "../swc_transform_common" }
-swc_typescript = { optional = true, version = "1.0.0", path = "../swc_typescript" }
-testing = { optional = true, version = "1.0.0", path = "../testing" }
+swc_ecma_transforms_proposal     = { optional = true, version = "1.0.1", path = "../swc_ecma_transforms_proposal" }
+swc_ecma_transforms_react        = { optional = true, version = "1.0.0", path = "../swc_ecma_transforms_react" }
+swc_ecma_transforms_testing      = { optional = true, version = "1.0.0", path = "../swc_ecma_transforms_testing" }
+swc_ecma_transforms_typescript   = { optional = true, version = "1.0.1", path = "../swc_ecma_transforms_typescript" }
+swc_ecma_usage_analyzer          = { optional = true, version = "1.0.1", path = "../swc_ecma_usage_analyzer" }
+swc_ecma_utils                   = { optional = true, version = "1.0.1", path = "../swc_ecma_utils" }
+swc_ecma_visit                   = { optional = true, version = "1.0.0", path = "../swc_ecma_visit" }
+swc_malloc                       = { optional = true, version = "1.0.0", path = "../swc_malloc" }
+swc_node_bundler                 = { optional = true, version = "1.0.0", path = "../swc_node_bundler" }
+swc_nodejs_common                = { optional = true, version = "1.0.0", path = "../swc_nodejs_common" }
+swc_plugin                       = { optional = true, version = "1.0.0", path = "../swc_plugin" }
+swc_plugin_macro                 = { optional = true, version = "1.0.0", path = "../swc_plugin_macro" }
+swc_plugin_proxy                 = { optional = true, version = "1.0.0", path = "../swc_plugin_proxy" }
+swc_trace_macro                  = { optional = true, version = "2.0.0", path = "../swc_trace_macro" }
+swc_transform_common             = { optional = true, version = "1.0.0", path = "../swc_transform_common" }
+swc_typescript                   = { optional = true, version = "1.0.1", path = "../swc_typescript" }
+testing                          = { optional = true, version = "1.0.0", path = "../testing" }
 # TODO: eventually swc_plugin_runner needs to remove default features
 swc_allocator = { version = "1.0.0", path = "../swc_allocator", default-features = false }
 swc_plugin_runner = { optional = true, version = "1.0.0", path = "../swc_plugin_runner", default-features = false }
