@@ -2,11 +2,11 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Common utilities for the swc project."
 documentation = "https://rustdoc.swc.rs/swc_common/"
-edition = "2021"
-license = "Apache-2.0"
-name = "swc_common"
-repository = "https://github.com/swc-project/swc.git"
-version = "1.0.0"
+edition       = "2021"
+license       = "Apache-2.0"
+name          = "swc_common"
+repository    = "https://github.com/swc-project/swc.git"
+version       = "2.0.1"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -65,7 +65,8 @@ from_variant = { version = "2.0.0", path = "../from_variant" }
 swc_allocator = { version = "1.0.0", path = "../swc_allocator", default-features = false }
 swc_atoms = { version = "2.0.0", path = "../swc_atoms" }
 swc_eq_ignore_macros = { version = "1.0.0", path = "../swc_eq_ignore_macros" }
-swc_visit = { version = "1.0.0", path = "../swc_visit" }
+swc_visit            = { version = "2.0.0", path = "../swc_visit" }
+
 
 [dev-dependencies]
 codspeed-criterion-compat = { workspace = true }

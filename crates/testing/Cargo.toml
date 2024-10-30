@@ -2,11 +2,11 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Testing utilities for the swc project."
 documentation = "https://rustdoc.swc.rs/testing/"
-edition = "2021"
-license = "Apache-2.0"
-name = "testing"
-repository = "https://github.com/swc-project/swc.git"
-version = "1.0.0"
+edition       = "2021"
+license       = "Apache-2.0"
+name          = "testing"
+repository    = "https://github.com/swc-project/swc.git"
+version       = "2.0.0"
 
 [lib]
 bench = false
@@ -24,8 +24,8 @@ serde_json = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 
-swc_common = { version = "1.0.0", path = "../swc_common", features = [
-	"tty-emitter",
+swc_common = { version = "2.0.1", path = "../swc_common", features = [
+  "tty-emitter",
 ] }
-swc_error_reporters = { version = "2.0.0", path = "../swc_error_reporters" }
+swc_error_reporters = { version = "3.0.0", path = "../swc_error_reporters" }
 testing_macros = { version = "1.0.0", path = "../testing_macros" }

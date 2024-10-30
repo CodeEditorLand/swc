@@ -1,8 +1,8 @@
-use swc_common::{chain, Mark, SyntaxContext};
+use swc_common::{Mark, SyntaxContext};
 use swc_ecma_transforms_base::{fixer::paren_remover, resolver};
 use swc_ecma_transforms_testing::test_transform;
 use swc_ecma_utils::ExprCtx;
-use swc_ecma_visit::as_folder;
+use swc_ecma_visit::visit_mut_pass;
 
 use super::SimplifyExpr;
 
@@ -14,21 +14,22 @@ fn fold(src: &str, expected: &str) {
             let unresolved_mark = Mark::new();
             let top_level_mark = Mark::new();
 
-            chain!(
+            (
                 resolver(unresolved_mark, top_level_mark, false),
                 paren_remover(None),
-                as_folder(SimplifyExpr {
+                visit_mut_pass(SimplifyExpr {
                     expr_ctx: ExprCtx {
                         unresolved_ctxt: SyntaxContext::empty().apply_mark(unresolved_mark),
                         // This is hack
                         is_unresolved_ref_safe: true,
+                        in_strict: false,
                     },
                     config: super::Config {},
                     changed: false,
                     is_arg_of_update: false,
                     is_modifying: false,
                     in_callee: false,
-                })
+                }),
             )
         },
         src,

@@ -3,7 +3,7 @@ use swc_ecma_ast::*;
 use swc_ecma_parser::parse_file_as_expr;
 use swc_ecma_transforms_base::fixer::fixer;
 use swc_ecma_utils::ExprCtx;
-use swc_ecma_visit::{noop_visit_mut_type, FoldWith, VisitMut, VisitMutWith};
+use swc_ecma_visit::{noop_visit_mut_type, VisitMut, VisitMutWith};
 use tracing::{info, warn};
 
 use super::negate_cost;
@@ -40,20 +40,21 @@ fn assert_negate_cost(s: &str, in_bool_ctx: bool, is_ret_val_ignored: bool, expe
         e.visit_mut_with(&mut UnwrapParen);
 
         let input = {
-            let e = e.clone();
-            let e = e.fold_with(&mut fixer(None));
+            let mut e = e.clone();
+            e.visit_mut_with(&mut fixer(None));
             dump(&e, true)
         };
 
         let expr_ctx = ExprCtx {
             unresolved_ctxt: SyntaxContext::empty().apply_mark(Mark::new()),
             is_unresolved_ref_safe: false,
+            in_strict: false,
         };
 
         let real = {
             let mut real = e.clone();
             negate(&expr_ctx, &mut real, in_bool_ctx, is_ret_val_ignored);
-            let real = real.fold_with(&mut fixer(None));
+            real.visit_mut_with(&mut fixer(None));
             dump(&real, true)
         };
 

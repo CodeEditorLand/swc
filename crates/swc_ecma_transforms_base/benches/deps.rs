@@ -2,9 +2,8 @@ use codspeed_criterion_compat::{black_box, criterion_group, criterion_main, Benc
 use swc_common::{FileName, DUMMY_SP};
 use swc_ecma_ast::*;
 use swc_ecma_parser::{lexer::Lexer, parse_file_as_module, Parser, StringInput, Syntax};
-use swc_ecma_transforms_base::pass::noop;
 use swc_ecma_utils::ExprFactory;
-use swc_ecma_visit::{FoldWith, Visit, VisitWith};
+use swc_ecma_visit::{Fold, FoldWith, Visit, VisitWith};
 
 static SOURCE:&str = include_str!("assets/AjaxObservable.ts");
 
@@ -109,9 +108,9 @@ fn fold_empty(b: &mut Bencher) {
             e.into_diagnostic(handler).emit();
         }
 
-        let mut folder = noop();
+        let mut folder = noop_pass();
 
-        b.iter(|| black_box(module.clone().fold_with(&mut folder)));
+        b.iter(|| black_box(Program::Module(module.clone()).apply(&mut folder)));
         Ok(())
     });
 }
@@ -161,9 +160,9 @@ fn fold_noop_impl_all(b: &mut Bencher) {
             e.into_diagnostic(handler).emit();
         }
 
-        let mut folder = noop();
+        let mut folder = noop_pass();
 
-        b.iter(|| black_box(module.clone().fold_with(&mut folder)));
+        b.iter(|| black_box(Program::Module(module.clone()).apply(&mut folder)));
         Ok(())
     });
 }
@@ -312,9 +311,9 @@ fn fold_noop_impl_vec(b: &mut Bencher) {
             e.into_diagnostic(handler).emit();
         }
 
-        let mut folder = noop();
+        let mut folder = noop_pass();
 
-        b.iter(|| black_box(module.clone().fold_with(&mut folder)));
+        b.iter(|| black_box(Program::Module(module.clone()).apply(&mut folder)));
         Ok(())
     });
 }
@@ -349,7 +348,7 @@ fn boxing_unboxed_clone(b: &mut Bencher) {
 
 fn boxing_boxed(b: &mut Bencher) {
     let _ = ::testing::run_test(false, |_, _| {
-        let mut folder = noop();
+        let mut folder = noop_fold();
         let expr = Box::new(mk_expr());
 
         b.iter(|| black_box(expr.clone().fold_with(&mut folder)));
@@ -359,7 +358,7 @@ fn boxing_boxed(b: &mut Bencher) {
 
 fn boxing_unboxed(b: &mut Bencher) {
     let _ = ::testing::run_test(false, |_, _| {
-        let mut folder = noop();
+        let mut folder = noop_fold();
         let expr = mk_expr();
 
         b.iter(|| black_box(expr.clone().fold_with(&mut folder)));
@@ -435,3 +434,9 @@ fn bench_cases(c: &mut Criterion) {
 
 criterion_group!(benches, bench_cases);
 criterion_main!(benches);
+
+fn noop_fold() -> impl Fold {
+    struct Noop;
+    impl Fold for Noop {}
+    Noop
+}

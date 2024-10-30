@@ -2,12 +2,12 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "rust port of babel and closure compiler."
 documentation = "https://rustdoc.swc.rs/swc_ecma_transforms_optimization/"
-edition = "2021"
-include = ["Cargo.toml", "src/**/*.rs"]
-license = "Apache-2.0"
-name = "swc_ecma_transforms_module"
-repository = "https://github.com/swc-project/swc.git"
-version = "1.0.0"
+edition       = "2021"
+include       = ["Cargo.toml", "src/**/*.rs"]
+license       = "Apache-2.0"
+name          = "swc_ecma_transforms_module"
+repository    = "https://github.com/swc-project/swc.git"
+version       = "3.0.0"
 
 [lib]
 bench = false
@@ -27,25 +27,25 @@ tracing = { workspace = true }
 
 swc_atoms = { version = "2.0.0", path = "../swc_atoms" }
 swc_cached = { version = "1.0.0", path = "../swc_cached" }
-swc_common = { version = "1.0.0", path = "../swc_common" }
-swc_ecma_ast = { version = "1.0.0", path = "../swc_ecma_ast" }
-swc_ecma_loader = { version = "1.0.0", path = "../swc_ecma_loader", features = [
-	"node",
+swc_common = { version = "2.0.1", path = "../swc_common" }
+swc_ecma_ast = { version = "2.0.0", path = "../swc_ecma_ast" }
+swc_ecma_loader = { version = "2.0.0", path = "../swc_ecma_loader", features = [
+  "node",
 ] }
-swc_ecma_parser = { version = "1.0.1", path = "../swc_ecma_parser" }
-swc_ecma_transforms_base = { version = "1.0.1", path = "../swc_ecma_transforms_base" }
-swc_ecma_utils = { version = "1.0.1", path = "../swc_ecma_utils" }
-swc_ecma_visit = { version = "1.0.0", path = "../swc_ecma_visit" }
+swc_ecma_parser = { version = "3.0.0", path = "../swc_ecma_parser" }
+swc_ecma_transforms_base = { version = "3.0.0", path = "../swc_ecma_transforms_base" }
+swc_ecma_utils = { version = "3.0.0", path = "../swc_ecma_utils" }
+swc_ecma_visit = { version = "2.0.0", path = "../swc_ecma_visit" }
 
 [dev-dependencies]
 indexmap = { workspace = true, features = ["serde"] }
 serde_json = { workspace = true }
 
-swc_ecma_loader = { version = "1.0.0", path = "../swc_ecma_loader", features = [
-	"node",
-	"tsc",
+swc_ecma_loader = { version = "2.0.0", path = "../swc_ecma_loader", features = [
+  "node",
+  "tsc",
 ] }
-swc_ecma_transforms_compat = { version = "1.0.0", path = "../swc_ecma_transforms_compat" }
-swc_ecma_transforms_testing = { version = "1.0.0", path = "../swc_ecma_transforms_testing" }
-swc_ecma_transforms_typescript = { version = "1.0.1", path = "../swc_ecma_transforms_typescript" }
-testing = { version = "1.0.0", path = "../testing/" }
+swc_ecma_transforms_compat = { version = "3.0.0", path = "../swc_ecma_transforms_compat" }
+swc_ecma_transforms_testing = { version = "3.0.0", path = "../swc_ecma_transforms_testing" }
+swc_ecma_transforms_typescript = { version = "3.0.0", path = "../swc_ecma_transforms_typescript" }
+testing = { version = "2.0.0", path = "../testing/" }
