@@ -8,8 +8,8 @@
 		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
 	},
 	"devDependencies": {
-		"@babel/compat-data": "7.26.0",
-		"@babel/generator": "7.26.0",
+		"@babel/compat-data": "7.26.2",
+		"@babel/generator": "7.26.2",
 		"@babel/plugin-proposal-decorators": "7.25.9",
 		"@babel/plugin-proposal-object-rest-spread": "7.20.7",
 		"@babel/types": "7.26.0",
@@ -17,7 +17,7 @@
 		"@swc/helpers": "workspace:^",
 		"@swc/plugin-jest": "3.0.3",
 		"@taplo/cli": "0.7.0",
-		"@types/node": "22.8.4",
+		"@types/node": "22.8.6",
 		"@types/terser": "3.12.0",
 		"acorn": "8.14.0",
 		"acorn-jsx": "5.3.2",
@@ -26,10 +26,10 @@
 		"benchmark": "2.1.4",
 		"bootstrap": "5.3.3",
 		"class-validator": "0.14.1",
-		"core-js": "3.38.1",
-		"core-js-compat": "3.38.1",
+		"core-js": "3.39.0",
+		"core-js-compat": "3.39.0",
 		"cross-env": "7.0.3",
-		"cspell": "8.15.4",
+		"cspell": "8.15.5",
 		"expect": "29.7.0",
 		"glob": "11.0.0",
 		"js-beautify": "1.15.1",
@@ -46,7 +46,7 @@
 		"swc-plugin-coverage-instrument": "0.0.25",
 		"terser": "5.36.0",
 		"yaml": "2.6.0",
-		"zx": "8.1.9"
+		"zx": "8.2.0"
 	},
 	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
 	"keywords": [
