@@ -1400,6 +1400,8 @@ export interface JscConfig {
 
         /**
          * Preserve `with` in imports and exports.
+         *
+         * @deprecated Use `keepImportAssertions` instead.
          */
         keepImportAttributes?: boolean;
 
@@ -1445,6 +1447,11 @@ export interface JscConfig {
          * Disable all lint rules.
          */
         disableAllLints?: boolean;
+
+        /**
+         * Keep import assertions.
+         */
+        keepImportAssertions?: boolean;
     };
 
     baseUrl?: string;
@@ -1469,6 +1476,8 @@ export type JscTarget =
     | "es2020"
     | "es2021"
     | "es2022"
+    | "es2023"
+    | "es2024"
     | "esnext";
 
 export type ParserConfig = TsParserConfig | EsParserConfig;

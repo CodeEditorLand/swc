@@ -15,7 +15,7 @@
 		"@babel/types": "7.26.0",
 		"@playform/build": "0.1.8",
 		"@swc/helpers": "workspace:^",
-		"@swc/plugin-jest": "3.0.3",
+		"@swc/plugin-jest": "4.0.0",
 		"@taplo/cli": "0.7.0",
 		"@types/node": "22.8.6",
 		"@types/terser": "3.12.0",
