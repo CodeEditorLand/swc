@@ -555,6 +555,45 @@ impl Visit for TsStrip {
     }
 
     fn visit_arrow_expr(&mut self, n: &ArrowExpr) {
+        #[inline(always)]
+        fn is_new_line(c: char) -> bool {
+            matches!(c, '\u{000A}' | '\u{000D}' | '\u{2028}' | '\u{2029}')
+        }
+
+        'type_params: {
+            // ```TypeScript
+            // let f = async <
+            //    T
+            // >(v: T) => v;
+            // ```
+
+            // ```TypeScript
+            // let f = async (
+            //
+            //   v   ) => v;
+            // ```
+            if let Some(tp) = &n.type_params {
+                self.add_replacement(tp.span);
+
+                if !n.is_async {
+                    break 'type_params;
+                }
+
+                let slice = self.get_src_slice(tp.span);
+                if !slice.chars().any(is_new_line) {
+                    break 'type_params;
+                }
+
+                let l_paren = self.get_next_token(tp.span.hi);
+                debug_assert_eq!(l_paren.token, Token::LParen);
+                let l_paren_pos = l_paren.span.lo;
+                let l_lt_pos = tp.span.lo;
+
+                self.add_overwrite(l_paren_pos, b' ');
+                self.add_overwrite(l_lt_pos, b'(');
+            }
+        }
+
         if let Some(ret) = &n.return_type {
             self.add_replacement(ret.span);
 
@@ -565,10 +604,7 @@ impl Visit for TsStrip {
             let span = span(r_paren.span.lo, arrow.span.lo);
 
             let slice = self.get_src_slice(span);
-            if slice
-                .chars()
-                .any(|c| matches!(c, '\u{000A}' | '\u{000D}' | '\u{2028}' | '\u{2029}'))
-            {
+            if slice.chars().any(is_new_line) {
                 self.add_replacement(r_paren.span);
 
                 // Instead of moving the arrow mark, we shift the right parenthesis to the next
@@ -597,7 +633,6 @@ impl Visit for TsStrip {
             }
         }
 
-        n.type_params.visit_with(self);
         n.params.visit_with(self);
         n.body.visit_with(self);
     }
@@ -649,7 +684,12 @@ impl Visit for TsStrip {
             return;
         }
 
-        self.strip_class_modifier(n.span.lo, n.key.span_lo());
+        // TODO(AST): constructor can not be optional
+        debug_assert!(!n.is_optional);
+
+        if n.accessibility.is_some() {
+            self.strip_class_modifier(n.span.lo, n.key.span_lo());
+        }
 
         n.visit_children_with(self);
     }
@@ -660,6 +700,8 @@ impl Visit for TsStrip {
             return;
         }
 
+        let has_modifier = n.is_override || n.accessibility.is_some();
+
         // @foo public m(): void {}
         let start_pos = n
             .function
@@ -667,11 +709,38 @@ impl Visit for TsStrip {
             .last()
             .map_or(n.span.lo, |d| d.span.hi);
 
-        self.strip_class_modifier(start_pos, n.key.span_lo());
+        if has_modifier {
+            self.strip_class_modifier(start_pos, n.key.span_lo());
+        }
 
         if n.is_optional {
             let mark_index = self.get_next_token_index(n.key.span_hi());
             self.strip_optional_mark(mark_index);
+        }
+
+        // It's dangerous to strip TypeScript modifiers if the key is computed, a
+        // generator, or `in`/`instanceof` keyword. However, it is safe to do so
+        // if the key is preceded by a `static` keyword or decorators.
+        //
+        // `public [foo]()`
+        // `;      [foo]()`
+        //
+        // `public *foo()`
+        // `;      *foo()`
+        //
+        // `public in()`
+        // `;      in()`
+        if has_modifier
+            && !n.is_static
+            && n.function.decorators.is_empty()
+            && (n.key.is_computed()
+                || n.function.is_generator
+                || n.key
+                    .as_ident()
+                    .filter(|k| matches!(k.sym.as_ref(), "in" | "instanceof"))
+                    .is_some())
+        {
+            self.add_overwrite(start_pos, b';');
         }
 
         n.visit_children_with(self);
@@ -683,9 +752,12 @@ impl Visit for TsStrip {
             return;
         }
 
+        let has_modifier = n.readonly || n.is_override || n.accessibility.is_some();
         let start_pos = n.decorators.last().map_or(n.span.lo, |d| d.span.hi);
 
-        self.strip_class_modifier(start_pos, n.key.span_lo());
+        if has_modifier {
+            self.strip_class_modifier(start_pos, n.key.span_lo());
+        }
 
         if n.is_optional {
             let mark_index = self.get_next_token_index(n.key.span_hi());
@@ -696,23 +768,53 @@ impl Visit for TsStrip {
             self.strip_definite_mark(mark_index);
         }
 
-        if n.value.is_none() && n.key.as_ident().filter(|k| k.sym == "static").is_some() {
-            if let Some(type_ann) = &n.type_ann {
-                self.add_overwrite(type_ann.span.lo, b';');
+        // It's dangerous to strip types if the key is `get`, `set`, or `static`.
+        if n.value.is_none() {
+            if let Some(key) = n.key.as_ident() {
+                if matches!(key.sym.as_ref(), "get" | "set" | "static") {
+                    // `get: number`
+                    // `get;       `
+                    if let Some(type_ann) = &n.type_ann {
+                        self.add_overwrite(type_ann.span.lo, b';');
+                    }
+                }
             }
+        }
+
+        // `private [foo]`
+        // `;       [foo]`
+        //
+        // `private in`
+        // `;       in`
+        if !n.is_static
+            && has_modifier
+            && n.decorators.is_empty()
+            && (n.key.is_computed()
+                || n.key
+                    .as_ident()
+                    .filter(|k| matches!(k.sym.as_ref(), "in" | "instanceof"))
+                    .is_some())
+        {
+            self.add_overwrite(start_pos, b';');
         }
 
         n.visit_children_with(self);
     }
 
     fn visit_private_method(&mut self, n: &PrivateMethod) {
-        let start_pos = n
-            .function
-            .decorators
-            .last()
-            .map_or(n.span.lo, |d| d.span.hi);
+        debug_assert!(!n.is_override);
+        debug_assert!(!n.is_abstract);
 
-        self.strip_class_modifier(start_pos, n.key.span.lo);
+        // Is `private #foo()` valid?
+        if n.accessibility.is_some() {
+            let start_pos = n
+                .function
+                .decorators
+                .last()
+                .map_or(n.span.lo, |d| d.span.hi);
+
+            self.strip_class_modifier(start_pos, n.key.span.lo);
+        }
 
         if n.is_optional {
             let mark_index = self.get_next_token_index(n.key.span.hi);
@@ -723,9 +825,12 @@ impl Visit for TsStrip {
     }
 
     fn visit_private_prop(&mut self, n: &PrivateProp) {
-        let start_pos = n.decorators.last().map_or(n.span.lo, |d| d.span.hi);
+        debug_assert!(!n.is_override);
 
-        self.strip_class_modifier(start_pos, n.key.span.lo);
+        if n.readonly || n.accessibility.is_some() {
+            let start_pos = n.decorators.last().map_or(n.span.lo, |d| d.span.hi);
+            self.strip_class_modifier(start_pos, n.key.span.lo);
+        }
 
         if n.is_optional {
             let mark_index = self.get_next_token_index(n.key.span.hi);
