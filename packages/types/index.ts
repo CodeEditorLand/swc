@@ -433,7 +433,7 @@ export interface TerserManglePropertiesOptions {}
      * Currently noop.
      * @alias inline_script
      */
-    inlineScript?: number;
+    inlineScript?: boolean;
 
     /**
      * Currently noop.
