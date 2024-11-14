@@ -29,7 +29,7 @@
 		"core-js": "3.39.0",
 		"core-js-compat": "3.39.0",
 		"cross-env": "7.0.3",
-		"cspell": "8.15.7",
+		"cspell": "8.16.0",
 		"expect": "29.7.0",
 		"glob": "11.0.0",
 		"js-beautify": "1.15.1",
@@ -46,7 +46,7 @@
 		"swc-plugin-coverage-instrument": "0.0.25",
 		"terser": "5.36.0",
 		"yaml": "2.6.0",
-		"zx": "8.2.0"
+		"zx": "8.2.2"
 	},
 	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
 	"keywords": [
