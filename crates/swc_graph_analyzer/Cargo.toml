@@ -15,7 +15,7 @@ path = "Source/lib.rs"
 [dependencies]
 auto_impl      = { workspace = true }
 petgraph       = { workspace = true }
-swc_common     = { version = "4.0.0", path = "../swc_common/" }
+swc_common     = { version = "4.0.1", path = "../swc_common/" }
 swc_fast_graph = { version = "5.0.0", path = "../swc_fast_graph/" }
 tracing        = { workspace = true }
 
