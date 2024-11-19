@@ -12,7 +12,7 @@
 	],
 	"description": "Super-fast HTML minifier",
 	"devDependencies": {
-		"@playform/build": "0.1.8"
+		"@playform/build": "0.1.9"
 	},
 	"files": [
 		"swc-html.darwin-arm64.node"

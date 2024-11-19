@@ -13,7 +13,7 @@
 	"description": "Super-fast HTML minifier",
 	"devDependencies": {
 		"@napi-rs/cli": "^3.0.0-alpha.43",
-		"@playform/build": "0.1.8"
+		"@playform/build": "0.1.9"
 	},
 	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
 	"keywords": [
