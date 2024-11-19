@@ -1,3 +1,5 @@
+import { Assumptions } from "./assumptions";
+
 export interface Plugin {
 	(module: Program): Program;
     (module: Program): Program;
@@ -1370,6 +1372,7 @@ export interface EsParserConfig {
 }
 
 export interface JscConfig {
+    assumptions?: Assumptions;
     loose?: boolean;
 
     /**
