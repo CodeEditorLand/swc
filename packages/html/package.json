@@ -34,10 +34,10 @@
 		"version": "napi version --npm-dir scripts/npm"
 	},
 	"dependencies": {
-		"@swc/counter": "^0.1.3"
+		"@swc/counter": "0.1.3"
 	},
 	"devDependencies": {
-		"@napi-rs/cli": "^3.0.0-alpha.43",
+		"@napi-rs/cli": "3.0.0-alpha.43",
 		"@playform/build": "0.1.9"
 	},
 	"publishConfig": {
