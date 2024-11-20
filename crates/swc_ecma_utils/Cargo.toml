@@ -2,11 +2,11 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Utilities for swc ecmascript ast nodes"
 documentation = "https://rustdoc.swc.rs/swc_ecma_utils/"
-edition       = "2021"
-license       = "Apache-2.0"
-name          = "swc_ecma_utils"
-repository    = "https://github.com/swc-project/swc.git"
-version       = "5.0.0"
+edition = "2021"
+license = "Apache-2.0"
+name = "swc_ecma_utils"
+repository = "https://github.com/swc-project/swc.git"
+version = "5.0.0"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -30,9 +30,9 @@ ryu-js = { workspace = true }
 tracing = { workspace = true }
 unicode-id = { workspace = true }
 
-swc_atoms      = { version = "2.0.0", path = "../swc_atoms" }
-swc_common     = { version = "4.0.1", path = "../swc_common" }
-swc_ecma_ast   = { version = "4.0.1", path = "../swc_ecma_ast" }
+swc_atoms = { version = "2.0.0", path = "../swc_atoms" }
+swc_common = { version = "4.0.1", path = "../swc_common" }
+swc_ecma_ast = { version = "4.0.1", path = "../swc_ecma_ast" }
 swc_ecma_visit = { version = "4.0.0", path = "../swc_ecma_visit" }
 
 [target.'cfg(not(any(target_arch = "wasm32", target_arch = "arm")))'.dependencies]
@@ -40,4 +40,4 @@ stacker = { version = "0.1.17", optional = true }
 
 [dev-dependencies]
 swc_ecma_parser = { version = "5.0.0", path = "../swc_ecma_parser" }
-testing         = { version = "4.0.0", path = "../testing" }
+testing = { version = "4.0.0", path = "../testing" }

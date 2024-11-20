@@ -2,12 +2,12 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Compatibility layer between estree and swc"
 documentation = "https://rustdoc.swc.rs/swc_estree_compat/"
-edition       = "2021"
-include       = ["Cargo.toml", "src/**/*.rs"]
-license       = "Apache-2.0"
-name          = "swc_estree_compat"
-repository    = "https://github.com/swc-project/swc.git"
-version       = "5.0.0"
+edition = "2021"
+include = ["Cargo.toml", "src/**/*.rs"]
+license = "Apache-2.0"
+name = "swc_estree_compat"
+repository = "https://github.com/swc-project/swc.git"
+version = "5.0.0"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -27,8 +27,8 @@ serde_json = { workspace = true }
 
 swc_atoms = { version = "2.0.0", path = "../swc_atoms" }
 swc_common = { version = "4.0.1", path = "../swc_common", features = [
-  "sourcemap",
-  "tty-emitter",
+	"sourcemap",
+	"tty-emitter",
 ] }
 swc_ecma_ast = { version = "4.0.1", path = "../swc_ecma_ast" }
 swc_ecma_parser = { version = "5.0.0", path = "../swc_ecma_parser" }
@@ -42,12 +42,12 @@ codspeed-criterion-compat = { workspace = true }
 criterion = { workspace = true }
 pretty_assertions = { workspace = true }
 
-swc                 = { version = "6.0.0", path = "../swc" }
-swc_ecma_ast        = { version = "4.0.1", path = "../swc_ecma_ast" }
-swc_ecma_parser     = { version = "5.0.0", path = "../swc_ecma_parser" }
+swc = { version = "6.0.0", path = "../swc" }
+swc_ecma_ast = { version = "4.0.1", path = "../swc_ecma_ast" }
+swc_ecma_parser = { version = "5.0.0", path = "../swc_ecma_parser" }
 swc_ecma_transforms = { version = "6.0.0", path = "../swc_ecma_transforms/" }
-testing             = { version = "4.0.0", path = "../testing" }
-walkdir             = { workspace = true }
+testing = { version = "4.0.0", path = "../testing" }
+walkdir = { workspace = true }
 
 [[bench]]
 harness = false

@@ -3,11 +3,11 @@ authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 build = "build.rs"
 description = "Speedy web compiler"
 documentation = "https://rustdoc.swc.rs/swc/"
-edition       = "2021"
-license       = "Apache-2.0"
-name          = "swc_node_bundler"
-repository    = "https://github.com/swc-project/swc.git"
-version       = "6.0.0"
+edition = "2021"
+license = "Apache-2.0"
+name = "swc_node_bundler"
+repository = "https://github.com/swc-project/swc.git"
+version = "6.0.0"
 
 [lib]
 bench = false
@@ -33,10 +33,10 @@ string_enum = { version = "1.0.0", path = "../string_enum" }
 swc = { version = "6.0.0", path = "../swc" }
 swc_atoms = { version = "2.0.0", path = "../swc_atoms" }
 swc_bundler = { version = "5.0.0", path = "../swc_bundler", features = [
-  "concurrent",
+	"concurrent",
 ] }
 swc_common = { version = "4.0.1", path = "../swc_common", features = [
-  "concurrent",
+	"concurrent",
 ] }
 swc_ecma_ast = { version = "4.0.1", path = "../swc_ecma_ast" }
 swc_ecma_codegen = { version = "4.0.2", path = "../swc_ecma_codegen" }

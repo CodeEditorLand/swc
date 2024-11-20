@@ -2,11 +2,11 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Ecmascript ast."
 documentation = "https://rustdoc.swc.rs/swc_ecma_ast/"
-edition       = "2021"
-license       = "Apache-2.0"
-name          = "swc_ecma_ast"
-repository    = "https://github.com/swc-project/swc.git"
-version       = "4.0.1"
+edition = "2021"
+license = "Apache-2.0"
+name = "swc_ecma_ast"
+repository = "https://github.com/swc-project/swc.git"
+version = "4.0.1"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -21,29 +21,29 @@ __rkyv = []
 default = []
 fuzzing = ["arbitrary", "swc_atoms/arbitrary", "swc_common/arbitrary"]
 rkyv-impl = [
-  "__rkyv",
-  "rkyv",
-  "bytecheck",
-  "swc_atoms/rkyv-impl",
-  "swc_common/rkyv-impl",
+	"__rkyv",
+	"rkyv",
+	"bytecheck",
+	"swc_atoms/rkyv-impl",
+	"swc_common/rkyv-impl",
 ]
 serde-impl = ["serde"]
 
 [dependencies]
 arbitrary = { workspace = true, features = ["derive"], optional = true }
-bitflags  = { workspace = true }
+bitflags = { workspace = true }
 # bytecheck version should be in sync with rkyv version. Do not bump individually.
-bytecheck        = { workspace = true, optional = true }
-is-macro         = { workspace = true }
-num-bigint       = { workspace = true, features = ["serde"] }
-phf              = { workspace = true, features = ["macros"] }
-rkyv             = { workspace = true, features = ["validation"], optional = true }
-scoped-tls       = { workspace = true }
-serde            = { workspace = true, features = ["derive"], optional = true }
-string_enum      = { version = "1.0.0", path = "../string_enum" }
-swc_atoms        = { version = "2.0.0", path = "../swc_atoms" }
-swc_common       = { version = "4.0.1", path = "../swc_common" }
-swc_visit        = { version = "2.0.0", path = "../swc_visit" }
+bytecheck = { workspace = true, optional = true }
+is-macro = { workspace = true }
+num-bigint = { workspace = true, features = ["serde"] }
+phf = { workspace = true, features = ["macros"] }
+rkyv = { workspace = true, features = ["validation"], optional = true }
+scoped-tls = { workspace = true }
+serde = { workspace = true, features = ["derive"], optional = true }
+string_enum = { version = "1.0.0", path = "../string_enum" }
+swc_atoms = { version = "2.0.0", path = "../swc_atoms" }
+swc_common = { version = "4.0.1", path = "../swc_common" }
+swc_visit = { version = "2.0.0", path = "../swc_visit" }
 unicode-id-start = { workspace = true }
 
 [dev-dependencies]

@@ -2,12 +2,12 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Base crate for the 'swc' crate. This is not a public API."
 documentation = "https://rustdoc.swc.rs/swc_compiler_base/"
-edition       = "2021"
-include       = ["Cargo.toml", "src/**/*.rs"]
-license       = "Apache-2.0"
-name          = "swc_compiler_base"
-repository    = "https://github.com/swc-project/swc.git"
-version       = "5.0.0"
+edition = "2021"
+include = ["Cargo.toml", "src/**/*.rs"]
+license = "Apache-2.0"
+name = "swc_compiler_base"
+repository = "https://github.com/swc-project/swc.git"
+version = "5.0.0"
 
 [features]
 node = ["napi", "napi-derive"]
@@ -25,7 +25,7 @@ swc_allocator = { version = "1.0.0", path = "../swc_allocator", default-features
 
 swc_atoms = { version = "2.0.0", path = "../swc_atoms" }
 swc_common = { version = "4.0.1", path = "../swc_common", features = [
-  "sourcemap",
+	"sourcemap",
 ] }
 swc_config = { version = "1.0.0", path = "../swc_config" }
 swc_ecma_ast = { version = "4.0.1", path = "../swc_ecma_ast" }

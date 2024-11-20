@@ -2,12 +2,12 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "EcmaScript code minifier."
 documentation = "https://rustdoc.swc.rs/swc_ecma_minifier/"
-edition       = "2021"
-include       = ["Cargo.toml", "src/**/*.rs", "src/lists/*.json"]
-license       = "Apache-2.0"
-name          = "swc_ecma_minifier"
-repository    = "https://github.com/swc-project/swc.git"
-version       = "5.0.0"
+edition = "2021"
+include = ["Cargo.toml", "src/**/*.rs", "src/lists/*.json"]
+license = "Apache-2.0"
+name = "swc_ecma_minifier"
+repository = "https://github.com/swc-project/swc.git"
+version = "5.0.0"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -59,7 +59,7 @@ swc_config = { version = "1.0.0", path = "../swc_config", features = [
 	"sourcemap",
 ] }
 swc_ecma_ast = { version = "4.0.1", path = "../swc_ecma_ast", features = [
-  "serde",
+	"serde",
 ] }
 swc_ecma_codegen = { version = "4.0.2", path = "../swc_ecma_codegen" }
 swc_ecma_parser = { version = "5.0.0", path = "../swc_ecma_parser" }
@@ -78,10 +78,10 @@ pretty_assertions = { workspace = true }
 walkdir = { workspace = true }
 
 codspeed-criterion-compat = { workspace = true }
-swc_allocator             = { version = "1.0.0", path = "../swc_allocator" }
-swc_ecma_testing          = { version = "4.0.0", path = "../swc_ecma_testing" }
-swc_malloc                = { version = "1.0.0", path = "../swc_malloc" }
-testing                   = { version = "4.0.0", path = "../testing" }
+swc_allocator = { version = "1.0.0", path = "../swc_allocator" }
+swc_ecma_testing = { version = "4.0.0", path = "../swc_ecma_testing" }
+swc_malloc = { version = "1.0.0", path = "../swc_malloc" }
+testing = { version = "4.0.0", path = "../testing" }
 
 [[bench]]
 harness = false

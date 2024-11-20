@@ -2,12 +2,12 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Speedy web compiler"
 documentation = "https://rustdoc.swc.rs/swc/"
-edition       = "2021"
-include       = ["Cargo.toml", "src/**/*.rs"]
-license       = "Apache-2.0"
-name          = "swc"
-repository    = "https://github.com/swc-project/swc.git"
-version       = "6.0.0"
+edition = "2021"
+include = ["Cargo.toml", "src/**/*.rs"]
+license = "Apache-2.0"
+name = "swc"
+repository = "https://github.com/swc-project/swc.git"
+version = "6.0.0"
 
 [lib]
 bench = false
@@ -72,9 +72,9 @@ url = { workspace = true }
 swc_atoms = { version = "2.0.0", path = "../swc_atoms" }
 swc_cached = { version = "1.0.0", path = "../swc_cached" }
 swc_common = { version = "4.0.1", path = "../swc_common", features = [
-  "ahash",
-  "sourcemap",
-  "parking_lot",
+	"ahash",
+	"sourcemap",
+	"parking_lot",
 ] }
 swc_compiler_base = { version = "5.0.0", path = "../swc_compiler_base" }
 swc_config = { version = "1.0.0", path = "../swc_config" }
@@ -83,20 +83,20 @@ swc_ecma_codegen = { version = "4.0.2", path = "../swc_ecma_codegen" }
 swc_ecma_ext_transforms = { version = "5.0.0", path = "../swc_ecma_ext_transforms" }
 swc_ecma_lints = { version = "5.0.0", path = "../swc_ecma_lints" }
 swc_ecma_loader = { version = "4.0.0", path = "../swc_ecma_loader", features = [
-  "cache",
-  "node",
-  "tsc",
+	"cache",
+	"node",
+	"tsc",
 ] }
 swc_ecma_minifier = { version = "5.0.0", path = "../swc_ecma_minifier" }
 swc_ecma_parser = { version = "5.0.0", path = "../swc_ecma_parser" }
 swc_ecma_preset_env = { version = "6.0.0", path = "../swc_ecma_preset_env" }
 swc_ecma_transforms = { version = "6.0.0", path = "../swc_ecma_transforms", features = [
-  "compat",
-  "module",
-  "optimization",
-  "proposal",
-  "react",
-  "typescript",
+	"compat",
+	"module",
+	"optimization",
+	"proposal",
+	"react",
+	"typescript",
 ] }
 swc_ecma_transforms_base = { version = "5.0.1", path = "../swc_ecma_transforms_base" }
 swc_ecma_transforms_compat = { version = "6.0.0", path = "../swc_ecma_transforms_compat" }
@@ -135,10 +135,10 @@ walkdir = { workspace = true }
 
 codspeed-criterion-compat = { workspace = true }
 swc_ecma_ast = { version = "4.0.1", path = "../swc_ecma_ast", features = [
-  "serde-impl",
+	"serde-impl",
 ] }
 swc_ecma_lints = { version = "5.0.0", path = "../swc_ecma_lints", features = [
-  "non_critical_lints",
+	"non_critical_lints",
 ] }
 swc_ecma_testing = { version = "4.0.0", path = "../swc_ecma_testing" }
 swc_malloc = { version = "1.0.0", path = "../swc_malloc" }

@@ -15,9 +15,9 @@ rustdoc-args = ["--cfg", "docsrs"]
 [features]
 default = ["scoped"]
 nightly = ["bumpalo/allocator_api", "hashbrown/nightly"]
-rkyv    = ["dep:rkyv"]
-scoped  = ["nightly"]
-serde   = ["dep:serde"]
+rkyv = ["dep:rkyv"]
+scoped = ["nightly"]
+serde = ["dep:serde"]
 
 [dependencies]
 bumpalo = { workspace = true, features = [
