@@ -7,6 +7,7 @@ export interface AjaxRequest {
 	url?: string;
 	body?: any;
 	user?: string;
+
 	async?: boolean;
 	method?: string;
 	headers?: object;
@@ -149,6 +150,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 
 		// ensure content type is set
 		let contentTypeHeader = this.getHeader(headers, "Content-Type");
+
 		if (
 			!contentTypeHeader &&
 			typeof request.body !== "undefined" &&
@@ -169,8 +171,11 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 
 	next(e: Event): void {
 		this.done = true;
+
 		const destination = this.destination as Subscriber<any>;
+
 		let result: AjaxResponse;
+
 		try {
 			result = new AjaxResponse(e, this.xhr, this.request);
 		} catch (err) {
@@ -184,6 +189,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 			request,
 			request: { user, method, url, async, password, headers, body },
 		} = this;
+
 		try {
 			const xhr = (this.xhr = request.createXHR!());
 
@@ -232,6 +238,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 
 		if (contentType) {
 			const splitIndex = contentType.indexOf(";");
+
 			if (splitIndex !== -1) {
 				contentType = contentType.substring(0, splitIndex);
 			}
@@ -245,8 +252,10 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 							`${encodeURIComponent(key)}=${encodeURIComponent(body[key])}`,
 					)
 					.join("&");
+
 			case "application/json":
 				return JSON.stringify(body);
+
 			default:
 				return body;
 		}
@@ -275,7 +284,9 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 
 		xhr.ontimeout = (e: ProgressEvent) => {
 			progressSubscriber?.error?.(e);
+
 			let error;
+
 			try {
 				error = new AjaxTimeoutError(xhr, request); // TODO: Make better.
 			} catch (err) {
@@ -303,7 +314,9 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 				this.complete();
 			} else {
 				progressSubscriber?.error?.(e);
+
 				let error;
+
 				try {
 					error = new AjaxError(
 						"ajax error " + xhr.status,
@@ -320,6 +333,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 
 	unsubscribe() {
 		const { done, xhr } = this;
+
 		if (
 			!done &&
 			xhr &&
@@ -346,6 +360,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 
     // ensure content type is set
     let contentTypeHeader = this.getHeader(headers, 'Content-Type');
+
     if (!contentTypeHeader && typeof request.body !== 'undefined' && !isFormData(request.body)) {
       (headers as any)['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
     }
@@ -358,8 +373,11 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 
   next(e: Event): void {
     this.done = true;
+
     const destination = this.destination as Subscriber<any>;
+
     let result: AjaxResponse;
+
     try {
       result = new AjaxResponse(e, this.xhr, this.request);
     } catch (err) {
@@ -373,6 +391,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
       request,
       request: { user, method, url, async, password, headers, body },
     } = this;
+
     try {
       const xhr = (this.xhr = request.createXHR!());
 
@@ -489,7 +508,9 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
         this.complete();
       } else {
         progressSubscriber?.error?.(e);
+
         let error;
+
         try {
           error = new AjaxError('ajax error ' + xhr.status, xhr, request);
         } catch (err) {
@@ -502,6 +523,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 
   unsubscribe() {
     const { done, xhr } = this;
+
     if (!done && xhr && xhr.readyState !== 4 && typeof xhr.abort === 'function') {
       xhr.abort();
     }
@@ -620,16 +642,20 @@ const AjaxErrorImpl = (() => {
 		this.request = request;
 		this.status = xhr.status;
 		this.responseType = xhr.responseType;
+
 		let response: any;
+
 		try {
 			response = getXHRResponse(xhr);
 		} catch (err) {
 			response = xhr.responseText;
 		}
 		this.response = response;
+
 		return this;
 	}
 	AjaxErrorImpl.prototype = Object.create(Error.prototype);
+
 	return AjaxErrorImpl;
   /**
    * The XHR instance associated with the error
@@ -674,13 +700,16 @@ const AjaxErrorImpl = (() => {
     this.request = request;
     this.status = xhr.status;
     this.responseType = xhr.responseType;
+
     let response: any;
+
     try {
       response = getXHRResponse(xhr);
     } catch (err) {
       response = xhr.responseText;
     }
     this.response = response;
+
     return this;
   }
   AjaxErrorImpl.prototype = Object.create(Error.prototype);
@@ -706,11 +735,13 @@ function getXHRResponse(xhr: XMLHttpRequest) {
 			} else {
 				// IE
 				const ieXHR: any = xhr;
+
 				return JSON.parse(ieXHR.responseText);
 			}
 		}
 		case "document":
 			return xhr.responseXML;
+
 		case "text":
 		default: {
 			if ("response" in xhr) {
@@ -718,6 +749,7 @@ function getXHRResponse(xhr: XMLHttpRequest) {
 			} else {
 				// IE
 				const ieXHR: any = xhr;
+
 				return ieXHR.responseText;
 			}
 		}
@@ -742,9 +774,11 @@ const AjaxTimeoutErrorImpl = (() => {
 	) {
 		AjaxError.call(this, "ajax timeout", xhr, request);
 		this.name = "AjaxTimeoutError";
+
 		return this;
 	}
 	AjaxTimeoutErrorImpl.prototype = Object.create(AjaxError.prototype);
+
 	return AjaxTimeoutErrorImpl;
   switch (xhr.responseType) {
     case 'json': {
@@ -753,11 +787,13 @@ const AjaxTimeoutErrorImpl = (() => {
       } else {
         // IE
         const ieXHR: any = xhr;
+
         return JSON.parse(ieXHR.responseText);
       }
     }
     case 'document':
       return xhr.responseXML;
+
     case 'text':
     default: {
       if ('response' in xhr) {
@@ -765,6 +801,7 @@ const AjaxTimeoutErrorImpl = (() => {
       } else {
         // IE
         const ieXHR: any = xhr;
+
         return ieXHR.responseText;
       }
     }
@@ -785,6 +822,7 @@ const AjaxTimeoutErrorImpl = (() => {
   function AjaxTimeoutErrorImpl(this: any, xhr: XMLHttpRequest, request: AjaxRequest) {
     AjaxError.call(this, 'ajax timeout', xhr, request);
     this.name = 'AjaxTimeoutError';
+
     return this;
   }
   AjaxTimeoutErrorImpl.prototype = Object.create(AjaxError.prototype);

@@ -13,13 +13,16 @@ import * as fs from "fs";
 function removeRecursive(dir: string): void {
     for (const entry of fs.readdirSync(dir)) {
         const entryPath = path.join(dir, entry);
+
         let stats;
+
         try {
             stats = fs.lstatSync(entryPath);
         } catch {
             continue; // Guard against https://github.com/nodejs/node/issues/4760
         }
         if (stats.isDirectory()) removeRecursive(entryPath);
+
         else fs.unlinkSync(entryPath);
     }
     fs.rmdirSync(dir);
@@ -34,6 +37,7 @@ const validateBinary = async () => {
             process.env.INIT_CWD!,
             "package.json"
         ));
+
         if (name === "@swc/core" || name === "@swc/workspace") {
             return;
         }
@@ -44,6 +48,7 @@ const validateBinary = async () => {
     // TODO: We do not take care of the case if user try to install with `--no-optional`.
     // For now, it is considered as deliberate decision.
     let binding;
+
     try {
         binding = require("./binding.js");
 
@@ -76,11 +81,13 @@ const validateBinary = async () => {
         console.warn(
             `@swc/core could not resolve native bindings installation, but found manual override config SWC_BINARY_PATH specified. Skipping remaning validation.`
         );
+
         return;
     }
 
     // Check if top-level package.json installs @swc/wasm separately already
     let wasmBinding;
+
     try {
         wasmBinding = require.resolve(`@swc/wasm`);
     } catch (_) {}
@@ -90,6 +97,7 @@ const validateBinary = async () => {
     }
 
     const env = { ...process.env, npm_config_global: undefined };
+
     const { version } = require(path.join(
         path.dirname(require.resolve("@swc/core")),
         "package.json"
@@ -99,6 +107,7 @@ const validateBinary = async () => {
     // but can't directly set cwd to INIT_CWD as npm seems to acquire lock to the working dir.
     // Instead, create a temporary inner and move it out.
     const coreDir = path.dirname(require.resolve("@swc/core"));
+
     const installDir = path.join(coreDir, "npm-install");
 
     try {

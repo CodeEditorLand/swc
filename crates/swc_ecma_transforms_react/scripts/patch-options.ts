@@ -4,17 +4,23 @@ import * as path from "path";
 async function* walk(dir: string): AsyncGenerator<string> {
 	for await (const d of await fs.promises.opendir(dir)) {
 		const entry = path.join(dir, d.name);
+
 		if (d.isDirectory()) yield* walk(entry);
+
 		else if (d.isFile()) yield entry;
 	}
 	for await (const d of await fs.promises.opendir(dir)) {
 		const entry = path.join(dir, d.name);
+
 		if (d.isDirectory()) yield* walk(entry);
+
 		else if (d.isFile()) yield entry;
 	}
     for await (const d of await fs.promises.opendir(dir)) {
         const entry = path.join(dir, d.name);
+
         if (d.isDirectory()) yield* walk(entry);
+
         else if (d.isFile()) yield entry;
     }
 }
@@ -29,6 +35,7 @@ async function main() {
 		const obj = JSON.parse(
 			await fs.promises.readFile(f, { encoding: "utf-8" }),
 		);
+
 		const dir = path.dirname(f);
 
 		if (obj.throws) {
@@ -39,6 +46,7 @@ async function main() {
 		}
 
 		console.log(f);
+
 		if (obj.plugins) {
 			if (obj.plugins.includes("transform-react-jsx")) {
 				const newObj = {
@@ -49,12 +57,14 @@ async function main() {
 				await fs.promises.writeFile(f, JSON.stringify(newObj), {
 					encoding: "utf-8",
 				});
+
 				continue;
 			}
 
 			for (const [plugin, config] of obj.plugins) {
 				if (plugin === "transform-react-jsx") {
 					console.log(plugin, config);
+
 					const newObj = {
 						...obj,
 						...config,
@@ -64,6 +74,7 @@ async function main() {
 					await fs.promises.writeFile(f, JSON.stringify(newObj), {
 						encoding: "utf-8",
 					});
+
 					break;
 				}
 			}
@@ -77,6 +88,7 @@ async function main() {
 		const obj = JSON.parse(
 			await fs.promises.readFile(f, { encoding: "utf-8" }),
 		);
+
 		const dir = path.dirname(f);
 
 		if (obj.throws) {
@@ -87,6 +99,7 @@ async function main() {
 		}
 
 		console.log(f);
+
 		if (obj.plugins) {
 			if (obj.plugins.includes("transform-react-jsx")) {
 				const newObj = {
@@ -97,12 +110,14 @@ async function main() {
 				await fs.promises.writeFile(f, JSON.stringify(newObj), {
 					encoding: "utf-8",
 				});
+
 				continue;
 			}
 
 			for (const [plugin, config] of obj.plugins) {
 				if (plugin === "transform-react-jsx") {
 					console.log(plugin, config);
+
 					const newObj = {
 						...obj,
 						...config,
@@ -112,6 +127,7 @@ async function main() {
 					await fs.promises.writeFile(f, JSON.stringify(newObj), {
 						encoding: "utf-8",
 					});
+
 					break;
 				}
 			}
@@ -125,6 +141,7 @@ async function main() {
         const obj = JSON.parse(
             await fs.promises.readFile(f, { encoding: "utf-8" })
         );
+
         const dir = path.dirname(f);
 
         if (obj.throws) {
@@ -135,6 +152,7 @@ async function main() {
         }
 
         console.log(f);
+
         if (obj.plugins) {
             if (obj.plugins.includes("transform-react-jsx")) {
                 const newObj = {
@@ -145,12 +163,14 @@ async function main() {
                 await fs.promises.writeFile(f, JSON.stringify(newObj), {
                     encoding: "utf-8",
                 });
+
                 continue;
             }
 
             for (const [plugin, config] of obj.plugins) {
                 if (plugin === "transform-react-jsx") {
                     console.log(plugin, config);
+
                     const newObj = {
                         ...obj,
                         ...config,
@@ -160,6 +180,7 @@ async function main() {
                     await fs.promises.writeFile(f, JSON.stringify(newObj), {
                         encoding: "utf-8",
                     });
+
                     break;
                 }
             }

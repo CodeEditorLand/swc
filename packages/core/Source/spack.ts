@@ -13,10 +13,13 @@ export async function compileBundleOptions(
 
     try {
         const filepath = typeof f === "string" ? f : "spack.config.js";
+
         const fileModule = isLocalFile.test(filepath)
             ? path.resolve(filepath)
             : filepath;
+
         let configFromFile: BundleInput = require(fileModule);
+
         if ((configFromFile as any).default) {
             configFromFile = (configFromFile as any).default;
         }

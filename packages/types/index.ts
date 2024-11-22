@@ -3734,10 +3734,12 @@ export interface ImportNamespaceSpecifier extends Node, HasSpan {
 export interface NamedImportSpecifier extends Node, HasSpan {
 	type: "ImportSpecifier";
 	local: Identifier;
+
 	imported?: ModuleExportName;
 	isTypeOnly: boolean;
     type: "ImportSpecifier";
     local: Identifier;
+
     imported?: ModuleExportName;
     isTypeOnly: boolean;
 }
@@ -4214,6 +4216,7 @@ export interface SwitchStatement extends Node, HasSpan {
 	type: "SwitchStatement";
 
 	discriminant: Expression;
+
 	cases: SwitchCase[];
 }
 
@@ -4314,7 +4317,9 @@ export interface TsTypeParameter extends Node, HasSpan {
 	name: Identifier;
 	in: boolean;
 	out: boolean;
+
 	constraint?: TsType;
+
 	default?: TsType;
 }
 
@@ -4481,6 +4486,7 @@ export interface SwitchStatement extends Node, HasSpan {
     type: "SwitchStatement";
 
     discriminant: Expression;
+
     cases: SwitchCase[];
 }
 
@@ -4581,7 +4587,9 @@ export interface TsTypeParameter extends Node, HasSpan {
     name: Identifier;
     in: boolean;
     out: boolean;
+
     constraint?: TsType;
+
     default?: TsType;
 }
 
@@ -5070,6 +5078,7 @@ export interface TsConditionalType extends Node, HasSpan {
 	type: "TsConditionalType";
 
 	checkType: TsType;
+
 	extendsType: TsType;
 	trueType: TsType;
 	falseType: TsType;
@@ -5107,6 +5116,7 @@ export interface TsConditionalType extends Node, HasSpan {
     type: "TsConditionalType";
 
     checkType: TsType;
+
     extendsType: TsType;
     trueType: TsType;
     falseType: TsType;
@@ -5213,6 +5223,7 @@ export interface TsInterfaceDeclaration extends Node, HasSpan {
 	id: Identifier;
 	declare: boolean;
 	typeParams?: TsTypeParameterDeclaration;
+
 	extends: TsExpressionWithTypeArguments[];
 	body: TsInterfaceBody;
 }
@@ -5258,6 +5269,7 @@ export interface TsEnumMember extends Node, HasSpan {
     id: Identifier;
     declare: boolean;
     typeParams?: TsTypeParameterDeclaration;
+
     extends: TsExpressionWithTypeArguments[];
     body: TsInterfaceBody;
 }

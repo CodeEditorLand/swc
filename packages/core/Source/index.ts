@@ -22,8 +22,10 @@ const bindingsOverride = process.env["SWC_BINARY_PATH"];
 // `@swc/core` includes d.ts for the `@swc/wasm` to provide typed fallback bindings
 // todo: fix package.json scripts
 let fallbackBindings: any;
+
 const bindings: typeof import("../binding") = (() => {
     let binding;
+
     try {
         binding = !!bindingsOverride
             ? require(resolve(bindingsOverride))
@@ -32,6 +34,7 @@ const bindings: typeof import("../binding") = (() => {
         // If native binding loaded successfully, it should return proper target triple constant.
         const triple = binding.getTargetTriple();
         assert.ok(triple, "Failed to read target triple from native binary.");
+
         return binding;
     } catch (_) {
         // postinstall supposed to install `@swc/wasm` already
@@ -52,6 +55,7 @@ export const version: string = require("./package.json").version;
 export function plugins(ps: Plugin[]): Plugin {
     return (mod) => {
         let m = mod;
+
         for (const p of ps) {
             m = p(m);
         }
@@ -92,6 +96,7 @@ export class Compiler {
         options?: ParseOptions,
         filename?: string
     ): Promise<Module>;
+
     async parse(
         src: string,
         options?: ParseOptions,
@@ -110,6 +115,7 @@ export class Compiler {
 
         if (bindings) {
             const res = await bindings.parse(src, toBuffer(options), filename);
+
             return JSON.parse(res);
         } else if (fallbackBindings) {
             return fallbackBindings.parse(src, options);
@@ -139,6 +145,7 @@ export class Compiler {
         options: ParseOptions & { isModule: false }
     ): Promise<Script>;
     parseFile(path: string, options?: ParseOptions): Promise<Module>;
+
     async parseFile(path: string, options?: ParseOptions): Promise<Program> {
         options = options || { syntax: "ecmascript" };
         options.syntax = options.syntax || "ecmascript";
@@ -229,6 +236,7 @@ export class Compiler {
                             options.filename
                         )
                         : src;
+
                 return this.transform(plugin(m), newOptions);
             }
 
@@ -272,6 +280,7 @@ export class Compiler {
                             options.filename
                         )
                         : src;
+
                 return this.transformSync(plugin(m), newOptions);
             }
 
@@ -317,6 +326,7 @@ export class Compiler {
 
         if (plugin) {
             const m = await this.parseFile(path, options?.jsc?.parser);
+
             return this.transform(plugin(m), newOptions);
         }
 
@@ -344,6 +354,7 @@ export class Compiler {
 
         if (plugin) {
             const m = this.parseFileSync(path, options?.jsc?.parser);
+
             return this.transformSync(plugin(m), newOptions);
         }
 
@@ -373,7 +384,9 @@ export class Compiler {
                     return this.bundle(opt);
                 })
             );
+
             let obj = {} as any;
+
             for (const o of all) {
                 obj = {
                     ...obj,

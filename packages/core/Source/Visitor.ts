@@ -183,6 +183,7 @@ export class Visitor {
         switch (n.type) {
             case "Module":
                 return this.visitModule(n);
+
             case "Script":
                 return this.visitScript(n);
         }
@@ -190,11 +191,13 @@ export class Visitor {
 
     visitModule(m: Module): Module {
         m.body = this.visitModuleItems(m.body);
+
         return m;
     }
 
     visitScript(m: Script): Script {
         m.body = this.visitStatements(m.body);
+
         return m;
     }
 
@@ -214,6 +217,7 @@ export class Visitor {
             case "TsExportAssignment":
             case "TsNamespaceExportDeclaration":
                 return this.visitModuleDeclaration(n);
+
             default:
                 return this.visitStatement(n);
         }
@@ -223,20 +227,28 @@ export class Visitor {
         switch (n.type) {
             case "ExportDeclaration":
                 return this.visitExportDeclaration(n);
+
             case "ExportDefaultDeclaration":
                 return this.visitExportDefaultDeclaration(n);
+
             case "ExportNamedDeclaration":
                 return this.visitExportNamedDeclaration(n);
+
             case "ExportDefaultExpression":
                 return this.visitExportDefaultExpression(n);
+
             case "ImportDeclaration":
                 return this.visitImportDeclaration(n);
+
             case "ExportAllDeclaration":
                 return this.visitExportAllDeclaration(n);
+
             case "TsImportEqualsDeclaration":
                 return this.visitTsImportEqualsDeclaration(n);
+
             case "TsExportAssignment":
                 return this.visitTsExportAssignment(n);
+
             case "TsNamespaceExportDeclaration":
                 return this.visitTsNamespaceExportDeclaration(n);
         }
@@ -246,6 +258,7 @@ export class Visitor {
         n: TsNamespaceExportDeclaration
     ): ModuleDeclaration {
         n.id = this.visitBindingIdentifier(n.id);
+
         return n;
     }
 
@@ -260,6 +273,7 @@ export class Visitor {
     ): ModuleDeclaration {
         n.id = this.visitBindingIdentifier(n.id);
         n.moduleRef = this.visitTsModuleReference(n.moduleRef);
+
         return n;
     }
 
@@ -267,8 +281,10 @@ export class Visitor {
         switch (n.type) {
             case "Identifier":
                 return this.visitIdentifierReference(n);
+
             case "TsExternalModuleReference":
                 return this.visitTsExternalModuleReference(n);
+
             case "TsQualifiedName":
                 return this.visitTsQualifiedName(n);
         }
@@ -278,11 +294,13 @@ export class Visitor {
         n: TsExternalModuleReference
     ): TsExternalModuleReference {
         n.expression = this.visitStringLiteral(n.expression);
+
         return n;
     }
 
     visitExportAllDeclaration(n: ExportAllDeclaration): ModuleDeclaration {
         n.source = this.visitStringLiteral(n.source);
+
         return n;
     }
 
@@ -290,12 +308,14 @@ export class Visitor {
         n: ExportDefaultExpression
     ): ModuleDeclaration {
         n.expression = this.visitExpression(n.expression);
+
         return n;
     }
 
     visitExportNamedDeclaration(n: ExportNamedDeclaration): ModuleDeclaration {
         n.specifiers = this.visitExportSpecifiers(n.specifiers);
         n.source = this.visitOptionalStringLiteral(n.source);
+
         return n;
     }
 
@@ -307,8 +327,10 @@ export class Visitor {
         switch (n.type) {
             case "ExportDefaultSpecifier":
                 return this.visitExportDefaultSpecifier(n);
+
             case "ExportNamespaceSpecifier":
                 return this.visitExportNamespaceSpecifier(n);
+
             case "ExportSpecifier":
                 return this.visitNamedExportSpecifier(n);
         }
@@ -318,6 +340,7 @@ export class Visitor {
             n.exported = this.visitModuleExportName(n.exported);
         }
         n.orig = this.visitModuleExportName(n.orig);
+
         return n;
     }
 
@@ -325,6 +348,7 @@ export class Visitor {
         switch (n.type) {
             case "Identifier":
                 return this.visitIdentifier(n);
+
             case "StringLiteral":
                 return this.visitStringLiteral(n);
         }
@@ -334,11 +358,13 @@ export class Visitor {
         n: ExportNamespaceSpecifier
     ): ExportSpecifier {
         n.name = this.visitModuleExportName(n.name);
+
         return n;
     }
 
     visitExportDefaultSpecifier(n: ExportDefaultSpecifier): ExportSpecifier {
         n.exported = this.visitBindingIdentifier(n.exported);
+
         return n;
     }
 
@@ -354,6 +380,7 @@ export class Visitor {
         n: ExportDefaultDeclaration
     ): ModuleDeclaration {
         n.decl = this.visitDefaultDeclaration(n.decl);
+
         return n;
     }
 
@@ -361,8 +388,10 @@ export class Visitor {
         switch (n.type) {
             case "ClassExpression":
                 return this.visitClassExpression(n);
+
             case "FunctionExpression":
                 return this.visitFunctionExpression(n);
+
             case "TsInterfaceDeclaration":
                 return this.visitTsInterfaceDeclaration(n);
         }
@@ -370,6 +399,7 @@ export class Visitor {
 
     visitFunctionExpression(n: FunctionExpression): FunctionExpression {
         n = this.visitFunction(n);
+
         if (n.identifier) {
             n.identifier = this.visitBindingIdentifier(n.identifier);
         }
@@ -378,6 +408,7 @@ export class Visitor {
 
     visitClassExpression(n: ClassExpression): ClassExpression {
         n = this.visitClass(n);
+
         if (n.identifier) {
             n.identifier = this.visitBindingIdentifier(n.identifier);
         }
@@ -386,6 +417,7 @@ export class Visitor {
 
     visitExportDeclaration(n: ExportDeclaration): ModuleDeclaration {
         n.declaration = this.visitDeclaration(n.declaration);
+
         return n;
     }
 
@@ -414,6 +446,7 @@ export class Visitor {
 
     visitSpreadElement(e: SpreadElement): SpreadElement {
         e.arguments = this.visitExpression(e.arguments);
+
         return e;
     }
 
@@ -440,6 +473,7 @@ export class Visitor {
         switch (body.type) {
             case "BlockStatement":
                 return this.visitBlockStatement(body);
+
             default:
                 return this.visitExpression(body);
         }
@@ -468,38 +502,55 @@ export class Visitor {
 
             case "BreakStatement":
                 return this.visitBreakStatement(stmt);
+
             case "BlockStatement":
                 return this.visitBlockStatement(stmt);
+
             case "ContinueStatement":
                 return this.visitContinueStatement(stmt);
+
             case "DebuggerStatement":
                 return this.visitDebuggerStatement(stmt);
+
             case "DoWhileStatement":
                 return this.visitDoWhileStatement(stmt);
+
             case "EmptyStatement":
                 return this.visitEmptyStatement(stmt);
+
             case "ForInStatement":
                 return this.visitForInStatement(stmt);
+
             case "ForOfStatement":
                 return this.visitForOfStatement(stmt);
+
             case "ForStatement":
                 return this.visitForStatement(stmt);
+
             case "IfStatement":
                 return this.visitIfStatement(stmt);
+
             case "LabeledStatement":
                 return this.visitLabeledStatement(stmt);
+
             case "ReturnStatement":
                 return this.visitReturnStatement(stmt);
+
             case "SwitchStatement":
                 return this.visitSwitchStatement(stmt);
+
             case "ThrowStatement":
                 return this.visitThrowStatement(stmt);
+
             case "TryStatement":
                 return this.visitTryStatement(stmt);
+
             case "WhileStatement":
                 return this.visitWhileStatement(stmt);
+
             case "WithStatement":
                 return this.visitWithStatement(stmt);
+
             case "ExpressionStatement":
                 return this.visitExpressionStatement(stmt);
 
@@ -513,6 +564,7 @@ export class Visitor {
     visitSwitchStatement(stmt: SwitchStatement): Statement {
         stmt.discriminant = this.visitExpression(stmt.discriminant);
         stmt.cases = this.visitSwitchCases(stmt.cases);
+
         return stmt;
     }
 
@@ -552,12 +604,14 @@ export class Visitor {
     visitWhileStatement(stmt: WhileStatement): Statement {
         stmt.test = this.visitExpression(stmt.test);
         stmt.body = this.visitStatement(stmt.body);
+
         return stmt;
     }
 
     visitTryStatement(stmt: TryStatement): Statement {
         stmt.block = this.visitBlockStatement(stmt.block);
         stmt.handler = this.visitCatchClause(stmt.handler);
+
         if (stmt.finalizer) {
             stmt.finalizer = this.visitBlockStatement(stmt.finalizer);
         }
@@ -580,6 +634,7 @@ export class Visitor {
 
     visitThrowStatement(stmt: ThrowStatement): Statement {
         stmt.argument = this.visitExpression(stmt.argument);
+
         return stmt;
     }
 
@@ -621,6 +676,7 @@ export class Visitor {
         }
         stmt.right = this.visitExpression(stmt.right);
         stmt.body = this.visitStatement(stmt.body);
+
         return stmt;
     }
 
@@ -632,6 +688,7 @@ export class Visitor {
         }
         stmt.right = this.visitExpression(stmt.right);
         stmt.body = this.visitStatement(stmt.body);
+
         return stmt;
     }
 
@@ -642,6 +699,7 @@ export class Visitor {
     visitDoWhileStatement(stmt: DoWhileStatement): Statement {
         stmt.body = this.visitStatement(stmt.body);
         stmt.test = this.visitExpression(stmt.test);
+
         return stmt;
     }
 
@@ -652,6 +710,7 @@ export class Visitor {
     visitWithStatement(stmt: WithStatement): Statement {
         stmt.object = this.visitExpression(stmt.object);
         stmt.body = this.visitStatement(stmt.body);
+
         return stmt;
     }
 
@@ -659,16 +718,22 @@ export class Visitor {
         switch (decl.type) {
             case "ClassDeclaration":
                 return this.visitClassDeclaration(decl);
+
             case "FunctionDeclaration":
                 return this.visitFunctionDeclaration(decl);
+
             case "TsEnumDeclaration":
                 return this.visitTsEnumDeclaration(decl);
+
             case "TsInterfaceDeclaration":
                 return this.visitTsInterfaceDeclaration(decl);
+
             case "TsModuleDeclaration":
                 return this.visitTsModuleDeclaration(decl);
+
             case "TsTypeAliasDeclaration":
                 return this.visitTsTypeAliasDeclaration(decl);
+
             case "VariableDeclaration":
                 return this.visitVariableDeclaration(decl);
         }
@@ -676,6 +741,7 @@ export class Visitor {
 
     visitVariableDeclaration(n: VariableDeclaration): VariableDeclaration {
         n.declarations = this.visitVariableDeclarators(n.declarations);
+
         return n;
     }
 
@@ -688,6 +754,7 @@ export class Visitor {
     visitVariableDeclarator(n: VariableDeclarator): VariableDeclarator {
         n.id = this.visitPattern(n.id);
         n.init = this.visitOptionalExpression(n.init);
+
         return n;
     }
 
@@ -695,11 +762,13 @@ export class Visitor {
         n.id = this.visitBindingIdentifier(n.id);
         n.typeAnnotation = this.visitTsType(n.typeAnnotation);
         n.typeParams = this.visitTsTypeParameterDeclaration(n.typeParams);
+
         return n;
     }
 
     visitTsModuleDeclaration(n: TsModuleDeclaration): Declaration {
         n.id = this.visitTsModuleName(n.id);
+
         if (n.body) {
             n.body = this.visitTsNamespaceBody(n.body);
         }
@@ -710,6 +779,7 @@ export class Visitor {
         switch (n.type) {
             case "Identifier":
                 return this.visitBindingIdentifier(n);
+
             case "StringLiteral":
                 return this.visitStringLiteral(n);
         }
@@ -720,6 +790,7 @@ export class Visitor {
             switch (n.type) {
                 case "TsModuleBlock":
                     return this.visitTsModuleBlock(n);
+
                 case "TsNamespaceDeclaration":
                     return this.visitTsNamespaceDeclaration(n);
             }
@@ -730,10 +801,12 @@ export class Visitor {
         n: TsNamespaceDeclaration
     ): TsModuleBlock | TsNamespaceDeclaration {
         const body = this.visitTsNamespaceBody(n.body);
+
         if (body) {
             n.body = body;
         }
         n.id = this.visitBindingIdentifier(n.id);
+
         return n;
     }
 
@@ -741,6 +814,7 @@ export class Visitor {
         n: TsModuleBlock
     ): TsModuleBlock | TsNamespaceDeclaration {
         n.body = this.visitModuleItems(n.body);
+
         return n;
     }
 
@@ -751,11 +825,13 @@ export class Visitor {
         n.typeParams = this.visitTsTypeParameterDeclaration(n.typeParams);
         n.extends = this.visitTsExpressionsWithTypeArguments(n.extends);
         n.body = this.visitTsInterfaceBody(n.body);
+
         return n;
     }
 
     visitTsInterfaceBody(n: TsInterfaceBody): TsInterfaceBody {
         n.body = this.visitTsTypeElements(n.body);
+
         return n;
     }
 
@@ -767,16 +843,22 @@ export class Visitor {
         switch (n.type) {
             case "TsCallSignatureDeclaration":
                 return this.visitTsCallSignatureDeclaration(n);
+
             case "TsConstructSignatureDeclaration":
                 return this.visitTsConstructSignatureDeclaration(n);
+
             case "TsPropertySignature":
                 return this.visitTsPropertySignature(n);
+
             case "TsGetterSignature":
                 return this.visitTsGetterSignature(n);
+
             case "TsSetterSignature":
                 return this.visitTsSetterSignature(n);
+
             case "TsMethodSignature":
                 return this.visitTsMethodSignature(n);
+
             case "TsIndexSignature":
                 return this.visitTsIndexSignature(n);
         }
@@ -787,6 +869,7 @@ export class Visitor {
     ): TsCallSignatureDeclaration {
         n.params = this.visitTsFnParameters(n.params);
         n.typeAnnotation = this.visitTsTypeAnnotation(n.typeAnnotation);
+
         return n;
     }
     visitTsConstructSignatureDeclaration(
@@ -794,29 +877,35 @@ export class Visitor {
     ): TsConstructSignatureDeclaration {
         n.params = this.visitTsFnParameters(n.params);
         n.typeAnnotation = this.visitTsTypeAnnotation(n.typeAnnotation);
+
         return n;
     }
     visitTsPropertySignature(n: TsPropertySignature): TsPropertySignature {
         n.typeAnnotation = this.visitTsTypeAnnotation(n.typeAnnotation);
+
         return n;
     }
     visitTsGetterSignature(n: TsGetterSignature): TsGetterSignature {
         n.typeAnnotation = this.visitTsTypeAnnotation(n.typeAnnotation);
+
         return n;
     }
     visitTsSetterSignature(n: TsSetterSignature): TsSetterSignature {
         n.param = this.visitTsFnParameter(n.param);
+
         return n;
     }
     visitTsMethodSignature(n: TsMethodSignature): TsMethodSignature {
         n.params = this.visitTsFnParameters(n.params);
         n.typeAnn = this.visitTsTypeAnnotation(n.typeAnn);
+
         return n;
     }
 
     visitTsEnumDeclaration(n: TsEnumDeclaration): Declaration {
         n.id = this.visitIdentifier(n.id);
         n.members = this.visitTsEnumMembers(n.members);
+
         return n;
     }
 
@@ -827,6 +916,7 @@ export class Visitor {
     visitTsEnumMember(n: TsEnumMember): TsEnumMember {
         n.id = this.visitTsEnumMemberId(n.id);
         n.init = this.visitOptionalExpression(n.init);
+
         return n;
     }
 
@@ -834,6 +924,7 @@ export class Visitor {
         switch (n.type) {
             case "Identifier":
                 return this.visitBindingIdentifier(n);
+
             case "StringLiteral":
                 return this.visitStringLiteral(n);
         }
@@ -849,6 +940,7 @@ export class Visitor {
     visitClassDeclaration(decl: ClassDeclaration): Declaration {
         decl = this.visitClass(decl);
         decl.identifier = this.visitIdentifier(decl.identifier);
+
         return decl;
     }
 
@@ -860,18 +952,25 @@ export class Visitor {
         switch (member.type) {
             case "ClassMethod":
                 return this.visitClassMethod(member);
+
             case "ClassProperty":
                 return this.visitClassProperty(member);
+
             case "Constructor":
                 return this.visitConstructor(member);
+
             case "PrivateMethod":
                 return this.visitPrivateMethod(member);
+
             case "PrivateProperty":
                 return this.visitPrivateProperty(member);
+
             case "TsIndexSignature":
                 return this.visitTsIndexSignature(member);
+
             case "EmptyStatement":
                 return this.visitEmptyStatement(member);
+
             case "StaticBlock":
                 return this.visitStaticBlock(member);
         }
@@ -879,8 +978,10 @@ export class Visitor {
 
     visitTsIndexSignature(n: TsIndexSignature): TsIndexSignature {
         n.params = this.visitTsFnParameters(n.params);
+
         if (n.typeAnnotation)
             n.typeAnnotation = this.visitTsTypeAnnotation(n.typeAnnotation);
+
         return n;
     }
 
@@ -890,6 +991,7 @@ export class Visitor {
 
     visitTsFnParameter(n: TsFnParameter): TsFnParameter {
         n.typeAnnotation = this.visitTsTypeAnnotation(n.typeAnnotation);
+
         return n;
     }
 
@@ -898,6 +1000,7 @@ export class Visitor {
         n.key = this.visitPrivateName(n.key);
         n.typeAnnotation = this.visitTsTypeAnnotation(n.typeAnnotation);
         n.value = this.visitOptionalExpression(n.value);
+
         return n;
     }
 
@@ -905,6 +1008,7 @@ export class Visitor {
         n.accessibility = this.visitAccessibility(n.accessibility);
         n.function = this.visitFunction(n.function);
         n.key = this.visitPrivateName(n.key);
+
         return n;
     }
 
@@ -916,6 +1020,7 @@ export class Visitor {
         n.accessibility = this.visitAccessibility(n.accessibility);
         n.key = this.visitPropertyName(n.key);
         n.params = this.visitConstructorParameters(n.params);
+
         if (n.body) {
             n.body = this.visitBlockStatement(n.body);
         }
@@ -934,6 +1039,7 @@ export class Visitor {
         switch (n.type) {
             case "TsParameterProperty":
                 return this.visitTsParameterProperty(n);
+
             default:
                 return this.visitParameter(n);
         }
@@ -941,6 +1047,7 @@ export class Visitor {
 
     visitStaticBlock(n: StaticBlock): StaticBlock {
         n.body = this.visitBlockStatement(n.body);
+
         return n;
     }
 
@@ -950,6 +1057,7 @@ export class Visitor {
         n.accessibility = this.visitAccessibility(n.accessibility);
         n.decorators = this.visitDecorators(n.decorators);
         n.param = this.visitTsParameterPropertyParameter(n.param);
+
         return n;
     }
 
@@ -957,6 +1065,7 @@ export class Visitor {
         n: TsParameterPropertyParameter
     ): TsParameterPropertyParameter {
         n.typeAnnotation = this.visitTsTypeAnnotation(n.typeAnnotation);
+
         return n;
     }
 
@@ -964,12 +1073,16 @@ export class Visitor {
         switch (key.type) {
             case "Identifier":
                 return this.visitBindingIdentifier(key);
+
             case "StringLiteral":
                 return this.visitStringLiteral(key);
+
             case "NumericLiteral":
                 return this.visitNumericLiteral(key);
+
             case "BigIntLiteral":
                 return this.visitBigIntLiteral(key);
+
             default:
                 return this.visitComputedPropertyKey(key);
         }
@@ -987,6 +1100,7 @@ export class Visitor {
         n.key = this.visitPropertyName(n.key);
         n.typeAnnotation = this.visitTsTypeAnnotation(n.typeAnnotation);
         n.value = this.visitOptionalExpression(n.value);
+
         return n;
     }
 
@@ -994,11 +1108,13 @@ export class Visitor {
         n.accessibility = this.visitAccessibility(n.accessibility);
         n.function = this.visitFunction(n.function);
         n.key = this.visitPropertyName(n.key);
+
         return n;
     }
 
     visitComputedPropertyKey(n: ComputedPropName): ComputedPropName {
         n.expression = this.visitExpression(n.expression);
+
         return n;
     }
 
@@ -1010,6 +1126,7 @@ export class Visitor {
         n.superTypeParams = this.visitTsTypeParameterInstantiation(
             n.superTypeParams
         );
+
         if (n.implements) {
             n.implements = this.visitTsExpressionsWithTypeArguments(
                 n.implements
@@ -1017,12 +1134,14 @@ export class Visitor {
         }
 
         n.body = this.visitClassBody(n.body);
+
         return n;
     }
 
     visitFunction<T extends Fn>(n: T): T {
         n.decorators = this.visitDecorators(n.decorators);
         n.params = this.visitParameters(n.params);
+
         if (n.body) {
             n.body = this.visitBlockStatement(n.body);
         }
@@ -1030,6 +1149,7 @@ export class Visitor {
         n.typeParameters = this.visitTsTypeParameterDeclaration(
             n.typeParameters
         );
+
         return n;
     }
 
@@ -1046,6 +1166,7 @@ export class Visitor {
         n.typeArguments = this.visitTsTypeParameterInstantiation(
             n.typeArguments
         );
+
         return n;
     }
 
@@ -1066,6 +1187,7 @@ export class Visitor {
         switch (n.type) {
             case "Identifier":
                 return this.visitBindingIdentifier(n);
+
             case "TsQualifiedName":
                 return this.visitTsQualifiedName(n);
         }
@@ -1074,6 +1196,7 @@ export class Visitor {
     visitTsQualifiedName(n: TsQualifiedName): TsQualifiedName {
         n.left = this.visitTsEntityName(n.left);
         n.right = this.visitIdentifier(n.right);
+
         return n;
     }
 
@@ -1091,6 +1214,7 @@ export class Visitor {
 
     visitExpressionStatement(stmt: ExpressionStatement): Statement {
         stmt.expression = this.visitExpression(stmt.expression);
+
         return stmt;
     }
 
@@ -1105,96 +1229,140 @@ export class Visitor {
         switch (n.type) {
             case "ArrayExpression":
                 return this.visitArrayExpression(n);
+
             case "ArrowFunctionExpression":
                 return this.visitArrowFunctionExpression(n);
+
             case "AssignmentExpression":
                 return this.visitAssignmentExpression(n);
+
             case "AwaitExpression":
                 return this.visitAwaitExpression(n);
+
             case "BigIntLiteral":
                 return this.visitBigIntLiteral(n);
+
             case "BinaryExpression":
                 return this.visitBinaryExpression(n);
+
             case "BooleanLiteral":
                 return this.visitBooleanLiteral(n);
+
             case "CallExpression":
                 return this.visitCallExpression(n);
+
             case "ClassExpression":
                 return this.visitClassExpression(n);
+
             case "ConditionalExpression":
                 return this.visitConditionalExpression(n);
+
             case "FunctionExpression":
                 return this.visitFunctionExpression(n);
+
             case "Identifier":
                 return this.visitIdentifierReference(n);
+
             case "JSXElement":
                 return this.visitJSXElement(n);
+
             case "JSXEmptyExpression":
                 return this.visitJSXEmptyExpression(n);
+
             case "JSXFragment":
                 return this.visitJSXFragment(n);
+
             case "JSXMemberExpression":
                 return this.visitJSXMemberExpression(n);
+
             case "JSXNamespacedName":
                 return this.visitJSXNamespacedName(n);
+
             case "JSXText":
                 return this.visitJSXText(n);
+
             case "MemberExpression":
                 return this.visitMemberExpression(n);
+
             case "SuperPropExpression":
                 return this.visitSuperPropExpression(n);
+
             case "MetaProperty":
                 return this.visitMetaProperty(n);
+
             case "NewExpression":
                 return this.visitNewExpression(n);
+
             case "NullLiteral":
                 return this.visitNullLiteral(n);
+
             case "NumericLiteral":
                 return this.visitNumericLiteral(n);
+
             case "ObjectExpression":
                 return this.visitObjectExpression(n);
+
             case "ParenthesisExpression":
                 return this.visitParenthesisExpression(n);
+
             case "PrivateName":
                 return this.visitPrivateName(n);
+
             case "RegExpLiteral":
                 return this.visitRegExpLiteral(n);
+
             case "SequenceExpression":
                 return this.visitSequenceExpression(n);
+
             case "StringLiteral":
                 return this.visitStringLiteral(n);
+
             case "TaggedTemplateExpression":
                 return this.visitTaggedTemplateExpression(n);
+
             case "TemplateLiteral":
                 return this.visitTemplateLiteral(n);
+
             case "ThisExpression":
                 return this.visitThisExpression(n);
+
             case "TsAsExpression":
                 return this.visitTsAsExpression(n);
+
             case "TsSatisfiesExpression":
                 return this.visitTsSatisfiesExpression(n);
+
             case "TsNonNullExpression":
                 return this.visitTsNonNullExpression(n);
+
             case "TsTypeAssertion":
                 return this.visitTsTypeAssertion(n);
+
             case "TsConstAssertion":
                 return this.visitTsConstAssertion(n);
+
             case "TsInstantiation":
                 return this.visitTsInstantiation(n);
+
             case "UnaryExpression":
                 return this.visitUnaryExpression(n);
+
             case "UpdateExpression":
                 return this.visitUpdateExpression(n);
+
             case "YieldExpression":
                 return this.visitYieldExpression(n);
+
             case "OptionalChainingExpression":
                 return this.visitOptionalChainingExpression(n);
+
             case "Invalid":
                 return n;
         }
     }
     visitOptionalChainingExpression(n: OptionalChainingExpression): Expression {
         n.base = this.visitMemberExpressionOrOptionalChainingCall(n.base);
+
         return n;
     }
 
@@ -1204,6 +1372,7 @@ export class Visitor {
         switch (n.type) {
             case "MemberExpression":
                 return this.visitMemberExpression(n);
+
             case "CallExpression":
                 return this.visitOptionalChainingCall(n);
         }
@@ -1212,16 +1381,19 @@ export class Visitor {
     visitOptionalChainingCall(n: OptionalChainingCall): OptionalChainingCall {
         n.callee = this.visitExpression(n.callee);
         n.arguments = this.visitExprOrSpreads(n.arguments);
+
         if (n.typeArguments)
             n.typeArguments = this.visitTsTypeParameterInstantiation(
                 n.typeArguments
             );
+
         return n;
     }
 
     visitAssignmentExpression(n: AssignmentExpression): Expression {
         n.left = this.visitPatternOrExpression(n.left);
         n.right = this.visitExpression(n.right);
+
         return n;
     }
 
@@ -1233,6 +1405,7 @@ export class Visitor {
             case "AssignmentPattern":
             case "RestElement":
                 return this.visitPattern(n);
+
             default:
                 return this.visitExpression(n);
         }
@@ -1240,49 +1413,58 @@ export class Visitor {
 
     visitYieldExpression(n: YieldExpression): Expression {
         n.argument = this.visitOptionalExpression(n.argument);
+
         return n;
     }
 
     visitUpdateExpression(n: UpdateExpression): Expression {
         n.argument = this.visitExpression(n.argument);
+
         return n;
     }
 
     visitUnaryExpression(n: UnaryExpression): Expression {
         n.argument = this.visitExpression(n.argument);
+
         return n;
     }
 
     visitTsTypeAssertion(n: TsTypeAssertion): Expression {
         n.expression = this.visitExpression(n.expression);
         n.typeAnnotation = this.visitTsType(n.typeAnnotation);
+
         return n;
     }
 
     visitTsConstAssertion(n: TsConstAssertion): Expression {
         n.expression = this.visitExpression(n.expression);
+
         return n;
     }
 
     visitTsInstantiation(n: TsInstantiation): TsInstantiation {
         n.expression = this.visitExpression(n.expression);
+
         return n;
     }
 
     visitTsNonNullExpression(n: TsNonNullExpression): Expression {
         n.expression = this.visitExpression(n.expression);
+
         return n;
     }
 
     visitTsAsExpression(n: TsAsExpression): Expression {
         n.expression = this.visitExpression(n.expression);
         n.typeAnnotation = this.visitTsType(n.typeAnnotation);
+
         return n;
     }
 
     visitTsSatisfiesExpression(n: TsSatisfiesExpression): Expression {
         n.expression = this.visitExpression(n.expression);
         n.typeAnnotation = this.visitTsType(n.typeAnnotation);
+
         return n;
     }
 
@@ -1292,6 +1474,7 @@ export class Visitor {
 
     visitTemplateLiteral(n: TemplateLiteral): Expression {
         n.expressions = n.expressions.map(this.visitExpression.bind(this));
+
         return n;
     }
 
@@ -1301,12 +1484,15 @@ export class Visitor {
 
     visitParameter(n: Param): Param {
         n.pat = this.visitPattern(n.pat);
+
         return n;
     }
 
     visitTaggedTemplateExpression(n: TaggedTemplateExpression): Expression {
         n.tag = this.visitExpression(n.tag);
+
         const template = this.visitTemplateLiteral(n.template);
+
         if (template.type === "TemplateLiteral") {
             n.template = template;
         }
@@ -1315,6 +1501,7 @@ export class Visitor {
 
     visitSequenceExpression(n: SequenceExpression): Expression {
         n.expressions = n.expressions.map(this.visitExpression.bind(this));
+
         return n;
     }
 
@@ -1324,6 +1511,7 @@ export class Visitor {
 
     visitParenthesisExpression(n: ParenthesisExpression): Expression {
         n.expression = this.visitExpression(n.expression);
+
         return n;
     }
 
@@ -1344,6 +1532,7 @@ export class Visitor {
         switch (n.type) {
             case "SpreadElement":
                 return this.visitSpreadElement(n);
+
             default:
                 return this.visitProperty(n);
         }
@@ -1353,14 +1542,19 @@ export class Visitor {
         switch (n.type) {
             case "Identifier":
                 return this.visitIdentifier(n);
+
             case "AssignmentProperty":
                 return this.visitAssignmentProperty(n);
+
             case "GetterProperty":
                 return this.visitGetterProperty(n);
+
             case "KeyValueProperty":
                 return this.visitKeyValueProperty(n);
+
             case "MethodProperty":
                 return this.visitMethodProperty(n);
+
             case "SetterProperty":
                 return this.visitSetterProperty(n);
         }
@@ -1369,6 +1563,7 @@ export class Visitor {
     visitSetterProperty(n: SetterProperty): Property | SpreadElement {
         n.key = this.visitPropertyName(n.key);
         n.param = this.visitPattern(n.param);
+
         if (n.body) {
             n.body = this.visitBlockStatement(n.body);
         }
@@ -1377,6 +1572,7 @@ export class Visitor {
 
     visitMethodProperty(n: MethodProperty): Property | SpreadElement {
         n.key = this.visitPropertyName(n.key);
+
         if (n.body) {
             n.body = this.visitBlockStatement(n.body);
         }
@@ -1386,27 +1582,32 @@ export class Visitor {
         n.typeParameters = this.visitTsTypeParameterDeclaration(
             n.typeParameters
         );
+
         return n;
     }
 
     visitKeyValueProperty(n: KeyValueProperty): Property | SpreadElement {
         n.key = this.visitPropertyName(n.key);
         n.value = this.visitExpression(n.value);
+
         return n;
     }
 
     visitGetterProperty(n: GetterProperty): Property | SpreadElement {
         n.key = this.visitPropertyName(n.key);
+
         if (n.body) {
             n.body = this.visitBlockStatement(n.body);
         }
         n.typeAnnotation = this.visitTsTypeAnnotation(n.typeAnnotation);
+
         return n;
     }
 
     visitAssignmentProperty(n: AssignmentProperty): Property | SpreadElement {
         n.key = this.visitIdentifier(n.key);
         n.value = this.visitExpression(n.value);
+
         return n;
     }
 
@@ -1416,10 +1617,12 @@ export class Visitor {
 
     visitNewExpression(n: NewExpression): Expression {
         n.callee = this.visitExpression(n.callee);
+
         if (n.arguments) {
             n.arguments = this.visitArguments(n.arguments);
         }
         n.typeArguments = this.visitTsTypeArguments(n.typeArguments);
+
         return n;
     }
 
@@ -1438,6 +1641,7 @@ export class Visitor {
 
     visitArgument(n: Argument): Argument {
         n.expression = this.visitExpression(n.expression);
+
         return n;
     }
 
@@ -1447,17 +1651,21 @@ export class Visitor {
 
     visitMemberExpression(n: MemberExpression): MemberExpression {
         n.object = this.visitExpression(n.object);
+
         switch (n.property.type) {
             case "Computed": {
                 n.property = this.visitComputedPropertyKey(n.property);
+
                 return n;
             }
             case "Identifier": {
                 n.property = this.visitIdentifier(n.property);
+
                 return n;
             }
             case "PrivateName": {
                 n.property = this.visitPrivateName(n.property);
+
                 return n;
             }
         }
@@ -1467,10 +1675,12 @@ export class Visitor {
         switch (n.property.type) {
             case "Computed": {
                 n.property = this.visitComputedPropertyKey(n.property);
+
                 return n;
             }
             case "Identifier": {
                 n.property = this.visitIdentifier(n.property);
+
                 return n;
             }
         }
@@ -1490,12 +1700,14 @@ export class Visitor {
     visitJSXNamespacedName(n: JSXNamespacedName): JSXNamespacedName {
         n.namespace = this.visitIdentifierReference(n.namespace);
         n.name = this.visitIdentifierReference(n.name);
+
         return n;
     }
 
     visitJSXMemberExpression(n: JSXMemberExpression): JSXMemberExpression {
         n.object = this.visitJSXObject(n.object);
         n.property = this.visitIdentifierReference(n.property);
+
         return n;
     }
 
@@ -1503,6 +1715,7 @@ export class Visitor {
         switch (n.type) {
             case "Identifier":
                 return this.visitIdentifierReference(n);
+
             case "JSXMemberExpression":
                 return this.visitJSXMemberExpression(n);
         }
@@ -1510,10 +1723,12 @@ export class Visitor {
 
     visitJSXFragment(n: JSXFragment): JSXFragment {
         n.opening = this.visitJSXOpeningFragment(n.opening);
+
         if (n.children) {
             n.children = this.visitJSXElementChildren(n.children);
         }
         n.closing = this.visitJSXClosingFragment(n.closing);
+
         return n;
     }
 
@@ -1529,12 +1744,16 @@ export class Visitor {
         switch (n.type) {
             case "JSXElement":
                 return this.visitJSXElement(n);
+
             case "JSXExpressionContainer":
                 return this.visitJSXExpressionContainer(n);
+
             case "JSXFragment":
                 return this.visitJSXFragment(n);
+
             case "JSXSpreadChild":
                 return this.visitJSXSpreadChild(n);
+
             case "JSXText":
                 return this.visitJSXText(n);
         }
@@ -1544,11 +1763,13 @@ export class Visitor {
         n: JSXExpressionContainer
     ): JSXExpressionContainer {
         n.expression = this.visitExpression(n.expression);
+
         return n;
     }
 
     visitJSXSpreadChild(n: JSXSpreadChild): JSXElementChild {
         n.expression = this.visitExpression(n.expression);
+
         return n;
     }
 
@@ -1564,6 +1785,7 @@ export class Visitor {
         n.opening = this.visitJSXOpeningElement(n.opening);
         n.children = this.visitJSXElementChildren(n.children);
         n.closing = this.visitJSXClosingElement(n.closing);
+
         return n;
     }
 
@@ -1580,8 +1802,10 @@ export class Visitor {
         switch (n.type) {
             case "Identifier":
                 return this.visitIdentifierReference(n);
+
             case "JSXMemberExpression":
                 return this.visitJSXMemberExpression(n);
+
             case "JSXNamespacedName":
                 return this.visitJSXNamespacedName(n);
         }
@@ -1593,6 +1817,7 @@ export class Visitor {
             n.typeArguments
         );
         n.attributes = this.visitJSXAttributeOrSpreads(n.attributes);
+
         return n;
     }
 
@@ -1606,6 +1831,7 @@ export class Visitor {
         switch (n.type) {
             case "JSXAttribute":
                 return this.visitJSXAttribute(n);
+
             case "SpreadElement":
                 return this.visitSpreadElement(n);
         }
@@ -1619,6 +1845,7 @@ export class Visitor {
     visitJSXAttribute(n: JSXAttribute): JSXAttributeOrSpread {
         n.name = this.visitJSXAttributeName(n.name);
         n.value = this.visitJSXAttributeValue(n.value);
+
         return n;
     }
 
@@ -1630,19 +1857,25 @@ export class Visitor {
         switch (n.type) {
             case "BooleanLiteral":
                 return this.visitBooleanLiteral(n);
+
             case "NullLiteral":
                 return this.visitNullLiteral(n);
+
             case "NumericLiteral":
                 return this.visitNumericLiteral(n);
+
             case "JSXText":
                 return this.visitJSXText(n);
+
             case "StringLiteral":
                 return this.visitStringLiteral(n);
 
             case "JSXElement":
                 return this.visitJSXElement(n);
+
             case "JSXExpressionContainer":
                 return this.visitJSXExpressionContainer(n);
+
             case "JSXFragment":
                 return this.visitJSXFragment(n);
         }
@@ -1653,6 +1886,7 @@ export class Visitor {
         switch (n.type) {
             case "Identifier":
                 return this.visitIdentifierReference(n);
+
             case "JSXNamespacedName":
                 return this.visitJSXNamespacedName(n);
         }
@@ -1662,6 +1896,7 @@ export class Visitor {
         n.test = this.visitExpression(n.test);
         n.consequent = this.visitExpression(n.consequent);
         n.alternate = this.visitExpression(n.alternate);
+
         return n;
     }
 
@@ -1670,6 +1905,7 @@ export class Visitor {
         n.typeArguments = this.visitTsTypeParameterInstantiation(
             n.typeArguments
         );
+
         if (n.arguments) {
             n.arguments = this.visitArguments(n.arguments);
         }
@@ -1684,11 +1920,13 @@ export class Visitor {
     visitBinaryExpression(n: BinaryExpression): Expression {
         n.left = this.visitExpression(n.left);
         n.right = this.visitExpression(n.right);
+
         return n;
     }
 
     visitAwaitExpression(n: AwaitExpression): Expression {
         n.argument = this.visitExpression(n.argument);
+
         return n;
     }
 
@@ -1713,6 +1951,7 @@ export class Visitor {
             n.default = this.visitTsType(n.default);
         }
         n.name = this.visitIdentifierReference(n.name);
+
         return n;
     }
 
@@ -1736,6 +1975,7 @@ export class Visitor {
     visitImportDeclaration(n: ImportDeclaration): ImportDeclaration {
         n.source = this.visitStringLiteral(n.source);
         n.specifiers = this.visitImportSpecifiers(n.specifiers || []);
+
         return n;
     }
 
@@ -1816,14 +2056,19 @@ export class Visitor {
         switch (n.type) {
             case "Identifier":
                 return this.visitBindingIdentifier(n);
+
             case "ArrayPattern":
                 return this.visitArrayPattern(n);
+
             case "ObjectPattern":
                 return this.visitObjectPattern(n);
+
             case "AssignmentPattern":
                 return this.visitAssignmentPattern(n);
+
             case "RestElement":
                 return this.visitRestElement(n);
+
             default:
                 return this.visitExpression(n);
         }
@@ -1832,6 +2077,7 @@ export class Visitor {
     visitRestElement(n: RestElement): RestElement {
         n.argument = this.visitPattern(n.argument);
         n.typeAnnotation = this.visitTsTypeAnnotation(n.typeAnnotation);
+
         return n;
     }
 
@@ -1839,12 +2085,14 @@ export class Visitor {
         n.left = this.visitPattern(n.left);
         n.right = this.visitExpression(n.right);
         n.typeAnnotation = this.visitTsTypeAnnotation(n.typeAnnotation);
+
         return n;
     }
 
     visitObjectPattern(n: ObjectPattern): Pattern {
         n.properties = this.visitObjectPatternProperties(n.properties || []);
         n.typeAnnotation = this.visitTsTypeAnnotation(n.typeAnnotation);
+
         return n;
     }
 
@@ -1860,8 +2108,10 @@ export class Visitor {
         switch (n.type) {
             case "AssignmentPatternProperty":
                 return this.visitAssignmentPatternProperty(n);
+
             case "KeyValuePatternProperty":
                 return this.visitKeyValuePatternProperty(n);
+
             case "RestElement":
                 return this.visitRestElement(n);
         }
@@ -1872,6 +2122,7 @@ export class Visitor {
     ): ObjectPatternProperty {
         n.key = this.visitPropertyName(n.key);
         n.value = this.visitPattern(n.value);
+
         return n;
     }
 
@@ -1880,12 +2131,14 @@ export class Visitor {
     ): ObjectPatternProperty {
         n.key = this.visitBindingIdentifier(n.key);
         n.value = this.visitOptionalExpression(n.value);
+
         return n;
     }
 
     visitArrayPattern(n: ArrayPattern): Pattern {
         n.typeAnnotation = this.visitTsTypeAnnotation(n.typeAnnotation);
         n.elements = this.visitArrayPatternElements(n.elements);
+
         return n;
     }
 

@@ -90,6 +90,7 @@ export class Observable<T> implements Subscribable<T> {
 		const observable = new Observable<R>();
 		observable.source = this;
 		observable.operator = operator;
+
 		return observable;
 	}
 
@@ -270,7 +271,9 @@ export class Observable<T> implements Subscribable<T> {
 	private _deprecatedSyncErrorSubscribe(subscriber: Subscriber<unknown>) {
 		const localSubscriber: any = subscriber;
 		localSubscriber._syncErrorHack_isSubscribing = true;
+
 		const { operator } = this;
+
 		if (operator) {
 			// We don't need to try/catch on operators, as they
 			// are doing their own try/catching, and will
@@ -290,6 +293,7 @@ export class Observable<T> implements Subscribable<T> {
 		// Does this suck for perf? Yes. So stop using the deprecated sync
 		// error handling already. We're removing this in v8.
 		let dest = localSubscriber;
+
 		while (dest) {
 			// Technically, someone could throw something falsy, like 0, or "",
 			// so we need to check to see if anything was thrown, and we know
@@ -613,6 +617,7 @@ export class Observable<T> implements Subscribable<T> {
         const observable = new Observable<R>();
         observable.source = this;
         observable.operator = operator;
+
         return observable;
     }
 
@@ -787,7 +792,9 @@ export class Observable<T> implements Subscribable<T> {
     private _deprecatedSyncErrorSubscribe(subscriber: Subscriber<unknown>) {
         const localSubscriber: any = subscriber;
         localSubscriber._syncErrorHack_isSubscribing = true;
+
         const { operator } = this;
+
         if (operator) {
             // We don't need to try/catch on operators, as they
             // are doing their own try/catching, and will
@@ -807,6 +814,7 @@ export class Observable<T> implements Subscribable<T> {
         // Does this suck for perf? Yes. So stop using the deprecated sync
         // error handling already. We're removing this in v8.
         let dest = localSubscriber;
+
         while (dest) {
             // Technically, someone could throw something falsy, like 0, or "",
             // so we need to check to see if anything was thrown, and we know
@@ -1103,3 +1111,4 @@ function isSubscriber<T>(value: any): value is Subscriber<T> {
     return (value && value instanceof Subscriber) || (isObserver(value) && isSubscription(value));
 }
 }
+

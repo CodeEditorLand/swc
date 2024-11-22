@@ -21,7 +21,9 @@ async function compile(
 ): Promise<boolean> {
 	options.noEmit = true;
 	options.jsx = ts.JsxEmit.Preserve;
+
 	let program = ts.createProgram(fileNames, options);
+
 	let emitResult = program.emit();
 
 	let allDiagnostics = ts
@@ -32,12 +34,15 @@ async function compile(
 		if (!d.file) continue;
 		// Parse failure
 		if (1000 <= d.code && d.code < 2000) return false;
+
 		if (2000 <= d.code && d.code < 3000) continue;
+
 		if (10000 <= d.code) return false;
 
 		let { line, character } = d.file.getLineAndCharacterOfPosition(
 			d.start!,
 		);
+
 		let message = ts.flattenDiagnosticMessageText(d.messageText, "\n");
 		console.log(
 			`${d.code} ${d.file.fileName} (${line + 1},${
@@ -51,6 +56,7 @@ async function compile(
 
 async function check(f: string) {
 	console.log(`Checking ${f}...`);
+
 	const ok = await compile([f], {
 		noEmitOnError: true,
 		target: ts.ScriptTarget.Latest,
@@ -59,6 +65,7 @@ async function check(f: string) {
 
 	if (ok) {
 		const filename = path.basename(f);
+
 		const target = path.join(targetDir, filename);
 
 		console.log("Creating", f, "->", target);
@@ -74,7 +81,9 @@ async function check(f: string) {
 ): Promise<boolean> {
     options.noEmit = true;
     options.jsx = ts.JsxEmit.Preserve;
+
     let program = ts.createProgram(fileNames, options);
+
     let emitResult = program.emit();
 
     let allDiagnostics = ts
@@ -85,12 +94,15 @@ async function check(f: string) {
         if (!d.file) continue;
         // Parse failure
         if (1000 <= d.code && d.code < 2000) return false;
+
         if (2000 <= d.code && d.code < 3000) continue;
+
         if (10000 <= d.code) return false;
 
         let { line, character } = d.file.getLineAndCharacterOfPosition(
             d.start!
         );
+
         let message = ts.flattenDiagnosticMessageText(d.messageText, "\n");
         console.log(
             `${d.code} ${d.file.fileName} (${line + 1},${
@@ -104,6 +116,7 @@ async function check(f: string) {
 
 async function check(f: string) {
     console.log(`Checking ${f}...`);
+
     const ok = await compile([f], {
         noEmitOnError: true,
         target: ts.ScriptTarget.Latest,
@@ -112,6 +125,7 @@ async function check(f: string) {
 
     if (ok) {
         const filename = path.basename(f);
+
         const target = path.join(targetDir, filename);
 
         console.log("Creating", f, "->", target);

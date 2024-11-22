@@ -4,6 +4,7 @@ export function wrapNativeSuper(Class) {
     //@ts-ignore
     wrapNativeSuper = function wrapNativeSuper(Class) {
         if (Class === null || !_isNativeFunction(Class)) return Class;
+
         if (typeof Class !== "function") {
             throw new TypeError(
                 "Super expression must either be null or a function"
@@ -29,8 +30,10 @@ export function wrapNativeSuper(Class) {
                 configurable: true,
             },
         });
+
         return _setPrototypeOf(Wrapper, Class);
     };
+
     return wrapNativeSuper(Class);
 }
 
@@ -38,11 +41,14 @@ function isNativeReflectConstruct() {
     if (typeof Reflect === "undefined" || !Reflect.construct) return false;
     //@ts-ignore
     if (Reflect.construct.sham) return false;
+
     if (typeof Proxy === "function") return true;
+
     try {
         Date.prototype.toString.call(
             Reflect.construct(Date, [], function () {})
         );
+
         return true;
     } catch (e) {
         return false;
@@ -63,7 +69,9 @@ function _construct(Parent, args, Class) {
             var Constructor = Function.bind.apply(Parent, a);
             //@ts-ignore
             var instance = new Constructor();
+
             if (Class) _setPrototypeOf(instance, Class.prototype);
+
             return instance;
         };
     }
@@ -83,8 +91,10 @@ function _setPrototypeOf(o, p) {
         //@ts-ignore
         function _setPrototypeOf(o, p) {
             o.__proto__ = p;
+
             return o;
         };
+
     return _setPrototypeOf(o, p);
 }
 
@@ -99,6 +109,7 @@ function _getPrototypeOf(o): any {
           ) {
               return o.__proto__ || Object.getPrototypeOf(o);
           };
+
     return _getPrototypeOf(o);
 }
 
