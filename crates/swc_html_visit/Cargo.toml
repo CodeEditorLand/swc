@@ -9,7 +9,7 @@ edition = "2021"
 license = { workspace = true }
 name = "swc_html_visit"
 repository = "https://github.com/swc-project/swc.git"
-version = "4.0.0"
+version = "4.0.1"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -20,11 +20,12 @@ bench = false
 path = "Source/lib.rs"
 
 [features]
-default = ["serde"]
-path = []
+default    = ["serde"]
+path       = []
+serde-impl = ["serde"]
 
 [dependencies]
-serde = { workspace = true, optional = true }
+serde = { workspace = true, optional = true, features = ["derive"] }
 
 swc_atoms = { version = "2.0.0", path = "../swc_atoms" }
 swc_common = { version = "4.0.1", path = "../swc_common" }
