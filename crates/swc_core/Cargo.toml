@@ -2,29 +2,29 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>", "OJ Kwon <kwon.ohjoong@gmail.com>"]
 description = "TBD"
 documentation = "https://rustdoc.swc.rs/swc_core/"
-edition = "2021"
-license = "Apache-2.0"
-name = "swc_core"
-repository = "https://github.com/swc-project/swc.git"
-version = "6.0.1"
-[package.metadata.docs.rs]
-features = [
-	"allocator_node",
-	"base",
-	"base_node",
-	"common",
-	"ecma_visit",
-	"quote",
-	"utils",
-	"ecma_transforms",
-	"bundler",
-	"ecma_loader",
-	"ecma_ast",
-	"trace_macro",
-	"transform_common",
-	"plugin_transform",
-]
-rustdoc-args = ["--cfg", "docsrs"]
+edition       = "2021"
+license       = "Apache-2.0"
+name          = "swc_core"
+repository    = "https://github.com/swc-project/swc.git"
+version       = "6.0.2"
+  [package.metadata.docs.rs]
+  features = [
+    "allocator_node",
+    "base",
+    "base_node",
+    "common",
+    "ecma_visit",
+    "quote",
+    "utils",
+    "ecma_transforms",
+    "bundler",
+    "ecma_loader",
+    "ecma_ast",
+    "trace_macro",
+    "transform_common",
+    "plugin_transform",
+  ]
+  rustdoc-args = ["--cfg", "docsrs"]
 
 [lib]
 bench = false
@@ -357,7 +357,7 @@ swc_ecma_ast                     = { optional = true, version = "4.0.1", path = 
 swc_ecma_codegen                 = { optional = true, version = "4.0.2", path = "../swc_ecma_codegen" }
 swc_ecma_lints                   = { optional = true, version = "5.0.0", path = "../swc_ecma_lints" }
 swc_ecma_loader                  = { optional = true, version = "4.0.0", path = "../swc_ecma_loader" }
-swc_ecma_minifier                = { optional = true, version = "5.0.0", path = "../swc_ecma_minifier" }
+swc_ecma_minifier                = { optional = true, version = "5.0.1", path = "../swc_ecma_minifier" }
 swc_ecma_parser                  = { optional = true, version = "5.0.0", path = "../swc_ecma_parser" }
 swc_ecma_preset_env              = { optional = true, version = "6.0.0", path = "../swc_ecma_preset_env" }
 swc_ecma_quote_macros            = { optional = true, version = "5.0.0", path = "../swc_ecma_quote_macros" }
