@@ -1228,6 +1228,7 @@ export type JscTarget =
 	| "esnext";
 
 export type ParserConfig = TsParserConfig | EsParserConfig;
+
 export interface TsParserConfig {
 	syntax: "typescript";
 	/**
@@ -1484,6 +1485,7 @@ export type JscTarget =
     | "esnext";
 
 export type ParserConfig = TsParserConfig | EsParserConfig;
+
 export interface TsParserConfig {
     syntax: "typescript";
     /**

@@ -3385,6 +3385,7 @@ export function forEachChild<T>(
 	)[node.kind];
 
 	return fn === undefined ? undefined : fn(node, cbNode, cbNodes);
+
 export function forEachChild<T>(node: Node, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
     if (node === undefined || node.kind <= SyntaxKind.LastToken) {
         return;
@@ -3568,6 +3569,7 @@ export function parseIsolatedEntityName(
 	languageVersion: ScriptTarget,
 ): EntityName | undefined {
 	return Parser.parseIsolatedEntityName(text, languageVersion);
+
 export function forEachChildRecursively<T>(rootNode: Node, cbNode: (node: Node, parent: Node) => T | "skip" | undefined, cbNodes?: (nodes: NodeArray<Node>, parent: Node) => T | "skip" | undefined): T | undefined {
     const queue: (Node | NodeArray<Node>)[] = gatherPossibleChildren(rootNode);
 
@@ -3694,6 +3696,7 @@ export function parseJsonText(
 	sourceText: string,
 ): JsonSourceFile {
 	return Parser.parseJsonText(fileName, sourceText);
+
 export function parseJsonText(fileName: string, sourceText: string): JsonSourceFile {
     return Parser.parseJsonText(fileName, sourceText);
 }
@@ -3732,6 +3735,7 @@ export function updateSourceFile(
 		sourceFile.flags & NodeFlags.PermanentlySetIncrementalFlags;
 
 	return newSourceFile;
+
 export function updateSourceFile(sourceFile: SourceFile, newText: string, textChangeRange: TextChangeRange, aggressiveChecks = false): SourceFile {
     const newSourceFile = IncrementalParser.updateSourceFile(sourceFile, newText, textChangeRange, aggressiveChecks);
     // Because new source file node is created, it may not have the flag PossiblyContainDynamicImport. This is the case if there is no new edit to add dynamic import.
@@ -3800,6 +3804,7 @@ export function parseJSDocTypeExpressionForTests(
 		start,
 		length,
 	);
+
 export function parseJSDocTypeExpressionForTests(content: string, start?: number, length?: number): {
     jsDocTypeExpression: JSDocTypeExpression;
     diagnostics: Diagnostic[];

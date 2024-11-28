@@ -101,6 +101,7 @@ export interface OutputConfig {
 export interface ModuleConfig {}
 
 export type Mode = "production" | "development" | "none";
+
 export type Target = "browser" | "node";
 
 export type EntryConfig =

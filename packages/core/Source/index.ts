@@ -431,7 +431,9 @@ export function parse(
 	src: string,
 	options: ParseOptions & { isModule: false },
 ): Promise<Script>;
+
 export function parse(src: string, options?: ParseOptions): Promise<Module>;
+
 export function parse(src: string, options?: ParseOptions): Promise<Program> {
 	return compiler.parse(src, options);
 }
@@ -440,7 +442,9 @@ export function parseSync(
 	src: string,
 	options: ParseOptions & { isModule: false },
 ): Script;
+
 export function parseSync(src: string, options?: ParseOptions): Module;
+
 export function parseSync(src: string, options?: ParseOptions): Program {
 	return compiler.parseSync(src, options);
 }
@@ -449,10 +453,12 @@ export function parseFile(
 	path: string,
 	options: ParseOptions & { isModule: false },
 ): Promise<Script>;
+
 export function parseFile(
 	path: string,
 	options?: ParseOptions,
 ): Promise<Module>;
+
 export function parseFile(
 	path: string,
 	options?: ParseOptions,
@@ -464,7 +470,9 @@ export function parseFileSync(
 	path: string,
 	options: ParseOptions & { isModule: false },
 ): Script;
+
 export function parseFileSync(path: string, options?: ParseOptions): Module;
+
 export function parseFileSync(path: string, options?: ParseOptions): Program {
 	return compiler.parseFileSync(path, options);
 }

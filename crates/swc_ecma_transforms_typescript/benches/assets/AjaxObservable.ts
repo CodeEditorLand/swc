@@ -841,4 +841,5 @@ const AjaxTimeoutErrorImpl = (() => {
  */
 export const AjaxTimeoutError: AjaxTimeoutErrorCtor =
 	AjaxTimeoutErrorImpl as any;
+
 export const AjaxTimeoutError: AjaxTimeoutErrorCtor = AjaxTimeoutErrorImpl as any;
