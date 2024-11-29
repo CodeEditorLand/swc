@@ -6,18 +6,23 @@ async function* walk(dir: string): AsyncGenerator<string> {
 		const entry = path.join(dir, d.name);
 
 		if (d.isDirectory()) yield* walk(entry);
+
 		else if (d.isFile()) yield entry;
 	}
+
 	for await (const d of await fs.promises.opendir(dir)) {
 		const entry = path.join(dir, d.name);
 
 		if (d.isDirectory()) yield* walk(entry);
+
 		else if (d.isFile()) yield entry;
 	}
+
 	for await (const d of await fs.promises.opendir(dir)) {
 		const entry = path.join(dir, d.name);
 
 		if (d.isDirectory()) yield* walk(entry);
+
 		else if (d.isFile()) yield entry;
 	}
 }
@@ -29,6 +34,7 @@ async function main() {
 		if (!f.endsWith(".json")) {
 			continue;
 		}
+
 		const obj = JSON.parse(
 			await fs.promises.readFile(f, { encoding: "utf-8" }),
 		);
@@ -49,8 +55,11 @@ async function main() {
 				const newObj = {
 					...obj,
 				};
+
 				delete newObj.sourceType;
+
 				delete newObj.plugins;
+
 				await fs.promises.writeFile(f, JSON.stringify(newObj), {
 					encoding: "utf-8",
 				});
@@ -66,8 +75,11 @@ async function main() {
 						...obj,
 						...config,
 					};
+
 					delete newObj.sourceType;
+
 					delete newObj.plugins;
+
 					await fs.promises.writeFile(f, JSON.stringify(newObj), {
 						encoding: "utf-8",
 					});
@@ -82,6 +94,7 @@ async function main() {
 		if (!f.endsWith(".json")) {
 			continue;
 		}
+
 		const obj = JSON.parse(
 			await fs.promises.readFile(f, { encoding: "utf-8" }),
 		);
@@ -102,8 +115,11 @@ async function main() {
 				const newObj = {
 					...obj,
 				};
+
 				delete newObj.sourceType;
+
 				delete newObj.plugins;
+
 				await fs.promises.writeFile(f, JSON.stringify(newObj), {
 					encoding: "utf-8",
 				});
@@ -119,8 +135,11 @@ async function main() {
 						...obj,
 						...config,
 					};
+
 					delete newObj.sourceType;
+
 					delete newObj.plugins;
+
 					await fs.promises.writeFile(f, JSON.stringify(newObj), {
 						encoding: "utf-8",
 					});
@@ -135,6 +154,7 @@ async function main() {
 		if (!f.endsWith(".json")) {
 			continue;
 		}
+
 		const obj = JSON.parse(
 			await fs.promises.readFile(f, { encoding: "utf-8" }),
 		);
@@ -155,8 +175,11 @@ async function main() {
 				const newObj = {
 					...obj,
 				};
+
 				delete newObj.sourceType;
+
 				delete newObj.plugins;
+
 				await fs.promises.writeFile(f, JSON.stringify(newObj), {
 					encoding: "utf-8",
 				});
@@ -172,8 +195,11 @@ async function main() {
 						...obj,
 						...config,
 					};
+
 					delete newObj.sourceType;
+
 					delete newObj.plugins;
+
 					await fs.promises.writeFile(f, JSON.stringify(newObj), {
 						encoding: "utf-8",
 					});

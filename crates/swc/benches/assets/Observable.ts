@@ -88,13 +88,16 @@ export class Observable<T> implements Subscribable<T> {
 	 */
 	lift<R>(operator?: Operator<T, R>): Observable<R> {
 		const observable = new Observable<R>();
+
 		observable.source = this;
+
 		observable.operator = operator;
 
 		return observable;
 	}
 
 	subscribe(observer?: Partial<Observer<T>>): Subscription;
+
 	subscribe(next: (value: T) => void): Subscription;
 	/** @deprecated Instead of passing separate callback arguments, use an observer argument. Signatures taking separate callback arguments will be removed in v8. Details: https://rxjs.dev/deprecations/subscribe-arguments */
 	subscribe(
@@ -247,6 +250,7 @@ export class Observable<T> implements Subscribable<T> {
 			this._deprecatedSyncErrorSubscribe(subscriber);
 		} else {
 			const { operator, source } = this;
+
 			subscriber.add(
 				operator
 					? // We're dealing with a subscription in the
@@ -262,6 +266,7 @@ export class Observable<T> implements Subscribable<T> {
 							this._trySubscribe(subscriber),
 			);
 		}
+
 		return subscriber;
 	}
 
@@ -270,6 +275,7 @@ export class Observable<T> implements Subscribable<T> {
 	 */
 	private _deprecatedSyncErrorSubscribe(subscriber: Subscriber<unknown>) {
 		const localSubscriber: any = subscriber;
+
 		localSubscriber._syncErrorHack_isSubscribing = true;
 
 		const { operator } = this;
@@ -305,6 +311,7 @@ export class Observable<T> implements Subscribable<T> {
 					subscriber.unsubscribe();
 				}
 			}
+
 			dest = dest.destination;
 		}
 
@@ -395,12 +402,14 @@ export class Observable<T> implements Subscribable<T> {
 			// Must be declared in a separate statement to avoid a ReferenceError when
 			// accessing subscription below in the closure due to Temporal Dead Zone.
 			let subscription: Subscription;
+
 			subscription = this.subscribe(
 				(value) => {
 					try {
 						next(value);
 					} catch (err) {
 						reject(err);
+
 						subscription?.unsubscribe();
 					}
 				},
@@ -426,22 +435,27 @@ export class Observable<T> implements Subscribable<T> {
 
 	/* tslint:disable:max-line-length */
 	pipe(): Observable<T>;
+
 	pipe<A>(op1: OperatorFunction<T, A>): Observable<A>;
+
 	pipe<A, B>(
 		op1: OperatorFunction<T, A>,
 		op2: OperatorFunction<A, B>,
 	): Observable<B>;
+
 	pipe<A, B, C>(
 		op1: OperatorFunction<T, A>,
 		op2: OperatorFunction<A, B>,
 		op3: OperatorFunction<B, C>,
 	): Observable<C>;
+
 	pipe<A, B, C, D>(
 		op1: OperatorFunction<T, A>,
 		op2: OperatorFunction<A, B>,
 		op3: OperatorFunction<B, C>,
 		op4: OperatorFunction<C, D>,
 	): Observable<D>;
+
 	pipe<A, B, C, D, E>(
 		op1: OperatorFunction<T, A>,
 		op2: OperatorFunction<A, B>,
@@ -449,6 +463,7 @@ export class Observable<T> implements Subscribable<T> {
 		op4: OperatorFunction<C, D>,
 		op5: OperatorFunction<D, E>,
 	): Observable<E>;
+
 	pipe<A, B, C, D, E, F>(
 		op1: OperatorFunction<T, A>,
 		op2: OperatorFunction<A, B>,
@@ -457,6 +472,7 @@ export class Observable<T> implements Subscribable<T> {
 		op5: OperatorFunction<D, E>,
 		op6: OperatorFunction<E, F>,
 	): Observable<F>;
+
 	pipe<A, B, C, D, E, F, G>(
 		op1: OperatorFunction<T, A>,
 		op2: OperatorFunction<A, B>,
@@ -466,6 +482,7 @@ export class Observable<T> implements Subscribable<T> {
 		op6: OperatorFunction<E, F>,
 		op7: OperatorFunction<F, G>,
 	): Observable<G>;
+
 	pipe<A, B, C, D, E, F, G, H>(
 		op1: OperatorFunction<T, A>,
 		op2: OperatorFunction<A, B>,
@@ -476,6 +493,7 @@ export class Observable<T> implements Subscribable<T> {
 		op7: OperatorFunction<F, G>,
 		op8: OperatorFunction<G, H>,
 	): Observable<H>;
+
 	pipe<A, B, C, D, E, F, G, H, I>(
 		op1: OperatorFunction<T, A>,
 		op2: OperatorFunction<A, B>,
@@ -487,6 +505,7 @@ export class Observable<T> implements Subscribable<T> {
 		op8: OperatorFunction<G, H>,
 		op9: OperatorFunction<H, I>,
 	): Observable<I>;
+
 	pipe<A, B, C, D, E, F, G, H, I>(
 		op1: OperatorFunction<T, A>,
 		op2: OperatorFunction<A, B>,
@@ -557,6 +576,7 @@ export class Observable<T> implements Subscribable<T> {
 
 		return new promiseCtor((resolve, reject) => {
 			let value: T | undefined;
+
 			this.subscribe(
 				(x: T) => (value = x),
 				(err: any) => reject(err),
@@ -615,13 +635,16 @@ export class Observable<T> implements Subscribable<T> {
      */
     lift<R>(operator?: Operator<T, R>): Observable<R> {
         const observable = new Observable<R>();
+
         observable.source = this;
+
         observable.operator = operator;
 
         return observable;
     }
 
     subscribe(observer?: Partial<Observer<T>>): Subscription;
+
     subscribe(next: (value: T) => void): Subscription;
     /** @deprecated Instead of passing separate callback arguments, use an observer argument. Signatures taking separate callback arguments will be removed in v8. Details: https://rxjs.dev/deprecations/subscribe-arguments */
     subscribe(next?: ((value: T) => void) | null, error?: ((error: any) => void) | null, complete?: (() => void) | null): Subscription;
@@ -768,6 +791,7 @@ export class Observable<T> implements Subscribable<T> {
             this._deprecatedSyncErrorSubscribe(subscriber);
         } else {
             const { operator, source } = this;
+
             subscriber.add(
                 operator
                     ? // We're dealing with a subscription in the
@@ -783,6 +807,7 @@ export class Observable<T> implements Subscribable<T> {
                         this._trySubscribe(subscriber)
             );
         }
+
         return subscriber;
     }
 
@@ -791,6 +816,7 @@ export class Observable<T> implements Subscribable<T> {
      */
     private _deprecatedSyncErrorSubscribe(subscriber: Subscriber<unknown>) {
         const localSubscriber: any = subscriber;
+
         localSubscriber._syncErrorHack_isSubscribing = true;
 
         const { operator } = this;
@@ -826,6 +852,7 @@ export class Observable<T> implements Subscribable<T> {
                     subscriber.unsubscribe();
                 }
             }
+
             dest = dest.destination;
         }
 
@@ -910,12 +937,14 @@ export class Observable<T> implements Subscribable<T> {
             // Must be declared in a separate statement to avoid a ReferenceError when
             // accessing subscription below in the closure due to Temporal Dead Zone.
             let subscription: Subscription;
+
             subscription = this.subscribe(
                 (value) => {
                     try {
                         next(value);
                     } catch (err) {
                         reject(err);
+
                         subscription?.unsubscribe();
                     }
                 },
@@ -941,15 +970,20 @@ export class Observable<T> implements Subscribable<T> {
 
     /* tslint:disable:max-line-length */
     pipe(): Observable<T>;
+
     pipe<A>(op1: OperatorFunction<T, A>): Observable<A>;
+
     pipe<A, B>(op1: OperatorFunction<T, A>, op2: OperatorFunction<A, B>): Observable<B>;
+
     pipe<A, B, C>(op1: OperatorFunction<T, A>, op2: OperatorFunction<A, B>, op3: OperatorFunction<B, C>): Observable<C>;
+
     pipe<A, B, C, D>(
         op1: OperatorFunction<T, A>,
         op2: OperatorFunction<A, B>,
         op3: OperatorFunction<B, C>,
         op4: OperatorFunction<C, D>
     ): Observable<D>;
+
     pipe<A, B, C, D, E>(
         op1: OperatorFunction<T, A>,
         op2: OperatorFunction<A, B>,
@@ -957,6 +991,7 @@ export class Observable<T> implements Subscribable<T> {
         op4: OperatorFunction<C, D>,
         op5: OperatorFunction<D, E>
     ): Observable<E>;
+
     pipe<A, B, C, D, E, F>(
         op1: OperatorFunction<T, A>,
         op2: OperatorFunction<A, B>,
@@ -965,6 +1000,7 @@ export class Observable<T> implements Subscribable<T> {
         op5: OperatorFunction<D, E>,
         op6: OperatorFunction<E, F>
     ): Observable<F>;
+
     pipe<A, B, C, D, E, F, G>(
         op1: OperatorFunction<T, A>,
         op2: OperatorFunction<A, B>,
@@ -974,6 +1010,7 @@ export class Observable<T> implements Subscribable<T> {
         op6: OperatorFunction<E, F>,
         op7: OperatorFunction<F, G>
     ): Observable<G>;
+
     pipe<A, B, C, D, E, F, G, H>(
         op1: OperatorFunction<T, A>,
         op2: OperatorFunction<A, B>,
@@ -984,6 +1021,7 @@ export class Observable<T> implements Subscribable<T> {
         op7: OperatorFunction<F, G>,
         op8: OperatorFunction<G, H>
     ): Observable<H>;
+
     pipe<A, B, C, D, E, F, G, H, I>(
         op1: OperatorFunction<T, A>,
         op2: OperatorFunction<A, B>,
@@ -995,6 +1033,7 @@ export class Observable<T> implements Subscribable<T> {
         op8: OperatorFunction<G, H>,
         op9: OperatorFunction<H, I>
     ): Observable<I>;
+
     pipe<A, B, C, D, E, F, G, H, I>(
         op1: OperatorFunction<T, A>,
         op2: OperatorFunction<A, B>,
@@ -1065,6 +1104,7 @@ export class Observable<T> implements Subscribable<T> {
 
         return new promiseCtor((resolve, reject) => {
             let value: T | undefined;
+
             this.subscribe(
                 (x: T) => (value = x),
                 (err: any) => reject(err),
@@ -1100,6 +1140,7 @@ function isSubscriber<T>(value: any): value is Subscriber<T> {
 		(isObserver(value) && isSubscription(value))
 	);
 }
+
     return promiseCtor ?? config.Promise ?? Promise;
 }
 

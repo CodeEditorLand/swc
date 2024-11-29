@@ -10,10 +10,13 @@ export function wrapNativeSuper(Class) {
 				"Super expression must either be null or a function",
 			);
 		}
+
 		if (typeof _cache !== "undefined") {
 			if (_cache.has(Class)) return _cache.get(Class);
+
 			_cache.set(Class, Wrapper);
 		}
+
 		function Wrapper(this: any) {
 			//@ts-ignore
 			return _construct(
@@ -22,6 +25,7 @@ export function wrapNativeSuper(Class) {
 				_getPrototypeOf(this).constructor,
 			);
 		}
+
 		Wrapper.prototype = Object.create(Class.prototype, {
 			constructor: {
 				value: Wrapper,
@@ -64,6 +68,7 @@ function _construct(Parent, args, Class) {
 		//@ts-ignore
 		_construct = function _construct(Parent, args, Class) {
 			var a = [null];
+
 			a.push.apply(a, args);
 			//@ts-ignore
 			var Constructor = Function.bind.apply(Parent, a);

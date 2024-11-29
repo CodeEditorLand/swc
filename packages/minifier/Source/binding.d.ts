@@ -17,11 +17,13 @@ export function minifySync(code: Buffer, opts: Buffer): TransformOutput;
 
 export interface TransformOutput {
 	code: string;
+
 	map?: string;
 }
 
 /** Hack for `Type Generation` */
 export interface TransformOutput {
 	code: string;
+
 	map?: string;
 }

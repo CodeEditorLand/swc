@@ -90,7 +90,9 @@ export declare function transformFileSync(
 
 export interface TransformOutput {
 	code: string;
+
 	map?: string;
+
 	output?: string;
   constructor()
 }
@@ -139,6 +141,7 @@ export interface TransformOutput {
 /** Hack for `Type Generation` */
 export interface TransformOutput {
 	code: string;
+
 	map?: string;
 }
 

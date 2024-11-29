@@ -92,6 +92,7 @@ import { popWarningContext, pushWarningContext, warn } from "./warning";
 
 export interface Renderer<HostElement = RendererElement> {
 	render: RootRenderFunction<HostElement>;
+
 	createApp: CreateAppFunction<HostElement>;
 }
 
@@ -119,26 +120,36 @@ export interface RendererOptions<
 		namespace?: ElementNamespace,
 		parentComponent?: ComponentInternalInstance | null,
 	): void;
+
 	insert(el: HostNode, parent: HostElement, anchor?: HostNode | null): void;
+
 	remove(el: HostNode): void;
+
 	createElement(
 		type: string,
 		namespace?: ElementNamespace,
 		isCustomizedBuiltIn?: string,
 		vnodeProps?: (VNodeProps & { [key: string]: any }) | null,
 	): HostElement;
+
 	createText(text: string): HostNode;
+
 	createComment(text: string): HostNode;
 
 	setText(node: HostNode, text: string): void;
 
 	setElementText(node: HostElement, text: string): void;
+
 	parentNode(node: HostNode): HostElement | null;
+
 	nextSibling(node: HostNode): HostNode | null;
+
 	querySelector?(selector: string): HostElement | null;
 
 	setScopeId?(el: HostElement, id: string): void;
+
 	cloneNode?(node: HostNode): HostNode;
+
 	insertStaticContent?(
 		content: string,
 		parent: HostElement,
@@ -310,14 +321,23 @@ export interface RendererInternals<
 	HostElement = RendererElement,
 > {
 	p: PatchFn;
+
 	um: UnmountFn;
+
 	r: RemoveFn;
+
 	m: MoveFn;
+
 	mt: MountComponentFn;
+
 	mc: MountChildrenFn;
+
 	pc: PatchChildrenFn;
+
 	pbc: PatchBlockChildrenFn;
+
 	n: NextFn;
+
 	o: RendererOptions<HostNode, HostElement>;
   HostNode = RendererNode,
   HostElement = RendererElement,
@@ -634,6 +654,7 @@ function baseCreateRenderer(
 	}
 
 	const target = getGlobalThis();
+
 	target.__VUE__ = true;
 
 	if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
@@ -675,12 +696,15 @@ function baseCreateRenderer(
 		// patching & not same type, unmount old tree
 		if (n1 && !isSameVNodeType(n1, n2)) {
 			anchor = getNextHostNode(n1);
+
 			unmount(n1, parentComponent, parentSuspense, true);
+
 			n1 = null;
 		}
 
 		if (n2.patchFlag === PatchFlags.BAIL) {
 			optimized = false;
+
 			n2.dynamicChildren = null;
 		}
 
@@ -703,6 +727,7 @@ function baseCreateRenderer(
 				} else if (__DEV__) {
 					patchStaticNode(n1, n2, container, namespace);
 				}
+
 				break;
 
 			case Fragment:
@@ -860,6 +885,7 @@ function baseCreateRenderer(
 			);
 		} else {
 			n2.el = n1.el;
+
 			n2.anchor = n1.anchor;
 		}
 	};
@@ -873,9 +899,12 @@ function baseCreateRenderer(
 
 		while (el && el !== anchor) {
 			next = hostNextSibling(el);
+
 			hostInsert(el, container, nextSibling);
+
 			el = next;
 		}
+
 		hostInsert(anchor!, container, nextSibling);
 	};
 
@@ -884,9 +913,12 @@ function baseCreateRenderer(
 
 		while (el && el !== anchor) {
 			next = hostNextSibling(el);
+
 			hostRemove(el);
+
 			el = next;
 		}
+
 		hostRemove(anchor!);
 	};
 
@@ -1002,6 +1034,7 @@ function baseCreateRenderer(
 			if ("value" in props) {
 				hostPatchProp(el, "value", null, props.value, namespace);
 			}
+
 			if ((vnodeHook = props.onVnodeBeforeMount)) {
 				invokeVNodeHook(vnodeHook, parentComponent, vnode);
 			}
@@ -1009,6 +1042,7 @@ function baseCreateRenderer(
 
 		if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
 			def(el, "__vnode", vnode, true);
+
 			def(el, "__vueParentComponent", parentComponent, true);
 		}
 
@@ -1025,6 +1059,7 @@ function baseCreateRenderer(
 		if (needCallTransitionHooks) {
 			transition!.beforeEnter(el);
 		}
+
 		hostInsert(el, container, anchor);
 
 		if (
@@ -1034,7 +1069,9 @@ function baseCreateRenderer(
 		) {
 			queuePostRenderEffect(() => {
 				vnodeHook && invokeVNodeHook(vnodeHook, parentComponent, vnode);
+
 				needCallTransitionHooks && transition!.enter(el);
+
 				dirs &&
 					invokeDirectiveHook(
 						vnode,
@@ -1056,11 +1093,13 @@ function baseCreateRenderer(
 		if (scopeId) {
 			hostSetScopeId(el, scopeId);
 		}
+
 		if (slotScopeIds) {
 			for (let i = 0; i < slotScopeIds.length; i++) {
 				hostSetScopeId(el, slotScopeIds[i]);
 			}
 		}
+
 		if (parentComponent) {
 			let subTree = parentComponent.subTree;
 
@@ -1073,6 +1112,7 @@ function baseCreateRenderer(
 					filterSingleRoot(subTree.children as VNodeArrayChildren) ||
 					subTree;
 			}
+
 			if (
 				vnode === subTree ||
 				(isSuspense(subTree.type) &&
@@ -1107,6 +1147,7 @@ function baseCreateRenderer(
 			const child = (children[i] = optimized
 				? cloneIfMounted(children[i] as VNode)
 				: normalizeVNode(children[i]));
+
 			patch(
 				null,
 				child,
@@ -1135,6 +1176,7 @@ function baseCreateRenderer(
 		if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
 			el.__vnode = n2;
 		}
+
 		let { patchFlag, dynamicChildren, dirs } = n2;
 		// #1426 take the old vnode's patch flag into account since user may clone a
 		// compiler-generated vnode, which de-opts to FULL_PROPS
@@ -1152,15 +1194,19 @@ function baseCreateRenderer(
 		if ((vnodeHook = newProps.onVnodeBeforeUpdate)) {
 			invokeVNodeHook(vnodeHook, parentComponent, n2, n1);
 		}
+
 		if (dirs) {
 			invokeDirectiveHook(n2, n1, parentComponent, "beforeUpdate");
 		}
+
 		parentComponent && toggleRecurse(parentComponent, true);
 
 		if (__DEV__ && isHmrUpdating) {
 			// HMR updated, force full diff
 			patchFlag = 0;
+
 			optimized = false;
+
 			dynamicChildren = null;
 		}
 
@@ -1285,6 +1331,7 @@ function baseCreateRenderer(
 			queuePostRenderEffect(() => {
 				vnodeHook &&
 					invokeVNodeHook(vnodeHook, parentComponent, n2, n1);
+
 				dirs && invokeDirectiveHook(n2, n1, parentComponent, "updated");
 			}, parentSuspense);
 		}
@@ -1322,6 +1369,7 @@ function baseCreateRenderer(
 					: // In other cases, the parent container is not actually used so we
 						// just pass the block element here to avoid a DOM parentNode call.
 						fallbackContainer;
+
 			patch(
 				oldVNode,
 				newVNode,
@@ -1358,6 +1406,7 @@ function baseCreateRenderer(
 					}
 				}
 			}
+
 			for (const key in newProps) {
 				// empty string is not valid prop
 				if (isReservedProp(key)) continue;
@@ -1377,6 +1426,7 @@ function baseCreateRenderer(
 					);
 				}
 			}
+
 			if ("value" in newProps) {
 				hostPatchProp(
 					el,
@@ -1419,7 +1469,9 @@ function baseCreateRenderer(
 		) {
 			// HMR updated / Dev root fragment (w/ comments), force full diff
 			patchFlag = 0;
+
 			optimized = false;
+
 			dynamicChildren = null;
 		}
 
@@ -1432,6 +1484,7 @@ function baseCreateRenderer(
 
 		if (n1 == null) {
 			hostInsert(fragmentStartAnchor, container, anchor);
+
 			hostInsert(fragmentEndAnchor, container, anchor);
 			// a fragment can only have array children
 			// since they are either generated by the compiler, or implicitly created
@@ -1570,6 +1623,7 @@ function baseCreateRenderer(
 
 		if (__DEV__) {
 			pushWarningContext(initialVNode);
+
 			startMeasure(instance, `mount`);
 		}
 
@@ -1583,6 +1637,7 @@ function baseCreateRenderer(
 			if (__DEV__) {
 				startMeasure(instance, `init`);
 			}
+
 			setupComponent(instance, false, optimized);
 
 			if (__DEV__) {
@@ -1607,6 +1662,7 @@ function baseCreateRenderer(
 			// TODO handle self-defined fallback
 			if (!initialVNode.el) {
 				const placeholder = (instance.subTree = createVNode(Comment));
+
 				processCommentNode(null, placeholder, container!, anchor);
 			}
 		} else {
@@ -1623,6 +1679,7 @@ function baseCreateRenderer(
 
 		if (__DEV__) {
 			popWarningContext();
+
 			endMeasure(instance, `mount`);
 		}
 	};
@@ -1641,11 +1698,13 @@ function baseCreateRenderer(
 				if (__DEV__) {
 					pushWarningContext(n2);
 				}
+
 				updateComponentPreRender(instance, n2, optimized);
 
 				if (__DEV__) {
 					popWarningContext();
 				}
+
 				return;
 			} else {
 				// normal update
@@ -1656,6 +1715,7 @@ function baseCreateRenderer(
 		} else {
 			// no update needed. just copy over properties
 			n2.el = n1.el;
+
 			instance.vnode = n2;
 		}
 	};
@@ -1691,6 +1751,7 @@ function baseCreateRenderer(
 				) {
 					invokeVNodeHook(vnodeHook, parent, initialVNode);
 				}
+
 				if (
 					__COMPAT__ &&
 					isCompatEnabled(
@@ -1700,6 +1761,7 @@ function baseCreateRenderer(
 				) {
 					instance.emit("hook:beforeMount");
 				}
+
 				toggleRecurse(instance, true);
 
 				if (el && hydrateNode) {
@@ -1708,14 +1770,17 @@ function baseCreateRenderer(
 						if (__DEV__) {
 							startMeasure(instance, `render`);
 						}
+
 						instance.subTree = renderComponentRoot(instance);
 
 						if (__DEV__) {
 							endMeasure(instance, `render`);
 						}
+
 						if (__DEV__) {
 							startMeasure(instance, `hydrate`);
 						}
+
 						hydrateNode!(
 							el as Node,
 							instance.subTree,
@@ -1750,15 +1815,18 @@ function baseCreateRenderer(
 					if (__DEV__) {
 						startMeasure(instance, `render`);
 					}
+
 					const subTree = (instance.subTree =
 						renderComponentRoot(instance));
 
 					if (__DEV__) {
 						endMeasure(instance, `render`);
 					}
+
 					if (__DEV__) {
 						startMeasure(instance, `patch`);
 					}
+
 					patch(
 						null,
 						subTree,
@@ -1772,6 +1840,7 @@ function baseCreateRenderer(
 					if (__DEV__) {
 						endMeasure(instance, `patch`);
 					}
+
 					initialVNode.el = subTree.el;
 				}
 				// mounted hook
@@ -1784,6 +1853,7 @@ function baseCreateRenderer(
 					(vnodeHook = props && props.onVnodeMounted)
 				) {
 					const scopedInitialVNode = initialVNode;
+
 					queuePostRenderEffect(
 						() =>
 							invokeVNodeHook(
@@ -1794,6 +1864,7 @@ function baseCreateRenderer(
 						parentSuspense,
 					);
 				}
+
 				if (
 					__COMPAT__ &&
 					isCompatEnabled(
@@ -1834,6 +1905,7 @@ function baseCreateRenderer(
 						);
 					}
 				}
+
 				instance.isMounted = true;
 
 				if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
@@ -1854,6 +1926,7 @@ function baseCreateRenderer(
 						// only sync the properties and abort the rest of operations
 						if (next) {
 							next.el = vnode.el;
+
 							updateComponentPreRender(instance, next, optimized);
 						}
 						// and continue the rest of operations once the deps are resolved
@@ -1884,6 +1957,7 @@ function baseCreateRenderer(
 
 				if (next) {
 					next.el = vnode.el;
+
 					updateComponentPreRender(instance, next, optimized);
 				} else {
 					next = vnode;
@@ -1899,6 +1973,7 @@ function baseCreateRenderer(
 				) {
 					invokeVNodeHook(vnodeHook, parent, next, vnode);
 				}
+
 				if (
 					__COMPAT__ &&
 					isCompatEnabled(
@@ -1908,23 +1983,28 @@ function baseCreateRenderer(
 				) {
 					instance.emit("hook:beforeUpdate");
 				}
+
 				toggleRecurse(instance, true);
 
 				// render
 				if (__DEV__) {
 					startMeasure(instance, `render`);
 				}
+
 				const nextTree = renderComponentRoot(instance);
 
 				if (__DEV__) {
 					endMeasure(instance, `render`);
 				}
+
 				const prevTree = instance.subTree;
+
 				instance.subTree = nextTree;
 
 				if (__DEV__) {
 					startMeasure(instance, `patch`);
 				}
+
 				patch(
 					prevTree,
 					nextTree,
@@ -1940,6 +2020,7 @@ function baseCreateRenderer(
 				if (__DEV__) {
 					endMeasure(instance, `patch`);
 				}
+
 				next.el = nextTree.el;
 
 				if (originNext === null) {
@@ -1959,6 +2040,7 @@ function baseCreateRenderer(
 						parentSuspense,
 					);
 				}
+
 				if (
 					__COMPAT__ &&
 					isCompatEnabled(
@@ -1988,14 +2070,18 @@ function baseCreateRenderer(
 		const effect = (instance.effect = new ReactiveEffect(
 			componentUpdateFn,
 		));
+
 		instance.scope.off();
 
 		const update = (instance.update = effect.run.bind(effect));
 
 		const job: SchedulerJob = (instance.job =
 			effect.runIfDirty.bind(effect));
+
 		job.i = instance;
+
 		job.id = instance.uid;
+
 		effect.scheduler = () => queueJob(job);
 
 		// allowRecurse
@@ -2006,6 +2092,7 @@ function baseCreateRenderer(
 			effect.onTrack = instance.rtc
 				? (e) => invokeArrayFns(instance.rtc!, e)
 				: void 0;
+
 			effect.onTrigger = instance.rtg
 				? (e) => invokeArrayFns(instance.rtg!, e)
 				: void 0;
@@ -2022,15 +2109,20 @@ function baseCreateRenderer(
 		nextVNode.component = instance;
 
 		const prevProps = instance.vnode.props;
+
 		instance.vnode = nextVNode;
+
 		instance.next = null;
+
 		updateProps(instance, nextVNode.props, prevProps, optimized);
+
 		updateSlots(instance, nextVNode.children, optimized);
 
 		pauseTracking();
 		// props update may have triggered pre-flush watchers.
 		// flush them before the render update.
 		flushPreFlushCbs(instance);
+
 		resetTracking();
 	};
 
@@ -2094,6 +2186,7 @@ function baseCreateRenderer(
 			if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
 				unmountChildren(c1 as VNode[], parentComponent, parentSuspense);
 			}
+
 			if (c2 !== c1) {
 				hostSetElementText(container, c2 as string);
 			}
@@ -2157,6 +2250,7 @@ function baseCreateRenderer(
 		optimized: boolean,
 	) => {
 		c1 = c1 || EMPTY_ARR;
+
 		c2 = c2 || EMPTY_ARR;
 
 		const oldLength = c1.length;
@@ -2171,6 +2265,7 @@ function baseCreateRenderer(
 			const nextChild = (c2[i] = optimized
 				? cloneIfMounted(c2[i] as VNode)
 				: normalizeVNode(c2[i]));
+
 			patch(
 				c1[i],
 				nextChild,
@@ -2183,6 +2278,7 @@ function baseCreateRenderer(
 				optimized,
 			);
 		}
+
 		if (oldLength > newLength) {
 			// remove old
 			unmountChildren(
@@ -2253,6 +2349,7 @@ function baseCreateRenderer(
 			} else {
 				break;
 			}
+
 			i++;
 		}
 
@@ -2281,7 +2378,9 @@ function baseCreateRenderer(
 			} else {
 				break;
 			}
+
 			e1--;
+
 			e2--;
 		}
 
@@ -2313,6 +2412,7 @@ function baseCreateRenderer(
 						slotScopeIds,
 						optimized,
 					);
+
 					i++;
 				}
 			}
@@ -2328,6 +2428,7 @@ function baseCreateRenderer(
 		else if (i > e2) {
 			while (i <= e1) {
 				unmount(c1[i], parentComponent, parentSuspense, true);
+
 				i++;
 			}
 		}
@@ -2356,6 +2457,7 @@ function baseCreateRenderer(
 							`Make sure keys are unique.`,
 						);
 					}
+
 					keyToNewIndexMap.set(nextChild.key, i);
 				}
 			}
@@ -2389,6 +2491,7 @@ function baseCreateRenderer(
 
 					continue;
 				}
+
 				let newIndex;
 
 				if (prevChild.key != null) {
@@ -2406,6 +2509,7 @@ function baseCreateRenderer(
 						}
 					}
 				}
+
 				if (newIndex === undefined) {
 					unmount(prevChild, parentComponent, parentSuspense, true);
 				} else {
@@ -2416,6 +2520,7 @@ function baseCreateRenderer(
 					} else {
 						moved = true;
 					}
+
 					patch(
 						prevChild,
 						c2[newIndex] as VNode,
@@ -2427,6 +2532,7 @@ function baseCreateRenderer(
 						slotScopeIds,
 						optimized,
 					);
+
 					patched++;
 				}
 			}
@@ -2436,6 +2542,7 @@ function baseCreateRenderer(
 			const increasingNewIndexSequence = moved
 				? getSequence(newIndexToOldIndexMap)
 				: EMPTY_ARR;
+
 			j = increasingNewIndexSequence.length - 1;
 			// looping backwards so that we can use last patched node as anchor
 			for (i = toBePatched - 1; i >= 0; i--) {
@@ -2513,6 +2620,7 @@ function baseCreateRenderer(
 			for (let i = 0; i < (children as VNode[]).length; i++) {
 				move((children as VNode[])[i], container, anchor, moveType);
 			}
+
 			hostInsert(vnode.anchor!, container, anchor);
 
 			return;
@@ -2533,7 +2641,9 @@ function baseCreateRenderer(
 		if (needTransition) {
 			if (moveType === MoveType.ENTER) {
 				transition!.beforeEnter(el!);
+
 				hostInsert(el!, container, anchor);
+
 				queuePostRenderEffect(
 					() => transition!.enter(el!),
 					parentSuspense,
@@ -2546,6 +2656,7 @@ function baseCreateRenderer(
 				const performLeave = () => {
 					leave(el!, () => {
 						remove();
+
 						afterLeave && afterLeave();
 					});
 				};
@@ -2685,6 +2796,7 @@ function baseCreateRenderer(
 		) {
 			queuePostRenderEffect(() => {
 				vnodeHook && invokeVNodeHook(vnodeHook, parentComponent, vnode);
+
 				shouldInvokeDirs &&
 					invokeDirectiveHook(
 						vnode,
@@ -2717,6 +2829,7 @@ function baseCreateRenderer(
 			} else {
 				removeFragment(el!, anchor!);
 			}
+
 			return;
 		}
 
@@ -2760,9 +2873,12 @@ function baseCreateRenderer(
 
 		while (cur !== end) {
 			next = hostNextSibling(cur)!;
+
 			hostRemove(cur);
+
 			cur = next;
 		}
+
 		hostRemove(end);
 	};
 
@@ -2776,7 +2892,9 @@ function baseCreateRenderer(
 		}
 
 		const { bum, scope, job, subTree, um, m, a } = instance;
+
 		invalidateMount(m);
+
 		invalidateMount(a);
 
 		// beforeUnmount hook
@@ -2799,12 +2917,14 @@ function baseCreateRenderer(
 		if (job) {
 			// so that scheduler will no longer invoke it
 			job.flags! |= SchedulerJobFlags.DISPOSED;
+
 			unmount(subTree, instance, parentSuspense, doRemove);
 		}
 		// unmounted hook
 		if (um) {
 			queuePostRenderEffect(um, parentSuspense);
 		}
+
 		if (
 			__COMPAT__ &&
 			isCompatEnabled(DeprecationTypes.INSTANCE_EVENT_HOOKS, instance)
@@ -2814,6 +2934,7 @@ function baseCreateRenderer(
 				parentSuspense,
 			);
 		}
+
 		queuePostRenderEffect(() => {
 			instance.isUnmounted = true;
 		}, parentSuspense);
@@ -2865,9 +2986,11 @@ function baseCreateRenderer(
 		if (vnode.shapeFlag & ShapeFlags.COMPONENT) {
 			return getNextHostNode(vnode.component!.subTree);
 		}
+
 		if (__FEATURE_SUSPENSE__ && vnode.shapeFlag & ShapeFlags.SUSPENSE) {
 			return vnode.suspense!.next();
 		}
+
 		const el = hostNextSibling((vnode.anchor || vnode.el)!);
 		// #9071, #9313
 		// teleported content can mess up nextSibling searches during patch so
@@ -2895,12 +3018,16 @@ function baseCreateRenderer(
 				namespace,
 			);
 		}
+
 		container._vnode = vnode;
 
 		if (!isFlushing) {
 			isFlushing = true;
+
 			flushPreFlushCbs();
+
 			flushPostFlushCbs();
+
 			isFlushing = false;
 		}
 	};
@@ -2955,9 +3082,11 @@ function toggleRecurse(
 ) {
 	if (allowed) {
 		effect.flags |= EffectFlags.ALLOW_RECURSE;
+
 		job.flags! |= SchedulerJobFlags.ALLOW_RECURSE;
 	} else {
 		effect.flags &= ~EffectFlags.ALLOW_RECURSE;
+
 		job.flags! &= ~SchedulerJobFlags.ALLOW_RECURSE;
 	}
 }
@@ -3056,6 +3185,7 @@ function baseCreateRenderer(
         } else if (__DEV__) {
           patchStaticNode(n1, n2, container, namespace)
         }
+
         break
       case Fragment:
         processFragment(
@@ -3221,6 +3351,7 @@ function baseCreateRenderer(
       hostInsert(el, container, nextSibling)
       el = next
     }
+
     hostInsert(anchor!, container, nextSibling)
   }
 
@@ -3231,6 +3362,7 @@ function baseCreateRenderer(
       hostRemove(el)
       el = next
     }
+
     hostRemove(anchor!)
   }
 
@@ -3356,6 +3488,7 @@ function baseCreateRenderer(
     if (needCallTransitionHooks) {
       transition!.beforeEnter(el)
     }
+
     hostInsert(el, container, anchor)
     if (
       (vnodeHook = props && props.onVnodeMounted) ||
@@ -3380,11 +3513,13 @@ function baseCreateRenderer(
     if (scopeId) {
       hostSetScopeId(el, scopeId)
     }
+
     if (slotScopeIds) {
       for (let i = 0; i < slotScopeIds.length; i++) {
         hostSetScopeId(el, slotScopeIds[i])
       }
     }
+
     if (parentComponent) {
       let subTree = parentComponent.subTree
       if (
@@ -3454,6 +3589,7 @@ function baseCreateRenderer(
     if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
       el.__vnode = n2
     }
+
     let { patchFlag, dynamicChildren, dirs } = n2
     // #1426 take the old vnode's patch flag into account since user may clone a
     // compiler-generated vnode, which de-opts to FULL_PROPS
@@ -3467,9 +3603,11 @@ function baseCreateRenderer(
     if ((vnodeHook = newProps.onVnodeBeforeUpdate)) {
       invokeVNodeHook(vnodeHook, parentComponent, n2, n1)
     }
+
     if (dirs) {
       invokeDirectiveHook(n2, n1, parentComponent, 'beforeUpdate')
     }
+
     parentComponent && toggleRecurse(parentComponent, true)
 
     if (__DEV__ && isHmrUpdating) {
@@ -3899,10 +4037,12 @@ function baseCreateRenderer(
         if (__DEV__) {
           pushWarningContext(n2)
         }
+
         updateComponentPreRender(instance, n2, optimized)
         if (__DEV__) {
           popWarningContext()
         }
+
         return
       } else {
         // normal update
@@ -3945,12 +4085,14 @@ function baseCreateRenderer(
         ) {
           invokeVNodeHook(vnodeHook, parent, initialVNode)
         }
+
         if (
           __COMPAT__ &&
           isCompatEnabled(DeprecationTypes.INSTANCE_EVENT_HOOKS, instance)
         ) {
           instance.emit('hook:beforeMount')
         }
+
         toggleRecurse(instance, true)
 
         if (el && hydrateNode) {
@@ -3959,13 +4101,16 @@ function baseCreateRenderer(
             if (__DEV__) {
               startMeasure(instance, `render`)
             }
+
             instance.subTree = renderComponentRoot(instance)
             if (__DEV__) {
               endMeasure(instance, `render`)
             }
+
             if (__DEV__) {
               startMeasure(instance, `hydrate`)
             }
+
             hydrateNode!(
               el as Node,
               instance.subTree,
@@ -4035,6 +4180,7 @@ function baseCreateRenderer(
             parentSuspense,
           )
         }
+
         if (
           __COMPAT__ &&
           isCompatEnabled(DeprecationTypes.INSTANCE_EVENT_HOOKS, instance)
@@ -4065,6 +4211,7 @@ function baseCreateRenderer(
             )
           }
         }
+
         instance.isMounted = true
 
         if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
@@ -4123,28 +4270,33 @@ function baseCreateRenderer(
         if ((vnodeHook = next.props && next.props.onVnodeBeforeUpdate)) {
           invokeVNodeHook(vnodeHook, parent, next, vnode)
         }
+
         if (
           __COMPAT__ &&
           isCompatEnabled(DeprecationTypes.INSTANCE_EVENT_HOOKS, instance)
         ) {
           instance.emit('hook:beforeUpdate')
         }
+
         toggleRecurse(instance, true)
 
         // render
         if (__DEV__) {
           startMeasure(instance, `render`)
         }
+
         const nextTree = renderComponentRoot(instance)
         if (__DEV__) {
           endMeasure(instance, `render`)
         }
+
         const prevTree = instance.subTree
         instance.subTree = nextTree
 
         if (__DEV__) {
           startMeasure(instance, `patch`)
         }
+
         patch(
           prevTree,
           nextTree,
@@ -4159,6 +4311,7 @@ function baseCreateRenderer(
         if (__DEV__) {
           endMeasure(instance, `patch`)
         }
+
         next.el = nextTree.el
         if (originNext === null) {
           // self-triggered update. In case of HOC, update parent component
@@ -4177,6 +4330,7 @@ function baseCreateRenderer(
             parentSuspense,
           )
         }
+
         if (
           __COMPAT__ &&
           isCompatEnabled(DeprecationTypes.INSTANCE_EVENT_HOOKS, instance)
@@ -4378,6 +4532,7 @@ function baseCreateRenderer(
         optimized,
       )
     }
+
     if (oldLength > newLength) {
       // remove old
       unmountChildren(
@@ -4567,6 +4722,7 @@ function baseCreateRenderer(
           unmount(prevChild, parentComponent, parentSuspense, true)
           continue
         }
+
         let newIndex
         if (prevChild.key != null) {
           newIndex = keyToNewIndexMap.get(prevChild.key)
@@ -4582,6 +4738,7 @@ function baseCreateRenderer(
             }
           }
         }
+
         if (newIndex === undefined) {
           unmount(prevChild, parentComponent, parentSuspense, true)
         } else {
@@ -4701,6 +4858,7 @@ function baseCreateRenderer(
             afterLeave && afterLeave()
           })
         }
+
         if (delayLeave) {
           delayLeave(el!, remove, performLeave)
         } else {
@@ -4889,6 +5047,7 @@ function baseCreateRenderer(
       hostRemove(cur)
       cur = next
     }
+
     hostRemove(end)
   }
 
@@ -4931,6 +5090,7 @@ function baseCreateRenderer(
     if (um) {
       queuePostRenderEffect(um, parentSuspense)
     }
+
     if (
       __COMPAT__ &&
       isCompatEnabled(DeprecationTypes.INSTANCE_EVENT_HOOKS, instance)
@@ -4940,6 +5100,7 @@ function baseCreateRenderer(
         parentSuspense,
       )
     }
+
     queuePostRenderEffect(() => {
       instance.isUnmounted = true
     }, parentSuspense)
@@ -4984,9 +5145,11 @@ function baseCreateRenderer(
     if (vnode.shapeFlag & ShapeFlags.COMPONENT) {
       return getNextHostNode(vnode.component!.subTree)
     }
+
     if (__FEATURE_SUSPENSE__ && vnode.shapeFlag & ShapeFlags.SUSPENSE) {
       return vnode.suspense!.next()
     }
+
     const el = hostNextSibling((vnode.anchor || vnode.el)!)
     // #9071, #9313
     // teleported content can mess up nextSibling searches during patch so
@@ -5012,6 +5175,7 @@ function baseCreateRenderer(
         namespace,
       )
     }
+
     container._vnode = vnode
     if (!isFlushing) {
       isFlushing = true
@@ -5121,8 +5285,10 @@ export function traverseStaticChildren(
 					c2.patchFlag === PatchFlags.NEED_HYDRATION
 				) {
 					c2 = ch2[i] = cloneIfMounted(ch2[i] as VNode);
+
 					c2.el = c1.el;
 				}
+
 				if (!shallow && c2.patchFlag !== PatchFlags.BAIL)
 					traverseStaticChildren(c1, c2);
 			}
@@ -5154,6 +5320,7 @@ export function traverseStaticChildren(
           c2 = ch2[i] = cloneIfMounted(ch2[i] as VNode)
           c2.el = c1.el
         }
+
         if (!shallow && c2.patchFlag !== PatchFlags.BAIL)
           traverseStaticChildren(c1, c2)
       }
@@ -5188,11 +5355,14 @@ function getSequence(arr: number[]): number[] {
 
 			if (arr[j] < arrI) {
 				p[i] = j;
+
 				result.push(i);
 
 				continue;
 			}
+
 			u = 0;
+
 			v = result.length - 1;
 
 			while (u < v) {
@@ -5204,21 +5374,27 @@ function getSequence(arr: number[]): number[] {
 					v = c;
 				}
 			}
+
 			if (arrI < arr[result[u]]) {
 				if (u > 0) {
 					p[i] = result[u - 1];
 				}
+
 				result[u] = i;
 			}
 		}
 	}
+
 	u = result.length;
+
 	v = result[u - 1];
 
 	while (u-- > 0) {
 		result[u] = v;
+
 		v = p[v];
 	}
+
 	return result;
 }
 
@@ -5268,6 +5444,7 @@ export function invalidateMount(hooks: LifecycleHook): void {
         if (u > 0) {
           p[i] = result[u - 1]
         }
+
         result[u] = i
       }
     }

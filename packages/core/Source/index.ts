@@ -35,6 +35,7 @@ const bindings: typeof import("../binding") = (() => {
 
 		// If native binding loaded successfully, it should return proper target triple constant.
 		const triple = binding.getTargetTriple();
+
 		assert.ok(triple, "Failed to read target triple from native binary.");
 
 		return binding;
@@ -61,6 +62,7 @@ export function plugins(ps: Plugin[]): Plugin {
 		for (const p of ps) {
 			m = p(m);
 		}
+
 		return m;
 	};
 }
@@ -82,6 +84,7 @@ export class Compiler {
 		} else if (fallbackBindings) {
 			return fallbackBindings.minify(src, opts);
 		}
+
 		throw new Error("Bindings not found.");
 	}
 
@@ -99,6 +102,7 @@ export class Compiler {
 		} else if (fallbackBindings) {
 			return fallbackBindings.minifySync(src, opts);
 		}
+
 		throw new Error("Bindings not found.");
 	}
 
@@ -109,6 +113,7 @@ export class Compiler {
 		src: string,
 		options: ParseOptions & { isModule: false },
 	): Promise<Script>;
+
 	parse(
 		src: string,
 		options?: ParseOptions,
@@ -121,6 +126,7 @@ export class Compiler {
 		filename?: string,
 	): Promise<Program> {
 		options = options || { syntax: "ecmascript" };
+
 		options.syntax = options.syntax || "ecmascript";
 
 		if (!bindings && !!fallbackBindings) {
@@ -138,13 +144,17 @@ export class Compiler {
 		} else if (fallbackBindings) {
 			return fallbackBindings.parse(src, options);
 		}
+
 		throw new Error("Bindings not found.");
 	}
 
 	parseSync(src: string, options: ParseOptions & { isModule: false }): Script;
+
 	parseSync(src: string, options?: ParseOptions, filename?: string): Module;
+
 	parseSync(src: string, options?: ParseOptions, filename?: string): Program {
 		options = options || { syntax: "ecmascript" };
+
 		options.syntax = options.syntax || "ecmascript";
 
 		if (bindings) {
@@ -162,10 +172,12 @@ export class Compiler {
 		path: string,
 		options: ParseOptions & { isModule: false },
 	): Promise<Script>;
+
 	parseFile(path: string, options?: ParseOptions): Promise<Module>;
 
 	async parseFile(path: string, options?: ParseOptions): Promise<Program> {
 		options = options || { syntax: "ecmascript" };
+
 		options.syntax = options.syntax || "ecmascript";
 
 		if (!bindings && !!fallbackBindings) {
@@ -185,9 +197,12 @@ export class Compiler {
 		path: string,
 		options: ParseOptions & { isModule: false },
 	): Script;
+
 	parseFileSync(path: string, options?: ParseOptions): Module;
+
 	parseFileSync(path: string, options?: ParseOptions): Program {
 		options = options || { syntax: "ecmascript" };
+
 		options.syntax = options.syntax || "ecmascript";
 
 		if (!bindings && !!fallbackBindings) {
@@ -235,6 +250,7 @@ export class Compiler {
 
 	async transform(src: string | Program, options?: Options): Promise<Output> {
 		const isModule = typeof src !== "string";
+
 		options = options || {};
 
 		if (options?.jsc?.parser) {
@@ -268,6 +284,7 @@ export class Compiler {
 				console.warn(
 					`Fallback bindings does not support legacy plugins, it'll be ignored.`,
 				);
+
 				this.fallbackBindingsPluginWarningDisplayed = true;
 			}
 
@@ -279,6 +296,7 @@ export class Compiler {
 
 	transformSync(src: string | Program, options?: Options): Output {
 		const isModule = typeof src !== "string";
+
 		options = options || {};
 
 		if (options?.jsc?.parser) {
@@ -312,8 +330,10 @@ export class Compiler {
 				console.warn(
 					`Fallback bindings does not support legacy plugins, it'll be ignored.`,
 				);
+
 				this.fallbackBindingsPluginWarningDisplayed = true;
 			}
+
 			return fallbackBindings.transformSync(
 				isModule ? JSON.stringify(src) : src,
 				options,
@@ -340,6 +360,7 @@ export class Compiler {
 		}
 
 		const { plugin, ...newOptions } = options;
+
 		newOptions.filename = path;
 
 		if (plugin) {
@@ -368,6 +389,7 @@ export class Compiler {
 		}
 
 		const { plugin, ...newOptions } = options;
+
 		newOptions.filename = path;
 
 		if (plugin) {
@@ -411,6 +433,7 @@ export class Compiler {
 					...o,
 				};
 			}
+
 			return obj;
 		}
 
@@ -552,6 +575,7 @@ export function minifySync(
  */
 export function __experimental_registerGlobalTraceConfig(traceConfig: {
 	type: "traceEvent";
+
 	fileName?: string;
 }) {
 	// Do not raise error if binding doesn't exists - fallback binding will not support

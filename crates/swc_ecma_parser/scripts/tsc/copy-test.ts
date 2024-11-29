@@ -20,6 +20,7 @@ async function compile(
 	options: ts.CompilerOptions,
 ): Promise<boolean> {
 	options.noEmit = true;
+
 	options.jsx = ts.JsxEmit.Preserve;
 
 	let program = ts.createProgram(fileNames, options);
@@ -44,6 +45,7 @@ async function compile(
 		);
 
 		let message = ts.flattenDiagnosticMessageText(d.messageText, "\n");
+
 		console.log(
 			`${d.code} ${d.file.fileName} (${line + 1},${
 				character + 1
@@ -76,10 +78,12 @@ async function check(f: string) {
 	} else {
 		await fs.promises.unlink(f);
 	}
+
     fileNames: string[],
     options: ts.CompilerOptions
 ): Promise<boolean> {
     options.noEmit = true;
+
     options.jsx = ts.JsxEmit.Preserve;
 
     let program = ts.createProgram(fileNames, options);
@@ -104,6 +108,7 @@ async function check(f: string) {
         );
 
         let message = ts.flattenDiagnosticMessageText(d.messageText, "\n");
+
         console.log(
             `${d.code} ${d.file.fileName} (${line + 1},${
                 character + 1

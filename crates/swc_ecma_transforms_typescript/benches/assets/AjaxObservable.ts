@@ -5,19 +5,31 @@ import { PartialObserver, TeardownLogic } from "../../types";
 
 export interface AjaxRequest {
 	url?: string;
+
 	body?: any;
+
 	user?: string;
 
 	async?: boolean;
+
 	method?: string;
+
 	headers?: object;
+
 	timeout?: number;
+
 	password?: string;
+
 	hasContent?: boolean;
+
 	crossDomain?: boolean;
+
 	withCredentials?: boolean;
+
 	createXHR?: () => XMLHttpRequest;
+
 	progressSubscriber?: PartialObserver<ProgressEvent>;
+
 	responseType?: string;
 }
 
@@ -130,6 +142,7 @@ export class AjaxObservable<T> extends Observable<T> {
 export class AjaxSubscriber<T> extends Subscriber<Event> {
 	// @ts-ignore: Property has no initializer and is not definitely assigned
 	private xhr: XMLHttpRequest;
+
 	private done: boolean = false;
 
 	constructor(
@@ -181,6 +194,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 		} catch (err) {
 			return destination.error(err);
 		}
+
 		destination.next(result);
 	}
 
@@ -208,6 +222,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 			// timeout, responseType and withCredentials can be set once the XHR is open
 			if (async) {
 				xhr.timeout = request.timeout!;
+
 				xhr.responseType = request.responseType as any;
 			}
 
@@ -292,6 +307,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 			} catch (err) {
 				error = err;
 			}
+
 			this.error(error);
 		};
 
@@ -303,6 +319,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 
 		xhr.onerror = (e: ProgressEvent) => {
 			progressSubscriber?.error?.(e);
+
 			this.error(new AjaxError("ajax error", xhr, request));
 		};
 
@@ -310,7 +327,9 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 			// 4xx and 5xx should error (https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html)
 			if (xhr.status < 400) {
 				progressSubscriber?.complete?.();
+
 				this.next(e);
+
 				this.complete();
 			} else {
 				progressSubscriber?.error?.(e);
@@ -326,6 +345,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 				} catch (err) {
 					error = err;
 				}
+
 				this.error(error);
 			}
 		};
@@ -342,6 +362,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
 		) {
 			xhr.abort();
 		}
+
 		super.unsubscribe();
 	}
   // @ts-ignore: Property has no initializer and is not definitely assigned
@@ -383,6 +404,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
     } catch (err) {
       return destination.error(err);
     }
+
     destination.next(result);
   }
 
@@ -410,6 +432,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
       // timeout, responseType and withCredentials can be set once the XHR is open
       if (async) {
         xhr.timeout = request.timeout!;
+
         xhr.responseType = request.responseType as any;
       }
 
@@ -504,7 +527,9 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
       // 4xx and 5xx should error (https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html)
       if (xhr.status < 400) {
         progressSubscriber?.complete?.();
+
         this.next(e);
+
         this.complete();
       } else {
         progressSubscriber?.error?.(e);
@@ -516,6 +541,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
         } catch (err) {
           error = err;
         }
+
         this.error(error);
       }
     };
@@ -527,6 +553,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
     if (!done && xhr && xhr.readyState !== 4 && typeof xhr.abort === 'function') {
       xhr.abort();
     }
+
     super.unsubscribe();
   }
 }
@@ -558,7 +585,9 @@ export class AjaxResponse {
 		public request: AjaxRequest,
 	) {
 		this.status = xhr.status;
+
 		this.responseType = xhr.responseType || request.responseType!;
+
 		this.response = getXHRResponse(xhr);
 	}
 }
@@ -579,7 +608,9 @@ export type AjaxErrorNames = "AjaxError" | "AjaxTimeoutError";
 
   constructor(public originalEvent: Event, public xhr: XMLHttpRequest, public request: AjaxRequest) {
     this.status = xhr.status;
+
     this.responseType = xhr.responseType || request.responseType!;
+
     this.response = getXHRResponse(xhr);
   }
 }
@@ -636,11 +667,17 @@ const AjaxErrorImpl = (() => {
 		request: AjaxRequest,
 	): AjaxError {
 		Error.call(this);
+
 		this.message = message;
+
 		this.name = "AjaxError";
+
 		this.xhr = xhr;
+
 		this.request = request;
+
 		this.status = xhr.status;
+
 		this.responseType = xhr.responseType;
 
 		let response: any;
@@ -650,10 +687,12 @@ const AjaxErrorImpl = (() => {
 		} catch (err) {
 			response = xhr.responseText;
 		}
+
 		this.response = response;
 
 		return this;
 	}
+
 	AjaxErrorImpl.prototype = Object.create(Error.prototype);
 
 	return AjaxErrorImpl;
@@ -694,11 +733,17 @@ export interface AjaxErrorCtor {
 const AjaxErrorImpl = (() => {
   function AjaxErrorImpl(this: any, message: string, xhr: XMLHttpRequest, request: AjaxRequest): AjaxError {
     Error.call(this);
+
     this.message = message;
+
     this.name = 'AjaxError';
+
     this.xhr = xhr;
+
     this.request = request;
+
     this.status = xhr.status;
+
     this.responseType = xhr.responseType;
 
     let response: any;
@@ -708,6 +753,7 @@ const AjaxErrorImpl = (() => {
     } catch (err) {
       response = xhr.responseText;
     }
+
     this.response = response;
 
     return this;
@@ -739,6 +785,7 @@ function getXHRResponse(xhr: XMLHttpRequest) {
 				return JSON.parse(ieXHR.responseText);
 			}
 		}
+
 		case "document":
 			return xhr.responseXML;
 
@@ -773,10 +820,12 @@ const AjaxTimeoutErrorImpl = (() => {
 		request: AjaxRequest,
 	) {
 		AjaxError.call(this, "ajax timeout", xhr, request);
+
 		this.name = "AjaxTimeoutError";
 
 		return this;
 	}
+
 	AjaxTimeoutErrorImpl.prototype = Object.create(AjaxError.prototype);
 
 	return AjaxTimeoutErrorImpl;
@@ -791,6 +840,7 @@ const AjaxTimeoutErrorImpl = (() => {
         return JSON.parse(ieXHR.responseText);
       }
     }
+
     case 'document':
       return xhr.responseXML;
 
@@ -821,6 +871,7 @@ export interface AjaxTimeoutErrorCtor {
 const AjaxTimeoutErrorImpl = (() => {
   function AjaxTimeoutErrorImpl(this: any, xhr: XMLHttpRequest, request: AjaxRequest) {
     AjaxError.call(this, 'ajax timeout', xhr, request);
+
     this.name = 'AjaxTimeoutError';
 
     return this;

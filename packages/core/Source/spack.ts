@@ -22,13 +22,16 @@ export async function compileBundleOptions(
 		if ((configFromFile as any).default) {
 			configFromFile = (configFromFile as any).default;
 		}
+
 		if (Array.isArray(configFromFile)) {
 			if (Array.isArray(f)) {
 				return [...configFromFile, ...f];
 			}
+
 			if (typeof f !== "string") {
 				configFromFile.push(f);
 			}
+
 			return configFromFile;
 		}
 
@@ -42,6 +45,7 @@ export async function compileBundleOptions(
 				`Error occurred while loading config file at ${config}: ${e}`,
 			);
 		}
+
 		return f;
 	}
 }
@@ -95,6 +99,7 @@ export interface SpackConfig {
 
 export interface OutputConfig {
 	name: string;
+
 	path: string;
 }
 

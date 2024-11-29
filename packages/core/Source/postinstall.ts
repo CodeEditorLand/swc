@@ -21,9 +21,12 @@ function removeRecursive(dir: string): void {
 		} catch {
 			continue; // Guard against https://github.com/nodejs/node/issues/4760
 		}
+
 		if (stats.isDirectory()) removeRecursive(entryPath);
+
 		else fs.unlinkSync(entryPath);
 	}
+
 	fs.rmdirSync(dir);
 }
 
@@ -58,6 +61,7 @@ const validateBinary = async () => {
 					"console.log()",
 					Buffer.from(JSON.stringify({ syntax: "ecmascript" })),
 				);
+
 		assert.ok(triple, "Failed to read target triple from native binary.");
 	} catch (error: any) {
 		// if error is unsupported architecture, ignore to display.
@@ -109,6 +113,7 @@ const validateBinary = async () => {
 
 	try {
 		fs.mkdirSync(installDir);
+
 		fs.writeFileSync(path.join(installDir, "package.json"), "{}");
 
 		// Instead of carrying over own dependencies to download & resolve package which increases installation sizes of `@swc/core`,

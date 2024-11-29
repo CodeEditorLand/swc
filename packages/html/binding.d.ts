@@ -3,21 +3,29 @@
 
 export interface Attribute {
 	namespace?: string;
+
 	prefix?: string;
+
 	name: string;
+
 	value?: string;
 }
 
 export interface Diagnostic {
 	level: string;
+
 	message: string;
+
 	span: any;
 }
 
 export interface Element {
 	tagName: string;
+
 	namespace: string;
+
 	attributes: Array<Attribute>;
+
 	isSelfClosing: boolean;
 }
 
@@ -37,21 +45,29 @@ export declare function minifyFragmentSync(
 	code: Buffer,
 	opts: Buffer,
     namespace?: string;
+
     prefix?: string;
+
     name: string;
+
     value?: string;
 }
 
 export interface Diagnostic {
     level: string;
+
     message: string;
+
     span: any;
 }
 
 export interface Element {
     tagName: string;
+
     namespace: string;
+
     attributes: Array<Attribute>;
+
     isSelfClosing: boolean;
 }
 
@@ -79,7 +95,10 @@ export declare function minifySync(
 
 export interface TransformOutput {
 	code: string;
+
 	errors?: Array<Diagnostic>;
+
     code: string;
+
     errors?: Array<Diagnostic>;
 }
