@@ -21,6 +21,7 @@ impl ToCode for BoxWrapper {
 pub(crate) fn parse_input_type(input_str: &str, ty: &Type) -> Result<BoxWrapper, Error> {
     if let Some(ty) = extract_generic("Box", ty) {
         let node = parse_input_type(input_str, ty).context("failed to parse `T` in Box<T>")?;
+
         return Ok(BoxWrapper(Box::new(Box::new(node))));
     }
 
@@ -30,6 +31,7 @@ pub(crate) fn parse_input_type(input_str: &str, ty: &Type) -> Result<BoxWrapper,
         }
 
         let node = parse_input_type(input_str, ty).context("failed to parse `T` in Option<T>")?;
+
         return Ok(BoxWrapper(Box::new(Some(node))));
     }
 
@@ -62,6 +64,7 @@ where
     T: ToCode,
 {
     let cm = Lrc::new(SourceMap::default());
+
     let fm = cm.new_source_file(FileName::Anon.into(), input_str.to_string());
 
     let lexer = Lexer::new(
@@ -70,7 +73,9 @@ where
         StringInput::from(&*fm),
         None,
     );
+
     let mut parser = Parser::new_from(lexer);
+
     op(&mut parser)
         .map_err(|err| anyhow!("{:?}", err))
         .with_context(|| format!("failed to parse input as `{}`", type_name::<T>()))
@@ -91,6 +96,7 @@ fn extract_generic<'a>(name: &str, ty: &'a Type) -> Option<&'a Type> {
                         _ => unimplemented!("generic parameter other than type"),
                     }
                 }
+
                 _ => unimplemented!("Box() -> T or Box without a type parameter"),
             }
         }

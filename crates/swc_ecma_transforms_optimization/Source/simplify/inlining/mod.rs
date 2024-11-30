@@ -66,7 +66,9 @@ impl Repeated for Inlining<'_> {
 
     fn reset(&mut self) {
         self.changed = false;
+
         self.is_first_run = false;
+
         self.pass += 1;
     }
 }
@@ -111,6 +113,7 @@ impl VisitMut for Inlining<'_> {
 
     fn visit_mut_assign_expr(&mut self, e: &mut AssignExpr) {
         tracing::trace!("{:?}; Fold<AssignExpr>", self.phase);
+
         self.pat_mode = PatFoldingMode::Assign;
 
         match e.op {
@@ -120,6 +123,7 @@ impl VisitMut for Inlining<'_> {
                 };
 
                 e.left.visit_with(&mut v);
+
                 e.right.visit_with(&mut v);
 
                 match &mut e.left {
@@ -127,14 +131,17 @@ impl VisitMut for Inlining<'_> {
                         //
                         if let SimpleAssignTarget::Member(ref left) = &*left {
                             tracing::trace!("Assign to member expression!");
+
                             let mut v = IdentListVisitor {
                                 scope: &mut self.scope,
                             };
 
                             left.visit_with(&mut v);
+
                             e.right.visit_with(&mut v);
                         }
                     }
+
                     AssignTarget::Pat(p) => {
                         p.visit_mut_with(self);
                     }
@@ -147,6 +154,7 @@ impl VisitMut for Inlining<'_> {
                 };
 
                 e.left.visit_with(&mut v);
+
                 e.right.visit_with(&mut v)
             }
         }
@@ -156,15 +164,18 @@ impl VisitMut for Inlining<'_> {
         if self.scope.is_inline_prevented(&e.right) {
             // Prevent inline for lhd
             let ids: Vec<Id> = find_pat_ids(&e.left);
+
             for id in ids {
                 self.scope.prevent_inline(&id);
             }
+
             return;
         }
 
         //
         if let Some(i) = e.left.as_ident() {
             let id = i.to_id();
+
             self.scope.add_write(&id, false);
 
             if let Some(var) = self.scope.find_binding(&id) {
@@ -209,14 +220,18 @@ impl VisitMut for Inlining<'_> {
     fn visit_mut_catch_clause(&mut self, node: &mut CatchClause) {
         self.with_child(ScopeKind::Block, move |child| {
             child.pat_mode = PatFoldingMode::CatchParam;
+
             node.param.visit_mut_with(child);
+
             match child.phase {
                 Phase::Analysis => {
                     let ids: Vec<Id> = find_pat_ids(&node.param);
+
                     for id in ids {
                         child.scope.prevent_inline(&id);
                     }
                 }
+
                 Phase::Inlining => {}
             }
 
@@ -232,6 +247,7 @@ impl VisitMut for Inlining<'_> {
         }
 
         node.test.visit_mut_with(self);
+
         self.visit_with_child(ScopeKind::Loop, &mut node.body);
     }
 
@@ -260,8 +276,10 @@ impl VisitMut for Inlining<'_> {
                             && !self.scope.is_inline_prevented(&e.right)
                         {
                             *var.value.borrow_mut() = Some(*e.right.clone());
+
                             var.is_undefined.set(false);
                             *node = *e.right.take();
+
                             return;
                         }
                     }
@@ -273,12 +291,16 @@ impl VisitMut for Inlining<'_> {
 
         if let Expr::Ident(ref i) = node {
             let id = i.to_id();
+
             if self.is_first_run {
                 if let Some(expr) = self.scope.find_constant(&id) {
                     self.changed = true;
+
                     let mut expr = expr.clone();
+
                     expr.visit_mut_with(self);
                     *node = expr;
+
                     return;
                 }
             }
@@ -289,18 +311,23 @@ impl VisitMut for Inlining<'_> {
                         if let Some(var) = self.scope.find_binding(&id) {
                             match &*var.value.borrow() {
                                 Some(Expr::Ident(..)) | Some(Expr::Lit(..)) => {}
+
                                 _ => {
                                     self.scope.prevent_inline(&id);
                                 }
                             }
                         }
                     }
+
                     self.scope.add_read(&id);
                 }
+
                 Phase::Inlining => {
                     tracing::trace!("Trying to inline: {:?}", id);
+
                     let expr = if let Some(var) = self.scope.find_binding(&id) {
                         tracing::trace!("VarInfo: {:?}", var);
+
                         if !var.is_inline_prevented() {
                             let expr = var.value.borrow();
 
@@ -317,14 +344,17 @@ impl VisitMut for Inlining<'_> {
 
                                 if var.is_undefined.get() {
                                     *node = *Expr::undefined(i.span);
+
                                     return;
                                 } else {
                                     tracing::trace!("Not a cheap expression");
+
                                     None
                                 }
                             }
                         } else {
                             tracing::trace!("Inlining is prevented");
+
                             None
                         }
                     } else {
@@ -343,6 +373,7 @@ impl VisitMut for Inlining<'_> {
                 BinaryOp::LogicalAnd | BinaryOp::LogicalOr => {
                     self.visit_with_child(ScopeKind::Cond, &mut b.right);
                 }
+
                 _ => {}
             }
         }
@@ -360,9 +391,12 @@ impl VisitMut for Inlining<'_> {
 
         self.with_child(ScopeKind::Fn { named: true }, |child| {
             child.pat_mode = PatFoldingMode::Param;
+
             node.function.params.visit_mut_with(child);
+
             match &mut node.function.body {
                 None => {}
+
                 Some(v) => {
                     v.visit_mut_children_with(child);
                 }
@@ -380,6 +414,7 @@ impl VisitMut for Inlining<'_> {
 
     fn visit_mut_for_in_stmt(&mut self, node: &mut ForInStmt) {
         self.pat_mode = PatFoldingMode::Param;
+
         node.left.visit_mut_with(self);
 
         {
@@ -395,11 +430,13 @@ impl VisitMut for Inlining<'_> {
         }
 
         node.right.visit_mut_with(self);
+
         self.visit_with_child(ScopeKind::Loop, &mut node.body);
     }
 
     fn visit_mut_for_of_stmt(&mut self, node: &mut ForOfStmt) {
         self.pat_mode = PatFoldingMode::Param;
+
         node.left.visit_mut_with(self);
 
         {
@@ -414,6 +451,7 @@ impl VisitMut for Inlining<'_> {
         }
 
         node.right.visit_mut_with(self);
+
         self.visit_with_child(ScopeKind::Loop, &mut node.body);
     }
 
@@ -435,8 +473,11 @@ impl VisitMut for Inlining<'_> {
         }
 
         node.init.visit_mut_with(self);
+
         node.test.visit_mut_with(self);
+
         node.update.visit_mut_with(self);
+
         self.visit_with_child(ScopeKind::Loop, &mut node.body);
 
         if node.init.is_none() && node.test.is_none() && node.update.is_none() {
@@ -447,11 +488,14 @@ impl VisitMut for Inlining<'_> {
     fn visit_mut_function(&mut self, node: &mut Function) {
         self.with_child(ScopeKind::Fn { named: false }, move |child| {
             child.pat_mode = PatFoldingMode::Param;
+
             node.params.visit_mut_with(child);
+
             match &mut node.body {
                 None => None,
                 Some(v) => {
                     v.visit_mut_children_with(child);
+
                     Some(())
                 }
             };
@@ -460,11 +504,15 @@ impl VisitMut for Inlining<'_> {
 
     fn visit_mut_if_stmt(&mut self, stmt: &mut IfStmt) {
         let old_in_test = self.in_test;
+
         self.in_test = true;
+
         stmt.test.visit_mut_with(self);
+
         self.in_test = old_in_test;
 
         self.visit_with_child(ScopeKind::Cond, &mut stmt.cons);
+
         self.visit_with_child(ScopeKind::Cond, &mut stmt.alt);
     }
 
@@ -474,12 +522,14 @@ impl VisitMut for Inlining<'_> {
         let old_phase = self.phase;
 
         self.phase = Phase::Analysis;
+
         program.visit_mut_children_with(self);
 
         tracing::trace!("Switching to Inlining phase");
 
         // Inline
         self.phase = Phase::Inlining;
+
         program.visit_mut_children_with(self);
 
         self.phase = old_phase;
@@ -487,6 +537,7 @@ impl VisitMut for Inlining<'_> {
 
     fn visit_mut_new_expr(&mut self, node: &mut NewExpr) {
         node.callee.visit_mut_with(self);
+
         if self.phase == Phase::Analysis {
             self.scope.mark_this_sensitive(&node.callee);
         }
@@ -509,6 +560,7 @@ impl VisitMut for Inlining<'_> {
                         VarType::Param,
                     );
                 }
+
                 PatFoldingMode::CatchParam => {
                     self.declare(
                         i.to_id(),
@@ -517,7 +569,9 @@ impl VisitMut for Inlining<'_> {
                         VarType::Var(VarDeclKind::Var),
                     );
                 }
+
                 PatFoldingMode::VarDecl => {}
+
                 PatFoldingMode::Assign => {
                     if self.scope.find_binding_from_current(&i.to_id()).is_some() {
                     } else {
@@ -535,12 +589,15 @@ impl VisitMut for Inlining<'_> {
             Phase::Analysis => {
                 items.visit_mut_children_with(self);
             }
+
             Phase::Inlining => {
                 self.phase = Phase::Analysis;
+
                 items.visit_mut_children_with(self);
 
                 // Inline
                 self.phase = Phase::Inlining;
+
                 items.visit_mut_children_with(self);
 
                 self.phase = old_phase
@@ -567,6 +624,7 @@ impl VisitMut for Inlining<'_> {
             };
 
             node.arg.visit_with(&mut v);
+
             return;
         }
 
@@ -589,6 +647,7 @@ impl VisitMut for Inlining<'_> {
 
     fn visit_mut_var_declarator(&mut self, node: &mut VarDeclarator) {
         let kind = VarType::Var(self.var_decl_kind);
+
         node.init.visit_mut_with(self);
 
         self.pat_mode = PatFoldingMode::VarDecl;
@@ -615,6 +674,7 @@ impl VisitMut for Inlining<'_> {
                                     .insert(name.to_id(), Some((**e).clone()));
                             }
                         }
+
                         Some(..) if self.var_decl_kind == VarDeclKind::Const => {
                             if self.is_first_run {
                                 self.scope.constants.insert(name.to_id(), None);
@@ -629,12 +689,14 @@ impl VisitMut for Inlining<'_> {
                                 self.scope.prevent_inline(&name.to_id());
                             }
                         }
+
                         Some(ref e) => {
                             if self.var_decl_kind != VarDeclKind::Const {
                                 self.declare(name.to_id(), Some(Cow::Borrowed(e)), false, kind);
 
                                 if contains_this_expr(&node.init) {
                                     self.scope.prevent_inline(&name.to_id());
+
                                     return;
                                 }
                             }
@@ -642,6 +704,7 @@ impl VisitMut for Inlining<'_> {
                     }
                 }
             }
+
             Phase::Inlining => {
                 if let Pat::Ident(ref name) = node.name {
                     if self.var_decl_kind != VarDeclKind::Const {
@@ -653,11 +716,14 @@ impl VisitMut for Inlining<'_> {
                             || !self.scope.has_same_this(&id, node.init.as_deref())
                         {
                             tracing::trace!("Inline is prevented for {:?}", id);
+
                             return;
                         }
 
                         let mut init = node.init.take();
+
                         init.visit_mut_with(self);
+
                         tracing::trace!("\tInit: {:?}", init);
 
                         if let Some(init) = &init {
@@ -677,8 +743,11 @@ impl VisitMut for Inlining<'_> {
                                     "Inlining is not possible as inline of the initialization was \
                                      prevented"
                                 );
+
                                 node.init = init;
+
                                 self.scope.prevent_inline(&name.to_id());
+
                                 return;
                             }
                         }
@@ -688,8 +757,10 @@ impl VisitMut for Inlining<'_> {
                             Some(e) if e.is_lit() || e.is_ident() => Some(e),
                             Some(e) => {
                                 let e = *e;
+
                                 if self.scope.is_inline_prevented(&Ident::from(name).into()) {
                                     node.init = Some(Box::new(e));
+
                                     return;
                                 }
 
@@ -698,10 +769,12 @@ impl VisitMut for Inlining<'_> {
                                         Some(Box::new(e))
                                     } else {
                                         node.init = Some(Box::new(e));
+
                                         return;
                                     }
                                 } else {
                                     node.init = Some(Box::new(e));
+
                                     return;
                                 }
                             }
@@ -729,6 +802,7 @@ impl VisitMut for Inlining<'_> {
         }
 
         node.test.visit_mut_with(self);
+
         self.visit_with_child(ScopeKind::Loop, &mut node.body);
     }
 }

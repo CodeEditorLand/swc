@@ -41,7 +41,9 @@ fn assert_negate_cost(s: &str, in_bool_ctx: bool, is_ret_val_ignored: bool, expe
 
         let input = {
             let mut e = e.clone();
+
             e.visit_mut_with(&mut fixer(None));
+
             dump(&e, true)
         };
 
@@ -53,8 +55,11 @@ fn assert_negate_cost(s: &str, in_bool_ctx: bool, is_ret_val_ignored: bool, expe
 
         let real = {
             let mut real = e.clone();
+
             negate(&expr_ctx, &mut real, in_bool_ctx, is_ret_val_ignored);
+
             real.visit_mut_with(&mut fixer(None));
+
             dump(&real, true)
         };
 
@@ -65,7 +70,9 @@ fn assert_negate_cost(s: &str, in_bool_ctx: bool, is_ret_val_ignored: bool, expe
                 input.len(),
                 real.len()
             );
+
             info!("Real: {}", real);
+
             info!("Input: {}", input);
         }
 

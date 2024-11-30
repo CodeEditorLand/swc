@@ -50,16 +50,19 @@ pub fn lookup_char_pos_proxy(
     allocated_ret_ptr: u32,
 ) -> u32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let alloc_guest_memory = env.data().alloc_guest_memory.clone();
+
     let alloc_guest_memory = alloc_guest_memory
         .as_ref()
         .expect("Alloc guest memory fn should be available, check initialization");
 
     let original_loc = (env.data().source_map.lock()).lookup_char_pos(BytePos(byte_pos));
+
     let ret = VersionedSerializable::new(PartialLoc {
         source_file: if should_include_source_file == 0 {
             None
@@ -81,6 +84,7 @@ pub fn lookup_char_pos_proxy(
         allocated_ret_ptr,
         &serialized_loc_bytes,
     );
+
     1
 }
 
@@ -100,6 +104,7 @@ pub fn merge_spans_proxy(
     allocated_ptr: u32,
 ) -> i32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
@@ -115,16 +120,20 @@ pub fn merge_spans_proxy(
     };
 
     let ret = (env.data().source_map.lock()).merge_spans(sp_lhs, sp_rhs);
+
     if let Some(span) = ret {
         let span = VersionedSerializable::new(span);
+
         let serialized_bytes =
             PluginSerializedBytes::try_serialize(&span).expect("Should be serializable");
+
         write_into_memory_view(
             memory,
             &mut env.as_store_mut(),
             &serialized_bytes,
             |_, _| allocated_ptr,
         );
+
         1
     } else {
         0
@@ -140,11 +149,13 @@ pub fn span_to_lines_proxy(
     allocated_ret_ptr: u32,
 ) -> i32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let alloc_guest_memory = env.data().alloc_guest_memory.clone();
+
     let alloc_guest_memory = alloc_guest_memory
         .as_ref()
         .expect("Alloc guest memory fn should be available, check initialization");
@@ -176,6 +187,7 @@ pub fn span_to_lines_proxy(
         allocated_ret_ptr,
         &serialized_loc_bytes,
     );
+
     1
 }
 
@@ -186,16 +198,19 @@ pub fn lookup_byte_offset_proxy(
     allocated_ret_ptr: u32,
 ) -> i32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let alloc_guest_memory = env.data().alloc_guest_memory.clone();
+
     let alloc_guest_memory = alloc_guest_memory
         .as_ref()
         .expect("Alloc guest memory fn should be available, check initialization");
 
     let byte_pos = BytePos(byte_pos);
+
     let ret = (env.data().source_map.lock()).lookup_byte_offset(byte_pos);
 
     let serialized_loc_bytes =
@@ -209,6 +224,7 @@ pub fn lookup_byte_offset_proxy(
         allocated_ret_ptr,
         &serialized_loc_bytes,
     );
+
     1
 }
 
@@ -220,11 +236,13 @@ pub fn span_to_string_proxy(
     allocated_ret_ptr: u32,
 ) -> i32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let alloc_guest_memory = env.data().alloc_guest_memory.clone();
+
     let alloc_guest_memory = alloc_guest_memory
         .as_ref()
         .expect("Alloc guest memory fn should be available, check initialization");
@@ -233,7 +251,9 @@ pub fn span_to_string_proxy(
         lo: BytePos(span_lo),
         hi: BytePos(span_hi),
     };
+
     let ret = (env.data().source_map.lock()).span_to_string(span);
+
     let serialized_loc_bytes =
         PluginSerializedBytes::try_serialize(&VersionedSerializable::new(ret))
             .expect("Should be serializable");
@@ -245,6 +265,7 @@ pub fn span_to_string_proxy(
         allocated_ret_ptr,
         &serialized_loc_bytes,
     );
+
     1
 }
 
@@ -256,11 +277,13 @@ pub fn span_to_filename_proxy(
     allocated_ret_ptr: u32,
 ) -> i32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let alloc_guest_memory = env.data().alloc_guest_memory.clone();
+
     let alloc_guest_memory = alloc_guest_memory
         .as_ref()
         .expect("Alloc guest memory fn should be available, check initialization");
@@ -269,7 +292,9 @@ pub fn span_to_filename_proxy(
         lo: BytePos(span_lo),
         hi: BytePos(span_hi),
     };
+
     let ret = (env.data().source_map.lock()).span_to_filename(span);
+
     let serialized_loc_bytes =
         PluginSerializedBytes::try_serialize(&VersionedSerializable::new(ret))
             .expect("Should be serializable");
@@ -281,6 +306,7 @@ pub fn span_to_filename_proxy(
         allocated_ret_ptr,
         &serialized_loc_bytes,
     );
+
     1
 }
 
@@ -292,11 +318,13 @@ pub fn span_to_source_proxy(
     allocated_ret_ptr: u32,
 ) -> i32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let alloc_guest_memory = env.data().alloc_guest_memory.clone();
+
     let alloc_guest_memory = alloc_guest_memory
         .as_ref()
         .expect("Alloc guest memory fn should be available, check initialization");
@@ -305,7 +333,9 @@ pub fn span_to_source_proxy(
         lo: BytePos(span_lo),
         hi: BytePos(span_hi),
     };
+
     let ret = (*env.data().source_map.lock()).span_to_snippet(span);
+
     let serialized_loc_bytes =
         PluginSerializedBytes::try_serialize(&VersionedSerializable::new(ret))
             .expect("Should be serializable");
@@ -317,5 +347,6 @@ pub fn span_to_source_proxy(
         allocated_ret_ptr,
         &serialized_loc_bytes,
     );
+
     1
 }

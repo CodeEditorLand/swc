@@ -30,7 +30,9 @@ impl Compressor {
     /// RAII guard to change context temporarically
     pub(super) fn with_ctx(&mut self, ctx: Ctx) -> WithCtx<'_> {
         let orig_ctx = self.ctx;
+
         self.ctx = ctx;
+
         WithCtx {
             pass: self,
             orig_ctx,

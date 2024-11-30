@@ -514,8 +514,11 @@ fn issue_5947() {
 #[test]
 fn issue_6781() {
     let cm = SourceMap::default();
+
     let fm = cm.new_source_file(FileName::Anon.into(), "import.meta.env".to_string());
+
     let mut errors = Vec::new();
+
     let expr = parse_file_as_expr(
         &fm,
         Default::default(),
@@ -523,7 +526,9 @@ fn issue_6781() {
         None,
         &mut errors,
     );
+
     assert!(expr.is_ok());
+
     assert!(errors.is_empty());
 }
 
@@ -535,6 +540,7 @@ fn bench_new_expr_ts(b: &mut Bencher) {
         Syntax::Typescript(Default::default()),
         |p| {
             black_box(p.parse_expr()?);
+
             Ok(())
         },
     );
@@ -544,6 +550,7 @@ fn bench_new_expr_ts(b: &mut Bencher) {
 fn bench_new_expr_es(b: &mut Bencher) {
     bench_parser(b, "new Foo()", Syntax::Es(Default::default()), |p| {
         black_box(p.parse_expr()?);
+
         Ok(())
     });
 }
@@ -556,6 +563,7 @@ fn bench_member_expr_ts(b: &mut Bencher) {
         Syntax::Typescript(Default::default()),
         |p| {
             black_box(p.parse_expr()?);
+
             Ok(())
         },
     );
@@ -565,6 +573,7 @@ fn bench_member_expr_ts(b: &mut Bencher) {
 fn bench_member_expr_es(b: &mut Bencher) {
     bench_parser(b, "a.b.c.d.e.f", Syntax::Es(Default::default()), |p| {
         black_box(p.parse_expr()?);
+
         Ok(())
     });
 }

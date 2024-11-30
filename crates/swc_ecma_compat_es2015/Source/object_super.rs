@@ -25,6 +25,7 @@ impl VisitMut for ObjectSuper {
 
     fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
         n.visit_mut_children_with(self);
+
         if !self.extra_vars.is_empty() {
             prepend_stmt(
                 n,
@@ -52,6 +53,7 @@ impl VisitMut for ObjectSuper {
 
     fn visit_mut_stmts(&mut self, stmts: &mut Vec<Stmt>) {
         stmts.visit_mut_children_with(self);
+
         if !self.extra_vars.is_empty() {
             prepend_stmt(
                 stmts,
@@ -77,15 +79,18 @@ impl VisitMut for ObjectSuper {
 
     fn visit_mut_expr(&mut self, expr: &mut Expr) {
         expr.visit_mut_children_with(self);
+
         if let Expr::Object(ObjectLit { span: _, props }) = expr {
             let mut replacer = SuperReplacer {
                 obj: None,
                 vars: Vec::new(),
             };
+
             for prop_or_spread in props.iter_mut() {
                 if let PropOrSpread::Prop(ref mut prop) = prop_or_spread {
                     if let Prop::Method(MethodProp { key: _, function }) = &mut **prop {
                         function.visit_mut_with(&mut replacer);
+
                         if !replacer.vars.is_empty() {
                             if let Some(BlockStmt { span: _, stmts, .. }) = &mut function.body {
                                 prepend_stmt(
@@ -113,6 +118,7 @@ impl VisitMut for ObjectSuper {
                     }
                 }
             }
+
             if let Some(obj) = replacer.obj {
                 *expr = AssignExpr {
                     span: DUMMY_SP,
@@ -121,6 +127,7 @@ impl VisitMut for ObjectSuper {
                     right: Box::new(expr.take()),
                 }
                 .into();
+
                 self.extra_vars.push(obj);
             }
         }
@@ -145,10 +152,12 @@ impl VisitMut for SuperReplacer {
                     | Prop::Setter(SetterProp { key, .. }) => key.visit_mut_with(self),
                     Prop::KeyValue(KeyValueProp { key, value }) => {
                         key.visit_mut_with(self);
+
                         if !(value.is_fn_expr() || value.is_class()) {
                             value.visit_mut_with(self)
                         }
                     }
+
                     Prop::Shorthand(_) | Prop::Assign(_) => (),
                 }
             }
@@ -157,7 +166,9 @@ impl VisitMut for SuperReplacer {
 
     fn visit_mut_expr(&mut self, expr: &mut Expr) {
         self.visit_mut_super_member_call(expr);
+
         self.visit_mut_super_member_set(expr);
+
         self.visit_mut_super_member_get(expr);
 
         expr.visit_mut_children_with(self)
@@ -171,7 +182,9 @@ impl SuperReplacer {
             obj.clone()
         } else {
             let ident = private_ident!("_obj");
+
             self.obj = Some(ident.clone());
+
             ident
         }
     }
@@ -225,9 +238,12 @@ impl SuperReplacer {
             }) = &mut **callee_expr
             {
                 let prop = self.normalize_computed_expr(prop);
+
                 let callee =
                     SuperReplacer::super_to_get_call(self.get_proto(), *super_token, prop.as_arg());
+
                 let this = ThisExpr { span: DUMMY_SP }.as_arg();
+
                 if args.len() == 1 && is_rest_arguments(&args[0]) {
                     *n = CallExpr {
                         span: DUMMY_SP,
@@ -240,13 +256,16 @@ impl SuperReplacer {
                         args: iter::once(this)
                             .chain(iter::once({
                                 let mut arg = args.pop().unwrap();
+
                                 arg.spread = None;
+
                                 arg
                             }))
                             .collect(),
                         ..Default::default()
                     }
                     .into();
+
                     return;
                 }
 
@@ -306,8 +325,10 @@ impl SuperReplacer {
                 {
                     *n =
                         self.super_to_set_call(*super_token, false, prop, *op, right.take(), false);
+
                     return;
                 }
+
                 left.visit_mut_children_with(self);
                 *n = AssignExpr {
                     span: *span,
@@ -317,6 +338,7 @@ impl SuperReplacer {
                 }
                 .into();
             }
+
             _ => {}
         }
     }
@@ -397,7 +419,9 @@ impl SuperReplacer {
             SuperProp::Ident(_) => false,
             SuperProp::Computed(_) => true,
         };
+
         let mut prop = self.normalize_computed_expr(prop);
+
         match op {
             op!("=") => self.call_set_helper(super_token, prop.as_arg(), rhs.as_arg()),
             _ => {
@@ -406,6 +430,7 @@ impl SuperReplacer {
                     super_token,
                     if computed {
                         let ref_ident = alias_ident_for(&rhs, "_ref").into_private();
+
                         self.vars.push(ref_ident.clone());
                         *prop = AssignExpr {
                             span: DUMMY_SP,
@@ -414,11 +439,13 @@ impl SuperReplacer {
                             right: prop.take(),
                         }
                         .into();
+
                         ref_ident.as_arg()
                     } else {
                         prop.clone().as_arg()
                     },
                 ));
+
                 if is_update {
                     if prefix {
                         self.call_set_helper(
@@ -438,7 +465,9 @@ impl SuperReplacer {
                         )
                     } else {
                         let update_ident = alias_ident_for(&rhs, "_super").into_private();
+
                         self.vars.push(update_ident.clone());
+
                         SeqExpr {
                             span: DUMMY_SP,
                             exprs: vec![
@@ -485,16 +514,22 @@ impl SuperReplacer {
 #[cfg(test)]
 mod tests {
     use swc_common::Mark;
+
     use swc_ecma_parser::{EsSyntax, Syntax};
+
     use swc_ecma_transforms_base::resolver;
+
     use swc_ecma_transforms_testing::test;
 
     use super::*;
+
     use crate::{function_name, shorthand};
+
     test!(
         ::swc_ecma_parser::Syntax::default(),
         |_| {
             let unresolved_mark = Mark::new();
+
             let top_level_mark = Mark::new();
             (
                 resolver(unresolved_mark, top_level_mark, false),
@@ -510,6 +545,7 @@ mod tests {
             }
         }"
     );
+
     test!(
         ::swc_ecma_parser::Syntax::default(),
         |_| {
@@ -527,6 +563,7 @@ mod tests {
             }
         }"
     );
+
     test!(
         ::swc_ecma_parser::Syntax::default(),
         |_| {
@@ -544,6 +581,7 @@ mod tests {
             }
         }"
     );
+
     test!(
         ::swc_ecma_parser::Syntax::default(),
         |_| {
@@ -566,6 +604,7 @@ mod tests {
             },
         }"
     );
+
     test!(
         Syntax::Es(EsSyntax {
             allow_super_outside_method: true,

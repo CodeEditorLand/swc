@@ -33,7 +33,9 @@ impl Jest {
         let items = orig.take();
 
         let mut new = Vec::with_capacity(items.len());
+
         let mut hoisted = Vec::with_capacity(8);
+
         items.into_iter().for_each(|item| {
             match item.try_into_stmt() {
                 Ok(stmt) => match &stmt {
@@ -48,6 +50,7 @@ impl Jest {
                                 new.push(T::from(stmt))
                             }
                         }
+
                         _ => new.push(T::from(stmt)),
                     },
 
@@ -111,6 +114,7 @@ impl VisitMut for Jest {
                                     self.imported.push(local.to_id());
                                 }
                             }
+
                             _ => {}
                         }
                     }

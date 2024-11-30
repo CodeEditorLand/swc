@@ -17,6 +17,7 @@ where
         should_preserve: false,
         in_top_level: false,
     };
+
     n.visit_with(&mut v);
 
     let top_level_mark = marks.top_level_ctxt.outer();
@@ -49,10 +50,13 @@ impl Visit for Preserver<'_> {
 
     fn visit_block_stmt(&mut self, n: &BlockStmt) {
         let old_top_level = self.in_top_level;
+
         for n in n.stmts.iter() {
             self.in_top_level = false;
+
             n.visit_with(self);
         }
+
         self.in_top_level = old_top_level;
     }
 
@@ -61,10 +65,12 @@ impl Visit for Preserver<'_> {
 
         if self.options.ie8 && !self.options.top_level.unwrap_or_default() {
             self.should_preserve = true;
+
             n.param.visit_with(self);
         }
 
         self.should_preserve = old;
+
         n.body.visit_with(self);
     }
 
@@ -96,13 +102,17 @@ impl Visit for Preserver<'_> {
             Decl::Class(c) => {
                 self.preserved.insert(c.ident.to_id());
             }
+
             Decl::Fn(f) => {
                 self.preserved.insert(f.ident.to_id());
             }
+
             Decl::Var(v) => {
                 let ids: Vec<Id> = find_pat_ids(&v.decls);
+
                 self.preserved.extend(ids);
             }
+
             _ => {}
         }
     }
@@ -143,6 +153,7 @@ impl Visit for Preserver<'_> {
     fn visit_module_items(&mut self, n: &[ModuleItem]) {
         for n in n {
             self.in_top_level = true;
+
             n.visit_with(self);
         }
     }
@@ -160,6 +171,7 @@ impl Visit for Preserver<'_> {
     fn visit_script(&mut self, n: &Script) {
         for n in n.body.iter() {
             self.in_top_level = true;
+
             n.visit_with(self);
         }
     }
@@ -169,9 +181,13 @@ impl Visit for Preserver<'_> {
 
         if self.in_top_level && !self.options.top_level.unwrap_or_default() {
             let old = self.should_preserve;
+
             self.should_preserve = true;
+
             n.name.visit_with(self);
+
             self.should_preserve = old;
+
             return;
         }
 
@@ -179,10 +195,14 @@ impl Visit for Preserver<'_> {
             match n.init.as_deref() {
                 Some(Expr::Fn(..)) | Some(Expr::Arrow(..)) => {
                     let old = self.should_preserve;
+
                     self.should_preserve = true;
+
                     n.name.visit_with(self);
+
                     self.should_preserve = old;
                 }
+
                 _ => {}
             }
         }

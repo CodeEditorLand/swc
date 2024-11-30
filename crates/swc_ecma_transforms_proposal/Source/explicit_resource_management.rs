@@ -57,14 +57,17 @@ impl ExplicitResourceManagement {
         T: StmtLike + ModuleItemLike,
     {
         let mut new = Vec::new();
+
         let mut extras = Vec::new();
 
         let env = state.env;
+
         let catch_e = private_ident!("e");
 
         let is_async = state.has_await;
 
         // const env_1 = { stack: [], error: void 0, hasError: false };
+
         new.push(T::from(Stmt::Decl(Decl::Var(Box::new(VarDecl {
             span: DUMMY_SP,
             kind: VarDeclKind::Const,
@@ -147,6 +150,7 @@ impl ExplicitResourceManagement {
                 span: DUMMY_SP,
                 stmts: vec![
                     // env.e = e;
+
                     AssignExpr {
                         span: DUMMY_SP,
                         left: MemberExpr {
@@ -160,6 +164,7 @@ impl ExplicitResourceManagement {
                     }
                     .into_stmt(),
                     // env.hasError = true;
+
                     AssignExpr {
                         span: DUMMY_SP,
                         left: MemberExpr {
@@ -205,11 +210,13 @@ impl ExplicitResourceManagement {
                 }],
                 ..Default::default()
             })));
+
             let if_stmt = Stmt::If(IfStmt {
                 span: DUMMY_SP,
                 test: result.clone().into(),
                 // Code:
                 //      await result_1;
+
                 cons: Stmt::Expr(ExprStmt {
                     expr: Box::new(Expr::Await(AwaitExpr {
                         arg: result.clone().into(),
@@ -225,6 +232,7 @@ impl ExplicitResourceManagement {
         } else {
             // Code:
             // _ts_dispose_resources(env_1);
+
             vec![CallExpr {
                 callee: helper!(ts, ts_dispose_resources),
                 args: vec![env.clone().as_arg()],
@@ -244,6 +252,7 @@ impl ExplicitResourceManagement {
         };
 
         new.push(T::from(try_stmt.into()));
+
         new.extend(extras);
 
         *stmts = new;
@@ -262,6 +271,7 @@ impl VisitMut for ExplicitResourceManagement {
 
         if let ForHead::UsingDecl(using) = &mut n.left {
             let mut state = State::default();
+
             state.has_await |= using.is_await;
 
             let mut inner_var_decl = VarDecl {
@@ -305,9 +315,11 @@ impl VisitMut for ExplicitResourceManagement {
                 Stmt::Decl(Decl::Var(Box::new(inner_var_decl))),
                 *n.body.take(),
             ];
+
             self.wrap_with_try(state, &mut body);
 
             n.left = ForHead::VarDecl(var_decl);
+
             n.body = Box::new(
                 BlockStmt {
                     span: DUMMY_SP,
@@ -330,8 +342,10 @@ impl VisitMut for ExplicitResourceManagement {
             let state = self.state.get_or_insert_with(Default::default);
 
             let decl = handle_using_decl(using, state);
+
             if decl.decls.is_empty() {
                 s.take();
+
                 return;
             }
 
@@ -341,8 +355,11 @@ impl VisitMut for ExplicitResourceManagement {
 
     fn visit_mut_stmts(&mut self, stmts: &mut Vec<Stmt>) {
         let old_is_not_top_level = self.is_not_top_level;
+
         self.is_not_top_level = true;
+
         self.visit_mut_stmt_likes(stmts);
+
         self.is_not_top_level = old_is_not_top_level;
     }
 }

@@ -73,6 +73,7 @@ pub mod errors {
 )]
 pub mod metadata {
     pub use swc_common::plugin::metadata::TransformPluginMetadataContextKind;
+
     pub use swc_plugin_proxy::TransformPluginProgramMetadata;
 }
 

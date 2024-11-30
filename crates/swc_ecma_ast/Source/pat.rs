@@ -41,6 +41,7 @@ pub enum Pat {
 impl Clone for Pat {
     fn clone(&self) -> Self {
         use Pat::*;
+
         match self {
             Ident(p) => Ident(p.clone()),
             Array(p) => Array(p.clone()),
@@ -71,6 +72,7 @@ bridge_pat_from!(BindingIdent, Id);
 macro_rules! pat_to_other {
     ($T:ty) => {
         bridge_from!(crate::Param, crate::Pat, $T);
+
         bridge_from!(Box<crate::Pat>, crate::Pat, $T);
     };
 }

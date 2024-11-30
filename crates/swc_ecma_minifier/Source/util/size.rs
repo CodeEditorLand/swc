@@ -25,6 +25,7 @@ impl Size for Lit {
 impl Size for UnaryOp {
     fn size(&self) -> usize {
         use UnaryOp::*;
+
         match self {
             Minus | Plus | Bang | Tilde => 1,
             TypeOf => 7,
@@ -43,6 +44,7 @@ impl Size for UpdateOp {
 impl Size for BinaryOp {
     fn size(&self) -> usize {
         use BinaryOp::*;
+
         match self {
             Lt | Gt | Add | Sub | Mul | Div | Mod | BitOr | BitXor | BitAnd | EqEq | NotEq
             | LtEq | GtEq | LShift | RShift | LogicalOr | LogicalAnd | Exp | NullishCoalescing
@@ -85,6 +87,7 @@ impl Size for BigIntValue {
         // bits is bascially log2
         // use this until https://github.com/rust-num/num-bigint/issues/57
         let value = ((self.bits() as f64) / 10.0_f64.log2()).ceil() as usize + 1;
+
         sign + value + 1 // n
     }
 }
@@ -141,6 +144,7 @@ impl SizeWithCtxt for Expr {
             Expr::Yield(YieldExpr { arg, delegate, .. }) => {
                 6 + *delegate as usize + arg.as_ref().map_or(0, |a| a.size(unresolved))
             }
+
             Expr::Await(a) => 6 + a.arg.size(unresolved),
             Expr::Cond(CondExpr {
                 test, cons, alt, ..
@@ -161,6 +165,7 @@ impl SizeWithCtxt for Expr {
                         [Pat::Ident(_)] => 1,
                         _ => 2 + params.size(unresolved),
                     };
+
                     let a = if *is_async {
                         5 + usize::from(params.len() != 1)
                     } else {
@@ -289,6 +294,7 @@ impl SizeWithCtxt for SimpleAssignTarget {
                     1
                 }
             }
+
             SimpleAssignTarget::Member(e) => e.obj.size(unresolved) + e.prop.size(unresolved),
             SimpleAssignTarget::SuperProp(e) => 6 + e.prop.size(unresolved),
             SimpleAssignTarget::Paren(e) => 2 + e.expr.size(unresolved),
@@ -337,6 +343,7 @@ impl SizeWithCtxt for ObjectPatProp {
             ObjectPatProp::Assign(a) => {
                 a.key.sym.len() + a.value.as_ref().map_or(0, |v| v.size(unresolved) + 1)
             }
+
             ObjectPatProp::Rest(r) => 3 + r.arg.size(unresolved),
         }
     }
@@ -364,8 +371,11 @@ impl SizeWithCtxt for PropOrSpread {
 impl SizeWithCtxt for Tpl {
     fn size(&self, unresolved: SyntaxContext) -> usize {
         let Self { exprs, quasis, .. } = self;
+
         let expr_len: usize = exprs.iter().map(|e| e.size(unresolved) + 3).sum();
+
         let str_len: usize = quasis.iter().map(|q| q.raw.len()).sum();
+
         2 + expr_len + str_len
     }
 }

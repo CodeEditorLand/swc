@@ -175,6 +175,7 @@ fn does_key_exist(key: &str, props: &Vec<PropOrSpread>) -> Option<bool> {
                         if let Some(object) = prop.value.as_object() {
                             // __proto__ is an ObjectLiteral, check if key exists in it
                             let exists = does_key_exist(key, &object.props);
+
                             if exists.is_none() {
                                 return None;
                             } else if exists.is_some_and(|exists| exists) {
@@ -320,6 +321,7 @@ impl Pure<'_> {
 
                 // Replace last element with replacement
                 let mut exprs: Vec<Box<Expr>> = exprs.drain(..(exprs.len() - 1)).collect();
+
                 exprs.push(Box::new(replacement));
 
                 Some(SeqExpr { span: *span, exprs }.into())
@@ -374,6 +376,7 @@ impl Pure<'_> {
 
                         // Extract side effects
                         let mut exprs = Vec::new();
+
                         elems.drain(..).flatten().for_each(|elem| {
                             self.expr_ctx.extract_side_effects_to(&mut exprs, *elem.expr);
                         });
@@ -423,6 +426,7 @@ impl Pure<'_> {
 
                         // Extract side effects
                         let mut exprs = Vec::new();
+
                         elems.drain(..).flatten().for_each(|elem| {
                             self.expr_ctx.extract_side_effects_to(&mut exprs, *elem.expr);
                         });
@@ -498,12 +502,14 @@ impl Pure<'_> {
 
                 // Check if key exists
                 let exists = does_key_exist(&key, props);
+
                 if exists.is_none() || exists.is_some_and(|exists| exists) {
                     // Valid properties are handled in simplify
                     return None;
                 }
 
                 let is_known_symbol = is_object_symbol(&key);
+
                 if is_known_symbol {
                     // Like with arrays, we need to check if this is already optimized
                     // before returning Some so we don't end up in an infinite loop.

@@ -76,6 +76,7 @@ impl VisitMut for Shorthand {
                     value,
                 });
             }
+
             Prop::Method(MethodProp { key, function }) => {
                 let key = match key.take() {
                     PropName::Ident(IdentName { span, sym, .. }) if sym == "__proto__" => {
@@ -85,6 +86,7 @@ impl VisitMut for Shorthand {
                         }
                         .into()
                     }
+
                     PropName::Str(s @ Str { span, .. }) if s.value == "__proto__" => {
                         ComputedPropName {
                             span,
@@ -92,6 +94,7 @@ impl VisitMut for Shorthand {
                         }
                         .into()
                     }
+
                     key => key,
                 };
                 *prop = Prop::KeyValue(KeyValueProp {
@@ -103,6 +106,7 @@ impl VisitMut for Shorthand {
                     .into(),
                 })
             }
+
             _ => {}
         }
     }

@@ -90,8 +90,11 @@ impl Visit for ConstAssign {
 
     fn visit_var_declarator(&mut self, var_declarator: &VarDeclarator) {
         let old_is_pat_decl = self.is_pat_decl;
+
         self.is_pat_decl = true;
+
         var_declarator.name.visit_with(self);
+
         self.is_pat_decl = old_is_pat_decl;
 
         var_declarator.init.visit_with(self);
@@ -128,6 +131,7 @@ impl Visit for Collector<'_> {
 
     fn visit_expr(&mut self, e: &Expr) {
         let old_var_decl_kind = self.var_decl_kind;
+
         self.var_decl_kind = None;
 
         e.visit_children_with(self);
@@ -147,6 +151,7 @@ impl Visit for Collector<'_> {
 
     fn visit_var_decl(&mut self, var_decl: &VarDecl) {
         let old_var_decl_kind = self.var_decl_kind;
+
         self.var_decl_kind = Some(var_decl.kind);
 
         var_decl.visit_children_with(self);

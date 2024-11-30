@@ -78,19 +78,24 @@ fn write_ignore_file(base_path: &Path) -> Result<()> {
             let existing = BufReader::new(file);
 
             let existing_items = existing.lines().collect::<Result<Vec<_>, _>>().unwrap();
+
             let mut out = String::new();
 
             out.push_str("\n\n# Added by swc\n");
+
             if ignore_list.iter().any(|item| existing_items.contains(item)) {
                 out.push_str("#\n# already existing elements were commented out\n");
             }
+
             out.push('\n');
 
             for item in &ignore_list {
                 if existing_items.contains(item) {
                     out.push('#');
                 }
+
                 out.push_str(item);
+
                 out.push('\n');
             }
 
@@ -115,6 +120,7 @@ impl super::CommandRunner for PluginScaffoldOptions {
     /// to support non-git based vcs.
     fn execute(&self) -> Result<()> {
         let path = &self.path;
+
         if path.exists() {
             anyhow::bail!("destination `{}` already exists", path.display())
         }
@@ -126,7 +132,9 @@ impl super::CommandRunner for PluginScaffoldOptions {
         // Depends on our usecase grows, we can revisit this.
         let mut base_git_cmd = if cfg!(target_os = "windows") {
             let mut c = std::process::Command::new("cmd");
+
             c.arg("/C").arg("git");
+
             c
         } else {
             std::process::Command::new("git")
@@ -142,6 +150,7 @@ impl super::CommandRunner for PluginScaffoldOptions {
         write_ignore_file(path)?;
 
         let core_engine = get_core_engine_diagnostics();
+
         let swc_core_version: Vec<&str> = core_engine.package_semver.split('.').collect();
         // We'll pick semver major.minor, but allow any patch version.
         let swc_core_version = format!("{}.{}.*", swc_core_version[0], swc_core_version[1]);
@@ -188,7 +197,9 @@ swc_core = {{ version = "{}", features = ["ecma_plugin_transform"] }}
 
         // Create `.cargo/config.toml` file for build target
         let cargo_config_path = path.join(".cargo");
+
         create_dir_all(&cargo_config_path).context("`create_dir_all` failed")?;
+
         fs::write(
             cargo_config_path.join("config.toml"),
             r#"# These command aliases are not final, may change
@@ -207,6 +218,7 @@ build-wasm32 = "build --target wasm32-unknown-unknown"
             build_target,
             name.replace('-', "_")
         );
+
         fs::write(
             path.join("package.json"),
             format!(
@@ -233,7 +245,9 @@ build-wasm32 = "build --target wasm32-unknown-unknown"
 
         // Create entrypoint src file
         let src_path = path.join("src");
+
         create_dir_all(&src_path)?;
+
         fs::write(
             src_path.join("lib.rs"),
             r##"use swc_core::ecma::{
@@ -294,6 +308,7 @@ If you haven't, please ensure to add target via "rustup target add {}" "#,
             path.display(),
             build_target
         );
+
         Ok(())
     }
 }

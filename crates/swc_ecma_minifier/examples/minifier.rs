@@ -34,6 +34,7 @@ fn main() {
 			let fm = cm.load_file(Path::new(&file)).expect("failed to load file");
 
 			let unresolved_mark = Mark::new();
+
 			let top_level_mark = Mark::new();
 
 			let program = parse_file_as_module(
@@ -107,6 +108,7 @@ fn print<N:swc_ecma_codegen::Node>(cm:Lrc<SourceMap>, nodes:&[N], minify:bool) -
             let fm = cm.load_file(Path::new(&file)).expect("failed to load file");
 
             let unresolved_mark = Mark::new();
+
             let top_level_mark = Mark::new();
 
             let program = parse_file_as_module(

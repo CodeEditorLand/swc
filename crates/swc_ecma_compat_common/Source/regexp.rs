@@ -52,10 +52,12 @@ impl VisitMut for RegExp {
                 let Regex { exp, flags, span } = regex.take();
 
                 let exp: Expr = exp.into();
+
                 let mut args = vec![exp.into()];
 
                 if !flags.is_empty() {
                     let flags: Expr = flags.into();
+
                     args.push(flags.into());
                 }
 

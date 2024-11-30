@@ -64,6 +64,7 @@ impl SymbolDescription {
             if self.enforce_string_description {
                 match extract_arg_val(self.unresolved_ctxt, expr.unwrap_seqs_and_parens()) {
                     ArgValue::Str(_) => {}
+
                     _ => {
                         self.emit_report(span, SYMBOL_STRING_DESCRIPTION_EXPECTED_MESSAGE);
                     }
@@ -81,9 +82,11 @@ impl SymbolDescription {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, message).emit();
             }
+
             _ => {}
         });
     }

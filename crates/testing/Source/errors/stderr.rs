@@ -17,6 +17,7 @@ pub(crate) fn stderr_emitter(cm: Lrc<SourceMap>) -> Box<dyn Emitter> {
         info!("Diagnostics will be printed to stderr as logging level is trace or debug");
 
         let reporter = GraphicalReportHandler::default();
+
         let emitter = PrettyEmitter::new(
             cm,
             Box::new(TestStderr),

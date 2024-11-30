@@ -26,7 +26,9 @@ fuzz_target!(|module:Module| {
 				return Ok(());
 			}
 		}
+
 		let unresolved_mark = Mark::new();
+
 		let top_level_mark = Mark::new();
 
 		let fm = cm.new_source_file(FileName::Anon, code);
@@ -108,7 +110,9 @@ fuzz_target!(|module: Module| {
                 return Ok(());
             }
         }
+
         let unresolved_mark = Mark::new();
+
         let top_level_mark = Mark::new();
 
         let fm = cm.new_source_file(FileName::Anon, code);

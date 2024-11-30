@@ -79,14 +79,18 @@ macro_rules! impl_for_for_stmt {
                     }
                     .into()
                 }
+
                 ForHead::Pat(pat) => {
                     let var_ident = private_ident!("_ref");
+
                     let index = self.vars.len();
+
                     let pat = pat.take();
 
                     // initialize (or destructure)
                     match &*pat {
                         Pat::Object(ObjectPat { ref props, .. }) if props.is_empty() => {}
+
                         Pat::Object(ObjectPat { .. }) => {
                             stmt = Some(Stmt::Expr(ExprStmt {
                                 span: DUMMY_SP,
@@ -101,6 +105,7 @@ macro_rules! impl_for_for_stmt {
                                 ),
                             }));
                         }
+
                         _ => {
                             // insert at index to create
                             // `var { a } = _ref, b = _object_without_properties(_ref, ['a']);`
@@ -108,6 +113,7 @@ macro_rules! impl_for_for_stmt {
                             // var b = _object_without_properties(_ref, ['a']), { a } = _ref;
 
                             // println!("Var(0): folded pat = var_ident",);
+
                             self.vars.insert(
                                 index,
                                 VarDeclarator {
@@ -139,6 +145,7 @@ macro_rules! impl_for_for_stmt {
                     unreachable!("using declaration must be removed by previous pass")
                 }
             };
+
             for_stmt.left = left;
 
             for_stmt.body = Box::new(Stmt::Block(match &mut *for_stmt.body {
@@ -187,7 +194,9 @@ where
     N: VisitWith<RestVisitor>,
 {
     let mut v = RestVisitor { found: false };
+
     node.visit_with(&mut v);
+
     v.found
 }
 
@@ -219,9 +228,11 @@ impl VisitMut for ObjectRest {
         }) = expr
         {
             let mut var_ident = alias_ident_for(right, "_tmp");
+
             var_ident.ctxt = var_ident.ctxt.apply_mark(Mark::new());
 
             // println!("Var: var_ident = None");
+
             self.mutable_vars.push(VarDeclarator {
                 span: DUMMY_SP,
                 name: var_ident.clone().into(),
@@ -229,6 +240,7 @@ impl VisitMut for ObjectRest {
                 definite: false,
             });
             // println!("Expr: var_ident = right");
+
             self.exprs.push(
                 AssignExpr {
                     span: DUMMY_SP,
@@ -238,6 +250,7 @@ impl VisitMut for ObjectRest {
                 }
                 .into(),
             );
+
             let pat = self.fold_rest(
                 &mut 0,
                 pat.take().into(),
@@ -248,6 +261,7 @@ impl VisitMut for ObjectRest {
 
             match pat {
                 Pat::Object(ObjectPat { ref props, .. }) if props.is_empty() => {}
+
                 _ => self.exprs.push(
                     AssignExpr {
                         span: *span,
@@ -258,6 +272,7 @@ impl VisitMut for ObjectRest {
                     .into(),
                 ),
             }
+
             self.exprs.push(Box::new(var_ident.into()));
             *expr = SeqExpr {
                 span: DUMMY_SP,
@@ -268,6 +283,7 @@ impl VisitMut for ObjectRest {
     }
 
     /// export var { b, ...c } = asdf2;
+
     fn visit_mut_module_decl(&mut self, decl: &mut ModuleDecl) {
         if !contains_rest(decl) {
             // fast path
@@ -282,8 +298,11 @@ impl VisitMut for ObjectRest {
             }) if var_decl.decls.iter().any(|v| v.name.is_object()) => {
                 let specifiers = {
                     let mut found: Vec<Ident> = Vec::new();
+
                     let mut finder = VarCollector { to: &mut found };
+
                     var_decl.visit_with(&mut finder);
+
                     found
                         .into_iter()
                         .map(|ident| ExportNamedSpecifier {
@@ -305,10 +324,12 @@ impl VisitMut for ObjectRest {
                 };
 
                 var_decl.visit_mut_with(self);
+
                 self.vars.append(&mut var_decl.decls);
 
                 *decl = export.into();
             }
+
             _ => {
                 decl.visit_mut_children_with(self);
             }
@@ -333,7 +354,9 @@ impl VisitMut for ObjectRest {
             // fast path
             if !contains_rest(&decl) {
                 // println!("Var: no rest",);
+
                 self.vars.push(decl);
+
                 continue;
             }
 
@@ -355,6 +378,7 @@ impl VisitMut for ObjectRest {
             };
 
             let has_init = decl.init.is_some();
+
             if let Some(init) = decl.init {
                 match decl.name {
                     // Optimize { ...props } = this.props
@@ -389,16 +413,20 @@ impl VisitMut for ObjectRest {
                             ),
                             definite: false,
                         });
+
                         continue;
                     }
+
                     _ => {}
                 }
 
                 match *init {
                     // skip `z = z`
                     Expr::Ident(..) => {}
+
                     _ => {
                         // println!("Var: var_ident = init",);
+
                         self.push_var_if_not_empty(VarDeclarator {
                             span: DUMMY_SP,
                             name: var_ident.clone().into(),
@@ -410,8 +438,10 @@ impl VisitMut for ObjectRest {
             }
 
             let mut index = self.vars.len();
+
             let mut pat =
                 self.fold_rest(&mut index, decl.name, var_ident.clone().into(), false, true);
+
             match pat {
                 // skip `{} = z`
                 Pat::Object(ObjectPat { ref props, .. }) if props.is_empty() => {}
@@ -464,6 +494,7 @@ impl ObjectRest {
                 config: self.config,
                 ..Default::default()
             };
+
             stmt.visit_mut_with(&mut folder);
 
             // Add variable declaration
@@ -511,15 +542,18 @@ impl ObjectRest {
                     }
                 }
             }
+
             decl.init = Some(e1);
         }
 
         if let Pat::Object(..) | Pat::Array(..) = decl.name {
             let ids: Vec<Id> = find_pat_ids(&decl.name);
+
             if ids.is_empty() {
                 return;
             }
         }
+
         self.vars.insert(idx, decl)
     }
 
@@ -532,6 +566,7 @@ impl ObjectRest {
                     }
                 }
             }
+
             decl.init = Some(e1);
         }
 
@@ -540,6 +575,7 @@ impl ObjectRest {
                 return;
             }
         }
+
         self.vars.push(decl)
     }
 
@@ -565,7 +601,9 @@ impl ObjectRest {
             .drain(..)
             .map(|mut param| {
                 let var_ident = private_ident!(param.span(), "_param");
+
                 let mut index = self.vars.len();
+
                 param.pat =
                     self.fold_rest(&mut index, param.pat, var_ident.clone().into(), false, true);
 
@@ -576,10 +614,12 @@ impl ObjectRest {
                     {
                         param
                     }
+
                     Pat::Assign(n) => {
                         let AssignPat {
                             span, left, right, ..
                         } = n;
+
                         self.insert_var_if_not_empty(
                             index,
                             VarDeclarator {
@@ -589,6 +629,7 @@ impl ObjectRest {
                                 definite: false,
                             },
                         );
+
                         Param {
                             span: DUMMY_SP,
                             decorators: Default::default(),
@@ -600,6 +641,7 @@ impl ObjectRest {
                             .into(),
                         }
                     }
+
                     _ => {
                         // initialize snd destructure
                         self.insert_var_if_not_empty(
@@ -611,6 +653,7 @@ impl ObjectRest {
                                 definite: false,
                             },
                         );
+
                         Param {
                             span: DUMMY_SP,
                             decorators: Default::default(),
@@ -681,6 +724,7 @@ impl ObjectRest {
                 let AssignPat {
                     span, left, right, ..
                 } = n;
+
                 let left = Box::new(self.fold_rest(
                     index,
                     *left,
@@ -688,10 +732,13 @@ impl ObjectRest {
                     use_expr_for_assign,
                     use_member_for_array,
                 ));
+
                 return AssignPat { span, left, right }.into();
             }
+
             Pat::Array(n) => {
                 let ArrayPat { span, elems, .. } = n;
+
                 let elems = elems
                     .into_iter()
                     .enumerate()
@@ -714,6 +761,7 @@ impl ObjectRest {
 
                 return ArrayPat { span, elems, ..n }.into();
             }
+
             _ => return pat,
         };
 
@@ -733,24 +781,28 @@ impl ObjectRest {
                         use_expr_for_assign,
                         true,
                     );
+
                     ObjectPatProp::Rest(RestPat {
                         dot3_token,
                         arg: Box::new(pat),
                         ..n
                     })
                 }
+
                 ObjectPatProp::KeyValue(KeyValuePatProp { key, value }) => {
                     let (key, prop) = match key {
                         PropName::Ident(ref ident) => {
                             let ident = ident.clone();
                             (key, MemberProp::Ident(ident))
                         }
+
                         PropName::Str(Str {
                             ref value, span, ..
                         }) => {
                             let value = value.clone();
                             (key, MemberProp::Ident(IdentName::new(value, span)))
                         }
+
                         PropName::Num(Number { span, value, .. }) => (
                             key,
                             MemberProp::Computed(ComputedPropName {
@@ -780,14 +832,18 @@ impl ObjectRest {
                                 }),
                             )
                         }
+
                         PropName::Computed(ref c) if is_literal(&c.expr) => {
                             let c = c.clone();
                             (key, MemberProp::Computed(c))
                         }
+
                         PropName::Computed(c) => {
                             let (ident, aliased) = alias_if_required(&c.expr, "key");
+
                             if aliased {
                                 *index += 1;
+
                                 self.vars.push(VarDeclarator {
                                     span: DUMMY_SP,
                                     name: ident.clone().into(),
@@ -825,14 +881,17 @@ impl ObjectRest {
                             true,
                         ),
                     );
+
                     ObjectPatProp::KeyValue(KeyValuePatProp { key, value })
                 }
+
                 _ => prop,
             })
             .collect();
 
         match props.last() {
             Some(ObjectPatProp::Rest(..)) => {}
+
             _ => {
                 return ObjectPat {
                     span,
@@ -843,6 +902,7 @@ impl ObjectRest {
                 .into();
             }
         }
+
         let last = match props.pop() {
             Some(ObjectPatProp::Rest(rest)) => rest,
             _ => unreachable!(),
@@ -852,6 +912,7 @@ impl ObjectRest {
 
         if use_expr_for_assign {
             // println!("Expr: last.arg = objectWithoutProperties()",);
+
             self.exprs.push(
                 AssignExpr {
                     span: DUMMY_SP,
@@ -867,6 +928,7 @@ impl ObjectRest {
             );
         } else {
             // println!("Var: rest = objectWithoutProperties()",);
+
             self.push_var_if_not_empty(VarDeclarator {
                 span: DUMMY_SP,
                 name: *last.arg,
@@ -1025,6 +1087,7 @@ impl VisitMut for PatSimplifier {
                         Pat::Object(ObjectPat { props, .. }) if props.is_empty() => {
                             return false;
                         }
+
                         _ => {}
                     }
                 }

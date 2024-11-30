@@ -37,6 +37,7 @@ impl FromStr for Version {
 
         if v.split('.').count() == 2 {
             let mut s = v.split('.');
+
             return Ok(Version {
                 major: s.next().unwrap().parse().unwrap(),
                 minor: s.next().unwrap().parse().unwrap(),
@@ -66,16 +67,19 @@ impl cmp::Ord for Version {
     fn cmp(&self, other: &Version) -> Ordering {
         match self.major.cmp(&other.major) {
             Ordering::Equal => {}
+
             r => return r,
         }
 
         match self.minor.cmp(&other.minor) {
             Ordering::Equal => {}
+
             r => return r,
         }
 
         match self.patch.cmp(&other.patch) {
             Ordering::Equal => {}
+
             r => return r,
         }
 
@@ -188,6 +192,7 @@ pub fn should_enable(target: Versions, feature: Versions, default: bool) -> bool
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::BrowserData;
 
     #[test]

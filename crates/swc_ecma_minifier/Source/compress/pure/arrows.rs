@@ -29,6 +29,7 @@ impl Pure<'_> {
             }
 
             self.changed = true;
+
             report_change!("unsafe_arrows: Fn expr => arrow");
 
             *e = ArrowExpr {
@@ -55,6 +56,7 @@ impl Pure<'_> {
                     }
                 }
             }
+
             BlockStmtOrExpr::Expr(_) => {}
         }
     }
@@ -85,7 +87,9 @@ impl Pure<'_> {
                     if contains_this_expr(body) {
                         return;
                     }
+
                     self.changed = true;
+
                     report_change!("Method property => arrow");
 
                     let arg = body
@@ -115,6 +119,7 @@ impl Pure<'_> {
                         }
                         .into(),
                     });
+
                     return;
                 }
             }
@@ -158,6 +163,7 @@ impl Pure<'_> {
                         }),
                     });
                 }
+
                 _ => (),
             }
         }

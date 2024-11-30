@@ -12,6 +12,7 @@ impl Compiler {
     pub(crate) fn process_rgb_and_hsl(&mut self, n: &mut AbsoluteColorBase) {
         if let AbsoluteColorBase::Function(function) = n {
             let is_rgb = matches_eq_ignore_ascii_case!(function.name.as_str(), "rgb", "rgba");
+
             let is_hsl = matches_eq_ignore_ascii_case!(function.name.as_str(), "hsl", "hsla");
 
             if is_rgb {
@@ -32,6 +33,7 @@ impl Compiler {
                                 raw: None,
                             }))
                         }
+
                         _ => n,
                     })
                     .collect();

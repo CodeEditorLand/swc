@@ -37,6 +37,7 @@ fn parse(c:&swc::Compiler) -> (Arc<SourceFile>, Program) {
 		FileName::Real("rxjs/src/internal/Observable.ts".into()).into(),
 		SOURCE.to_string(),
 	);
+
 	let handler = Handler::with_emitter_writer(Box::new(io::stderr()), Some(c.cm.clone()));
 
 	let comments = c.comments().clone();
@@ -56,7 +57,9 @@ fn parse(c:&swc::Compiler) -> (Arc<SourceFile>, Program) {
 
 fn as_es(c:&swc::Compiler) -> Program {
 	let program = parse(c).1;
+
 	let unresolved_mark = Mark::new();
+
 	let top_level_mark = Mark::new();
 
 	program
@@ -74,12 +77,14 @@ fn base_tr_group(c:&mut Criterion) {
 
 fn base_tr_fixer(b:&mut Bencher) {
 	let c = mk();
+
 	GLOBALS.set(&Default::default(), || {
 		let module = as_es(&c);
 
 		b.iter(|| {
 			GLOBALS.set(&Default::default(), || {
 				let handler = Handler::with_emitter_writer(Box::new(stderr()), Some(c.cm.clone()));
+
 				black_box(c.run_transform(&handler, true, || {
 					module.clone().fold_with(&mut fixer(Some(c.comments())))
 				}))
@@ -99,6 +104,7 @@ fn parse(c: &swc::Compiler) -> (Arc<SourceFile>, Program) {
         FileName::Real("rxjs/src/internal/Observable.ts".into()).into(),
         SOURCE.to_string(),
     );
+
     let handler = Handler::with_emitter_writer(Box::new(io::stderr()), Some(c.cm.clone()));
 
     let comments = c.comments().clone();
@@ -118,7 +124,9 @@ fn parse(c: &swc::Compiler) -> (Arc<SourceFile>, Program) {
 
 fn as_es(c: &swc::Compiler) -> Program {
     let program = parse(c).1;
+
     let unresolved_mark = Mark::new();
+
     let top_level_mark = Mark::new();
 
     program
@@ -136,12 +144,14 @@ fn base_tr_group(c: &mut Criterion) {
 
 fn base_tr_fixer(b: &mut Bencher) {
     let c = mk();
+
     GLOBALS.set(&Default::default(), || {
         let module = as_es(&c);
 
         b.iter(|| {
             GLOBALS.set(&Default::default(), || {
                 let handler = Handler::with_emitter_writer(Box::new(stderr()), Some(c.cm.clone()));
+
                 black_box(c.run_transform(&handler, true, || {
                     module.clone().apply(&mut fixer(Some(c.comments())))
                 }))
@@ -206,12 +216,19 @@ fn codegen_group(c:&mut Criterion) {
 	}
 
 	codegen!(es3, EsVersion::Es3);
+
 	codegen!(es5, EsVersion::Es5);
+
 	codegen!(es2015, EsVersion::Es2015);
+
 	codegen!(es2016, EsVersion::Es2016);
+
 	codegen!(es2017, EsVersion::Es2017);
+
 	codegen!(es2018, EsVersion::Es2018);
+
 	codegen!(es2019, EsVersion::Es2019);
+
 	codegen!(es2020, EsVersion::Es2020);
 }
 
@@ -227,6 +244,7 @@ fn bench_full(b:&mut Bencher, opts:&Options) {
 					FileName::Real("rxjs/src/internal/Observable.ts".into()).into(),
 					SOURCE.to_string(),
 				);
+
 				let _ = c.process_js_file(fm, &handler, opts).unwrap();
 			})
 		}
@@ -258,12 +276,19 @@ fn full_group(c:&mut Criterion) {
 	}
 
 	compat!(es3, EsVersion::Es3);
+
 	compat!(es5, EsVersion::Es5);
+
 	compat!(es2015, EsVersion::Es2015);
+
 	compat!(es2016, EsVersion::Es2016);
+
 	compat!(es2017, EsVersion::Es2017);
+
 	compat!(es2018, EsVersion::Es2018);
+
 	compat!(es2019, EsVersion::Es2019);
+
 	compat!(es2020, EsVersion::Es2020);
 }
 
@@ -314,12 +339,19 @@ fn codegen_group(c: &mut Criterion) {
     }
 
     codegen!(es3, EsVersion::Es3);
+
     codegen!(es5, EsVersion::Es5);
+
     codegen!(es2015, EsVersion::Es2015);
+
     codegen!(es2016, EsVersion::Es2016);
+
     codegen!(es2017, EsVersion::Es2017);
+
     codegen!(es2018, EsVersion::Es2018);
+
     codegen!(es2019, EsVersion::Es2019);
+
     codegen!(es2020, EsVersion::Es2020);
 }
 
@@ -335,6 +367,7 @@ fn bench_full(b: &mut Bencher, opts: &Options) {
                     FileName::Real("rxjs/src/internal/Observable.ts".into()).into(),
                     SOURCE.to_string(),
                 );
+
                 let _ = c.process_js_file(fm, &handler, opts).unwrap();
             })
         }
@@ -366,12 +399,19 @@ fn full_group(c: &mut Criterion) {
     }
 
     compat!(es3, EsVersion::Es3);
+
     compat!(es5, EsVersion::Es5);
+
     compat!(es2015, EsVersion::Es2015);
+
     compat!(es2016, EsVersion::Es2016);
+
     compat!(es2017, EsVersion::Es2017);
+
     compat!(es2018, EsVersion::Es2018);
+
     compat!(es2019, EsVersion::Es2019);
+
     compat!(es2020, EsVersion::Es2020);
 }
 

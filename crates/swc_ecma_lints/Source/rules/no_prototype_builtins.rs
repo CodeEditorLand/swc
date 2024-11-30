@@ -50,9 +50,11 @@ impl NoPrototypeBuiltins {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, &message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, &message).emit();
             }
+
             _ => {}
         });
     }
@@ -72,19 +74,23 @@ impl NoPrototypeBuiltins {
                     MemberProp::Ident(ident) => {
                         self.extend_chain(ident.span, ident.sym.clone());
                     }
+
                     MemberProp::Computed(computed_prop_name) => {
                         match computed_prop_name.expr.as_ref() {
                             Expr::Lit(_) | Expr::Tpl(_) | Expr::Paren(_) | Expr::Seq(_) => {
                                 self.extract_path(&computed_prop_name.expr);
                             }
+
                             _ => {}
                         }
                     }
+
                     _ => {}
                 }
 
                 self.extract_path(member.obj.as_ref());
             }
+
             Expr::OptChain(OptChainExpr { base, .. }) => {
                 if let Some(member_expr) = base.as_member() {
                     if let Some(ident) = member_expr.prop.as_ident() {
@@ -94,23 +100,29 @@ impl NoPrototypeBuiltins {
                     self.extract_path(member_expr.obj.as_ref());
                 }
             }
+
             Expr::Paren(ParenExpr { expr, .. }) => {
                 self.extract_path(expr.as_ref());
             }
+
             Expr::Seq(SeqExpr { exprs, .. }) => {
                 self.extract_path(exprs.last().unwrap().as_ref());
             }
+
             Expr::Lit(Lit::Str(lit_str)) => {
                 self.extend_chain(lit_str.span, lit_str.value.clone());
             }
+
             Expr::Tpl(tpl) => {
                 if tpl.exprs.is_empty() && tpl.quasis.len() == 1 {
                     self.extend_chain(tpl.span, tpl.quasis[0].raw.clone());
                 }
             }
+
             Expr::Ident(ident) => {
                 self.extend_chain(ident.span, ident.sym.clone());
             }
+
             _ => {}
         }
     }

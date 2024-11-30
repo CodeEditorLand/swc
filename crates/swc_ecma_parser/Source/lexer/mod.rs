@@ -58,6 +58,7 @@ pub(crate) struct CharIter(SmallVec<[char; 7]>);
 /// Ported from https://github.com/web-infra-dev/oxc/blob/99a4816ce7b6132b2667257984f9d92ae3768f03/crates/oxc_parser/src/lexer/mod.rs#L1349-L1374
 impl IntoIterator for Char {
     type IntoIter = CharIter;
+
     type Item = char;
 
     #[allow(unsafe_code)]
@@ -80,17 +81,24 @@ impl IntoIterator for Char {
                 // to 0xDFFF, and is called a low surrogate or a trail surrogate.
                 if !(0xdc00..=0xdfff).contains(&low) {
                     buf.push('\\');
+
                     buf.push('u');
+
                     buf.extend(format!("{high:x}").chars());
+
                     buf.push('\\');
+
                     buf.push('u');
+
                     buf.extend(format!("{low:x}").chars());
                 } else {
                     // `https://tc39.es/ecma262/#sec-utf16decodesurrogatepair`
                     let astral_code_point = (high - 0xd800) * 0x400 + low - 0xdc00 + 0x10000;
 
                     buf.push('\\');
+
                     buf.push('u');
+
                     buf.extend(format!("{astral_code_point:x}").chars());
                 }
 
@@ -169,7 +177,9 @@ impl<'a> Lexer<'a> {
         F: for<'any> FnOnce(&mut Lexer<'any>, &mut String) -> LexResult<Ret>,
     {
         let b = self.buf.clone();
+
         let mut buf = b.borrow_mut();
+
         buf.clear();
 
         op(self, &mut buf)
@@ -188,7 +198,9 @@ impl<'a> Lexer<'a> {
             Some(handler) => handler(self),
             None => {
                 let start = self.cur_pos();
+
                 self.input.bump_bytes(1);
+
                 self.error_span(
                     pos_span(start),
                     SyntaxError::UnexpectedChar { c: byte as _ },
@@ -212,6 +224,7 @@ impl<'a> Lexer<'a> {
             !self.input.is_at_start() || self.cur() != Some('!'),
             "#! should have already been handled by read_shebang()"
         );
+
         Ok(Some(Token::Hash))
     }
 
@@ -228,9 +241,11 @@ impl<'a> Lexer<'a> {
                     // Safety: cur() is Some(',')
                     self.input.bump();
                 }
+
                 return Ok(tok!('.'));
             }
         };
+
         if next.is_ascii_digit() {
             return self.read_number(true).map(|v| match v {
                 Left((value, raw)) => Token::Num { value, raw },
@@ -268,8 +283,10 @@ impl<'a> Lexer<'a> {
                 unsafe {
                     // Safety: peek() was some
                     self.input.bump();
+
                     self.input.bump();
                 }
+
                 if self.input.cur() == Some('=') {
                     unsafe {
                         // Safety: cur() was some
@@ -278,13 +295,16 @@ impl<'a> Lexer<'a> {
 
                     return Ok(tok!("??="));
                 }
+
                 Ok(tok!("??"))
             }
+
             _ => {
                 unsafe {
                     // Safety: peek() is callable only if cur() is Some
                     self.input.bump();
                 }
+
                 Ok(tok!('?'))
             }
         }
@@ -299,6 +319,7 @@ impl<'a> Lexer<'a> {
             // Safety: cur() is Some(':')
             self.input.bump();
         }
+
         Ok(tok!(':'))
     }
 
@@ -333,12 +354,14 @@ impl<'a> Lexer<'a> {
     #[inline(never)]
     fn read_token_logical(&mut self, c: u8) -> LexResult<Token> {
         let had_line_break_before_last = self.had_line_break_before_last();
+
         let start = self.cur_pos();
 
         unsafe {
             // Safety: cur() is Some(c as char)
             self.input.bump();
         }
+
         let token = if c == b'&' {
             BinOpToken::BitAnd
         } else {
@@ -366,6 +389,7 @@ impl<'a> Lexer<'a> {
                     // Safety: cur() is Some('=')
                     self.input.bump();
                 }
+
                 return Ok(Token::AssignOp(match token {
                     BinOpToken::BitAnd => op!("&&="),
                     BinOpToken::BitOr => op!("||="),
@@ -377,9 +401,13 @@ impl<'a> Lexer<'a> {
             //   ^
             if had_line_break_before_last && token == BinOpToken::BitOr && self.is_str("||||| ") {
                 let span = fixed_len_span(start, 7);
+
                 self.emit_error_span(span, SyntaxError::TS1185);
+
                 self.skip_line_comment(5);
+
                 self.skip_space::<true>();
+
                 return self.error_span(span, SyntaxError::TS1185);
             }
 
@@ -399,10 +427,12 @@ impl<'a> Lexer<'a> {
     #[inline(never)]
     fn read_token_mul_mod(&mut self, c: u8) -> LexResult<Token> {
         let is_mul = c == b'*';
+
         unsafe {
             // Safety: cur() is Some(c)
             self.input.bump();
         }
+
         let mut token = if is_mul {
             Token::BinOp(BinOpToken::Mul)
         } else {
@@ -522,6 +552,7 @@ impl<'a> Lexer<'a> {
                                     let new_val = value
                                         .checked_mul(8)
                                         .and_then(|value| value.checked_add(v as u8));
+
                                     match new_val {
                                         Some(val) => val,
                                         None => return Ok(Some(vec![Char::from(value as char)])),
@@ -532,16 +563,19 @@ impl<'a> Lexer<'a> {
 
                                 self.bump();
                             }
+
                             _ => return Ok(Some(vec![Char::from(value as u32)])),
                         }
                     }};
                 }
 
                 one!(false);
+
                 one!(true);
 
                 return Ok(Some(vec![Char::from(value as char)]));
             }
+
             _ => c,
         };
 
@@ -571,8 +605,11 @@ impl<'a> Lexer<'a> {
             // Handle -->
             if self.state.had_line_break && c == b'-' && self.eat(b'>') {
                 self.emit_module_mode_error(start, SyntaxError::LegacyCommentInModule);
+
                 self.skip_line_comment(0);
+
                 self.skip_space::<true>();
+
                 return self.read_token();
             }
 
@@ -598,6 +635,7 @@ impl<'a> Lexer<'a> {
 
     fn read_token_bang_or_eq(&mut self, c: u8) -> LexResult<Option<Token>> {
         let start = self.cur_pos();
+
         let had_line_break_before_last = self.had_line_break_before_last();
 
         unsafe {
@@ -616,8 +654,11 @@ impl<'a> Lexer<'a> {
                     //    ^
                     if had_line_break_before_last && self.is_str("====") {
                         self.emit_error_span(fixed_len_span(start, 7), SyntaxError::TS1185);
+
                         self.skip_line_comment(4);
+
                         self.skip_space::<true>();
+
                         return self.read_token();
                     }
 
@@ -660,8 +701,11 @@ impl Lexer<'_> {
         debug_assert!(self.cur() == Some('<') || self.cur() == Some('>'));
 
         let had_line_break_before_last = self.had_line_break_before_last();
+
         let start = self.cur_pos();
+
         let c = self.cur().unwrap();
+
         self.bump();
 
         if self.syntax.typescript() && self.ctx.in_type && !self.ctx.should_not_lex_lt_or_gt_as_type
@@ -676,7 +720,9 @@ impl Lexer<'_> {
         // XML style comment. `<!--`
         if c == '<' && self.is(b'!') && self.peek() == Some('-') && self.peek_ahead() == Some('-') {
             self.skip_line_comment(3);
+
             self.skip_space::<true>();
+
             self.emit_module_mode_error(start, SyntaxError::LegacyCommentInModule);
 
             return self.read_token();
@@ -691,6 +737,7 @@ impl Lexer<'_> {
         // '<<', '>>'
         if self.cur() == Some(c) {
             self.bump();
+
             op = if c == '<' {
                 BinOpToken::LShift
             } else {
@@ -700,6 +747,7 @@ impl Lexer<'_> {
             //'>>>'
             if c == '>' && self.cur() == Some(c) {
                 self.bump();
+
                 op = BinOpToken::ZeroFillRShift;
             }
         }
@@ -731,8 +779,11 @@ impl Lexer<'_> {
             }
         {
             self.emit_error_span(fixed_len_span(start, 7), SyntaxError::TS1185);
+
             self.skip_line_comment(5);
+
             self.skip_space::<true>();
+
             return self.read_token();
         }
 
@@ -759,6 +810,7 @@ impl Lexer<'_> {
         debug_assert!(self.cur().is_some());
 
         let start = self.cur_pos();
+
         let (word, has_escape) = self.read_word_as_str_with(|l, s, _, can_be_known| {
             if can_be_known {
                 if let Some(word) = convert(s) {
@@ -791,9 +843,13 @@ impl Lexer<'_> {
         F: for<'any> FnOnce(&'any mut Lexer<'_>, &str, bool, bool) -> Ret,
     {
         debug_assert!(self.cur().is_some());
+
         let mut first = true;
+
         let mut can_be_keyword = true;
+
         let mut slice_start = self.cur_pos();
+
         let mut has_escape = false;
 
         self.with_buf(|l, buf| {
@@ -806,18 +862,24 @@ impl Lexer<'_> {
 
                     if Ident::is_valid_continue(c as _) {
                         l.bump();
+
                         continue;
                     } else if first && Ident::is_valid_start(c as _) {
                         l.bump();
+
                         first = false;
+
                         continue;
                     }
 
                     // unicode escape
                     if c == b'\\' {
                         first = false;
+
                         has_escape = true;
+
                         let start = l.cur_pos();
+
                         l.bump();
 
                         if !l.is(b'u') {
@@ -826,12 +888,15 @@ impl Lexer<'_> {
 
                         {
                             let end = l.input.cur_pos();
+
                             let s = unsafe {
                                 // Safety: start and end are valid position because we got them from
                                 // `self.input`
                                 l.input.slice(slice_start, start)
                             };
+
                             buf.push_str(s);
+
                             unsafe {
                                 // Safety: We got end from `self.input`
                                 l.input.reset_to(end);
@@ -857,6 +922,7 @@ impl Lexer<'_> {
                         }
 
                         slice_start = l.cur_pos();
+
                         continue;
                     }
 
@@ -868,10 +934,13 @@ impl Lexer<'_> {
                 if let Some(c) = l.input.cur() {
                     if Ident::is_valid_continue(c) {
                         l.bump();
+
                         continue;
                     } else if first && Ident::is_valid_start(c) {
                         l.bump();
+
                         first = false;
+
                         continue;
                     }
                 }
@@ -889,6 +958,7 @@ impl Lexer<'_> {
                     // `self.input`
                     l.input.slice(slice_start, end)
                 };
+
                 let s = unsafe {
                     // Safety: We don't use 'static. We just bypass the lifetime check.
                     transmute::<&str, &'static str>(s)
@@ -901,6 +971,7 @@ impl Lexer<'_> {
                     // `self.input`
                     l.input.slice(slice_start, end)
                 };
+
                 buf.push_str(s);
 
                 convert(l, buf, has_escape, can_be_keyword)
@@ -914,6 +985,7 @@ impl Lexer<'_> {
         debug_assert_eq!(self.cur(), Some('u'));
 
         let mut chars = Vec::new();
+
         let mut is_curly = false;
 
         self.bump(); // 'u'
@@ -923,6 +995,7 @@ impl Lexer<'_> {
         }
 
         let state = self.input.cur_pos();
+
         let c = match self.read_int_u32::<16>(if is_curly { 0 } else { 4 }) {
             Ok(Some(val)) => {
                 if 0x0010_ffff >= val {
@@ -942,6 +1015,7 @@ impl Lexer<'_> {
                     )?
                 }
             }
+
             _ => {
                 let start = self.cur_pos();
 
@@ -962,6 +1036,7 @@ impl Lexer<'_> {
             Some(c) => {
                 chars.push(c.into());
             }
+
             _ => {
                 unsafe {
                     // Safety: state is valid position because we got it from cur_pos()
@@ -969,6 +1044,7 @@ impl Lexer<'_> {
                 }
 
                 chars.push(Char::from('\\'));
+
                 chars.push(Char::from('u'));
 
                 if is_curly {
@@ -1011,12 +1087,15 @@ impl Lexer<'_> {
     /// See https://tc39.github.io/ecma262/#sec-literals-string-literals
     fn read_str_lit(&mut self) -> LexResult<Token> {
         debug_assert!(self.cur() == Some('\'') || self.cur() == Some('"'));
+
         let start = self.cur_pos();
+
         let quote = self.cur().unwrap() as u8;
 
         self.bump(); // '"'
 
         let mut has_escape = false;
+
         let mut slice_start = self.input.cur_pos();
 
         self.with_buf(|l, buf| {
@@ -1039,6 +1118,7 @@ impl Lexer<'_> {
                                 // got them from `self.input`
                                 l.input.slice(slice_start, value_end)
                             };
+
                             buf.push_str(s);
 
                             l.atoms.atom(&**buf)
@@ -1056,6 +1136,7 @@ impl Lexer<'_> {
                             // `self.input`
                             l.input.slice(start, end)
                         };
+
                         let raw = l.atoms.atom(raw);
 
                         return Ok(Token::Str { value, raw });
@@ -1066,11 +1147,13 @@ impl Lexer<'_> {
 
                         {
                             let end = l.cur_pos();
+
                             let s = unsafe {
                                 // Safety: start and end are valid position because we got them from
                                 // `self.input`
                                 l.input.slice(slice_start, end)
                             };
+
                             buf.push_str(s);
                         }
 
@@ -1081,6 +1164,7 @@ impl Lexer<'_> {
                         }
 
                         slice_start = l.cur_pos();
+
                         continue;
                     }
 
@@ -1092,6 +1176,7 @@ impl Lexer<'_> {
                         // Safety: cur is a ascii character
                         l.input.bump();
                     }
+
                     continue;
                 }
 
@@ -1100,22 +1185,26 @@ impl Lexer<'_> {
                         if c.is_line_break() {
                             break;
                         }
+
                         unsafe {
                             // Safety: cur is Some(c)
                             l.input.bump();
                         }
                     }
+
                     None => break,
                 }
             }
 
             {
                 let end = l.cur_pos();
+
                 let s = unsafe {
                     // Safety: start and end are valid position because we got them from
                     // `self.input`
                     l.input.slice(slice_start, end)
                 };
+
                 buf.push_str(s);
             }
 
@@ -1128,6 +1217,7 @@ impl Lexer<'_> {
                 // `self.input`
                 l.input.slice(start, end)
             };
+
             Ok(Token::Str {
                 value: l.atoms.atom(&*buf),
                 raw: l.atoms.atom(raw),
@@ -1175,6 +1265,7 @@ impl Lexer<'_> {
                 }
 
                 l.bump();
+
                 buf.push(c);
             }
 
@@ -1196,6 +1287,7 @@ impl Lexer<'_> {
         // Need to use `read_word` because '\uXXXX' sequences are allowed
         // here (don't ask).
         // let flags_start = self.cur_pos();
+
         let flags = {
             match self.cur() {
                 Some(c) if c.is_ident_start() => self
@@ -1215,13 +1307,16 @@ impl Lexer<'_> {
         if self.input.cur() != Some('#') || self.input.peek() != Some('!') {
             return Ok(None);
         }
+
         unsafe {
             // Safety: cur() is Some('#')
             self.input.bump();
             // Safety: cur() is Some('!')
             self.input.bump();
         }
+
         let s = self.input.uncons_while(|c| !c.is_line_terminator());
+
         Ok(Some(self.atoms.atom(s)))
     }
 
@@ -1229,13 +1324,16 @@ impl Lexer<'_> {
         let start = self.cur_pos();
 
         let mut cooked = Ok(String::new());
+
         let mut cooked_slice_start = start;
+
         let raw_slice_start = start;
 
         macro_rules! consume_cooked {
             () => {{
                 if let Ok(cooked) = &mut cooked {
                     let last_pos = self.cur_pos();
+
                     cooked.push_str(unsafe {
                         // Safety: Both of start and last_pos are valid position because we got them
                         // from `self.input`
@@ -1250,10 +1348,13 @@ impl Lexer<'_> {
                 if start == self.cur_pos() && self.state.last_was_tpl_element() {
                     if c == '$' {
                         self.bump();
+
                         self.bump();
+
                         return Ok(tok!("${"));
                     } else {
                         self.bump();
+
                         return Ok(tok!('`'));
                     }
                 }
@@ -1261,6 +1362,7 @@ impl Lexer<'_> {
                 // If we don't have any escape
                 let cooked = if cooked_slice_start == raw_slice_start {
                     let last_pos = self.cur_pos();
+
                     let s = unsafe {
                         // Safety: Both of start and last_pos are valid position because we got them
                         // from `self.input`
@@ -1276,11 +1378,13 @@ impl Lexer<'_> {
 
                 // TODO: Handle error
                 let end = self.input.cur_pos();
+
                 let raw = unsafe {
                     // Safety: Both of start and last_pos are valid position because we got them
                     // from `self.input`
                     self.input.slice(raw_slice_start, end)
                 };
+
                 return Ok(Token::Template {
                     cooked,
                     raw: self.atoms.atom(raw),
@@ -1298,7 +1402,9 @@ impl Lexer<'_> {
                             }
                         }
                     }
+
                     Ok(None) => {}
+
                     Err(error) => {
                         cooked = Err(error);
                     }
@@ -1328,6 +1434,7 @@ impl Lexer<'_> {
                 if let Ok(ref mut cooked) = cooked {
                     cooked.push(c);
                 }
+
                 cooked_slice_start = self.cur_pos();
             } else {
                 self.bump();

@@ -15,6 +15,7 @@ impl Babelify for Program {
 
     fn babelify(self, ctx: &Context) -> Self::Output {
         let comments = extract_all_comments(&self, ctx);
+
         let program = match self {
             Program::Module(module) => module.babelify(ctx),
             Program::Script(script) => script.babelify(ctx),
@@ -55,6 +56,7 @@ impl Babelify for Module {
         } else {
             self.span
         };
+
         BabelProgram {
             base: base_with_trailing_newline(span, ctx),
             source_type: SrcType::Module,
@@ -83,6 +85,7 @@ impl Babelify for Script {
         } else {
             self.span
         };
+
         BabelProgram {
             base: base_with_trailing_newline(span, ctx),
             source_type: SrcType::Script,
@@ -106,6 +109,7 @@ fn base_with_trailing_newline(span: Span, ctx: &Context) -> BaseNode {
     let mut base = ctx.base(span);
 
     base.end = base.end.map(|num| num + 1);
+
     base.loc = base.loc.map(|loc| Loc {
         end: LineCol {
             line: loc.end.line + 1,
@@ -113,6 +117,7 @@ fn base_with_trailing_newline(span: Span, ctx: &Context) -> BaseNode {
         },
         ..loc
     });
+
     base.range = base.range.map(|range| [range[0], range[1] + 1]);
 
     base
@@ -177,7 +182,9 @@ fn extract_all_comments(program: &Program, ctx: &Context) -> Vec<Comment> {
         comments: ctx.comments.clone(),
         collected: Vec::new(),
     };
+
     program.visit_with(&mut collector);
+
     collector.collected
 }
 
@@ -207,6 +214,7 @@ impl Visit for CommentCollector {
                 }
             }
         }
+
         self.collected.append(&mut span_comments);
     }
 }

@@ -67,6 +67,7 @@ impl Compressor {
                     }
                 }
             }
+
             ComponentValue::Function(function)
                 if function.name == "steps" && function.value.len() == 3 =>
             {
@@ -89,6 +90,7 @@ impl Compressor {
                                     raw: None,
                                 }))
                             }
+
                             _ => {}
                         }
                     }
@@ -106,12 +108,15 @@ impl Compressor {
                             "end" | "jump-end" => {
                                 function.value = vec![ComponentValue::Integer(number.clone())];
                             }
+
                             _ => {}
                         }
                     }
+
                     _ => {}
                 }
             }
+
             _ => {}
         }
     }

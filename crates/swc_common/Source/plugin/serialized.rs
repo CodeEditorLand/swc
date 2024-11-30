@@ -51,7 +51,9 @@ impl PluginSerializedBytes {
     #[tracing::instrument(level = "info", skip_all)]
     pub fn from_slice(bytes: &[u8]) -> PluginSerializedBytes {
         let mut field = rkyv::AlignedVec::new();
+
         field.extend_from_slice(bytes);
+
         PluginSerializedBytes { field }
     }
 
@@ -73,6 +75,7 @@ impl PluginSerializedBytes {
                 rkyv::ser::serializers::CompositeSerializerError::ScratchSpaceError(_e) => {
                     Error::msg("AllocScratchError")
                 }
+
                 rkyv::ser::serializers::CompositeSerializerError::SharedError(_e) => {
                     Error::msg("SharedSerializeMapError")
                 }

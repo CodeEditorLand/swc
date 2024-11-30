@@ -22,8 +22,11 @@ pub trait Take: Sized {
         F: FnOnce(Self) -> Self,
     {
         let dummy = Self::dummy();
+
         let cur_val = replace(self, dummy);
+
         let new_val = op(cur_val);
+
         let _dummy = replace(self, new_val);
     }
 }

@@ -37,6 +37,7 @@ impl VisitMut for JsxSrc {
         e.visit_mut_children_with(self);
 
         let loc = self.cm.lookup_char_pos(e.span.lo);
+
         let file_name = loc.file.name.to_string();
 
         e.attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {

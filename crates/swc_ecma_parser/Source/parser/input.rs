@@ -16,8 +16,11 @@ use crate::{
 /// syntax requires backtracking.
 pub trait Tokens: Clone + Iterator<Item = TokenAndSpan> {
     fn set_ctx(&mut self, ctx: Context);
+
     fn ctx(&self) -> Context;
+
     fn syntax(&self) -> Syntax;
+
     fn target(&self) -> EsVersion;
 
     fn start_pos(&self) -> BytePos {
@@ -25,10 +28,13 @@ pub trait Tokens: Clone + Iterator<Item = TokenAndSpan> {
     }
 
     fn set_expr_allowed(&mut self, allow: bool);
+
     fn set_next_regexp(&mut self, start: Option<BytePos>);
 
     fn token_context(&self) -> &lexer::TokenContexts;
+
     fn token_context_mut(&mut self) -> &mut lexer::TokenContexts;
+
     fn set_token_context(&mut self, _c: lexer::TokenContexts);
 
     /// Implementors should use Rc<RefCell<Vec<Error>>>.
@@ -96,8 +102,10 @@ impl Tokens for TokensInput {
     fn set_ctx(&mut self, ctx: Context) {
         if ctx.module && !self.module_errors.borrow().is_empty() {
             let mut module_errors = self.module_errors.borrow_mut();
+
             self.errors.borrow_mut().append(&mut *module_errors);
         }
+
         self.ctx = ctx;
     }
 
@@ -140,8 +148,10 @@ impl Tokens for TokensInput {
     fn add_module_mode_error(&self, error: Error) {
         if self.ctx.module {
             self.add_error(error);
+
             return;
         }
+
         self.module_errors.borrow_mut().push(error);
     }
 
@@ -219,6 +229,7 @@ impl<I: Tokens> Iterator for Capturing<I> {
 
                 Some(ts)
             }
+
             None => None,
         }
     }
@@ -310,6 +321,7 @@ impl<I: Tokens> Parser<I> {
 impl<I: Tokens> Buffer<I> {
     pub fn new(lexer: I) -> Self {
         let start_pos = lexer.start_pos();
+
         Buffer {
             iter: lexer,
             cur: None,
@@ -320,7 +332,9 @@ impl<I: Tokens> Buffer<I> {
 
     pub fn store(&mut self, token: Token) {
         debug_assert!(self.next.is_none());
+
         debug_assert!(self.cur.is_none());
+
         let span = self.prev_span;
 
         self.cur = Some(TokenAndSpan {
@@ -355,6 +369,7 @@ impl<I: Tokens> Buffer<I> {
                 )
             },
         };
+
         self.prev_span = prev.span;
 
         prev.token
@@ -390,6 +405,7 @@ impl<I: Tokens> Buffer<I> {
     /// This returns true on eof.
     pub fn has_linebreak_between_cur_and_peeked(&mut self) -> bool {
         let _ = self.peek();
+
         self.next
             .as_ref()
             .map(|item| item.had_line_break)
@@ -419,6 +435,7 @@ impl<I: Tokens> Buffer<I> {
             self.is(&tok!("<<")),
             "parser should only call cut_lshift when encountering LShift token"
         );
+
         self.cur = Some(TokenAndSpan {
             token: tok!('<'),
             span: self.cur_span().with_lo(self.cur_span().lo + BytePos(1)),
@@ -445,6 +462,7 @@ impl<I: Tokens> Buffer<I> {
         }
 
         let cur = self.cur.take().unwrap();
+
         let next = self.next.take().unwrap();
 
         let token = match (&cur.token, &next.token) {
@@ -459,10 +477,13 @@ impl<I: Tokens> Buffer<I> {
 
             _ => {
                 self.cur = Some(cur);
+
                 self.next = Some(next);
+
                 return;
             }
         };
+
         let span = span.with_hi(next.span.hi);
 
         self.cur = Some(TokenAndSpan {
@@ -483,9 +504,11 @@ impl<I: Tokens> Buffer<I> {
     #[inline]
     pub fn eat(&mut self, expected: &Token) -> bool {
         let v = self.is(expected);
+
         if v {
             self.bump();
         }
+
         v
     }
 
@@ -493,6 +516,7 @@ impl<I: Tokens> Buffer<I> {
     #[inline]
     pub fn cur_pos(&mut self) -> BytePos {
         let _ = self.cur();
+
         self.cur
             .as_ref()
             .map(|item| item.span.lo)

@@ -72,6 +72,7 @@ fn to_miette_reporter(color: ColorConfig) -> GraphicalReportHandler {
                 to_miette_reporter(ColorConfig::Never)
             }
         }
+
         ColorConfig::Always => GraphicalReportHandler::default(),
         ColorConfig::Never => GraphicalReportHandler::default().with_theme(GraphicalTheme::none()),
     }
@@ -100,12 +101,14 @@ where
     );
     // let e_wr = EmitterWriter::new(wr.clone(), Some(cm), false,
     // true).skip_filename(skip_filename);
+
     let handler = Handler::with_emitter(true, false, Box::new(emitter));
 
     let ret = HANDLER.set(&handler, || op(&handler));
 
     if handler.has_errors() {
         let mut lock = wr.0.lock();
+
         let error = take(&mut *lock);
 
         let msg = String::from_utf8(error).expect("error string should be utf8");

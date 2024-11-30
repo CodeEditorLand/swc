@@ -36,12 +36,14 @@ impl VisitMut for KeywordRenamer {
     fn visit_mut_binding_ident(&mut self, n: &mut BindingIdent) {
         if let Some(new) = self.renamed(&n.id) {
             n.ctxt = new.ctxt;
+
             n.sym = new.sym;
         }
     }
 
     fn visit_mut_class_decl(&mut self, c: &mut ClassDecl) {
         c.class.visit_mut_with(self);
+
         if let Some(renamed) = self.renamed(&c.ident) {
             c.ident = renamed;
         }
@@ -53,6 +55,7 @@ impl VisitMut for KeywordRenamer {
         }
 
         n.decorators.visit_mut_with(self);
+
         n.value.visit_mut_with(self);
     }
 
@@ -61,6 +64,7 @@ impl VisitMut for KeywordRenamer {
             ModuleExportName::Ident(ident) => ident,
             ModuleExportName::Str(..) => unimplemented!("module string names unimplemented"),
         };
+
         if let Some(renamed) = self.renamed(orig) {
             n.orig = ModuleExportName::Ident(renamed);
         }
@@ -71,6 +75,7 @@ impl VisitMut for KeywordRenamer {
             if let Some(renamed) = self.renamed(n) {
                 *n = renamed;
             }
+
             return;
         }
 
@@ -79,6 +84,7 @@ impl VisitMut for KeywordRenamer {
 
     fn visit_mut_fn_decl(&mut self, f: &mut FnDecl) {
         f.function.visit_mut_with(self);
+
         if let Some(renamed) = self.renamed(&f.ident) {
             f.ident = renamed;
         }
@@ -99,6 +105,7 @@ impl VisitMut for KeywordRenamer {
                             .into(),
                         });
                     }
+
                     None => {
                         *n = ObjectPatProp::KeyValue(KeyValuePatProp {
                             key: PropName::Ident(pat.key.take().into()),
@@ -107,6 +114,7 @@ impl VisitMut for KeywordRenamer {
                     }
                 }
             }
+
             return;
         }
 
@@ -121,11 +129,13 @@ impl VisitMut for KeywordRenamer {
 
             return;
         }
+
         n.visit_mut_children_with(self);
     }
 
     fn visit_mut_private_prop(&mut self, n: &mut PrivateProp) {
         n.decorators.visit_mut_with(self);
+
         n.value.visit_mut_with(self);
     }
 
@@ -139,6 +149,7 @@ impl VisitMut for KeywordRenamer {
                     });
                 }
             }
+
             _ => {
                 n.visit_mut_children_with(self);
             }

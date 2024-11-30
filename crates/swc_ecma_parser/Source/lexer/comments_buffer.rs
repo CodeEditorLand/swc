@@ -61,21 +61,28 @@ impl<T: Clone> OneDirectionalList<T> {
     pub fn take_all(&mut self) -> Rev<IntoIter<T>> {
         // these are stored in reverse, so we need to reverse them back
         let mut items = Vec::new();
+
         let mut current_node = self.last_node.take();
+
         while let Some(node) = current_node {
             let mut node = match Rc::try_unwrap(node) {
                 Ok(n) => n,
                 Err(n) => n.as_ref().clone(),
             };
+
             items.push(node.item);
+
             current_node = node.previous.take();
         }
+
         items.into_iter().rev()
     }
 
     pub fn push(&mut self, item: T) {
         let previous = self.last_node.take();
+
         let new_item = OneDirectionalListNode { item, previous };
+
         self.last_node = Some(Rc::new(new_item));
     }
 }

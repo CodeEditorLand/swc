@@ -50,6 +50,7 @@ impl Mode {
                     init: None,
                     definite: Default::default(),
                 });
+
                 if let Some(init) = init {
                     init_exprs.push(
                         AssignExpr {
@@ -62,6 +63,7 @@ impl Mode {
                     );
                 }
             }
+
             Mode::ClassDecl { vars } => {
                 vars.push(VarDeclarator {
                     span: DUMMY_SP,
@@ -118,6 +120,7 @@ impl PrivateInObject {
         let is_static = self.cls.statics.contains(&n.name);
 
         let span = n.span;
+
         let ctxt = SyntaxContext::empty().apply_mark(self.cls.mark);
 
         if !is_static && self.cls.methods.contains(&n.name) {
@@ -175,6 +178,7 @@ impl VisitMut for PrivateInObject {
 
             if !has_constructor {
                 let has_super = n.super_class.is_some();
+
                 n.body
                     .push(ClassMember::Constructor(default_constructor_with_span(
                         has_super, n.span,
@@ -204,7 +208,9 @@ impl VisitMut for PrivateInObject {
         let old_cls = take(&mut self.cls);
 
         self.cls.mark = Mark::fresh(Mark::root());
+
         self.cls.ident = Some(n.ident.clone());
+
         self.cls.vars = Mode::ClassDecl {
             vars: Default::default(),
         };
@@ -215,6 +221,7 @@ impl VisitMut for PrivateInObject {
             Mode::ClassDecl { vars } => {
                 self.vars.extend(take(vars));
             }
+
             _ => {
                 unreachable!()
             }
@@ -227,7 +234,9 @@ impl VisitMut for PrivateInObject {
         let old_cls = take(&mut self.cls);
 
         self.cls.mark = Mark::fresh(Mark::root());
+
         self.cls.ident.clone_from(&n.ident);
+
         self.cls.vars = Mode::ClassExpr {
             vars: Default::default(),
             init_exprs: Default::default(),
@@ -238,8 +247,10 @@ impl VisitMut for PrivateInObject {
         match &mut self.cls.vars {
             Mode::ClassExpr { vars, init_exprs } => {
                 self.vars.extend(take(vars));
+
                 self.prepend_exprs.extend(take(init_exprs));
             }
+
             _ => {
                 unreachable!()
             }
@@ -253,10 +264,12 @@ impl VisitMut for PrivateInObject {
 
         {
             let mut buf = AHashSet::default();
+
             let mut v = ClassAnalyzer {
                 brand_check_names: &mut buf,
                 ignore_class: false,
             };
+
             p.right.visit_with(&mut v);
 
             if buf.is_empty() {
@@ -267,6 +280,7 @@ impl VisitMut for PrivateInObject {
                     stmts: Vec::new(),
                     ..Default::default()
                 };
+
                 bs.stmts.push(
                     ReturnStmt {
                         span: DUMMY_SP,
@@ -274,6 +288,7 @@ impl VisitMut for PrivateInObject {
                     }
                     .into(),
                 );
+
                 bs.visit_mut_with(self);
 
                 p.right = CallExpr {
@@ -307,6 +322,7 @@ impl VisitMut for PrivateInObject {
                 Expr::Seq(e) => {
                     e.exprs = prepend_exprs.into_iter().chain(e.exprs.take()).collect();
                 }
+
                 _ => {
                     prepend_exprs.push(Box::new(e.take()));
                     *e = SeqExpr {
@@ -316,6 +332,7 @@ impl VisitMut for PrivateInObject {
                     .into();
                 }
             }
+
             return;
         }
 
@@ -329,6 +346,7 @@ impl VisitMut for PrivateInObject {
                 let left = left.take().expect_private_name();
 
                 let is_static = self.cls.statics.contains(&left.name);
+
                 let is_method = self.cls.methods.contains(&left.name);
 
                 if let Some(cls_ident) = self.cls.ident.clone() {
@@ -340,6 +358,7 @@ impl VisitMut for PrivateInObject {
                             right: right.take(),
                         }
                         .into();
+
                         return;
                     }
                 }
@@ -445,6 +464,7 @@ impl VisitMut for PrivateInObject {
                     }
                     .into();
                 }
+
                 None => {
                     n.value = Some(
                         UnaryExpr {

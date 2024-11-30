@@ -14,7 +14,9 @@ where
         this: replace_with,
         found: false,
     };
+
     node.visit_mut_with(&mut v);
+
     v.found
 }
 
@@ -35,6 +37,7 @@ impl VisitMut for TopLevelThis {
             }) => {
                 computed.visit_mut_with(self);
             }
+
             _ => {}
         }
     }
@@ -44,6 +47,7 @@ impl VisitMut for TopLevelThis {
             Prop::KeyValue(..) => {
                 n.visit_mut_children_with(self);
             }
+
             Prop::Getter(GetterProp {
                 key: PropName::Computed(computed),
                 ..
@@ -65,6 +69,7 @@ impl VisitMut for TopLevelThis {
             self.found = true;
 
             let mut this = self.this.clone();
+
             match &mut this {
                 // for void 0
                 Expr::Unary(unary_expr) => unary_expr.span = *span,

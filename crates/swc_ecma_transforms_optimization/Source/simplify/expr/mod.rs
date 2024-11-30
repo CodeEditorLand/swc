@@ -103,6 +103,7 @@ impl SimplifyExpr {
             Expr::Member(member) => member,
             _ => return,
         };
+
         if self.is_modifying {
             return;
         }
@@ -126,10 +127,12 @@ impl SimplifyExpr {
             /// ({}).foo
             IndexStr(JsWord),
         }
+
         let op = match prop {
             MemberProp::Ident(IdentName { sym, .. }) if &**sym == "length" && !obj.is_object() => {
                 KnownOp::Len
             }
+
             MemberProp::Ident(IdentName { sym, .. }) => {
                 if self.in_callee {
                     return;
@@ -137,6 +140,7 @@ impl SimplifyExpr {
 
                 KnownOp::IndexStr(sym.clone())
             }
+
             MemberProp::Computed(ComputedPropName { expr, .. }) => {
                 if self.in_callee {
                     return;
@@ -160,6 +164,7 @@ impl SimplifyExpr {
                     return;
                 }
             }
+
             _ => return,
         };
 
@@ -278,6 +283,7 @@ impl SimplifyExpr {
                         // elements before target element
                         let before: Vec<Option<ExprOrSpread>> =
                             elems.drain(..(idx as usize)).collect();
+
                         let mut iter = elems.take().into_iter();
                         // element at idx
                         let e = iter.next().flatten();
@@ -319,6 +325,7 @@ impl SimplifyExpr {
                                 exprs: vec![0.into(), val],
                             }
                             .into();
+
                             return;
                         }
 
@@ -389,8 +396,10 @@ impl SimplifyExpr {
                         *expr = *make_bool_expr(&self.expr_ctx, *span, v, {
                             iter::once(left.take()).chain(iter::once(right.take()))
                         });
+
                         return;
                     }
+
                     _ => {}
                 }
             }};
@@ -416,8 +425,10 @@ impl SimplifyExpr {
                         *expr = *self.expr_ctx.preserve_effects(*span, value_expr.into(), {
                             iter::once(left.take()).chain(iter::once(right.take()))
                         });
+
                         return;
                     }
+
                     _ => {}
                 }
             }};
@@ -443,6 +454,7 @@ impl SimplifyExpr {
                             span: *span,
                         })
                         .into();
+
                         return;
                     }
                 }
@@ -473,6 +485,7 @@ impl SimplifyExpr {
                                 }
                             }
                         }
+
                         _ => unreachable!(),
                     },
                     // Numerical calculation
@@ -486,6 +499,7 @@ impl SimplifyExpr {
                                     self.perform_arithmetic_op(op!(bin, "+"), left, right)
                                 {
                                     self.changed = true;
+
                                     let span = *span;
 
                                     let value_expr = if !v.is_nan() {
@@ -511,9 +525,11 @@ impl SimplifyExpr {
                                     );
                                 }
                             }
+
                             _ => unreachable!(),
                         };
                     }
+
                     _ => {}
                 }
 
@@ -531,6 +547,7 @@ impl SimplifyExpr {
 
                             // 0 && $right
                             *expr = *left.take();
+
                             return;
                         }
                     } else if val {
@@ -538,6 +555,7 @@ impl SimplifyExpr {
 
                         // 1 || $right
                         *expr = *(left.take());
+
                         return;
                     } else {
                         // 0 || $right
@@ -570,6 +588,7 @@ impl SimplifyExpr {
                     };
                 }
             }
+
             op!("instanceof") => {
                 fn is_non_obj(e: &Expr) -> bool {
                     match e {
@@ -616,6 +635,7 @@ impl SimplifyExpr {
                     self.changed = true;
 
                     *expr = *make_bool_expr(&self.expr_ctx, *span, false, iter::once(right.take()));
+
                     return;
                 }
 
@@ -647,6 +667,7 @@ impl SimplifyExpr {
                         (Known(lv), Known(rv)) => (lv, rv),
                         _ => unreachable!(),
                     };
+
                     let (lv, rv) = (JsNumber::from(lv), JsNumber::from(rv));
 
                     Known(match op {
@@ -657,6 +678,7 @@ impl SimplifyExpr {
                         _ => unreachable!("Unknown bit operator {:?}", op),
                     })
                 }
+
                 try_replace!(number, try_fold_shift(&self.expr_ctx, *op, left, right))
             }
 
@@ -700,12 +722,15 @@ impl SimplifyExpr {
             op!("<") => {
                 try_replace!(self.perform_abstract_rel_cmp(left, right, false))
             }
+
             op!(">") => {
                 try_replace!(self.perform_abstract_rel_cmp(right, left, false))
             }
+
             op!("<=") => {
                 try_replace!(!self.perform_abstract_rel_cmp(right, left, true))
             }
+
             op!(">=") => {
                 try_replace!(!self.perform_abstract_rel_cmp(left, right, true))
             }
@@ -728,6 +753,7 @@ impl SimplifyExpr {
             Expr::Unary(unary) => unary,
             _ => return,
         };
+
         assert_eq!(*op, op!("typeof"));
 
         let val = match &**arg {
@@ -766,12 +792,14 @@ impl SimplifyExpr {
             Expr::Unary(unary) => unary,
             _ => return,
         };
+
         let may_have_side_effects = arg.may_have_side_effects(&self.expr_ctx);
 
         match op {
             op!("typeof") if !may_have_side_effects => {
                 self.try_fold_typeof(expr);
             }
+
             op!("!") => {
                 match &**arg {
                     // Don't expand booleans.
@@ -785,6 +813,7 @@ impl SimplifyExpr {
                             }
                         }
                     }
+
                     _ => {}
                 }
 
@@ -794,6 +823,7 @@ impl SimplifyExpr {
                     *expr = *make_bool_expr(&self.expr_ctx, *span, !val, iter::once(arg.take()));
                 }
             }
+
             op!(unary, "+") => {
                 if let Known(v) = arg.as_pure_number(&self.expr_ctx) {
                     self.changed = true;
@@ -804,6 +834,7 @@ impl SimplifyExpr {
                             Ident::new("NaN".into(), *span, self.expr_ctx.unresolved_ctxt).into(),
                             iter::once(arg.take()),
                         );
+
                         return;
                     }
 
@@ -819,6 +850,7 @@ impl SimplifyExpr {
                     );
                 }
             }
+
             op!(unary, "-") => match &**arg {
                 Expr::Ident(Ident { sym, .. }) if &**sym == "Infinity" => {}
                 // "-NaN" is "NaN"
@@ -826,6 +858,7 @@ impl SimplifyExpr {
                     self.changed = true;
                     *expr = *(arg.take());
                 }
+
                 Expr::Lit(Lit::Num(Number { value: f, .. })) => {
                     self.changed = true;
                     *expr = Lit::Num(Number {
@@ -835,6 +868,7 @@ impl SimplifyExpr {
                     })
                     .into();
                 }
+
                 _ => {
 
                     // TODO: Report that user is something bad (negating
@@ -846,6 +880,7 @@ impl SimplifyExpr {
                     Expr::Lit(Lit::Num(Number { value, .. })) if *value == 0.0 => return,
                     _ => {}
                 }
+
                 self.changed = true;
 
                 *arg = Lit::Num(Number {
@@ -874,6 +909,7 @@ impl SimplifyExpr {
                     // TODO: Report error
                 }
             }
+
             _ => {}
         }
     }
@@ -884,13 +920,16 @@ impl SimplifyExpr {
         macro_rules! try_replace {
             ($value:expr) => {{
                 let (ls, rs) = (left.span(), right.span());
+
                 if ls.is_dummy() || rs.is_dummy() {
                     Known($value)
                 } else {
                     let new_len = format!("{}", $value).len();
+
                     if right.span().hi() > left.span().lo() {
                         let orig_len = right.span().hi() - right.span().lo() + left.span().hi()
                             - left.span().lo();
+
                         if new_len <= orig_len.0 as usize + 1 {
                             Known($value)
                         } else {
@@ -933,6 +972,7 @@ impl SimplifyExpr {
 
                 return Unknown;
             }
+
             op!(bin, "-") => {
                 if let (Known(lv), Known(rv)) = (lv, rv) {
                     return try_replace!(lv - rv);
@@ -950,6 +990,7 @@ impl SimplifyExpr {
 
                 return Unknown;
             }
+
             op!("*") => {
                 if let (Known(lv), Known(rv)) = (lv, rv) {
                     return try_replace!(lv * rv);
@@ -960,6 +1001,7 @@ impl SimplifyExpr {
                 if Known(1.0) == lv {
                     return rv;
                 }
+
                 if Known(1.0) == rv {
                     return lv;
                 }
@@ -972,6 +1014,7 @@ impl SimplifyExpr {
                     if rv == 0.0 {
                         return Unknown;
                     }
+
                     return try_replace!(lv / rv);
                 }
 
@@ -982,6 +1025,7 @@ impl SimplifyExpr {
                     // x/1->x
                     return lv;
                 }
+
                 return Unknown;
             }
 
@@ -992,15 +1036,20 @@ impl SimplifyExpr {
 
                 if let (Known(lv), Known(rv)) = (lv, rv) {
                     let lv: JsNumber = lv.into();
+
                     let rv: JsNumber = rv.into();
+
                     let result: f64 = lv.pow(rv).into();
+
                     return try_replace!(result);
                 }
 
                 return Unknown;
             }
+
             _ => {}
         }
+
         let (lv, rv) = match (lv, rv) {
             (Known(lv), Known(rv)) => (lv, rv),
             _ => return Unknown,
@@ -1014,8 +1063,10 @@ impl SimplifyExpr {
                 if rv == 0.0 {
                     return Unknown;
                 }
+
                 try_replace!(lv % rv)
             }
+
             _ => unreachable!("unknown binary operator: {:?}", op),
         }
     }
@@ -1065,6 +1116,7 @@ impl SimplifyExpr {
             {
                 return Known(false)
             }
+
             _ => {}
         }
 
@@ -1092,6 +1144,7 @@ impl SimplifyExpr {
             try_val!(left.as_pure_number(&self.expr_ctx)),
             try_val!(right.as_pure_number(&self.expr_ctx)),
         );
+
         if lv.is_nan() || rv.is_nan() {
             return Known(will_negate);
         }
@@ -1111,6 +1164,7 @@ impl SimplifyExpr {
             (NullType, UndefinedType) | (UndefinedType, NullType) => Known(true),
             (NumberType, StringType) | (_, BoolType) => {
                 let rv = try_val!(right.as_pure_number(&self.expr_ctx));
+
                 self.perform_abstract_eq_cmp(
                     span,
                     left,
@@ -1125,6 +1179,7 @@ impl SimplifyExpr {
 
             (StringType, NumberType) | (BoolType, _) => {
                 let lv = try_val!(left.as_pure_number(&self.expr_ctx));
+
                 self.perform_abstract_eq_cmp(
                     span,
                     &Lit::Num(Number {
@@ -1152,6 +1207,7 @@ impl SimplifyExpr {
         if left.is_nan() || right.is_nan() {
             return Known(false);
         }
+
         match (left, right) {
             // Special case, typeof a == typeof a is always true.
             (
@@ -1170,6 +1226,7 @@ impl SimplifyExpr {
             {
                 return Known(true)
             }
+
             _ => {}
         }
 
@@ -1195,8 +1252,10 @@ impl SimplifyExpr {
                 if lv.contains('\u{000B}') || rv.contains('\u{000B}') {
                     return Unknown;
                 }
+
                 Known(lv == rv)
             }
+
             BoolType => {
                 let (lv, rv) = (
                     left.as_pure_bool(&self.expr_ctx),
@@ -1207,6 +1266,7 @@ impl SimplifyExpr {
 
                 lv.and(rv).or((!lv).and(!rv))
             }
+
             ObjectType | SymbolType => Unknown,
         }
     }
@@ -1217,12 +1277,17 @@ impl VisitMut for SimplifyExpr {
 
     fn visit_mut_assign_expr(&mut self, n: &mut AssignExpr) {
         let old = self.is_modifying;
+
         self.is_modifying = true;
+
         n.left.visit_mut_with(self);
+
         self.is_modifying = old;
 
         self.is_modifying = false;
+
         n.right.visit_mut_with(self);
+
         self.is_modifying = old;
     }
 
@@ -1231,8 +1296,10 @@ impl VisitMut for SimplifyExpr {
         let old_in_callee = self.in_callee;
 
         self.in_callee = true;
+
         match &mut n.callee {
             Callee::Super(..) | Callee::Import(..) => {}
+
             Callee::Expr(e) => {
                 let may_inject_zero = !need_zero_for_this(e);
 
@@ -1240,6 +1307,7 @@ impl VisitMut for SimplifyExpr {
                     Expr::Seq(seq) => {
                         if seq.exprs.len() == 1 {
                             let mut expr = seq.exprs.take().into_iter().next().unwrap();
+
                             expr.visit_mut_with(self);
                             *e = expr;
                         } else if seq
@@ -1250,8 +1318,10 @@ impl VisitMut for SimplifyExpr {
                         {
                             match seq.exprs.first().map(|v| &**v) {
                                 Some(Expr::Lit(..) | Expr::Ident(..)) => {}
+
                                 _ => {
                                     tracing::debug!("Injecting `0` to preserve `this = undefined`");
+
                                     seq.exprs.insert(0, 0.0.into());
                                 }
                             }
@@ -1270,6 +1340,7 @@ impl VisitMut for SimplifyExpr {
                         Expr::Seq(seq) => {
                             seq.exprs.insert(0, 0.into());
                         }
+
                         _ => {
                             let seq = SeqExpr {
                                 span: DUMMY_SP,
@@ -1283,6 +1354,7 @@ impl VisitMut for SimplifyExpr {
         }
 
         self.in_callee = false;
+
         n.args.visit_mut_with(self);
 
         self.in_callee = old_in_callee;
@@ -1320,13 +1392,16 @@ impl VisitMut for SimplifyExpr {
         match expr {
             Expr::Unary(_) => {
                 self.optimize_unary_expr(expr);
+
                 debug_assert_valid(expr);
             }
+
             Expr::Bin(_) => {
                 self.optimize_bin_expr(expr);
 
                 debug_assert_valid(expr);
             }
+
             Expr::Member(_) => {
                 self.optimize_member_expr(expr);
 
@@ -1401,6 +1476,7 @@ impl VisitMut for SimplifyExpr {
 
             Expr::Object(ObjectLit { props, .. }) => {
                 let should_work = props.iter().any(|p| matches!(p, PropOrSpread::Spread(..)));
+
                 if !should_work {
                     return;
                 }
@@ -1424,11 +1500,15 @@ impl VisitMut for SimplifyExpr {
                                         dot3_token,
                                         expr,
                                     }));
+
                                     continue;
                                 }
                             }
+
                             let props = expr.object().unwrap().props;
+
                             ps.extend(props);
+
                             self.changed = true;
                         }
 
@@ -1448,8 +1528,10 @@ impl VisitMut for SimplifyExpr {
             match &mut *expr {
                 Expr::Fn(..) | Expr::Class(..) => {
                     expr.visit_mut_children_with(visitor);
+
                     true
                 }
+
                 Expr::Paren(p) => is_paren_wrap_fn_or_class(&mut p.expr, visitor),
                 _ => false,
             }
@@ -1473,6 +1555,7 @@ impl VisitMut for SimplifyExpr {
         child.maybe_par(cpu_count() * 8, n, |v, n| {
             n.visit_mut_with(v);
         });
+
         self.changed |= child.changed;
     }
 
@@ -1485,8 +1568,10 @@ impl VisitMut for SimplifyExpr {
             match &mut **e {
                 Expr::Seq(SeqExpr { exprs, .. }) if exprs.is_empty() => {
                     *n = None;
+
                     return;
                 }
+
                 _ => {}
             }
         }
@@ -1496,8 +1581,11 @@ impl VisitMut for SimplifyExpr {
 
     fn visit_mut_pat(&mut self, p: &mut Pat) {
         let old_in_callee = self.in_callee;
+
         self.in_callee = false;
+
         p.visit_mut_children_with(self);
+
         self.in_callee = old_in_callee;
 
         if let Pat::Assign(a) = p {
@@ -1524,7 +1612,9 @@ impl VisitMut for SimplifyExpr {
         }
 
         let old_in_callee = self.in_callee;
+
         let len = e.exprs.len();
+
         for (idx, e) in e.exprs.iter_mut().enumerate() {
             if idx == len - 1 {
                 self.in_callee = old_in_callee;
@@ -1534,6 +1624,7 @@ impl VisitMut for SimplifyExpr {
 
             e.visit_mut_with(self);
         }
+
         self.in_callee = old_in_callee;
 
         let len = e.exprs.len();
@@ -1595,11 +1686,17 @@ impl VisitMut for SimplifyExpr {
 
     fn visit_mut_stmt(&mut self, s: &mut Stmt) {
         let old_is_modifying = self.is_modifying;
+
         self.is_modifying = false;
+
         let old_is_arg_of_update = self.is_arg_of_update;
+
         self.is_arg_of_update = false;
+
         s.visit_mut_children_with(self);
+
         self.is_arg_of_update = old_is_arg_of_update;
+
         self.is_modifying = old_is_modifying;
 
         debug_assert_valid(s);
@@ -1618,30 +1715,39 @@ impl VisitMut for SimplifyExpr {
         child.maybe_par(cpu_count() * 8, n, |v, n| {
             n.visit_mut_with(v);
         });
+
         self.changed |= child.changed;
     }
 
     fn visit_mut_update_expr(&mut self, n: &mut UpdateExpr) {
         let old = self.is_modifying;
+
         self.is_modifying = true;
+
         n.arg.visit_mut_with(self);
+
         self.is_modifying = old;
     }
 
     fn visit_mut_for_head(&mut self, n: &mut ForHead) {
         let old = self.is_modifying;
+
         self.is_modifying = true;
+
         n.visit_mut_children_with(self);
+
         self.is_modifying = old;
     }
 
     fn visit_mut_tagged_tpl(&mut self, n: &mut TaggedTpl) {
         let old = self.in_callee;
+
         self.in_callee = true;
 
         n.tag.visit_mut_with(self);
 
         self.in_callee = false;
+
         n.tpl.visit_mut_with(self);
 
         self.in_callee = old;
@@ -1699,8 +1805,11 @@ fn nth_char(s: &str, mut idx: usize) -> Option<Cow<str>> {
         if c == '\\' && iter.peek().copied() == Some('u') {
             if idx == 0 {
                 let mut buf = String::new();
+
                 buf.push('\\');
+
                 buf.extend(iter.take(5));
+
                 return Some(Cow::Owned(buf));
             } else {
                 for _ in 0..5 {
@@ -1746,10 +1855,12 @@ fn get_key_value(key: &str, props: &mut Vec<PropOrSpread>) -> Option<Box<Expr>> 
                     PropOrSpread::Prop(x) => *x,
                     _ => unreachable!(),
                 };
+
                 let ident = match prop {
                     Prop::Shorthand(x) => x,
                     _ => unreachable!(),
                 };
+
                 return Some(ident.into());
             }
 
@@ -1767,6 +1878,7 @@ fn get_key_value(key: &str, props: &mut Vec<PropOrSpread>) -> Option<Box<Expr>> 
                     // the result is Some. If None, we keep searching in the
                     // parent object.
                     let v = get_key_value(key, props);
+
                     if v.is_some() {
                         return v;
                     }
@@ -1775,10 +1887,12 @@ fn get_key_value(key: &str, props: &mut Vec<PropOrSpread>) -> Option<Box<Expr>> 
                         PropOrSpread::Prop(x) => *x,
                         _ => unreachable!(),
                     };
+
                     let prop = match prop {
                         Prop::KeyValue(x) => x,
                         _ => unreachable!(),
                     };
+
                     return Some(prop.value);
                 }
             }

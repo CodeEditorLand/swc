@@ -56,6 +56,7 @@ where
                 | "color" | "device-cmyk" | "color-mix" | "color-contrast" => {
                     return Ok(ComponentValue::Color(self.parse()?));
                 }
+
                 _ => {
                     return Ok(ComponentValue::Function(self.parse()?));
                 }
@@ -89,6 +90,7 @@ where
 
             tok!("[") | tok!("(") | tok!("{") => {
                 let mut block = self.parse_as::<SimpleBlock>()?;
+
                 let locv = self.create_locv(block.value);
 
                 block.value = match self
@@ -120,6 +122,7 @@ where
     /// Parse value as <any-value>.
     pub(super) fn parse_any_value(&mut self) -> PResult<Vec<TokenAndSpan>> {
         let mut tokens = Vec::new();
+
         let mut balance_stack: Vec<Option<char>> = Vec::new();
 
         // The <any-value> production matches any sequence of one or more tokens,
@@ -377,6 +380,7 @@ where
                 self.input.skip_ws();
 
                 let mut has_variable = false;
+
                 let mut is_legacy_syntax = true;
 
                 match cur!(self) {
@@ -398,6 +402,7 @@ where
 
                         self.input.skip_ws();
                     }
+
                     _ => {}
                 }
 
@@ -408,10 +413,12 @@ where
                                 tok!("percentage") => {
                                     Ok(Some(ComponentValue::Percentage(parser.parse()?)))
                                 }
+
                                 tok!("number") => Ok(Some(ComponentValue::Number(parser.parse()?))),
                                 Token::Function { value, .. } if is_math_function(value) => {
                                     Ok(Some(ComponentValue::Function(parser.parse()?)))
                                 }
+
                                 tok!("ident") => {
                                     is_legacy_syntax = false;
 
@@ -426,6 +433,7 @@ where
                                         ))
                                     }
                                 }
+
                                 _ => {
                                     if !has_variable_before {
                                         Err(Error::new(
@@ -455,6 +463,7 @@ where
                                 tok!("number") | tok!("dimension") => {
                                     Ok(Some(ComponentValue::Hue(parser.parse()?)))
                                 }
+
                                 tok!("ident") => {
                                     let ident: Box<Ident> = parser.parse()?;
 
@@ -467,9 +476,11 @@ where
                                         ))
                                     }
                                 }
+
                                 Token::Function { value, .. } if is_math_function(value) => {
                                     Ok(Some(ComponentValue::Function(parser.parse()?)))
                                 }
+
                                 _ => {
                                     if !has_variable_before {
                                         Err(Error::new(
@@ -493,6 +504,7 @@ where
 
                         self.input.skip_ws();
                     }
+
                     _ => {
                         unreachable!()
                     }
@@ -521,10 +533,12 @@ where
                                 tok!("percentage") => {
                                     Ok(Some(ComponentValue::Percentage(parser.parse()?)))
                                 }
+
                                 tok!("number") => Ok(Some(ComponentValue::Number(parser.parse()?))),
                                 Token::Function { value, .. } if is_math_function(value) => {
                                     Ok(Some(ComponentValue::Function(parser.parse()?)))
                                 }
+
                                 tok!("ident") if !is_legacy_syntax => {
                                     let ident: Box<Ident> = parser.parse()?;
 
@@ -537,6 +551,7 @@ where
                                         ))
                                     }
                                 }
+
                                 _ => {
                                     if !has_variable_before {
                                         Err(Error::new(
@@ -566,9 +581,11 @@ where
                                 tok!("percentage") => {
                                     Ok(Some(ComponentValue::Percentage(parser.parse()?)))
                                 }
+
                                 Token::Function { value, .. } if is_math_function(value) => {
                                     Ok(Some(ComponentValue::Function(parser.parse()?)))
                                 }
+
                                 tok!("ident") => {
                                     let ident: Box<Ident> = parser.parse()?;
 
@@ -581,6 +598,7 @@ where
                                         ))
                                     }
                                 }
+
                                 _ => {
                                     if !has_variable_before {
                                         Err(Error::new(
@@ -604,6 +622,7 @@ where
 
                         self.input.skip_ws();
                     }
+
                     _ => {
                         unreachable!();
                     }
@@ -620,6 +639,7 @@ where
 
                             self.input.skip_ws();
                         }
+
                         _ => {
                             if !has_variable {
                                 let span = self.input.cur_span();
@@ -637,10 +657,12 @@ where
                                 tok!("percentage") => {
                                     Ok(Some(ComponentValue::Percentage(parser.parse()?)))
                                 }
+
                                 tok!("number") => Ok(Some(ComponentValue::Number(parser.parse()?))),
                                 Token::Function { value, .. } if is_math_function(value) => {
                                     Ok(Some(ComponentValue::Function(parser.parse()?)))
                                 }
+
                                 tok!("ident") if !is_legacy_syntax => {
                                     let ident: Box<Ident> = parser.parse()?;
 
@@ -653,6 +675,7 @@ where
                                         ))
                                     }
                                 }
+
                                 _ => {
                                     if !has_variable_before {
                                         Err(Error::new(
@@ -682,9 +705,11 @@ where
                                 tok!("percentage") => {
                                     Ok(Some(ComponentValue::Percentage(parser.parse()?)))
                                 }
+
                                 Token::Function { value, .. } if is_math_function(value) => {
                                     Ok(Some(ComponentValue::Function(parser.parse()?)))
                                 }
+
                                 tok!("ident") => {
                                     let ident: Box<Ident> = parser.parse()?;
 
@@ -697,6 +722,7 @@ where
                                         ))
                                     }
                                 }
+
                                 _ => {
                                     if !has_variable_before {
                                         Err(Error::new(
@@ -720,6 +746,7 @@ where
 
                         self.input.skip_ws();
                     }
+
                     _ => {
                         unreachable!();
                     }
@@ -737,9 +764,11 @@ where
                             tok!("number") | tok!("percentage") => {
                                 Ok(Some(ComponentValue::AlphaValue(parser.parse()?)))
                             }
+
                             Token::Function { value, .. } if is_math_function(value) => {
                                 Ok(Some(ComponentValue::Function(parser.parse()?)))
                             }
+
                             _ => {
                                 if !has_variable_before {
                                     Err(Error::new(
@@ -771,9 +800,11 @@ where
                             tok!("number") | tok!("percentage") => {
                                 Ok(Some(ComponentValue::AlphaValue(parser.parse()?)))
                             }
+
                             Token::Function { value, .. } if is_math_function(value) => {
                                 Ok(Some(ComponentValue::Function(parser.parse()?)))
                             }
+
                             tok!("ident") => {
                                 let ident: Box<Ident> = parser.parse()?;
 
@@ -786,6 +817,7 @@ where
                                     ))
                                 }
                             }
+
                             _ => {
                                 if !has_variable_before {
                                     Err(Error::new(
@@ -817,6 +849,7 @@ where
 
                 match cur!(self) {
                     Token::Ident { value, .. }
+
                         if matches_eq_ignore_ascii_case!(value, "from")
                             && lower_fname != "device-cmyk" =>
                     {
@@ -835,6 +868,7 @@ where
 
                         self.input.skip_ws();
                     }
+
                     _ => {}
                 }
 
@@ -845,9 +879,11 @@ where
                                 tok!("number") | tok!("dimension") => {
                                     Ok(Some(ComponentValue::Hue(parser.parse()?)))
                                 }
+
                                 Token::Function { value, .. } if is_math_function(value) => {
                                     Ok(Some(ComponentValue::Function(parser.parse()?)))
                                 }
+
                                 tok!("ident") => {
                                     let ident: Box<Ident> = parser.parse()?;
 
@@ -860,6 +896,7 @@ where
                                         ))
                                     }
                                 }
+
                                 _ => {
                                     if !has_variable_before {
                                         return Err(Error::new(
@@ -889,10 +926,12 @@ where
                                 tok!("percentage") => {
                                     Ok(Some(ComponentValue::Percentage(parser.parse()?)))
                                 }
+
                                 tok!("number") => Ok(Some(ComponentValue::Number(parser.parse()?))),
                                 Token::Function { value, .. } if is_math_function(value) => {
                                     Ok(Some(ComponentValue::Function(parser.parse()?)))
                                 }
+
                                 tok!("ident") => {
                                     let ident: Box<Ident> = parser.parse()?;
 
@@ -905,6 +944,7 @@ where
                                         ))
                                     }
                                 }
+
                                 _ => {
                                     if !has_variable_before {
                                         Err(Error::new(
@@ -940,6 +980,7 @@ where
 
                         self.input.skip_ws();
                     }
+
                     _ => {
                         unreachable!();
                     }
@@ -953,9 +994,11 @@ where
                                     tok!("percentage") => {
                                         Ok(Some(ComponentValue::Percentage(parser.parse()?)))
                                     }
+
                                     Token::Function { value, .. } if is_math_function(value) => {
                                         Ok(Some(ComponentValue::Function(parser.parse()?)))
                                     }
+
                                     tok!("ident") => {
                                         let ident: Box<Ident> = parser.parse()?;
 
@@ -970,6 +1013,7 @@ where
                                             ))
                                         }
                                     }
+
                                     _ => {
                                         if !has_variable_before {
                                             Err(Error::new(
@@ -999,12 +1043,15 @@ where
                                     tok!("percentage") => {
                                         Ok(Some(ComponentValue::Percentage(parser.parse()?)))
                                     }
+
                                     tok!("number") => {
                                         Ok(Some(ComponentValue::Number(parser.parse()?)))
                                     }
+
                                     Token::Function { value, .. } if is_math_function(value) => {
                                         Ok(Some(ComponentValue::Function(parser.parse()?)))
                                     }
+
                                     tok!("ident") => {
                                         let ident: Box<Ident> = parser.parse()?;
 
@@ -1019,6 +1066,7 @@ where
                                             ))
                                         }
                                     }
+
                                     _ => {
                                         if !has_variable_before {
                                             Err(Error::new(
@@ -1056,6 +1104,7 @@ where
 
                             self.input.skip_ws();
                         }
+
                         _ => {
                             unreachable!();
                         }
@@ -1070,9 +1119,11 @@ where
                                     tok!("percentage") => {
                                         Ok(Some(ComponentValue::Percentage(parser.parse()?)))
                                     }
+
                                     Token::Function { value, .. } if is_math_function(value) => {
                                         Ok(Some(ComponentValue::Function(parser.parse()?)))
                                     }
+
                                     tok!("ident") => {
                                         let ident: Box<Ident> = parser.parse()?;
 
@@ -1087,6 +1138,7 @@ where
                                             ))
                                         }
                                     }
+
                                     _ => {
                                         if !has_variable_before {
                                             Err(Error::new(
@@ -1116,12 +1168,15 @@ where
                                     tok!("percentage") => {
                                         Ok(Some(ComponentValue::Percentage(parser.parse()?)))
                                     }
+
                                     tok!("number") => {
                                         Ok(Some(ComponentValue::Number(parser.parse()?)))
                                     }
+
                                     Token::Function { value, .. } if is_math_function(value) => {
                                         Ok(Some(ComponentValue::Function(parser.parse()?)))
                                     }
+
                                     tok!("ident") => {
                                         let ident: Box<Ident> = parser.parse()?;
 
@@ -1136,6 +1191,7 @@ where
                                             ))
                                         }
                                     }
+
                                     _ => {
                                         if !has_variable_before {
                                             Err(Error::new(
@@ -1165,9 +1221,11 @@ where
                                     tok!("number") | tok!("dimension") => {
                                         Ok(Some(ComponentValue::Hue(parser.parse()?)))
                                     }
+
                                     Token::Function { value, .. } if is_math_function(value) => {
                                         Ok(Some(ComponentValue::Function(parser.parse()?)))
                                     }
+
                                     tok!("ident") => {
                                         let ident: Box<Ident> = parser.parse()?;
 
@@ -1182,6 +1240,7 @@ where
                                             ))
                                         }
                                     }
+
                                     _ => {
                                         if !has_variable_before {
                                             return Err(Error::new(
@@ -1219,6 +1278,7 @@ where
 
                             self.input.skip_ws();
                         }
+
                         _ => {
                             unreachable!();
                         }
@@ -1248,9 +1308,11 @@ where
                             tok!("number") | tok!("percentage") => {
                                 Ok(Some(ComponentValue::AlphaValue(parser.parse()?)))
                             }
+
                             Token::Function { value, .. } if is_math_function(value) => {
                                 Ok(Some(ComponentValue::Function(parser.parse()?)))
                             }
+
                             tok!("ident") if !matches!(&*lower_fname, "device-cmyk") => {
                                 let ident: Box<Ident> = parser.parse()?;
 
@@ -1263,6 +1325,7 @@ where
                                     ))
                                 }
                             }
+
                             _ => {
                                 if !has_variable_before {
                                     Err(Error::new(
@@ -1309,10 +1372,12 @@ where
 
                         self.input.skip_ws();
                     }
+
                     _ => {}
                 }
 
                 let mut is_custom_params = false;
+
                 let mut is_xyz = false;
 
                 let ident = self.try_parse_variable_function(
@@ -1337,6 +1402,7 @@ where
                                 Ok(Some(ComponentValue::Ident(parser.parse()?)))
                             }
                         }
+
                         _ => Err(Error::new(
                             parser.input.cur_span(),
                             ErrorKind::Expected("ident token"),
@@ -1357,9 +1423,11 @@ where
                         tok!("percentage") if !is_xyz => {
                             Ok(Some(ComponentValue::Percentage(parser.parse()?)))
                         }
+
                         Token::Function { value, .. } if is_math_function(value) => {
                             Ok(Some(ComponentValue::Function(parser.parse()?)))
                         }
+
                         tok!("ident") => {
                             let ident: Box<Ident> = parser.parse()?;
 
@@ -1372,6 +1440,7 @@ where
                                 ))
                             }
                         }
+
                         _ => {
                             if !has_variable_before {
                                 Err(Error::new(
@@ -1406,7 +1475,9 @@ where
                             tok!("percentage") if !is_xyz => {
                                 ComponentValue::Percentage(self.parse()?)
                             }
+
                             Token::Function { value, .. }
+
                                 if is_math_function(value)
                                     || matches_eq_ignore_ascii_case!(
                                         value, "var", "env", "constant"
@@ -1414,6 +1485,7 @@ where
                             {
                                 ComponentValue::Function(self.parse()?)
                             }
+
                             tok!("ident") => {
                                 let ident: Box<Ident> = self.parse()?;
 
@@ -1426,6 +1498,7 @@ where
                                     ));
                                 }
                             }
+
                             _ => {
                                 break;
                             }
@@ -1442,9 +1515,11 @@ where
                             tok!("percentage") if !is_xyz => {
                                 Ok(Some(ComponentValue::Percentage(parser.parse()?)))
                             }
+
                             Token::Function { value, .. } if is_math_function(value) => {
                                 Ok(Some(ComponentValue::Function(parser.parse()?)))
                             }
+
                             tok!("ident") => {
                                 let ident: Box<Ident> = parser.parse()?;
 
@@ -1457,6 +1532,7 @@ where
                                     ))
                                 }
                             }
+
                             _ => {
                                 if !has_variable_before {
                                     Err(Error::new(
@@ -1486,6 +1562,7 @@ where
                             tok!("percentage") if !is_xyz => {
                                 Ok(Some(ComponentValue::Percentage(parser.parse()?)))
                             }
+
                             tok!("ident") => {
                                 let ident: Box<Ident> = parser.parse()?;
 
@@ -1498,9 +1575,11 @@ where
                                     ))
                                 }
                             }
+
                             Token::Function { value, .. } if is_math_function(value) => {
                                 Ok(Some(ComponentValue::Function(parser.parse()?)))
                             }
+
                             _ => {
                                 if !has_variable_before {
                                     Err(Error::new(
@@ -1535,9 +1614,11 @@ where
                             tok!("number") | tok!("percentage") => {
                                 Ok(Some(ComponentValue::AlphaValue(parser.parse()?)))
                             }
+
                             Token::Function { value, .. } if is_math_function(value) => {
                                 Ok(Some(ComponentValue::Function(parser.parse()?)))
                             }
+
                             tok!("ident") if !matches!(&*lower_fname, "device-cmyk") => {
                                 let ident: Box<Ident> = parser.parse()?;
 
@@ -1550,6 +1631,7 @@ where
                                     ))
                                 }
                             }
+
                             _ => {
                                 if !has_variable_before {
                                     Err(Error::new(
@@ -1644,6 +1726,7 @@ where
 
                             self.input.skip_ws();
                         }
+
                         Err(_) => {
                             self.input.reset(&state);
 
@@ -1654,6 +1737,7 @@ where
                     }
                 }
             }
+
             _ => loop {
                 self.input.skip_ws();
 
@@ -1698,12 +1782,14 @@ where
 
         match cur!(self) {
             Token::Function { value, .. }
+
                 if matches_eq_ignore_ascii_case!(value, "var", "env", "constant") =>
             {
                 *has_before_variable = true;
 
                 Ok(Some(ComponentValue::Function(self.parse()?)))
             }
+
             _ => fallback(self, *has_before_variable),
         }
     }
@@ -1732,6 +1818,7 @@ where
                     value: DelimiterValue::Comma,
                 });
             }
+
             tok!("/") => {
                 bump!(self);
 
@@ -1740,6 +1827,7 @@ where
                     value: DelimiterValue::Solidus,
                 });
             }
+
             tok!(";") => {
                 bump!(self);
 
@@ -1748,6 +1836,7 @@ where
                     value: DelimiterValue::Semicolon,
                 });
             }
+
             _ => {
                 unreachable!();
             }
@@ -1785,6 +1874,7 @@ where
                     raw: Some(raw),
                 })
             }
+
             _ => {
                 unreachable!()
             }
@@ -1843,6 +1933,7 @@ where
                     raw: Some(raw),
                 })
             }
+
             _ => {
                 unreachable!()
             }
@@ -1883,6 +1974,7 @@ where
                     raw: Some(raw),
                 })
             }
+
             _ => {
                 unreachable!()
             }
@@ -1921,6 +2013,7 @@ where
                     raw: Some(raw),
                 })
             }
+
             _ => {
                 unreachable!()
             }
@@ -1985,6 +2078,7 @@ where
                     _ => Ok(Dimension::UnknownDimension(self.parse()?)),
                 }
             }
+
             _ => {
                 unreachable!()
             }
@@ -2031,6 +2125,7 @@ where
                     },
                 })
             }
+
             _ => {
                 unreachable!()
             }
@@ -2082,6 +2177,7 @@ where
                     },
                 })
             }
+
             _ => {
                 unreachable!()
             }
@@ -2130,6 +2226,7 @@ where
                     },
                 })
             }
+
             _ => {
                 unreachable!()
             }
@@ -2178,6 +2275,7 @@ where
                     },
                 })
             }
+
             _ => {
                 unreachable!()
             }
@@ -2229,6 +2327,7 @@ where
                     },
                 })
             }
+
             _ => {
                 unreachable!()
             }
@@ -2277,6 +2376,7 @@ where
                     },
                 })
             }
+
             _ => {
                 unreachable!()
             }
@@ -2321,6 +2421,7 @@ where
                     },
                 })
             }
+
             _ => {
                 unreachable!()
             }
@@ -2338,6 +2439,7 @@ where
         match cur!(self) {
             // currentcolor | <system-color>
             Token::Ident { value, .. }
+
                 if value.as_ref().eq_ignore_ascii_case("currentcolor")
                     || is_system_color(value) =>
             {
@@ -2385,9 +2487,11 @@ where
 
                 Ok(AbsoluteColorBase::NamedColorOrTransparent(self.parse()?))
             }
+
             Token::Function { value, .. } if is_absolute_color_base_function(value) => {
                 Ok(AbsoluteColorBase::Function(self.parse()?))
             }
+
             _ => {
                 return Err(Error::new(
                     span,
@@ -2427,6 +2531,7 @@ where
                     raw: Some(raw),
                 })
             }
+
             _ => {
                 unreachable!()
             }
@@ -2508,6 +2613,7 @@ where
 
                 Ok(CmykComponent::Function(self.parse()?))
             }
+
             _ => {
                 unreachable!()
             }
@@ -2536,6 +2642,7 @@ where
 
                 Ok(Percentage { span, value })
             }
+
             _ => {
                 unreachable!()
             }
@@ -2584,11 +2691,13 @@ where
         match bump!(self) {
             Token::Url { value, raw } => {
                 let name_length = raw.0.len() as u32;
+
                 let name = Ident {
                     span: Span::new(span.lo, span.lo + BytePos(name_length)),
                     value: self.input.atom("url"),
                     raw: Some(raw.0),
                 };
+
                 let value = Some(Box::new(UrlValue::Raw(UrlValueRaw {
                     span: Span::new(span.lo + BytePos(name_length + 1), span.hi - BytePos(1)),
                     value,
@@ -2602,6 +2711,7 @@ where
                     modifiers: None,
                 })
             }
+
             Token::Function {
                 value: function_name,
                 raw: raw_function_name,
@@ -2639,9 +2749,11 @@ where
                         tok!("ident") => {
                             modifiers.push(UrlModifier::Ident(self.parse()?));
                         }
+
                         tok!("function") => {
                             modifiers.push(UrlModifier::Function(self.parse()?));
                         }
+
                         _ => {
                             let span = self.input.cur_span();
 
@@ -2661,6 +2773,7 @@ where
                     modifiers: Some(modifiers),
                 })
             }
+
             _ => {
                 unreachable!()
             }
@@ -2681,6 +2794,7 @@ where
 {
     fn parse(&mut self) -> PResult<UnicodeRange> {
         let span = self.input.cur_span();
+
         let mut unicode_range = String::new();
 
         // should start with `u` or `U`
@@ -2695,6 +2809,7 @@ where
 
                 unicode_range.push_str(&u);
             }
+
             _ => {
                 return Err(Error::new(span, ErrorKind::Expected("'u' ident token")));
             }
@@ -2803,19 +2918,23 @@ where
                                 unicode_range.push(question);
                             }
                         }
+
                         tok!("dimension") => {
                             let raw = match bump!(self) {
                                 Token::Dimension(dimension_token) => {
                                     (dimension_token.raw_value, dimension_token.raw_unit)
                                 }
+
                                 _ => {
                                     unreachable!();
                                 }
                             };
 
                             unicode_range.push_str(&raw.0);
+
                             unicode_range.push_str(&raw.1);
                         }
+
                         tok!("number") => {
                             let number = match bump!(self) {
                                 Token::Number { raw, .. } => raw,
@@ -2826,6 +2945,7 @@ where
 
                             unicode_range.push_str(&number);
                         }
+
                         _ => {}
                     }
                 }
@@ -2836,12 +2956,14 @@ where
                     Token::Dimension(dimension_token) => {
                         (dimension_token.raw_value, dimension_token.raw_unit)
                     }
+
                     _ => {
                         unreachable!();
                     }
                 };
 
                 unicode_range.push_str(&raw.0);
+
                 unicode_range.push_str(&raw.1);
 
                 loop {
@@ -2859,6 +2981,7 @@ where
                     unicode_range.push(question);
                 }
             }
+
             _ => {
                 return Err(Error::new(
                     span,
@@ -2899,11 +3022,13 @@ where
 
                     next = chars.next();
                 }
+
                 Some(c @ 'A'..='F') | Some(c @ 'a'..='f') => {
                     start.push(c);
 
                     next = chars.next();
                 }
+
                 _ => {
                     break;
                 }
@@ -2997,12 +3122,16 @@ where
             match next {
                 Some(c) if c.is_ascii_digit() => {
                     end.push(c);
+
                     next = chars.next();
                 }
+
                 Some(c @ 'A'..='F') | Some(c @ 'a'..='f') => {
                     end.push(c);
+
                     next = chars.next();
                 }
+
                 _ => {
                     break;
                 }
@@ -3042,8 +3171,11 @@ where
 {
     fn parse(&mut self) -> PResult<CalcSum> {
         let start = self.input.cur_span().lo;
+
         let mut expressions = Vec::new();
+
         let calc_product = CalcProductOrOperator::Product(self.parse()?);
+
         let mut end = match calc_product {
             CalcProductOrOperator::Product(ref calc_product) => calc_product.span.hi,
             _ => {
@@ -3079,6 +3211,7 @@ where
 
                     expressions.push(calc_product);
                 }
+
                 _ => {
                     break;
                 }
@@ -3098,8 +3231,11 @@ where
 {
     fn parse(&mut self) -> PResult<CalcProduct> {
         let start = self.input.cur_span().lo;
+
         let mut expressions = Vec::new();
+
         let calc_value = CalcValueOrOperator::Value(self.parse()?);
+
         let mut end = match calc_value {
             CalcValueOrOperator::Value(ref calc_value) => match calc_value {
                 CalcValue::Number(item) => item.span.hi,
@@ -3165,6 +3301,7 @@ where
 
                     expressions.push(calc_value);
                 }
+
                 _ => {
                     break;
                 }
@@ -3194,6 +3331,7 @@ where
                     value: CalcOperatorType::Add,
                 })
             }
+
             tok!("-") => {
                 bump!(self);
 
@@ -3202,6 +3340,7 @@ where
                     value: CalcOperatorType::Sub,
                 })
             }
+
             tok!("*") => {
                 bump!(self);
 
@@ -3210,6 +3349,7 @@ where
                     value: CalcOperatorType::Mul,
                 })
             }
+
             tok!("/") => {
                 bump!(self);
 
@@ -3218,6 +3358,7 @@ where
                     value: CalcOperatorType::Div,
                 })
             }
+
             _ => {
                 let span = self.input.cur_span();
 
@@ -3242,6 +3383,7 @@ where
             Token::Ident { value, .. } => {
                 match &*value.to_ascii_lowercase() {
                     "e" | "pi" | "infinity" | "-infinity" | "nan" => {}
+
                     _ => {
                         let span = self.input.cur_span();
 
@@ -3256,6 +3398,7 @@ where
 
                 Ok(CalcValue::Constant(self.parse()?))
             }
+
             tok!("(") => {
                 let span = self.input.cur_span();
 
@@ -3273,6 +3416,7 @@ where
 
                 Ok(CalcValue::Sum(calc_sum_in_parens))
             }
+
             tok!("function") => Ok(CalcValue::Function(self.parse()?)),
             _ => {
                 let span = self.input.cur_span();
@@ -3315,6 +3459,7 @@ where
                     value,
                 }))
             }
+
             _ => {
                 let span = self.input.cur_span();
 

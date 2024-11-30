@@ -217,6 +217,7 @@ impl Expr {
         F: FnMut(&'a Expr) -> Option<&'a Expr>,
     {
         let mut cur = self;
+
         loop {
             match op(cur) {
                 Some(next) => cur = next,
@@ -235,6 +236,7 @@ impl Expr {
         F: FnMut(&'a mut Expr) -> Option<&'a mut Expr>,
     {
         let mut cur = self;
+
         loop {
             match unsafe {
                 // Safety: Polonius is not yet stable
@@ -317,6 +319,7 @@ impl Expr {
 
     pub fn with_span(mut self, span: Span) -> Expr {
         self.set_span(span);
+
         self
     }
 
@@ -325,6 +328,7 @@ impl Expr {
             Expr::Ident(i) => {
                 i.span = span;
             }
+
             Expr::This(e) => e.span = span,
             Expr::Array(e) => e.span = span,
             Expr::Object(e) => e.span = span,
@@ -371,6 +375,7 @@ impl Expr {
 impl Clone for Expr {
     fn clone(&self) -> Self {
         use Expr::*;
+
         match self {
             This(e) => This(e.clone()),
             Array(e) => Array(e.clone()),
@@ -526,6 +531,7 @@ impl ObjectLit {
     /// Returns [None] if this is not a valid for `with` of [crate::ImportDecl].
     pub fn as_import_with(&self) -> Option<ImportWith> {
         let mut values = Vec::new();
+
         for prop in &self.props {
             match prop {
                 PropOrSpread::Spread(..) => return None,
@@ -545,6 +551,7 @@ impl ObjectLit {
                             },
                         });
                     }
+
                     _ => return None,
                 },
             }
@@ -1176,7 +1183,9 @@ impl Take for TplElement {
 impl<'a> arbitrary::Arbitrary<'a> for TplElement {
     fn arbitrary(u: &mut arbitrary::Unstructured<'_>) -> arbitrary::Result<Self> {
         let span = u.arbitrary()?;
+
         let cooked = Some(u.arbitrary::<String>()?.into());
+
         let raw = u.arbitrary::<String>()?.into();
 
         Ok(Self {
@@ -1297,6 +1306,7 @@ impl Spanned for ExprOrSpread {
     #[inline]
     fn span(&self) -> Span {
         let expr = self.expr.span();
+
         match self.spread {
             Some(spread) => expr.with_lo(spread.lo()),
             None => expr,
@@ -1526,6 +1536,7 @@ impl SimpleAssignTarget {
             SimpleAssignTarget::Ident(i) => {
                 Some(Cow::Owned(Ident::new(i.sym.clone(), i.span, i.ctxt)))
             }
+
             SimpleAssignTarget::Member(MemberExpr { obj, .. }) => obj.leftmost().map(Cow::Borrowed),
             _ => None,
         }

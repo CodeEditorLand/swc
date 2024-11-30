@@ -7,6 +7,7 @@ use swc_ecma_ast::*;
 /// we will stop using createElement in the transform.
 pub(super) fn should_use_create_element(attrs: &[JSXAttrOrSpread]) -> bool {
     let mut seen_prop_spread = false;
+
     for attr in attrs {
         if seen_prop_spread
             && match attr {

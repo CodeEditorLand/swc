@@ -25,6 +25,7 @@ impl<'a> Derive<'a> {
                 if path.leading_colon.is_none() {
                     if let Some(seg) = path.segments.first() {
                         let id = &seg.ident;
+
                         if self.params.contains(id) {
                             self.is_generic = true;
                         }
@@ -49,7 +50,9 @@ impl<'a> Derive<'a> {
                     params: &self.params,
                     is_generic: false,
                 };
+
                 vis.visit_type(&field.ty);
+
                 if vis.is_generic {
                     self.fields.push(field);
                 }
@@ -71,6 +74,7 @@ impl<'a> Derive<'a> {
         };
 
         vis.visit_derive_input(self.input);
+
         vis.fields
     }
 
@@ -92,6 +96,7 @@ impl<'a> Derive<'a> {
 
                 predicates.extend(preds)
             }
+
             None => {
                 self.out.generics.where_clause = Some(WhereClause {
                     where_token: Token![where](def_site()),

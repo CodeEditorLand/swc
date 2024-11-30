@@ -31,6 +31,7 @@ impl VisitMut for Rewriter {
                         .unwrap();
 
                     s.raw = None;
+
                     s.value = src;
                 }
             }
@@ -45,6 +46,7 @@ impl VisitMut for Rewriter {
             .unwrap();
 
         i.src.raw = None;
+
         i.src.value = src;
     }
 
@@ -57,6 +59,7 @@ impl VisitMut for Rewriter {
                 .unwrap();
 
             src.raw = None;
+
             src.value = new;
         }
     }
@@ -71,6 +74,7 @@ impl VisitMut for Rewriter {
             .unwrap();
 
         src.raw = None;
+
         src.value = new;
     }
 }

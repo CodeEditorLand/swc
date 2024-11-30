@@ -322,16 +322,22 @@ where
     #[deprecated = "Use with_guard instead"]
     pub fn with<Ret>(&mut self, path: K, op: impl FnOnce(&mut Self) -> Ret) -> Ret {
         self.path.push(path);
+
         let ret = op(self);
+
         self.path.pop();
+
         ret
     }
 
     #[deprecated = "Use with_index_guard instead"]
     pub fn with_index<Ret>(&mut self, index: usize, op: impl FnOnce(&mut Self) -> Ret) -> Ret {
         self.path.last_mut().unwrap().set_index(index);
+
         let res = op(self);
+
         self.path.last_mut().unwrap().set_index(usize::MAX);
+
         res
     }
 }
@@ -458,6 +464,7 @@ where
 
     pub fn with_guard(&mut self, node: N) -> AstNodePathGuard<N> {
         self.kinds.path.push(node.kind());
+
         self.path.push(node);
 
         AstNodePathGuard { path: self }
@@ -465,6 +472,7 @@ where
 
     pub fn with_index_guard(&mut self, index: usize) -> AstNodePathIndexGuard<N> {
         self.kinds.path.last_mut().unwrap().set_index(index);
+
         self.path.last_mut().unwrap().set_index(index);
 
         AstNodePathIndexGuard { path: self }
@@ -478,9 +486,13 @@ where
         let kind = node.kind();
 
         self.kinds.path.push(kind);
+
         self.path.push(node);
+
         let ret = op(self);
+
         self.path.pop();
+
         self.kinds.path.pop();
 
         ret
@@ -492,12 +504,15 @@ where
         F: for<'aa> FnOnce(&'aa mut AstNodePath<N>) -> Ret,
     {
         self.kinds.path.last_mut().unwrap().set_index(index);
+
         self.path.last_mut().unwrap().set_index(index);
 
         let res = op(self);
 
         self.path.last_mut().unwrap().set_index(usize::MAX);
+
         self.kinds.path.last_mut().unwrap().set_index(usize::MAX);
+
         res
     }
 }
@@ -549,6 +564,7 @@ where
 {
     fn drop(&mut self) {
         self.path.path.pop();
+
         self.path.kinds.path.pop();
     }
 }
@@ -588,6 +604,7 @@ where
 {
     fn drop(&mut self) {
         self.path.path.last_mut().unwrap().set_index(usize::MAX);
+
         self.path
             .kinds
             .path

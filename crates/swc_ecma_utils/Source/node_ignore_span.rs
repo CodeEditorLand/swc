@@ -42,14 +42,17 @@ impl Hash for NodeIgnoringSpan<'_, Expr> {
             Expr::Ident(i) => {
                 i.sym.hash(state);
             }
+
             Expr::Member(i) => {
                 {
                     NodeIgnoringSpan::borrowed(i.obj.as_ref()).hash(state);
                 }
+
                 if let MemberProp::Ident(prop) = &i.prop {
                     prop.sym.hash(state);
                 }
             }
+
             _ => {
                 // Other expression kinds would fallback to the same empty hash.
                 // So, they will spend linear time to do comparisons.

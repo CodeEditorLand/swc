@@ -106,8 +106,10 @@ pub(crate) fn build_import_object(
     // metadata
     let copy_context_key_to_host_env_fn_decl =
         Function::new_typed_with_env(wasmer_store, metadata_env, copy_context_key_to_host_env);
+
     let get_transform_plugin_config_fn_decl =
         Function::new_typed_with_env(wasmer_store, metadata_env, get_transform_plugin_config);
+
     let get_transform_context_fn_decl =
         Function::new_typed_with_env(wasmer_store, metadata_env, get_transform_context);
 
@@ -116,6 +118,7 @@ pub(crate) fn build_import_object(
         metadata_env,
         get_experimental_transform_context,
     );
+
     let get_raw_experiemtal_transform_context_fn_decl = Function::new_typed_with_env(
         wasmer_store,
         metadata_env,
@@ -132,7 +135,9 @@ pub(crate) fn build_import_object(
 
     // hygiene
     let mark_fresh_fn_decl = Function::new_typed(wasmer_store, mark_fresh_proxy);
+
     let mark_parent_fn_decl = Function::new_typed(wasmer_store, mark_parent_proxy);
+
     let mark_is_descendant_of_fn_decl =
         Function::new_typed_with_env(wasmer_store, base_env, mark_is_descendant_of_proxy);
 
@@ -141,8 +146,10 @@ pub(crate) fn build_import_object(
 
     let syntax_context_apply_mark_fn_decl =
         Function::new_typed(wasmer_store, syntax_context_apply_mark_proxy);
+
     let syntax_context_remove_mark_fn_decl =
         Function::new_typed_with_env(wasmer_store, base_env, syntax_context_remove_mark_proxy);
+
     let syntax_context_outer_fn_decl =
         Function::new_typed(wasmer_store, syntax_context_outer_proxy);
 

@@ -90,9 +90,11 @@ impl Radix {
                 LintRuleReaction::Error => {
                     builder = Some(handler.struct_span_err(span, message));
                 }
+
                 LintRuleReaction::Warning => {
                     builder = Some(handler.struct_span_warn(span, message));
                 }
+
                 _ => {}
             };
 
@@ -147,6 +149,7 @@ impl Radix {
 
                 match &extract_arg_val(self.unresolved_ctxt, expr) {
                     ArgValue::Ident => {}
+
                     ArgValue::Number(radix) => {
                         if radix.fract() != 0.0 || !(2f64..=36f64).contains(radix) {
                             self.emit_report(call_expr.span, INVALID_RADIX_MESSAGE, None);
@@ -160,11 +163,13 @@ impl Radix {
                             }
                         }
                     }
+
                     _ => {
                         self.emit_report(call_expr.span, INVALID_RADIX_MESSAGE, None);
                     }
                 };
             }
+
             None => {
                 if let RadixMode::Always = self.radix_mode {
                     self.emit_report(
@@ -195,6 +200,7 @@ impl Radix {
 
                 None
             }
+
             _ => None,
         }
     }
@@ -213,8 +219,10 @@ impl Radix {
 
                 return (Some(obj.sym.clone()), self.extract_prop_value(prop));
             }
+
             Expr::This(_) => {
                 let inside_arrow_fn = self.is_inside_arrow_fn();
+
                 let inside_class = self.is_inside_class();
 
                 if inside_arrow_fn && inside_class {
@@ -227,6 +235,7 @@ impl Radix {
 
                 return (None, self.extract_prop_value(prop));
             }
+
             _ => {}
         };
 
@@ -240,17 +249,21 @@ impl Radix {
                     return (None, Some(ident.sym.clone()));
                 }
             }
+
             Expr::Member(member_expr) => {
                 return self.extract_obj_and_prop_member_case(member_expr);
             }
+
             Expr::OptChain(OptChainExpr { base, .. }) => {
                 if let OptChainBase::Member(member_expr) = &**base {
                     return self.extract_obj_and_prop_member_case(member_expr);
                 }
             }
+
             Expr::Paren(ParenExpr { expr, .. }) => {
                 return self.extract_obj_and_prop(expr.as_ref());
             }
+
             _ => {}
         }
 

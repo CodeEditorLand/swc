@@ -83,6 +83,7 @@ impl SwcLoader {
 
     fn load_with_handler(&self, handler: &Handler, name: &FileName) -> Result<ModuleData, Error> {
         tracing::debug!("JsLoader.load({})", name);
+
         let helpers = Helpers::new(false);
 
         if let FileName::Custom(id) = name {
@@ -92,6 +93,7 @@ impl SwcLoader {
                     .compiler
                     .cm
                     .new_source_file(name.clone().into(), "".to_string());
+
                 return Ok(ModuleData {
                     fm,
                     module: Module {
@@ -119,6 +121,7 @@ impl SwcLoader {
                     &mut Vec::new(),
                 )
                 .unwrap();
+
                 return Ok(ModuleData {
                     fm,
                     module,
@@ -141,6 +144,7 @@ impl SwcLoader {
                 if ext == "json" {
                     let module = load_json_as_module(&fm)
                         .with_context(|| format!("failed to load json file at {}", fm.name))?;
+
                     return Ok(ModuleData {
                         fm,
                         module,
@@ -167,9 +171,11 @@ impl SwcLoader {
             helpers::HELPERS.set(&helpers, || {
                 HANDLER.set(handler, || {
                     let unresolved_mark = Mark::new();
+
                     let top_level_mark = Mark::new();
 
                     program.mutate(&mut resolver(unresolved_mark, top_level_mark, false));
+
                     program.mutate(&mut typescript(
                         Default::default(),
                         unresolved_mark,
@@ -199,6 +205,7 @@ impl SwcLoader {
             })
         } else {
             let comments = SingleThreadedComments::default();
+
             let config = self.compiler.parse_js_as_input(
                 fm.clone(),
                 None,
@@ -206,6 +213,7 @@ impl SwcLoader {
                 &swc::config::Options {
                     config: {
                         let c = &self.options.config;
+
                         swc::config::Config {
                             jsc: JscConfig {
                                 transform: {
@@ -257,14 +265,17 @@ impl SwcLoader {
             // Note that we don't apply compat transform at loading phase.
             let program = if let Some(config) = config {
                 let mut program = config.program;
+
                 let pass = config.pass;
 
                 helpers::HELPERS.set(&helpers, || {
                     HANDLER.set(handler, || {
                         let unresolved_mark = Mark::new();
+
                         let top_level_mark = Mark::new();
 
                         program.mutate(&mut resolver(unresolved_mark, top_level_mark, false));
+
                         program.mutate(&mut typescript(
                             Default::default(),
                             unresolved_mark,
@@ -286,6 +297,7 @@ impl SwcLoader {
                         ));
 
                         program.mutate(&mut expr_simplifier(unresolved_mark, Default::default()));
+
                         program.mutate(&mut dead_branch_remover(unresolved_mark));
 
                         program.apply(pass)

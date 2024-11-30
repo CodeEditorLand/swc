@@ -219,6 +219,7 @@ impl VisitMut for FieldsHandler {
 
                     member.take();
                 }
+
                 ClassMember::PrivateProp(PrivateProp {
                     ref span,
                     is_static: false,
@@ -243,6 +244,7 @@ impl VisitMut for FieldsHandler {
                         constructor_inits.push(init_expr.into());
                     }
                 }
+
                 _ => {}
             }
         }
@@ -258,7 +260,9 @@ impl VisitMut for FieldsHandler {
                 self.super_call_span.is_some(),
                 self.super_call_span.span(),
             );
+
             inject_after_super(&mut c, constructor_inits.take());
+
             n.push(c.into());
         }
     }
@@ -280,6 +284,7 @@ impl VisitMut for ComputedFieldsHandler {
                 if !is_literal(expr) && !is_simple_pure_expr(expr, self.pure_getters) =>
             {
                 let ref_key = private_ident!("prop");
+
                 let mut computed_expr = ref_key.clone().into();
 
                 mem::swap(expr, &mut computed_expr);
@@ -297,6 +302,7 @@ impl VisitMut for ComputedFieldsHandler {
                     assign_expr.into_stmt()
                 });
             }
+
             _ => (),
         }
     }

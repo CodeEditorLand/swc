@@ -43,6 +43,7 @@ impl ItemImplExt for ItemImpl {
         // TODO: Check conflicting name
 
         let need_new_punct = !generics.params.empty_or_trailing();
+
         if need_new_punct {
             generics.params.push_punct(Token![,](def_site()));
         }
@@ -51,6 +52,7 @@ impl ItemImplExt for ItemImpl {
         if let Some(t) = generics.lt_token {
             self.generics.lt_token = Some(t)
         }
+
         if let Some(t) = generics.gt_token {
             self.generics.gt_token = Some(t)
         }
@@ -60,6 +62,7 @@ impl ItemImplExt for ItemImpl {
         // Handle generics defined on struct, enum, or union.
         let mut item: ItemImpl = {
             let (_, ty_generics, _) = generics.split_for_impl();
+
             let item = quote! {
                 #ty #ty_generics
             };

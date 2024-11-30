@@ -16,6 +16,7 @@ pub(crate) mod unit;
 
 pub(crate) fn make_number(span: Span, value: f64) -> Expr {
     trace_op!("Creating a numeric literal");
+
     Lit::Num(Number {
         span,
         value,
@@ -97,10 +98,12 @@ pub(crate) fn make_bool(span: Span, value: bool) -> Expr {
 /// Additional methods for optimizing expressions.
 pub(crate) trait ExprOptExt: Sized {
     fn as_expr(&self) -> &Expr;
+
     fn as_mut(&mut self) -> &mut Expr;
 
     fn first_expr_mut(&mut self) -> &mut Expr {
         let expr = self.as_mut();
+
         match expr {
             Expr::Seq(seq) => seq
                 .exprs
@@ -115,6 +118,7 @@ pub(crate) trait ExprOptExt: Sized {
     /// for sequence expressions.
     fn value_mut(&mut self) -> &mut Expr {
         let expr = self.as_mut();
+
         match expr {
             Expr::Seq(seq) => seq
                 .exprs
@@ -127,6 +131,7 @@ pub(crate) trait ExprOptExt: Sized {
 
     fn force_seq(&mut self) -> &mut SeqExpr {
         let expr = self.as_mut();
+
         match expr {
             Expr::Seq(seq) => seq,
             _ => {
@@ -136,6 +141,7 @@ pub(crate) trait ExprOptExt: Sized {
                     exprs: vec![Box::new(inner)],
                 }
                 .into();
+
                 expr.force_seq()
             }
         }
@@ -147,13 +153,17 @@ pub(crate) trait ExprOptExt: Sized {
         }
 
         let to = self.as_mut();
+
         match to {
             Expr::Seq(to) => {
                 exprs.append(&mut to.exprs);
+
                 to.exprs = exprs;
             }
+
             _ => {
                 let v = to.take();
+
                 exprs.push(Box::new(v));
                 *to = SeqExpr {
                     span: DUMMY_SP,
@@ -193,7 +203,9 @@ where
         target_label: Some(label),
         ..Default::default()
     };
+
     n.visit_with(&mut v);
+
     v.found_continue_with_label
 }
 
@@ -203,7 +215,9 @@ where
     N: VisitWith<LeapFinder>,
 {
     let mut v = LeapFinder::default();
+
     n.visit_with(&mut v);
+
     v.found_yield
 }
 
@@ -271,8 +285,10 @@ where
         {
             v
         }
+
         _ => return false,
     };
+
     var.decls.iter().all(|decl| decl.init.is_none())
 }
 
@@ -320,7 +336,9 @@ where
     N: VisitWith<DeepThisExprVisitor>,
 {
     let mut visitor = DeepThisExprVisitor { found: false };
+
     body.visit_with(&mut visitor);
+
     visitor.found
 }
 
@@ -399,22 +417,31 @@ impl Visit for CapturedIdCollector {
 
     fn visit_block_stmt_or_expr(&mut self, n: &BlockStmtOrExpr) {
         let old = self.is_nested;
+
         self.is_nested = true;
+
         n.visit_children_with(self);
+
         self.is_nested = old;
     }
 
     fn visit_constructor(&mut self, n: &Constructor) {
         let old = self.is_nested;
+
         self.is_nested = true;
+
         n.visit_children_with(self);
+
         self.is_nested = old;
     }
 
     fn visit_function(&mut self, n: &Function) {
         let old = self.is_nested;
+
         self.is_nested = true;
+
         n.visit_children_with(self);
+
         self.is_nested = old;
     }
 
@@ -439,7 +466,9 @@ where
         is_nested: false,
         ..Default::default()
     };
+
     n.visit_with(&mut v);
+
     v.ids
 }
 
@@ -451,7 +480,9 @@ where
         ignore_nested: false,
         ..Default::default()
     };
+
     n.visit_with(&mut v);
+
     v.ids
 }
 
@@ -463,7 +494,9 @@ where
         ignore_nested: true,
         ..Default::default()
     };
+
     n.visit_with(&mut v);
+
     v.ids
 }
 
@@ -488,6 +521,7 @@ where
     };
 
     node.visit_with(&mut v);
+
     v.found
 }
 

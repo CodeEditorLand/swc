@@ -30,6 +30,7 @@ where
         let visitor = VecVisitor {
             marker: PhantomData,
         };
+
         deserializer.deserialize_seq(visitor)
     }
 }
@@ -53,6 +54,7 @@ where
         A: SeqAccess<'de>,
     {
         let capacity = cautious_size_hint::<T>(seq.size_hint());
+
         let mut values = Vec::<T>::with_capacity(capacity);
 
         while let Some(value) = seq.next_element()? {

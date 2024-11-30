@@ -20,15 +20,18 @@ pub struct CompareCommand {
 impl CompareCommand {
     pub fn run(self, cm: Arc<SourceMap>) -> Result<()> {
         let record = get_minified(cm.clone(), &self.path, true, false)?;
+
         let code = print_js(cm, &record.module, true).context("failed to convert ast to code")?;
 
         let terser_mangled = get_terser_output(&self.path, true, false)?;
 
         eprintln!("swc: {} bytes", code.as_bytes().len());
+
         eprintln!(
             "swc: {} bytes (newline stripped)",
             code.replace("\\n", "_").as_bytes().len()
         );
+
         std::fs::write("swc.output.js", code.as_bytes())
             .context("failed to write swc.output.js")?;
 
@@ -38,13 +41,18 @@ impl CompareCommand {
             .context("failed to write terser.output.js")?;
 
         eprintln!("terser: {} bytes", terser_mangled.as_bytes().len());
+
         make_pretty("terser.output.js".as_ref())?;
 
         {
             let mut c = Command::new("code");
+
             c.arg("--diff");
+
             c.arg("swc.output.js");
+
             c.arg("terser.output.js");
+
             c.output().context("failed to run vscode")?;
         }
 

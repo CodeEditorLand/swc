@@ -66,15 +66,19 @@ pub fn derive_string_enum(input: proc_macro::TokenStream) -> proc_macro::TokenSt
     let input = syn::parse::<syn::DeriveInput>(input)
         .map(From::from)
         .expect("failed to parse derive input");
+
     let mut tts = TokenStream::new();
 
     make_as_str(&input).to_tokens(&mut tts);
+
     make_from_str(&input).to_tokens(&mut tts);
 
     make_serialize(&input).to_tokens(&mut tts);
+
     make_deserialize(&input).to_tokens(&mut tts);
 
     derive_fmt(&input, quote_spanned!(Span::call_site() => std::fmt::Debug)).to_tokens(&mut tts);
+
     derive_fmt(
         &input,
         quote_spanned!(Span::call_site() => std::fmt::Display),
@@ -102,12 +106,17 @@ fn derive_fmt(i: &DeriveInput, trait_path: TokenStream) -> ItemImpl {
 fn get_str_value(attrs: &[Attribute]) -> String {
     // TODO: Accept multiline string
     let docs: Vec<_> = attrs.iter().filter_map(doc_str).collect();
+
     for raw_line in docs {
         let line = raw_line.trim();
+
         if line.starts_with('`') && line.ends_with('`') {
             let mut s: String = line.split_at(1).1.into();
+
             let new_len = s.len() - 1;
+
             s.truncate(new_len);
+
             return s;
         }
     }
@@ -156,6 +165,7 @@ fn make_from_str(i: &DeriveInput) -> ItemImpl {
                         leading_vert: None,
                         cases,
                     });
+
                     continue;
                 }
 
@@ -193,6 +203,7 @@ fn make_from_str(i: &DeriveInput) -> ItemImpl {
     });
 
     let ty = &i.ident;
+
     let item: ItemImpl = parse_quote!(
         impl ::std::str::FromStr for #ty {
             type Err = ();
@@ -202,6 +213,7 @@ fn make_from_str(i: &DeriveInput) -> ItemImpl {
             }
         }
     );
+
     item.with_generics(i.generics.clone())
 }
 
@@ -266,7 +278,9 @@ fn make_as_str(i: &DeriveInput) -> ItemImpl {
     });
 
     let ty = &i.ident;
+
     let as_str = make_as_str_ident();
+
     let item: ItemImpl = parse_quote!(
         impl #ty {
             pub fn #as_str(&self) -> &'static str {
@@ -284,6 +298,7 @@ fn make_as_str_ident() -> Ident {
 
 fn make_serialize(i: &DeriveInput) -> ItemImpl {
     let ty = &i.ident;
+
     let item: ItemImpl = parse_quote!(
         #[cfg(feature = "serde")]
         impl ::serde::Serialize for #ty {
@@ -301,6 +316,7 @@ fn make_serialize(i: &DeriveInput) -> ItemImpl {
 
 fn make_deserialize(i: &DeriveInput) -> ItemImpl {
     let ty = &i.ident;
+
     let item: ItemImpl = parse_quote!(
         #[cfg(feature = "serde")]
         impl<'de> ::serde::Deserialize<'de> for #ty {
@@ -362,6 +378,7 @@ impl Parse for FieldAttrItem {
         );
 
         let alias;
+
         parenthesized!(alias in input);
 
         Ok(Self {

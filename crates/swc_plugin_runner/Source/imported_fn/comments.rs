@@ -84,6 +84,7 @@ where
     unwrap_comments_storage_or_default(
         |comments| {
             f(comments);
+
             None
         },
         None as Option<i32>,
@@ -126,6 +127,7 @@ where
         let byte_pos = BytePos(byte_pos);
         // PluginCommentProxy in the guest should've copied buffer already
         let comment_byte = &mut (*env.data_mut().mutable_comment_buffer.lock());
+
         let serialized = PluginSerializedBytes::from_slice(comment_byte);
 
         f(comments, byte_pos, serialized);
@@ -180,11 +182,13 @@ pub fn take_leading_comments_proxy(
     allocated_ret_ptr: u32,
 ) -> i32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let alloc_guest_memory = env.data().alloc_guest_memory.clone();
+
     let alloc_guest_memory = alloc_guest_memory
         .as_ref()
         .expect("Alloc guest memory fn should be available, check initialization");
@@ -192,6 +196,7 @@ pub fn take_leading_comments_proxy(
     unwrap_comments_storage_or_default(
         |comments| {
             let leading_comments = comments.take_leading(BytePos(byte_pos));
+
             if let Some(leading_comments) = leading_comments {
                 let serialized_leading_comments_vec_bytes = PluginSerializedBytes::try_serialize(
                     &VersionedSerializable::new(leading_comments),
@@ -205,6 +210,7 @@ pub fn take_leading_comments_proxy(
                     allocated_ret_ptr,
                     &serialized_leading_comments_vec_bytes,
                 );
+
                 1
             } else {
                 0
@@ -226,11 +232,13 @@ pub fn get_leading_comments_proxy(
     allocated_ret_ptr: u32,
 ) -> i32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let alloc_guest_memory = env.data().alloc_guest_memory.clone();
+
     let alloc_guest_memory = alloc_guest_memory
         .as_ref()
         .expect("Alloc guest memory fn should be available, check initialization");
@@ -238,6 +246,7 @@ pub fn get_leading_comments_proxy(
     unwrap_comments_storage_or_default(
         |comments| {
             let leading_comments = comments.get_leading(BytePos(byte_pos));
+
             if let Some(leading_comments) = leading_comments {
                 let serialized_leading_comments_vec_bytes = PluginSerializedBytes::try_serialize(
                     &VersionedSerializable::new(leading_comments),
@@ -251,6 +260,7 @@ pub fn get_leading_comments_proxy(
                     allocated_ret_ptr,
                     &serialized_leading_comments_vec_bytes,
                 );
+
                 1
             } else {
                 0
@@ -308,11 +318,13 @@ pub fn take_trailing_comments_proxy(
     allocated_ret_ptr: u32,
 ) -> i32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let alloc_guest_memory = env.data().alloc_guest_memory.clone();
+
     let alloc_guest_memory = alloc_guest_memory
         .as_ref()
         .expect("Alloc guest memory fn should be available, check initialization");
@@ -320,6 +332,7 @@ pub fn take_trailing_comments_proxy(
     unwrap_comments_storage_or_default(
         |comments| {
             let trailing_comments = comments.take_trailing(BytePos(byte_pos));
+
             if let Some(leading_comments) = trailing_comments {
                 let serialized_leading_comments_vec_bytes = PluginSerializedBytes::try_serialize(
                     &VersionedSerializable::new(leading_comments),
@@ -333,6 +346,7 @@ pub fn take_trailing_comments_proxy(
                     allocated_ret_ptr,
                     &serialized_leading_comments_vec_bytes,
                 );
+
                 1
             } else {
                 0
@@ -349,11 +363,13 @@ pub fn get_trailing_comments_proxy(
     allocated_ret_ptr: u32,
 ) -> i32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let alloc_guest_memory = env.data().alloc_guest_memory.clone();
+
     let alloc_guest_memory = alloc_guest_memory
         .as_ref()
         .expect("Alloc guest memory fn should be available, check initialization");
@@ -361,6 +377,7 @@ pub fn get_trailing_comments_proxy(
     unwrap_comments_storage_or_default(
         |comments| {
             let trailing_comments = comments.get_trailing(BytePos(byte_pos));
+
             if let Some(leading_comments) = trailing_comments {
                 let serialized_leading_comments_vec_bytes = PluginSerializedBytes::try_serialize(
                     &VersionedSerializable::new(leading_comments),
@@ -374,6 +391,7 @@ pub fn get_trailing_comments_proxy(
                     allocated_ret_ptr,
                     &serialized_leading_comments_vec_bytes,
                 );
+
                 1
             } else {
                 0

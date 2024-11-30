@@ -39,6 +39,7 @@ impl DefaultParamLast {
                 if seen {
                     self.emit_report(span);
                 }
+
                 seen
             }
         });
@@ -79,6 +80,7 @@ impl Visit for DefaultParamLast {
                         if seen {
                             self.emit_report(*span);
                         }
+
                         seen
                     }
                 },
@@ -88,6 +90,7 @@ impl Visit for DefaultParamLast {
                         if seen {
                             self.emit_report(*span);
                         }
+
                         seen
                     }
                 },

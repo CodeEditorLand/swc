@@ -6,6 +6,7 @@ macro_rules! private_ident {
     };
     ($span:expr, $s:expr) => {{
         let mark = $crate::swc_common::Mark::new();
+
         let ctxt = $crate::swc_common::SyntaxContext::empty().apply_mark(mark);
         $crate::swc_ecma_ast::Ident::new($s.into(), $span, ctxt)
     }};
@@ -17,12 +18,14 @@ macro_rules! private_ident {
 macro_rules! quote_ident {
     ($s:expr) => {{
         let sym: $crate::swc_atoms::Atom = $s.into();
+
         let id: $crate::swc_ecma_ast::IdentName = sym.into();
 
         id
     }};
     ($ctxt:expr, $s:expr) => {{
         let sym: $crate::swc_atoms::Atom = $s.into();
+
         let id: $crate::swc_ecma_ast::Ident =
             $crate::swc_ecma_ast::Ident::new(sym, $crate::swc_common::DUMMY_SP, $ctxt);
 
@@ -52,6 +55,7 @@ macro_rules! quote_str {
 macro_rules! quote_expr {
     ($span:expr, null) => {{
         use $crate::swc_ecma_ast::*;
+
         Expr::Lit(Lit::Null(Null { span: $span }))
     }};
 
@@ -72,6 +76,7 @@ macro_rules! quote_expr {
 macro_rules! member_expr {
     ($ctxt:expr, $span:expr, $first:ident) => {{
         use $crate::swc_ecma_ast::Expr;
+
         Box::new(Expr::Ident($crate::quote_ident!($ctxt, $span, stringify!($first))))
     }};
 
@@ -83,7 +88,9 @@ macro_rules! member_expr {
 
     (@EXT, $span:expr, $obj:expr, $first:ident . $($rest:tt)* ) => {{
         use $crate::swc_ecma_ast::MemberProp;
+
         use $crate::swc_ecma_ast::IdentName;
+
         let prop = MemberProp::Ident(IdentName::new(stringify!($first).into(), $span));
 
         member_expr!(@EXT, $span, Box::new(Expr::Member(MemberExpr{
@@ -95,6 +102,7 @@ macro_rules! member_expr {
 
     (@EXT, $span:expr, $obj:expr,  $first:ident) => {{
         use $crate::swc_ecma_ast::*;
+
         let prop = MemberProp::Ident(IdentName::new(stringify!($first).into(), $span));
 
         MemberExpr{
@@ -108,6 +116,7 @@ macro_rules! member_expr {
 #[cfg(test)]
 mod tests {
     use swc_common::DUMMY_SP as span;
+
     use swc_ecma_ast::*;
 
     use crate::drop_span;

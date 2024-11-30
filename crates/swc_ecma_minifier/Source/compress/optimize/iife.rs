@@ -67,15 +67,19 @@ impl Optimizer<'_> {
         match callee {
             Expr::Fn(..) => {
                 report_change!("negate_iife: Swapping cons and alt");
+
                 cond.test = UnaryExpr {
                     span: DUMMY_SP,
                     op: op!("!"),
                     arg: cond.test.take(),
                 }
                 .into();
+
                 swap(&mut cond.cons, &mut cond.alt);
+
                 true
             }
+
             _ => false,
         }
     }
@@ -104,6 +108,7 @@ impl Optimizer<'_> {
                         ..Default::default()
                     }
                     .into();
+
                     swap(&mut cond.cons, &mut cond.alt);
                 }
             }
@@ -142,6 +147,7 @@ impl Optimizer<'_> {
         }
 
         let has_spread_arg = e.args.iter().any(|v| v.spread.is_some());
+
         if has_spread_arg {
             return;
         }
@@ -154,6 +160,7 @@ impl Optimizer<'_> {
         if let Some(scope) = find_scope(self.data, callee) {
             if scope.used_arguments {
                 log_abort!("iife: [x] Found usage of arguments");
+
                 return;
             }
         }
@@ -164,10 +171,12 @@ impl Optimizer<'_> {
                     // Drop invalid nodes
                     callee.params.retain(|p| !p.is_invalid())
                 }
+
                 Expr::Fn(callee) => {
                     // Drop invalid nodes
                     callee.function.params.retain(|p| !p.pat.is_invalid())
                 }
+
                 _ => {}
             }
         }
@@ -184,11 +193,13 @@ impl Optimizer<'_> {
                 .is_some()
             {
                 log_abort!("iife: [x] Recursive?");
+
                 return;
             }
         }
 
         let params = find_params(callee);
+
         if let Some(mut params) = params {
             let mut vars = HashMap::default();
             // We check for parameter and argument
@@ -198,6 +209,7 @@ impl Optimizer<'_> {
                         if param.sym == "arguments" {
                             continue;
                         }
+
                         if let Some(usage) = self.data.vars.get(&param.to_id()) {
                             if usage.reassigned {
                                 continue;
@@ -211,16 +223,19 @@ impl Optimizer<'_> {
                                 Expr::Lit(Lit::Regex(..)) => continue,
                                 Expr::Lit(Lit::Str(s)) if s.value.len() > 3 => continue,
                                 Expr::Lit(..) => {}
+
                                 _ => continue,
                             }
 
                             let should_be_inlined = self.can_be_inlined_for_iife(arg);
+
                             if should_be_inlined {
                                 trace_op!(
                                     "iife: Trying to inline argument ({}{:?})",
                                     param.id.sym,
                                     param.id.ctxt
                                 );
+
                                 vars.insert(param.to_id(), arg.clone());
                             } else {
                                 trace_op!(
@@ -277,16 +292,19 @@ impl Optimizer<'_> {
                                     }
                                     .into(),
                                 );
+
                                 param.take();
                             }
                         }
                     }
+
                     _ => (),
                 }
             }
 
             if vars.is_empty() {
                 log_abort!("vars is empty");
+
                 return;
             }
 
@@ -295,16 +313,22 @@ impl Optimizer<'_> {
                 top_level: false,
                 ..self.ctx.clone()
             };
+
             let mut optimizer = self.with_ctx(ctx);
+
             match find_body(callee) {
                 Some(Either::Left(body)) => {
                     trace_op!("inline: Inlining arguments");
+
                     optimizer.inline_vars_in_node(body, vars);
                 }
+
                 Some(Either::Right(body)) => {
                     trace_op!("inline: Inlining arguments");
+
                     optimizer.inline_vars_in_node(body, vars);
                 }
+
                 _ => {
                     unreachable!("find_body and find_params should match")
                 }
@@ -333,6 +357,7 @@ impl Optimizer<'_> {
                         return;
                     }
                 }
+
                 Either::Right(body) => {
                     if contains_arguments(body) {
                         return;
@@ -358,7 +383,9 @@ impl Optimizer<'_> {
         }
 
         let mut removed = Vec::new();
+
         let params = find_params(callee);
+
         if let Some(mut params) = params {
             // We check for parameter and argument
             for (idx, param) in params.iter_mut().enumerate() {
@@ -373,6 +400,7 @@ impl Optimizer<'_> {
 
             if removed.is_empty() {
                 log_abort!("`removed` is empty");
+
                 return;
             }
         } else {
@@ -413,7 +441,9 @@ impl Optimizer<'_> {
         trace_op!("inline: inline_vars_in_node");
 
         let mut v = NormalMultiReplacer::new(&mut vars);
+
         n.visit_mut_with(&mut v);
+
         self.changed |= v.changed;
     }
 
@@ -448,6 +478,7 @@ impl Optimizer<'_> {
 
             if skip {
                 log_abort!("skip");
+
                 return;
             }
         }
@@ -461,6 +492,7 @@ impl Optimizer<'_> {
 
         if self.has_noinline(call.ctxt) {
             log_abort!("iife: Has no inline mark");
+
             return;
         }
 
@@ -471,6 +503,7 @@ impl Optimizer<'_> {
 
         if self.ctx.dont_invoke_iife {
             log_abort!("iife: Inline is prevented");
+
             return;
         }
 
@@ -480,16 +513,19 @@ impl Optimizer<'_> {
             Expr::Arrow(f) => {
                 if f.is_async {
                     log_abort!("iife: Cannot inline async fn");
+
                     return;
                 }
 
                 if f.is_generator {
                     log_abort!("iife: Cannot inline generator");
+
                     return;
                 }
 
                 if self.ctx.in_param && !f.params.is_empty() {
                     log_abort!("iife: We don't invoke IIFE with params in function params");
+
                     return;
                 }
 
@@ -498,10 +534,12 @@ impl Optimizer<'_> {
                         BlockStmtOrExpr::BlockStmt(body) => {
                             let has_decl =
                                 body.stmts.iter().any(|stmt| matches!(stmt, Stmt::Decl(..)));
+
                             if has_decl {
                                 return;
                             }
                         }
+
                         BlockStmtOrExpr::Expr(_) => {}
                     }
                 }
@@ -519,13 +557,16 @@ impl Optimizer<'_> {
                 match &mut *f.body {
                     BlockStmtOrExpr::BlockStmt(body) => {
                         let new = self.inline_fn_like(&param_ids, body, &mut call.args);
+
                         if let Some(new) = new {
                             self.changed = true;
+
                             report_change!("inline: Inlining a function call (arrow)");
 
                             *e = new;
                         }
                     }
+
                     BlockStmtOrExpr::Expr(body) => {
                         if !self.can_extract_param(&param_ids) {
                             return;
@@ -538,6 +579,7 @@ impl Optimizer<'_> {
                         }
 
                         self.changed = true;
+
                         report_change!("inline: Inlining a function call (arrow)");
 
                         let mut exprs = vec![Box::new(make_number(DUMMY_SP, 0.0))];
@@ -562,41 +604,51 @@ impl Optimizer<'_> {
                                 exprs.push(arg.expr.take());
                             }
                         }
+
                         if self.vars.inline_with_multi_replacer(body) {
                             self.changed = true;
                         }
+
                         exprs.push(body.take());
 
                         report_change!("inline: Inlining a call to an arrow function");
                         *e = *Expr::from_exprs(exprs);
+
                         e.visit_mut_with(self);
                     }
                 }
             }
+
             Expr::Fn(f) => {
                 trace_op!("iife: Expr::Fn(..)");
 
                 if !self.may_add_ident() {
                     let body = f.function.body.as_ref().unwrap();
+
                     let has_decl = body.stmts.iter().any(|stmt| matches!(stmt, Stmt::Decl(..)));
+
                     if has_decl {
                         log_abort!("iife: [x] Found decl");
+
                         return;
                     }
                 }
 
                 if f.function.is_async {
                     log_abort!("iife: [x] Cannot inline async fn");
+
                     return;
                 }
 
                 if f.function.is_generator {
                     log_abort!("iife: [x] Cannot inline generator");
+
                     return;
                 }
 
                 if self.ctx.in_param && !f.function.params.is_empty() {
                     log_abort!("iife: We don't invoke IIFE with params in function params");
+
                     return;
                 }
 
@@ -608,6 +660,7 @@ impl Optimizer<'_> {
                     )
                 }) {
                     log_abort!("iife: [x] Found complex pattern");
+
                     return;
                 }
 
@@ -622,6 +675,7 @@ impl Optimizer<'_> {
                         .is_some()
                     {
                         log_abort!("iife: [x] Recursive?");
+
                         return;
                     }
                 }
@@ -629,6 +683,7 @@ impl Optimizer<'_> {
                 for arg in &call.args {
                     if arg.spread.is_some() {
                         log_abort!("iife: Found spread argument");
+
                         return;
                     }
                 }
@@ -636,10 +691,13 @@ impl Optimizer<'_> {
                 trace_op!("iife: Empty function");
 
                 let body = f.function.body.as_mut().unwrap();
+
                 if body.stmts.is_empty() && call.args.is_empty() {
                     self.changed = true;
+
                     report_change!("iife: Inlining an empty function call as `undefined`");
                     *e = *Expr::undefined(f.function.span);
+
                     return;
                 }
 
@@ -652,12 +710,15 @@ impl Optimizer<'_> {
 
                 if !self.can_inline_fn_like(&param_ids, body) {
                     log_abort!("iife: [x] Body is not inlinable");
+
                     return;
                 }
 
                 let new = self.inline_fn_like(&param_ids, body, &mut call.args);
+
                 if let Some(new) = new {
                     self.changed = true;
+
                     report_change!("inline: Inlining a function call (params = {param_ids:?})");
 
                     dump_change_detail!("{}", dump(&new, false));
@@ -667,6 +728,7 @@ impl Optimizer<'_> {
 
                 //
             }
+
             _ => {}
         }
     }
@@ -699,6 +761,7 @@ impl Optimizer<'_> {
                 if let Some(usage) = self.data.vars.get(&pid.to_id()) {
                     if usage.ref_count > 1 || usage.assign_count > 0 || usage.inline_prevented {
                         log_abort!("iife: [x] Cannot inline because of usage of `{}`", pid);
+
                         return false;
                     }
                 }
@@ -711,6 +774,7 @@ impl Optimizer<'_> {
                     "iife: [x] Cannot inline because of reservation of `{}`",
                     pid
                 );
+
                 return false;
             }
         }
@@ -745,6 +809,7 @@ impl Optimizer<'_> {
         // https://github.com/swc-project/swc/issues/6628
         if self.data.top.has_eval_call {
             log_abort!("iife: [x] Aborting because of eval");
+
             return false;
         }
 
@@ -758,6 +823,7 @@ impl Optimizer<'_> {
                             "iife: [x] Cannot inline because of the capture of `{}`",
                             param
                         );
+
                         return false;
                     }
                 }
@@ -770,6 +836,7 @@ impl Optimizer<'_> {
                     for id in find_pat_ids::<_, Id>(&decl.name) {
                         if self.ident_reserved(&id.0) {
                             log_abort!("iife: [x] Cannot inline because reservation of `{}`", id.0);
+
                             return false;
                         }
                     }
@@ -795,6 +862,7 @@ impl Optimizer<'_> {
                                         "iife: [x] Cannot inline because pending inline of `{}`",
                                         id.id
                                     );
+
                                     return false;
                                 }
                             }
@@ -884,6 +952,7 @@ impl Optimizer<'_> {
                     {
                         // We don't need to create a variable in this case
                         self.vars.vars_for_inlining.insert(param.to_id(), arg);
+
                         continue;
                     }
 
@@ -935,7 +1004,9 @@ impl Optimizer<'_> {
         }
 
         let param_len = params.len();
+
         let mut exprs = Vec::new();
+
         let vars = self.inline_fn_param(params, args, &mut exprs);
 
         if args.len() > param_len {
@@ -995,19 +1066,25 @@ impl Optimizer<'_> {
 
                 Stmt::Return(stmt) => {
                     let span = stmt.span;
+
                     let val = *stmt.arg.unwrap_or_else(|| Expr::undefined(span));
+
                     exprs.push(Box::new(val));
 
                     let mut e = SeqExpr {
                         span: DUMMY_SP,
                         exprs,
                     };
+
                     self.merge_sequences_in_seq_expr(&mut e);
 
                     let mut e = e.into();
+
                     self.normalize_expr(&mut e);
+
                     return Some(e);
                 }
+
                 _ => {}
             }
         }
@@ -1027,10 +1104,13 @@ impl Optimizer<'_> {
             span: DUMMY_SP,
             exprs,
         };
+
         self.merge_sequences_in_seq_expr(&mut e);
 
         let mut e = e.into();
+
         self.normalize_expr(&mut e);
+
         Some(e)
     }
 
@@ -1059,6 +1139,7 @@ impl Optimizer<'_> {
                 op!(bin, "+") | op!("*") => {
                     self.can_be_inlined_for_iife(left) && self.can_be_inlined_for_iife(right)
                 }
+
                 _ => false,
             },
 
@@ -1068,6 +1149,7 @@ impl Optimizer<'_> {
                         PropOrSpread::Spread(_) => return false,
                         PropOrSpread::Prop(p) => match &**p {
                             Prop::Shorthand(_) => {}
+
                             Prop::KeyValue(kv) => {
                                 if let PropName::Computed(key) = &kv.key {
                                     if !self.can_be_inlined_for_iife(&key.expr) {
@@ -1079,11 +1161,13 @@ impl Optimizer<'_> {
                                     return false;
                                 }
                             }
+
                             Prop::Assign(p) => {
                                 if !self.can_be_inlined_for_iife(&p.value) {
                                     return false;
                                 }
                             }
+
                             _ => return false,
                         },
                     }

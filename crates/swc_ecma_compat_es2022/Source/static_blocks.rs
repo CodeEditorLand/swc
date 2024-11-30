@@ -19,6 +19,7 @@ impl ClassStaticBlock {
         private_id: JsWord,
     ) -> PrivateProp {
         let mut stmts = static_block.body.stmts.take();
+
         let span = static_block.span;
 
         // We special-case the single expression case to avoid the iife, since it's
@@ -62,6 +63,7 @@ impl VisitMut for ClassStaticBlock {
         class.visit_mut_children_with(self);
 
         let mut private_names = AHashSet::default();
+
         for member in &class.body {
             if let ClassMember::PrivateProp(private_property) = member {
                 private_names.insert(private_property.key.name.clone());
@@ -69,10 +71,12 @@ impl VisitMut for ClassStaticBlock {
         }
 
         let mut count = 0;
+
         for member in class.body.iter_mut() {
             if let ClassMember::StaticBlock(static_block) = member {
                 if static_block.body.stmts.is_empty() {
                     *member = ClassMember::dummy();
+
                     continue;
                 }
 
@@ -94,8 +98,10 @@ fn generate_uid(deny_list: &AHashSet<JsWord>, i: &mut u32) -> JsWord {
         format!("_{i}")
     }
     .into();
+
     while deny_list.contains(&uid) {
         *i += 1;
+
         uid = format!("_{i}").into();
     }
 

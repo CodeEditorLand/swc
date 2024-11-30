@@ -133,6 +133,7 @@ pub struct Config {
 #[cfg(test)]
 mod tests {
     use swc_ecma_transforms_base::resolver;
+
     use swc_ecma_transforms_testing::{test, test_exec};
 
     use super::*;
@@ -260,11 +261,13 @@ export const getBadgeBorderRadius = (text, color) => {
 class B extends A {
     constructor(num) {
         super();
+
         this.b_num = num;
     }
 
     print() {
         expect(this.b_num).toBe(20);
+
         super.print();
     }
 }
@@ -292,11 +295,13 @@ class B extends A {
 class B extends A {
     constructor(num) {
         super();
+
         this.b_num = num;
     }
 
     print() {
         expect(this.b_num).toBe(20);
+
         super.print();
     }
 }
@@ -330,7 +335,9 @@ return new B(20).print()"
               return Object.create(new.target.prototype);
             }
           }
+
         var obj = new MyObject();
+
         expect(obj.constructor).toBe(MyObject);
         "
     );
@@ -368,8 +375,11 @@ export class Foo {
         issue_8871,
         r#"
         const x = "</" + "script>";
+
         const y = "<\/script>";
+
         const z = "\/\/   \\";
+
         export { x, y, z };
         "#
     );

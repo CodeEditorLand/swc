@@ -47,7 +47,9 @@ impl BenchCmd {
         let mut cmd = self.build_cmd()?;
 
         cmd.env("RUST_LOG", "off");
+
         cmd.env("CARGO_PROFILE_RELEASE_DEBUG", "true");
+
         cmd.env("CARGO_PROFILE_BENCH_DEBUG", "true");
 
         run_cmd(&mut cmd)
@@ -57,6 +59,7 @@ impl BenchCmd {
         let mut cmd = if self.samply {
             // ddt profile instruments cargo -t time
             let mut cmd = Command::new("ddt");
+
             cmd.arg("profile").arg("samply").arg("cargo");
 
             if !self.debug {
@@ -67,7 +70,9 @@ impl BenchCmd {
         } else if self.instrument {
             // ddt profile instruments cargo -t time
             let mut cmd = Command::new("ddt");
+
             cmd.arg("profile").arg("instruments").arg("cargo");
+
             cmd.arg("-t")
                 .arg(self.template.as_deref().unwrap_or("time"));
 
@@ -78,6 +83,7 @@ impl BenchCmd {
             cmd
         } else {
             let mut cmd = Command::new("cargo");
+
             cmd.arg("bench");
 
             if self.debug {

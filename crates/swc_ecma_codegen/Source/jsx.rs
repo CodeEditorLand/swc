@@ -13,11 +13,13 @@ where
     #[emitter]
     fn emit_jsx_element(&mut self, node: &JSXElement) -> Result {
         emit!(node.opening);
+
         self.emit_list(
             node.span(),
             Some(&node.children),
             ListFormat::JsxElementOrFragmentChildren,
         )?;
+
         if let Some(ref closing) = node.closing {
             emit!(closing)
         }
@@ -26,6 +28,7 @@ where
     #[emitter]
     fn emit_jsx_opening_element(&mut self, node: &JSXOpeningElement) -> Result {
         punct!("<");
+
         emit!(node.name);
 
         if let Some(type_args) = &node.type_args {
@@ -45,6 +48,7 @@ where
         if node.self_closing {
             punct!("/");
         }
+
         punct!(">");
     }
 
@@ -92,7 +96,9 @@ where
             JSXAttrOrSpread::JSXAttr(ref n) => emit!(n),
             JSXAttrOrSpread::SpreadElement(ref n) => {
                 punct!("{");
+
                 emit!(n);
+
                 punct!("}");
             }
         }
@@ -112,15 +118,20 @@ where
     #[emitter]
     fn emit_jsx_spread_child(&mut self, node: &JSXSpreadChild) -> Result {
         punct!("{");
+
         punct!("...");
+
         emit!(node.expr);
+
         punct!("}");
     }
 
     #[emitter]
     fn emit_jsx_expr_container(&mut self, node: &JSXExprContainer) -> Result {
         punct!("{");
+
         emit!(node.expr);
+
         punct!("}");
     }
 
@@ -135,7 +146,9 @@ where
     #[emitter]
     fn emit_jsx_closing_element(&mut self, node: &JSXClosingElement) -> Result {
         punct!("</");
+
         emit!(node.name);
+
         punct!(">");
     }
 
@@ -165,7 +178,9 @@ where
     #[emitter]
     fn emit_jsx_namespaced_name(&mut self, node: &JSXNamespacedName) -> Result {
         emit!(node.ns);
+
         punct!(":");
+
         emit!(node.name);
     }
 
@@ -180,7 +195,9 @@ where
     #[emitter]
     fn emit_jsx_member_expr(&mut self, node: &JSXMemberExpr) -> Result {
         emit!(node.obj);
+
         punct!(".");
+
         emit!(node.prop);
     }
 

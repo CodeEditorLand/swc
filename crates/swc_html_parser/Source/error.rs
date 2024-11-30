@@ -38,10 +38,12 @@ impl Error {
             ErrorKind::AbsenceOfDigitsInNumericCharacterReference => {
                 "Absence of digits in numeric character reference".into()
             }
+
             ErrorKind::CdataInHtmlContent => "Cdata in html content".into(),
             ErrorKind::CharacterReferenceOutsideUnicodeRange => {
                 "Character reference outside unicode range".into()
             }
+
             ErrorKind::ControlCharacterInInputStream => "Control character in input stream".into(),
             ErrorKind::ControlCharacterReference => "Control character reference".into(),
             ErrorKind::EndTagWithAttributes => "End tag with attributes".into(),
@@ -54,15 +56,18 @@ impl Error {
             ErrorKind::EofInScriptHtmlCommentLikeText => {
                 "Eof in script html comment like text".into()
             }
+
             ErrorKind::EofInTag => "Eof in tag".into(),
             ErrorKind::IncorrectlyClosedComment => "Incorrectly closed comment".into(),
             ErrorKind::IncorrectlyOpenedComment => "Incorrectly opened comment".into(),
             ErrorKind::InvalidCharacterSequenceAfterDoctypeName => {
                 "Invalid character sequence after doctype name".into()
             }
+
             ErrorKind::InvalidFirstCharacterOfTagName => {
                 "Invalid first character of tag name".into()
             }
+
             ErrorKind::MissingAttributeValue => "Missing attribute value".into(),
             ErrorKind::MissingDoctypeName => "Missing doctype name".into(),
             ErrorKind::MissingDoctypePublicIdentifier => "Missing doctype public identifier".into(),
@@ -71,52 +76,66 @@ impl Error {
             ErrorKind::MissingQuoteBeforeDoctypePublicIdentifier => {
                 "Missing quote before doctype public identifier".into()
             }
+
             ErrorKind::MissingQuoteBeforeDoctypeSystemIdentifier => {
                 "Missing quote before doctype system identifier".into()
             }
+
             ErrorKind::MissingSemicolonAfterCharacterReference => {
                 "Missing semicolon after character reference".into()
             }
+
             ErrorKind::MissingWhitespaceAfterDoctypePublicKeyword => {
                 "Missing whitespace after doctype public keyword".into()
             }
+
             ErrorKind::MissingWhitespaceAfterDoctypeSystemKeyword => {
                 "Missing whitespace after doctype system keyword".into()
             }
+
             ErrorKind::MissingWhitespaceBeforeDoctypeName => {
                 "Missing whitespace before doctype name".into()
             }
+
             ErrorKind::MissingWhitespaceBetweenAttributes => {
                 "Missing whitespace between attributes".into()
             }
+
             ErrorKind::MissingWhitespaceBetweenDoctypePublicAndSystemIdentifiers => {
                 "Missing whitespace between doctype public and system identifiers".into()
             }
+
             ErrorKind::NestedComment => "Nested comment".into(),
             ErrorKind::NoncharacterCharacterReference => "Noncharacter character reference".into(),
             ErrorKind::NoncharacterInInputStream => "Noncharacter in input stream".into(),
             ErrorKind::NonVoidHtmlElementStartTagWithTrailingSolidus => {
                 "Non void html element start tag with trailing solidus".into()
             }
+
             ErrorKind::NullCharacterReference => "Null character reference".into(),
             ErrorKind::SurrogateCharacterReference => "Surrogate character reference".into(),
             ErrorKind::SurrogateInInputStream => "Surrogate in input stream".into(),
             ErrorKind::UnexpectedCharacterAfterDoctypeSystemIdentifier => {
                 "Unexpected character after doctype system identifier".into()
             }
+
             ErrorKind::UnexpectedCharacterInAttributeName => {
                 "Unexpected character in attribute name".into()
             }
+
             ErrorKind::UnexpectedCharacterInUnquotedAttributeValue => {
                 "Unexpected character in unquoted attribute value".into()
             }
+
             ErrorKind::UnexpectedEqualsSignBeforeAttributeName => {
                 "Unexpected equals sign before attribute name".into()
             }
+
             ErrorKind::UnexpectedNullCharacter => "Unexpected null character".into(),
             ErrorKind::UnexpectedQuestionMarkInsteadOfTagName => {
                 "Unexpected question mark instead of tag name".into()
             }
+
             ErrorKind::UnexpectedSolidusInTag => "Unexpected solidus in tag".into(),
             ErrorKind::UnknownNamedCharacterReference => "Unknown named character reference".into(),
 
@@ -124,6 +143,7 @@ impl Error {
             ErrorKind::StrayStartTag(tag_name) => {
                 format!("Stray start tag \"{}\"", tag_name).into()
             }
+
             ErrorKind::StrayEndTag(tag_name) => format!("Stray end tag \"{}\"", tag_name).into(),
             ErrorKind::UnclosedElements(tag_name) => format!(
                 "End tag \"{}\" seen, but there were open elements",
@@ -138,32 +158,40 @@ impl Error {
             ErrorKind::UnclosedElementsCell => {
                 "A table cell was implicitly closed, but there were open elements".into()
             }
+
             ErrorKind::StrayDoctype => "Stray doctype".into(),
             ErrorKind::NonConformingDoctype => "Non conforming doctype".into(),
             ErrorKind::NonSpaceCharacterInTrailer => "Non-space character in page trailer".into(),
             ErrorKind::NonSpaceCharacterAfterFrameset => {
                 "Non-space character after \"frameset\"".into()
             }
+
             ErrorKind::NonSpaceCharacterInFrameset => "Non-space character in \"frameset\"".into(),
             ErrorKind::NonSpaceCharacterAfterBody => "Non-space character after body".into(),
             ErrorKind::NonSpaceCharacterInColumnGroup => {
                 "Non-space character in \"colgroup\" element".into()
             }
+
             ErrorKind::NonSpaceCharacterInNoscriptInHead => {
                 "Non-space character inside \"noscript\" inside \"head\"".into()
             }
+
             ErrorKind::SomethingBetweenHeadAndBody(tag_name) => {
                 format!("\"{}\" element between \"head\" and \"body\"", tag_name).into()
             }
+
             ErrorKind::StartTagWithoutDoctype => {
                 "Start tag seen without seeing a doctype first, expected \"<!DOCTYPE html>\"".into()
             }
+
             ErrorKind::StartSelectWhereEndSelectExpected => {
                 "\"select\" start tag where end tag expected".into()
             }
+
             ErrorKind::StartTagWithSelectOpen(tag_name) => {
                 format!("\"{}\" start tag with \"select\" open", tag_name).into()
             }
+
             ErrorKind::BadStartTagInNoscriptInHead(tag_name) => format!(
                 "Bad start tag in \"{}\" in \"noscript\" in \"head\"",
                 tag_name
@@ -172,6 +200,7 @@ impl Error {
             ErrorKind::UnexpectedImageStartTag => {
                 "Saw a start tag \"image\", \"img\" element is outdated".into()
             }
+
             ErrorKind::SomethingSeenWhenSomethingOpen(tag_name) => format!(
                 "Start tag \"{}\" seen but an element of the same type was already open",
                 tag_name
@@ -180,26 +209,32 @@ impl Error {
             ErrorKind::HeadingWhenHeadingOpen => {
                 "Heading cannot be a child of another heading".into()
             }
+
             ErrorKind::NoCellToClose => "No cell to close".into(),
             ErrorKind::StartTagInTable(tag_name) => {
                 format!("Start tag \"{}\" seen in \"table\"", tag_name).into()
             }
+
             ErrorKind::FormWhenFormOpen => "Saw a \"form\" start tag, but there was already an \
                                             active \"form\" element, nested forms are not allowed"
                 .into(),
             ErrorKind::TableSeenWhileTableOpen => {
                 "Start tag for \"table\" seen but the previous \"table\" is still open".into()
             }
+
             ErrorKind::StartTagInTableBody(tag_name) => {
                 format!("Start tag \"{}\" seen in \"table\" body", tag_name).into()
             }
+
             ErrorKind::EndTagSeenWithoutDoctype => {
                 "End tag seen without seeing a doctype first, expected \"<!DOCTYPE html>\"".into()
             }
+
             ErrorKind::EndTagAfterBody => "Saw an end tag after \"body\" had been closed".into(),
             ErrorKind::EndTagSeenWithSelectOpen(tag_name) => {
                 format!("\"{}\" end tag with \"select\" open", tag_name).into()
             }
+
             ErrorKind::GarbageInColumnGroup => "Garbage in \"colgroup\" element".into(),
             ErrorKind::EndTagBr => "End tag \"br\"".into(),
             ErrorKind::NoElementToCloseButEndTagSeen(tag_name) => format!(
@@ -216,6 +251,7 @@ impl Error {
             ErrorKind::NonSpaceCharacterInTable => {
                 "Misplaced non-space characters inside a table".into()
             }
+
             ErrorKind::UnclosedChildrenInRuby => "Unclosed children in \"ruby\"".into(),
             ErrorKind::StartTagSeenWithoutRuby(tag_name) => format!(
                 "Start tag \"{}\" seen without a \"ruby\" element being open",
@@ -234,9 +270,11 @@ impl Error {
             ErrorKind::EndTagViolatesNestingRules(tag_name) => {
                 format!("End tag \"{}\" violates nesting rules", tag_name).into()
             }
+
             ErrorKind::EofWithUnclosedElements => {
                 "End of file seen and there were open elements".into()
             }
+
             ErrorKind::EndTagWithUnclosedElements(tag_name) => format!(
                 "Unexpected end tag for \"{}\", but there were unclosed elements",
                 tag_name

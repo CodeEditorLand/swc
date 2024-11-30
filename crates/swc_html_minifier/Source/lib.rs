@@ -387,9 +387,11 @@ impl<C: MinifyCss> Minifier<'_, C> {
             Namespace::HTML => {
                 ALLOW_TO_TRIM_HTML_ATTRIBUTES.contains(&(&element.tag_name, &attribute.name))
             }
+
             Namespace::SVG => {
                 ALLOW_TO_TRIM_SVG_ATTRIBUTES.contains(&(&element.tag_name, &attribute.name))
             }
+
             _ => false,
         }
     }
@@ -425,6 +427,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                 {
                     true
                 }
+
                 _ if attribute.name == "exportparts" => true,
                 _ => {
                     COMMA_SEPARATED_HTML_ATTRIBUTES.contains(&(&element.tag_name, &attribute.name))
@@ -433,6 +436,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
             Namespace::SVG => {
                 COMMA_SEPARATED_SVG_ATTRIBUTES.contains(&(&element.tag_name, &attribute.name))
             }
+
             _ => false,
         }
     }
@@ -448,16 +452,19 @@ impl<C: MinifyCss> Minifier<'_, C> {
             Namespace::HTML => {
                 SPACE_SEPARATED_HTML_ATTRIBUTES.contains(&(&element.tag_name, &attribute.name))
             }
+
             Namespace::SVG => {
                 match &*attribute.name {
                     "transform" | "stroke-dasharray" | "clip-path" | "requiredFeatures" => {
                         return true
                     }
+
                     _ => {}
                 }
 
                 SPACE_SEPARATED_SVG_ATTRIBUTES.contains(&(&element.tag_name, &attribute.name))
             }
+
             _ => false,
         }
     }
@@ -467,6 +474,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
             Namespace::SVG => {
                 SEMICOLON_SEPARATED_SVG_ATTRIBUTES.contains(&(&element.tag_name, &attribute.name))
             }
+
             _ => false,
         }
     }
@@ -501,11 +509,13 @@ impl<C: MinifyCss> Minifier<'_, C> {
                 {
                     true
                 }
+
                 _ => false,
             },
             Namespace::SVG => {
                 matches!(&*element.tag_name, "a" if attribute.name == "rel")
             }
+
             _ => false,
         }
     }
@@ -541,6 +551,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
 
     fn is_type_text_javascript(&self, value: &str) -> bool {
         let value = value.trim().to_ascii_lowercase();
+
         let value = if let Some(next) = value.split(';').next() {
             next
         } else {
@@ -599,6 +610,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                 return true;
                             }
                         }
+
                         _ => {}
                     },
                     "script" => match &*attribute.name {
@@ -628,6 +640,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                             return true;
                         }
                     }
+
                     _ => {}
                 }
 
@@ -647,7 +660,9 @@ impl<C: MinifyCss> Minifier<'_, C> {
                         String::with_capacity(prefix.len() + 1 + attribute.name.len());
 
                     with_namespace.push_str(prefix);
+
                     with_namespace.push(':');
+
                     with_namespace.push_str(&attribute.name);
 
                     attributes.other.get(&JsWord::from(with_namespace))
@@ -699,12 +714,15 @@ impl<C: MinifyCss> Minifier<'_, C> {
 
                                 false
                             }
+
                             RemoveRedundantAttributes::All => initial == normalized_value,
                         }
                     }
+
                     _ => false,
                 }
             }
+
             _ => {
                 matches!(
                     (
@@ -825,6 +843,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                     _ => Display::Inline,
                 }
             }
+
             Namespace::SVG => match &*element.tag_name {
                 "text" | "foreignObject" => Display::Block,
                 _ => Display::Inline,
@@ -846,6 +865,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                     "base" | "command" | "link" | "meta" | "style" | "title" | "template"
                 )
             }
+
             Namespace::SVG => !matches!(&*element.tag_name, "style"),
             _ => true,
         }
@@ -868,6 +888,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                             children.remove(0);
                         }
                     }
+
                     Child::Element(Element {
                         namespace,
                         tag_name,
@@ -876,6 +897,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                     }) if get_white_space(*namespace, tag_name) == WhiteSpace::Normal => {
                         self.remove_leading_and_trailing_whitespaces(children, true, false);
                     }
+
                     _ => {}
                 }
             }
@@ -891,6 +913,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                             children.pop();
                         }
                     }
+
                     Child::Element(Element {
                         namespace,
                         tag_name,
@@ -899,6 +922,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                     }) if get_white_space(*namespace, tag_name) == WhiteSpace::Normal => {
                         self.remove_leading_and_trailing_whitespaces(children, false, true);
                     }
+
                     _ => {}
                 }
             }
@@ -920,6 +944,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                     None
                 }
             }
+
             Some(Child::Element(element)) => {
                 if !self.is_element_displayed(element) && index >= 1 {
                     self.get_prev_displayed_node(children, index - 1)
@@ -929,6 +954,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                     prev
                 }
             }
+
             Some(_) => prev,
             _ => None,
         }
@@ -949,6 +975,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                     None
                 }
             }
+
             Some(Child::Element(element)) => {
                 if !self.is_element_displayed(element) && index >= 1 {
                     self.get_last_displayed_text_node(children, index - 1)
@@ -966,6 +993,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                     None
                 }
             }
+
             Some(Child::Text(text)) => Some(text),
             _ => None,
         }
@@ -997,6 +1025,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                     None
                 }
             }
+
             Some(Child::Text(text)) => Some(text),
             _ => None,
         }
@@ -1014,6 +1043,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
             Some(Child::Element(element)) if !self.is_element_displayed(element) => {
                 self.get_next_displayed_node(children, index + 1)
             }
+
             Some(_) => next,
             _ => None,
         }
@@ -1027,6 +1057,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
             | CollapseWhitespaces::AdvancedConservative => true,
             CollapseWhitespaces::OnlyMetadata | CollapseWhitespaces::None => false,
         };
+
         let default_trim = match self.options.collapse_whitespaces {
             CollapseWhitespaces::All => true,
             CollapseWhitespaces::Smart
@@ -1091,6 +1122,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                         trim: default_trim,
                     }
                 }
+
                 _ => WhitespaceMinificationMode {
                     collapse: default_collapse,
                     trim: !matches!(
@@ -1116,6 +1148,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
         }
 
         let mut collapsed = String::with_capacity(data.len());
+
         let mut in_whitespace = false;
 
         for c in data.chars() {
@@ -1202,6 +1235,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                 Child::Text(text) if text.data.chars().all(is_whitespace) => {
                     continue;
                 }
+
                 _ => return false,
             }
         }
@@ -1215,6 +1249,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                 && left.tag_name == "style"
                 && matches!(right.namespace, Namespace::HTML | Namespace::SVG)
                 && right.tag_name == "style";
+
             let is_script_tag = matches!(left.namespace, Namespace::HTML | Namespace::SVG)
                 && left.tag_name == "script"
                 && matches!(right.namespace, Namespace::HTML | Namespace::SVG)
@@ -1252,6 +1287,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                 true
                             }
                         }
+
                         _ => !self.is_default_attribute_value(left, attribute),
                     })
                     .map(|mut attribute| {
@@ -1294,6 +1330,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                 true
                             }
                         }
+
                         _ => !self.is_default_attribute_value(right, attribute),
                     })
                     .map(|mut attribute| {
@@ -1308,6 +1345,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                 }
 
                 left_attributes.sort_by(|a, b| a.name.cmp(&b.name));
+
                 right_attributes.sort_by(|a, b| a.name.cmp(&b.name));
 
                 return left_attributes.eq_ignore_span(&right_attributes);
@@ -1349,12 +1387,14 @@ impl<C: MinifyCss> Minifier<'_, C> {
                 Some(minified) => {
                     data.push_str(&minified);
                 }
+
                 _ => {
                     return None;
                 }
             }
         } else {
             data.push_str(&left_data);
+
             data.push_str(&right_data);
         }
 
@@ -1387,6 +1427,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                     Child::Comment(comment) if self.options.remove_comments => {
                         self.is_preserved_comment(&comment.data)
                     }
+
                     Child::Element(element)
                         if self.options.merge_metadata_elements
                             && self.allow_elements_to_merge(prev_children.last(), element) =>
@@ -1403,6 +1444,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                             true
                         }
                     }
+
                     Child::Text(text) if text.data.is_empty() => false,
                     Child::Text(text)
                         if self.need_collapse_whitespace()
@@ -1412,6 +1454,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                     {
                         false
                     }
+
                     Child::Text(text)
                         if !self.descendant_of_pre
                             && get_white_space(parent.namespace, &parent.tag_name)
@@ -1426,6 +1469,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                             ) =>
                     {
                         let mut is_smart_left_trim = false;
+
                         let mut is_smart_right_trim = false;
 
                         if matches!(
@@ -1441,6 +1485,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                             );
 
                             let prev = prev_children.last();
+
                             let prev_display = match prev {
                                 Some(Child::Element(element)) => Some(self.get_display(element)),
                                 Some(Child::Comment(_)) => match need_remove_metadata_whitespaces {
@@ -1495,6 +1540,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                             Some(Child::Text(text)) => {
                                                 text.data.ends_with(is_whitespace)
                                             }
+
                                             Some(Child::Element(element)) => {
                                                 let deep = if !element.children.is_empty() {
                                                     self.get_last_displayed_text_node(
@@ -1511,6 +1557,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                                     false
                                                 }
                                             }
+
                                             _ => {
                                                 let parent_display = self.get_display(parent);
 
@@ -1526,6 +1573,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                                             false
                                                         }
                                                     }
+
                                                     _ => true,
                                                 }
                                             }
@@ -1562,6 +1610,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                                     false
                                                 }
                                             }
+
                                             _ => true,
                                         }
                                     }
@@ -1569,6 +1618,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                             };
 
                             let next = next_children.first();
+
                             let next_display = match next {
                                 Some(Child::Element(element)) => Some(self.get_display(element)),
                                 Some(Child::Comment(_)) => match need_remove_metadata_whitespaces {
@@ -1606,6 +1656,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                         Some(Child::Text(text)) => {
                                             text.data.starts_with(is_whitespace)
                                         }
+
                                         Some(Child::Element(element)) => {
                                             let deep = self.get_first_displayed_text_node(
                                                 &element.children,
@@ -1618,6 +1669,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                                 false
                                             }
                                         }
+
                                         _ => {
                                             let parent_display = self.get_display(parent);
 
@@ -1625,6 +1677,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                         }
                                     }
                                 }
+
                                 Some(_) => false,
                                 None => {
                                     // Template can be used in any place, so let's keep whitespaces
@@ -1649,6 +1702,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                     && next_display == Some(Display::None)))
                             {
                                 is_smart_left_trim = allow_to_trim_left;
+
                                 is_smart_right_trim = allow_to_trim_right;
                             }
                         }
@@ -1677,6 +1731,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                             true
                         }
                     }
+
                     _ => true,
                 }
             };
@@ -1692,6 +1747,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                         String::with_capacity(prev_text.data.len() + text.data.len());
 
                     new_data.push_str(&prev_text.data);
+
                     new_data.push_str(&text.data);
 
                     text.data = new_data.into();
@@ -1713,6 +1769,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                     String::with_capacity(prev_text.data.len() + text.data.len());
 
                                 new_data.push_str(&prev_text.data);
+
                                 new_data.push_str(&text.data);
 
                                 text.data = new_data.into();
@@ -1787,6 +1844,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
         };
 
         let options = self.get_json_options();
+
         let result = match options.pretty {
             true => serde_json::to_string_pretty(&json),
             false => serde_json::to_string(&json),
@@ -1822,11 +1880,14 @@ impl<C: MinifyCss> Minifier<'_, C> {
 
     fn merge_js(&self, left: String, right: String, is_modules: bool) -> Option<String> {
         let comments = SingleThreadedComments::default();
+
         let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
 
         // Left
         let mut left_errors: Vec<_> = Vec::new();
+
         let left_fm = cm.new_source_file(FileName::Anon.into(), left);
+
         let syntax = swc_ecma_parser::Syntax::default();
         // Use the latest target for merging
         let target = swc_ecma_ast::EsVersion::latest();
@@ -1861,6 +1922,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
         }
 
         let unresolved_mark = Mark::new();
+
         let left_top_level_mark = Mark::new();
 
         swc_ecma_visit::VisitMutWith::visit_mut_with(
@@ -1870,6 +1932,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
 
         // Right
         let mut right_errors: Vec<_> = Vec::new();
+
         let right_fm = cm.new_source_file(FileName::Anon.into(), right);
 
         let mut right_program = if is_modules {
@@ -1914,6 +1977,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                 swc_ecma_ast::Program::Module(right_program) => {
                     left_program.body.extend(right_program.body);
                 }
+
                 _ => {
                     unreachable!();
                 }
@@ -1922,6 +1986,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                 swc_ecma_ast::Program::Script(right_program) => {
                     left_program.body.extend(right_program.body);
                 }
+
                 _ => {
                     unreachable!();
                 }
@@ -1971,7 +2036,9 @@ impl<C: MinifyCss> Minifier<'_, C> {
         let mut errors: Vec<_> = Vec::new();
 
         let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
+
         let fm = cm.new_source_file(FileName::Anon.into(), data);
+
         let mut options = self.get_js_options();
 
         if let swc_ecma_parser::Syntax::Es(es_config) = &mut options.parser.syntax {
@@ -2027,6 +2094,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
         }
 
         let unresolved_mark = Mark::new();
+
         let top_level_mark = Mark::new();
 
         swc_ecma_visit::VisitMutWith::visit_mut_with(
@@ -2071,7 +2139,9 @@ impl<C: MinifyCss> Minifier<'_, C> {
             wr = Box::new(swc_ecma_codegen::text_writer::omit_trailing_semi(wr));
 
             options.codegen.minify = true;
+
             options.codegen.target = options.parser.target;
+
             options.codegen.omit_last_semi = true;
 
             let mut emitter = swc_ecma_codegen::Emitter {
@@ -2126,10 +2196,13 @@ impl<C: MinifyCss> Minifier<'_, C> {
             };
 
         let source_size_value = values[0];
+
         let mut minified = String::with_capacity(media_condition.len() + source_size_value.len());
 
         minified.push_str(&media_condition);
+
         minified.push(' ');
+
         minified.push_str(source_size_value);
 
         Some(minified)
@@ -2144,6 +2217,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
         let mut errors: Vec<_> = Vec::new();
 
         let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
+
         let fm = cm.new_source_file(FileName::Anon.into(), data);
 
         // Emulate content inside conditional comments like content inside the
@@ -2176,6 +2250,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                     _ => return None,
                 }
             }
+
             HtmlMinificationMode::DocumentIframeSrcdoc => {
                 match swc_html_parser::parse_file_as_document(
                     &fm,
@@ -2200,6 +2275,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
             HtmlRoot::Document(ref mut document) => {
                 minify_document_with_custom_css_minifier(document, self.options, self.css_minifier);
             }
+
             HtmlRoot::DocumentFragment(ref mut document_fragment) => {
                 minify_document_fragment_with_custom_css_minifier(
                     document_fragment,
@@ -2211,11 +2287,13 @@ impl<C: MinifyCss> Minifier<'_, C> {
         }
 
         let mut minified = String::new();
+
         let wr = swc_html_codegen::writer::basic::BasicHtmlWriter::new(
             &mut minified,
             None,
             swc_html_codegen::writer::basic::BasicHtmlWriterConfig::default(),
         );
+
         let mut gen = swc_html_codegen::CodeGenerator::new(
             wr,
             swc_html_codegen::CodegenConfig {
@@ -2232,6 +2310,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
             HtmlRoot::Document(document) => {
                 swc_html_codegen::Emit::emit(&mut gen, &document).unwrap();
             }
+
             HtmlRoot::DocumentFragment(document_fragment) => {
                 swc_html_codegen::Emit::emit(&mut gen, &document_fragment).unwrap();
             }
@@ -2271,17 +2350,20 @@ impl<C: MinifyCss> Minifier<'_, C> {
                 ) if self.options.normalize_attributes => {
                     n.value = Some(value.trim().to_ascii_lowercase().into());
                 }
+
                 _ if self.options.normalize_attributes
                     && self.is_crossorigin_attribute(element, n)
                     && value.to_ascii_lowercase() == "anonymous" =>
                 {
                     n.value = None;
                 }
+
                 _ if self.options.collapse_boolean_attributes
                     && self.is_boolean_attribute(element, n) =>
                 {
                     n.value = None;
                 }
+
                 _ if self.is_event_handler_attribute(n) => {
                     let mut value = value.to_string();
 
@@ -2301,6 +2383,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                         n.value = Some(value.into());
                     }
                 }
+
                 _ if self.options.normalize_attributes
                     && element.namespace == Namespace::HTML
                     && n.name == "contenteditable"
@@ -2308,6 +2391,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                 {
                     n.value = Some(js_word!(""));
                 }
+
                 _ if self.options.normalize_attributes
                     && self.is_semicolon_separated_attribute(element, n) =>
                 {
@@ -2320,6 +2404,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                             .into(),
                     );
                 }
+
                 _ if self.options.normalize_attributes
                     && n.name == "content"
                     && self.element_has_attribute_with_value(
@@ -2349,6 +2434,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
 
                     n.value = Some(value.into());
                 }
+
                 _ if self.options.sort_space_separated_attribute_values
                     && self.is_attribute_value_unordered_set(element, n) =>
                 {
@@ -2358,6 +2444,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
 
                     n.value = Some(values.join(" ").into());
                 }
+
                 _ if self.options.normalize_attributes
                     && self.is_space_separated_attribute(element, n) =>
                 {
@@ -2369,6 +2456,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                             .into(),
                     );
                 }
+
                 _ if self.is_comma_separated_attribute(element, n) => {
                     let mut value = value.to_string();
 
@@ -2405,6 +2493,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                         n.value = Some(value.into());
                     }
                 }
+
                 _ if self.is_trimable_separated_attribute(element, n) => {
                     let mut value = value.to_string();
 
@@ -2433,6 +2522,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                     String::with_capacity(11 + minified.len());
 
                                 with_javascript.push_str("javascript:");
+
                                 with_javascript.push_str(&minified);
 
                                 n.value = Some(with_javascript.into());
@@ -2444,6 +2534,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                         fallback(n);
                     }
                 }
+
                 _ if self.options.minify_additional_attributes.is_some() => {
                     match self.is_additional_minifier_attribute(&n.name) {
                         Some(MinifierType::JsScript) if self.need_minify_js() => {
@@ -2451,16 +2542,19 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                 n.value = Some(minified.into());
                             }
                         }
+
                         Some(MinifierType::JsModule) if self.need_minify_js() => {
                             if let Some(minified) = self.minify_js(value.to_string(), true, true) {
                                 n.value = Some(minified.into());
                             }
                         }
+
                         Some(MinifierType::Json) if self.need_minify_json() => {
                             if let Some(minified) = self.minify_json(value.to_string()) {
                                 n.value = Some(minified.into());
                             }
                         }
+
                         Some(MinifierType::Css) if self.need_minify_css() => {
                             if let Some(minified) = self.minify_css(
                                 value.to_string(),
@@ -2469,6 +2563,7 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                 n.value = Some(minified.into());
                             }
                         }
+
                         Some(MinifierType::Html) => {
                             if let Some(minified) = self.minify_html(
                                 value.to_string(),
@@ -2477,9 +2572,11 @@ impl<C: MinifyCss> Minifier<'_, C> {
                                 n.value = Some(minified.into());
                             };
                         }
+
                         _ => {}
                     }
                 }
+
                 _ => {}
             }
         }
@@ -2508,7 +2605,9 @@ impl<C: MinifyCss> VisitMut for Minifier<'_, C> {
         }
 
         n.name = Some("html".into());
+
         n.system_id = None;
+
         n.public_id = None;
     }
 
@@ -2527,6 +2626,7 @@ impl<C: MinifyCss> VisitMut for Minifier<'_, C> {
                 Child::Text(_) | Child::Element(_) => {
                     self.latest_element = Some(n.clone());
                 }
+
                 _ => {}
             }
         }
@@ -2669,14 +2769,17 @@ impl<C: MinifyCss> VisitMut for Minifier<'_, C> {
                         Some("module") if self.need_minify_js() => {
                             text_type = Some(MinifierType::JsModule);
                         }
+
                         Some(value)
                             if self.need_minify_js() && self.is_type_text_javascript(value) =>
                         {
                             text_type = Some(MinifierType::JsScript);
                         }
+
                         None if self.need_minify_js() => {
                             text_type = Some(MinifierType::JsScript);
                         }
+
                         Some(
                             "application/json"
                             | "application/ld+json"
@@ -2685,6 +2788,7 @@ impl<C: MinifyCss> VisitMut for Minifier<'_, C> {
                         ) if self.need_minify_json() => {
                             text_type = Some(MinifierType::Json);
                         }
+
                         Some(script_type)
                             if self.options.minify_additional_scripts_content.is_some() =>
                         {
@@ -2694,6 +2798,7 @@ impl<C: MinifyCss> VisitMut for Minifier<'_, C> {
                                 text_type = Some(minifier_type);
                             }
                         }
+
                         _ => {}
                     }
                 }
@@ -2723,6 +2828,7 @@ impl<C: MinifyCss> VisitMut for Minifier<'_, C> {
                 "title" if current_element.namespace == Namespace::HTML => {
                     n.data = self.collapse_whitespace(&n.data).trim().into();
                 }
+
                 _ => {}
             }
         }
@@ -2736,6 +2842,7 @@ impl<C: MinifyCss> VisitMut for Minifier<'_, C> {
 
                 n.data = minified.into();
             }
+
             Some(MinifierType::JsModule) => {
                 let minified = match self.minify_js(n.data.to_string(), true, false) {
                     Some(minified) => minified,
@@ -2744,6 +2851,7 @@ impl<C: MinifyCss> VisitMut for Minifier<'_, C> {
 
                 n.data = minified.into();
             }
+
             Some(MinifierType::Json) => {
                 let minified = match self.minify_json(n.data.to_string()) {
                     Some(minified) => minified,
@@ -2752,6 +2860,7 @@ impl<C: MinifyCss> VisitMut for Minifier<'_, C> {
 
                 n.data = minified.into();
             }
+
             Some(MinifierType::Css) => {
                 let minified =
                     match self.minify_css(n.data.to_string(), CssMinificationMode::Stylesheet) {
@@ -2761,6 +2870,7 @@ impl<C: MinifyCss> VisitMut for Minifier<'_, C> {
 
                 n.data = minified.into();
             }
+
             Some(MinifierType::Html) => {
                 let minified = match self.minify_html(
                     n.data.to_string(),
@@ -2772,6 +2882,7 @@ impl<C: MinifyCss> VisitMut for Minifier<'_, C> {
 
                 n.data = minified.into();
             }
+
             _ => {}
         }
     }
@@ -2788,6 +2899,7 @@ impl<C: MinifyCss> VisitMut for Minifier<'_, C> {
                 Some(start_pos) => start_pos,
                 _ => return,
             };
+
             let end_pos = match n.data.find("<![") {
                 Some(end_pos) => end_pos,
                 _ => return,
@@ -2804,12 +2916,17 @@ impl<C: MinifyCss> VisitMut for Minifier<'_, C> {
                 Some(minified) => minified,
                 _ => return,
             };
+
             let before: String = n.data.chars().take(start_pos).collect();
+
             let after: String = n.data.chars().skip(end_pos).take(n.data.len()).collect();
+
             let mut data = String::with_capacity(n.data.len());
 
             data.push_str(&before);
+
             data.push_str(&minified);
+
             data.push_str(&after);
 
             n.data = data.into();
@@ -2831,6 +2948,7 @@ impl VisitMut for AttributeNameCounter {
 
 pub trait MinifyCss {
     type Options;
+
     fn minify_css(
         &self,
         options: &MinifyCssOption<Self::Options>,
@@ -2869,6 +2987,7 @@ impl MinifyCss for DefaultCssMinifier {
         let mut errors: Vec<_> = Vec::new();
 
         let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
+
         let fm = cm.new_source_file(FileName::Anon.into(), data);
 
         let mut options = self.get_css_options(options);
@@ -2880,6 +2999,7 @@ impl MinifyCss for DefaultCssMinifier {
                     _ => return None,
                 }
             }
+
             CssMinificationMode::ListOfDeclarations => {
                 match swc_css_parser::parse_file::<Vec<swc_css_ast::DeclarationOrAtRule>>(
                     &fm,
@@ -2918,9 +3038,11 @@ impl MinifyCss for DefaultCssMinifier {
                             )],
                         }
                     }
+
                     _ => return None,
                 }
             }
+
             CssMinificationMode::MediaQueryList => {
                 match swc_css_parser::parse_file::<swc_css_ast::MediaQueryList>(
                     &fm,
@@ -2975,6 +3097,7 @@ impl MinifyCss for DefaultCssMinifier {
         swc_css_minifier::minify(&mut stylesheet, options.minifier);
 
         let mut minified = String::new();
+
         let wr = swc_css_codegen::writer::basic::BasicCssWriter::new(
             &mut minified,
             None,
@@ -2989,6 +3112,7 @@ impl MinifyCss for DefaultCssMinifier {
             CssMinificationMode::Stylesheet => {
                 swc_css_codegen::Emit::emit(&mut gen, &stylesheet).unwrap();
             }
+
             CssMinificationMode::ListOfDeclarations => {
                 let swc_css_ast::Stylesheet { rules, .. } = &stylesheet;
 
@@ -3003,6 +3127,7 @@ impl MinifyCss for DefaultCssMinifier {
 
                 minified = minified[1..minified.len() - 1].to_string();
             }
+
             CssMinificationMode::MediaQueryList => {
                 let swc_css_ast::Stylesheet { rules, .. } = &stylesheet;
 
@@ -3029,10 +3154,12 @@ fn create_minifier<'a, C: MinifyCss>(
     css_minifier: &'a C,
 ) -> Minifier<'a, C> {
     let mut current_element = None;
+
     let mut is_pre = false;
 
     if let Some(context_element) = context_element {
         current_element = Some(context_element.clone());
+
         is_pre = get_white_space(context_element.namespace, &context_element.tag_name)
             == WhiteSpace::Pre;
     }

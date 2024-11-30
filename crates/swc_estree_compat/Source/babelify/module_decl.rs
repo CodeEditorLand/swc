@@ -46,6 +46,7 @@ impl Babelify for ModuleDecl {
             ModuleDecl::TsExportAssignment(a) => {
                 ModuleDeclOutput::TsExportAssignment(a.babelify(ctx))
             }
+
             ModuleDecl::TsNamespaceExport(e) => {
                 ModuleDeclOutput::TsNamespaceExport(e.babelify(ctx))
             }
@@ -113,6 +114,7 @@ fn convert_import_attrs(
                         &prop_or_spread
                     ),
                 };
+
                 let (key, val) = match *prop {
                     Prop::KeyValue(keyval) => {
                         let key = match keyval.key {
@@ -123,6 +125,7 @@ fn convert_import_attrs(
                                 &keyval.key
                             ),
                         };
+
                         let val = match *keyval.value {
                             Expr::Lit(lit) => match lit {
                                 Lit::Str(s) => s.babelify(ctx),
@@ -138,11 +141,13 @@ fn convert_import_attrs(
                         };
                         (key, val)
                     }
+
                     _ => panic!(
                         "illegal conversion: Cannot convert {:?} to key, value",
                         &prop
                     ),
                 };
+
                 ImportAttribute {
                     base: ctx.base(obj_span),
                     key,
@@ -325,6 +330,7 @@ impl Babelify for ExportDefaultSpecifier {
 
     fn babelify(self, ctx: &Context) -> Self::Output {
         let exported = self.exported.babelify(ctx);
+
         BabelExportDefaultSpecifier {
             base: exported.base.clone(),
             exported,

@@ -72,12 +72,15 @@ where
                 .scope
                 .get_module(id)
                 .unwrap_or_else(|| unreachable!("Module {} is not registered", id));
+
             let mut module = self.apply_hooks(id, is_entry)?;
+
             module = self.prepare_for_merging(ctx, &info, module)?;
 
             if !is_entry {
                 module = self.wrap_cjs_module(ctx, &info, module)?;
             }
+
             self.replace_cjs_require_calls(&info, &mut module, is_entry);
 
             Ok(module)
@@ -104,13 +107,16 @@ where
 
             let deps = all_deps_of_entry.iter().map(|id| {
                 let dep_info = self.scope.get_module(*id).unwrap();
+
                 entry_info.helpers.extend(&dep_info.helpers);
 
                 {
                     let helpers = *entry_info.swc_helpers.lock();
+
                     let dep_helpers = *dep_info.swc_helpers.lock();
 
                     let helpers = Helpers::from_data(helpers);
+
                     let dep_helpers = Helpers::from_data(dep_helpers);
 
                     helpers.extend_from(&dep_helpers);
@@ -135,7 +141,9 @@ where
             }
 
             self.replace_import_specifiers(&entry_info, entry);
+
             self.finalize_merging_of_entry(ctx, entry_id, entry);
+
             self.remove_wrong_exports(ctx, &entry_info, entry);
         })
     }
@@ -153,7 +161,9 @@ where
             if !dejavu.insert(dep) {
                 continue;
             }
+
             set.insert(dep);
+
             set.extend(self.collect_all_deps(graph, dep, dejavu));
         }
 
@@ -169,6 +179,7 @@ where
             let info = self.scope.get_module(module_id).unwrap();
 
             let mut entry: Module = (*info.module).clone();
+
             entry.visit_mut_with(&mut ImportMetaHandler {
                 file: &info.fm.name,
                 hook: &self.hook,
@@ -190,6 +201,7 @@ where
     /// to be called before `sort`.
     fn inject_reexports(&self, ctx: &Ctx, _entry_id: ModuleId, entry: &mut Modules) {
         // dbg!(&ctx.transitive_remap);
+
         let injected_ctxt = self.injected_ctxt;
 
         {
@@ -209,9 +221,11 @@ where
                     Some(v) => v,
                     _ => return,
                 };
+
                 if remapped == id.ctxt() {
                     return;
                 }
+
                 let reexported = id.clone().with_ctxt(remapped);
 
                 add_var(
@@ -247,6 +261,7 @@ where
                 if let ModuleItem::Stmt(Stmt::Decl(Decl::Var(decl))) = stmt {
                     if decl.ctxt == injected_ctxt {
                         let ids: Vec<Id> = find_pat_ids(decl);
+
                         declared_ids.extend(ids);
                     }
                 }
@@ -258,7 +273,9 @@ where
                         for s in &export.specifiers {
                             match s {
                                 ExportSpecifier::Namespace(_) => {}
+
                                 ExportSpecifier::Default(_) => {}
+
                                 ExportSpecifier::Named(named) => {
                                     if let Some(exported) = &named.exported {
                                         let exported = match exported {
@@ -269,6 +286,7 @@ where
                                         };
 
                                         let id: Id = exported.into();
+
                                         if declared_ids.contains(&id) {
                                             continue;
                                         }
@@ -285,6 +303,7 @@ where
                                                         ),
                                                 ));
                                             }
+
                                             ModuleExportName::Str(..) => {
                                                 unimplemented!("module string names unimplemented")
                                             }
@@ -323,6 +342,7 @@ where
 
         {
             let mut map = ctx.export_stars_in_wrapped.lock();
+
             let mut additional_props = AHashMap::<_, Vec<_>>::default();
             // Handle `export *` for wrapped modules.
             for (module_id, ctxts) in map.drain() {
@@ -364,6 +384,7 @@ where
                         {
                             var
                         }
+
                         _ => continue,
                     };
 
@@ -372,8 +393,10 @@ where
                     }
 
                     let var_decl = &mut var.decls[0];
+
                     match &var_decl.name {
                         Pat::Ident(i) if id == i.id => {}
+
                         _ => continue,
                     }
 
@@ -423,6 +446,7 @@ where
                     };
 
                     obj.props.extend(props);
+
                     break;
                 }
             }
@@ -433,6 +457,7 @@ where
         tracing::trace!("All modules are merged");
 
         tracing::debug!("Injecting reexports");
+
         self.inject_reexports(ctx, id, entry);
 
         // entry.print(&self.cm, "before inline");
@@ -503,6 +528,7 @@ where
         tracing::debug!("Removing wrong exports");
 
         let item_count = module.iter().count();
+
         tracing::trace!("Item count = {}", item_count);
 
         module.retain_mut(|_, item| {
@@ -528,6 +554,7 @@ where
                             ctx.is_exported_ctxt(exported.ctxt, info.export_ctxt())
                         }
                     }
+
                     _ => true,
                 });
 
@@ -560,6 +587,7 @@ where
         self.handle_imports_and_exports(ctx, info, &mut module);
 
         let wrapped = self.scope.should_be_wrapped_with_a_fn(info.id);
+
         if wrapped {
             module = self.wrap_esm(ctx, info.id, module)?;
         }
@@ -590,6 +618,7 @@ where
                         // Preserve imports from node.js builtin modules.
                         if self.config.external_modules.contains(&import.src.value) {
                             new.push(import.into());
+
                             continue;
                         }
 
@@ -601,6 +630,7 @@ where
                         {
                             if !self.scope.get_module(src.module_id).unwrap().is_es6 {
                                 new.push(import.into());
+
                                 continue;
                             }
                         }
@@ -616,6 +646,7 @@ where
                                                 unimplemented!("module string names unimplemented")
                                             }
                                         };
+
                                         new.push(
                                             imported
                                                 .clone()
@@ -627,6 +658,7 @@ where
                                         );
                                     }
                                 }
+
                                 ImportSpecifier::Default(s) => {
                                     new.push(
                                         Ident::new(
@@ -643,6 +675,7 @@ where
                                         ),
                                     );
                                 }
+
                                 ImportSpecifier::Namespace(s) => {
                                     if let Some((src, _)) = info
                                         .imports
@@ -656,6 +689,7 @@ where
                                                  means failure of deblobbing and as a result \
                                                  module should be marked as wrapped esm",
                                             );
+
                                         new.push(
                                             esm_id
                                                 .clone()
@@ -671,8 +705,10 @@ where
                         }
 
                         import.specifiers.clear();
+
                         new.push(import.into());
                     }
+
                     ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultDecl(export)) => {
                         // At here, we create multiple items.
                         //
@@ -703,8 +739,10 @@ where
                                             "prepare -> export default decl -> class -> with ident",
                                         ))
                                     }
+
                                     None => {
                                         let init = c;
+
                                         new.push(init.assign_to(local.clone()).into_module_item(
                                             injected_ctxt,
                                             "prepare -> export default decl -> class -> without \
@@ -713,6 +751,7 @@ where
                                     }
                                 }
                             }
+
                             DefaultDecl::Fn(f) => {
                                 //
                                 match f.ident {
@@ -732,12 +771,14 @@ where
                                              ident",
                                         ))
                                     }
+
                                     None => {
                                         // We should inject a function declaration because of
                                         // dependencies.
                                         //
                                         // See: https://github.com/denoland/deno/issues/9346
                                         let ident = private_ident!("default");
+
                                         new.push(
                                             FnDecl {
                                                 ident: ident.clone(),
@@ -755,6 +796,7 @@ where
                                     }
                                 }
                             }
+
                             DefaultDecl::TsInterfaceDecl(_) => continue,
                         }
 
@@ -779,6 +821,7 @@ where
                             exported: Some(ModuleExportName::Ident(exported)),
                             is_type_only: false,
                         });
+
                         extra.push(
                             NamedExport {
                                 span: export.span,
@@ -831,7 +874,9 @@ where
                             exported: Some(ModuleExportName::Ident(exported)),
                             is_type_only: false,
                         });
+
                         tracing::trace!("Exporting `default` with `export default expr`");
+
                         extra.push(
                             NamedExport {
                                 span: export.span,
@@ -857,16 +902,20 @@ where
                         let local = match export.decl {
                             Decl::Class(c) => {
                                 let i = c.ident.clone();
+
                                 new.push(c.into());
 
                                 i
                             }
+
                             Decl::Fn(f) => {
                                 let i = f.ident.clone();
+
                                 new.push(f.into());
 
                                 i
                             }
+
                             Decl::Var(v) => {
                                 let ids: Vec<Ident> = find_pat_ids(&v);
                                 //
@@ -919,7 +968,9 @@ where
                                     ),
                                 }
                                 .into();
+
                                 extra.push(export);
+
                                 continue;
                             }
 
@@ -984,10 +1035,12 @@ where
                                 .find(|s| s.0.src.value == export_src.value)
                             {
                                 let dep = self.scope.get_module(src.module_id).unwrap();
+
                                 if !dep.is_es6 {
                                     dep.helpers.require.store(true, Ordering::SeqCst);
 
                                     let mut vars = Vec::new();
+
                                     let mod_var = private_ident!("_cjs_module_");
 
                                     vars.push(VarDeclarator {
@@ -1008,6 +1061,7 @@ where
                                         ),
                                         definite: Default::default(),
                                     });
+
                                     for s in specifiers {
                                         match s {
                                             ExportSpecifier::Namespace(s) => {
@@ -1020,6 +1074,7 @@ where
                                                             definite: Default::default(),
                                                         });
                                                     }
+
                                                     ModuleExportName::Str(..) => {
                                                         unimplemented!(
                                                             "module string names unimplemented"
@@ -1027,6 +1082,7 @@ where
                                                     }
                                                 };
                                             }
+
                                             ExportSpecifier::Default(s) => {
                                                 vars.push(VarDeclarator {
                                                     span: DUMMY_SP,
@@ -1040,25 +1096,31 @@ where
                                                     definite: Default::default(),
                                                 });
                                             }
+
                                             ExportSpecifier::Named(s) => {
                                                 let exp = s.exported.clone();
+
                                                 let exported = match exp {
                                                     Some(ModuleExportName::Ident(ident)) => {
                                                         Some(ident)
                                                     }
+
                                                     Some(ModuleExportName::Str(..)) => {
                                                         unimplemented!(
                                                             "module string names unimplemented"
                                                         )
                                                     }
+
                                                     _ => None,
                                                 };
+
                                                 let orig = match &s.orig {
                                                     ModuleExportName::Ident(ident) => ident,
                                                     _ => unimplemented!(
                                                         "module string names unimplemented"
                                                     ),
                                                 };
+
                                                 vars.push(VarDeclarator {
                                                     span: s.span,
                                                     name: exported.clone().unwrap().into(),
@@ -1086,6 +1148,7 @@ where
                                             .into(),
                                         );
                                     }
+
                                     continue;
                                 }
                             }
@@ -1104,10 +1167,12 @@ where
                                             unimplemented!("module string names unimplemented")
                                         }
                                     };
+
                                     let orig_ident = match orig {
                                         ModuleExportName::Ident(ident) => ident,
                                         _ => unimplemented!("module string names unimplemented"),
                                     };
+
                                     new.push(
                                         orig_ident
                                             .clone()
@@ -1154,6 +1219,7 @@ where
 
                                                 let wrapped_esm_id =
                                                     self.scope.wrapped_esm_id(src.module_id);
+
                                                 match wrapped_esm_id {
                                                     Some(module_var) => {
                                                         // Create variable for the namespaced
@@ -1168,6 +1234,7 @@ where
                                                                      reexport",
                                                                 ),
                                                         );
+
                                                         let specifier = ExportSpecifier::Named(
                                                             ExportNamedSpecifier {
                                                                 span: ns.span,
@@ -1178,6 +1245,7 @@ where
                                                                 is_type_only: false,
                                                             },
                                                         );
+
                                                         extra.push(
                                                             NamedExport {
                                                                 span: ns.span,
@@ -1189,6 +1257,7 @@ where
                                                             .into(),
                                                         );
                                                     }
+
                                                     None => {
                                                         unreachable!(
                                                             "Modules reexported with `export * as \
@@ -1201,12 +1270,14 @@ where
                                                 // Remove `export * as foo from ''`
                                                 continue;
                                             }
+
                                             ModuleExportName::Str(..) => {
                                                 unimplemented!("module string names unimplemented")
                                             }
                                         }
                                     }
                                 }
+
                                 _ => {}
                             }
                         }
@@ -1219,6 +1290,7 @@ where
 
                         if let Some(export_ctxt) = metadata.export_ctxt {
                             let reexport = self.scope.get_module(info.id).unwrap().export_ctxt();
+
                             ctx.transitive_remap.insert(export_ctxt, reexport);
                         }
 
@@ -1245,6 +1317,7 @@ where
         let injected_ctxt = self.injected_ctxt;
 
         let mut vars = Vec::new();
+
         module.map_any_items(|module_id, stmts| {
             let mut new = Vec::with_capacity(stmts.len() + 32);
 
@@ -1252,6 +1325,7 @@ where
                 if let ModuleItem::ModuleDecl(ModuleDecl::Import(import)) = &stmt {
                     if self.config.external_modules.contains(&import.src.value) {
                         new.push(stmt);
+
                         continue;
                     }
 
@@ -1265,6 +1339,7 @@ where
                                             unimplemented!("module string names unimplemented")
                                         }
                                     };
+
                                     vars.push((
                                         module_id,
                                         imporeted_ident
@@ -1275,9 +1350,11 @@ where
                                                 "from_replace_import_specifiers",
                                             ),
                                     ));
+
                                     continue;
                                 }
                             }
+
                             ImportSpecifier::Default(default) => {
                                 if let Some((src, _)) = info
                                     .imports
@@ -1287,6 +1364,7 @@ where
                                 {
                                     let imported =
                                         Ident::new("default".into(), DUMMY_SP, src.export_ctxt);
+
                                     vars.push((
                                         module_id,
                                         imported.assign_to(default.local.clone()).into_module_item(
@@ -1294,9 +1372,11 @@ where
                                             "from_replace_import_specifiers",
                                         ),
                                     ));
+
                                     continue;
                                 }
                             }
+
                             ImportSpecifier::Namespace(s) => {
                                 if let Some((src, _)) = info
                                     .imports
@@ -1309,6 +1389,7 @@ where
                                          failure of deblobbing and as a result module should be \
                                          marked as wrapped esm",
                                     );
+
                                     vars.push((
                                         module_id,
                                         esm_id.clone().assign_to(s.local.clone()).into_module_item(
@@ -1316,6 +1397,7 @@ where
                                             "from_replace_import_specifiers: namespaced",
                                         ),
                                     ));
+
                                     continue;
                                 }
                             }
@@ -1358,6 +1440,7 @@ impl VisitMut for ImportMetaHandler<'_, '_> {
         }) = e
         {
             *e = self.inline_ident.clone().into();
+
             self.occurred = true;
         }
     }
@@ -1398,6 +1481,7 @@ impl VisitMut for ImportMetaHandler<'_, '_> {
                         .into(),
                     );
                 }
+
                 Err(err) => self.err = Some(err),
             }
         }

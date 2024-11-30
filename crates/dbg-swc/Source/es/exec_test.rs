@@ -37,6 +37,7 @@ impl ExecForTestingCommand {
 
         {
             let _timer = timer!("run");
+
             let stdout = output
                 .runtime
                 .execute(&output.path)
@@ -60,6 +61,7 @@ impl TestMinifiedBundleCommand {
 
         let mut minified = {
             let _timer = timer!("minify");
+
             swc_ecma_minifier::optimize(
                 bundle.module.into(),
                 cm.clone(),
@@ -84,6 +86,7 @@ impl TestMinifiedBundleCommand {
         let code = print_js(cm, &minified, true).context("failed to convert ast to code")?;
 
         let path = Path::new("output.js").to_path_buf();
+
         fs::write(&path, code.as_bytes()).context("failed to write code as file")?;
 
         Ok(Output {
@@ -109,6 +112,7 @@ impl JsRuntime {
             // JsRuntime::Node => todo!("node.execute"),
             JsRuntime::Deno => {
                 let mut cmd = Command::new("deno");
+
                 cmd.arg("run").arg("--no-check");
 
                 cmd.arg(path);

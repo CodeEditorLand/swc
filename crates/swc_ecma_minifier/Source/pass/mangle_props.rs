@@ -88,6 +88,7 @@ impl ManglePropertiesState {
                 let mangled_name = self.chars.encode(&mut self.n, true);
 
                 self.cache.insert(name.clone(), mangled_name.clone());
+
                 Some(mangled_name)
             }
         } else {
@@ -111,6 +112,7 @@ pub(crate) fn mangle_properties(
     };
 
     let data = analyze(&*m, None);
+
     m.visit_mut_with(&mut PropertyCollector {
         state: &mut state,
         data,
@@ -161,9 +163,11 @@ impl VisitMut for PropertyCollector<'_> {
             PropName::Ident(ident) => {
                 self.state.add(&ident.sym);
             }
+
             PropName::Str(s) => {
                 self.state.add(&s.value);
             }
+
             _ => {}
         };
     }
@@ -232,6 +236,7 @@ impl Mangler<'_> {
     fn mangle_str(&mut self, string: &mut Str) {
         if let Some(mangled) = self.state.gen_name(&string.value) {
             string.value = mangled;
+
             string.raw = None;
         }
     }
@@ -278,9 +283,11 @@ impl VisitMut for Mangler<'_> {
             PropName::Ident(ident) => {
                 self.mangle_ident(ident);
             }
+
             PropName::Str(string) => {
                 self.mangle_str(string);
             }
+
             _ => {}
         }
     }

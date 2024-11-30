@@ -37,25 +37,31 @@ impl VisitMut for DroppedCommentsPreserver {
 
     fn visit_mut_module(&mut self, module: &mut Module) {
         module.visit_mut_children_with(self);
+
         self.known_spans
             .sort_by(|span_a, span_b| span_a.lo.cmp(&span_b.lo));
+
         self.shift_comments_to_known_spans();
     }
 
     fn visit_mut_script(&mut self, script: &mut Script) {
         script.visit_mut_children_with(self);
+
         self.known_spans
             .sort_by(|span_a, span_b| span_a.lo.cmp(&span_b.lo));
+
         self.shift_comments_to_known_spans();
     }
 
     fn visit_mut_span(&mut self, span: &mut Span) {
         if span.is_dummy() || self.is_first_span {
             self.is_first_span = false;
+
             return;
         }
 
         self.known_spans.push(*span);
+
         span.visit_mut_children_with(self)
     }
 }
@@ -77,6 +83,7 @@ impl DroppedCommentsPreserver {
     /// once.
     fn collect_existing_comments(&self, comments: &SingleThreadedComments) -> CommentEntries {
         let (mut leading_comments, mut trailing_comments) = comments.borrow_all_mut();
+
         let mut existing_comments: CommentEntries = leading_comments
             .drain()
             .chain(trailing_comments.drain())
@@ -101,10 +108,12 @@ impl DroppedCommentsPreserver {
 
         for span in self.known_spans.iter() {
             let cut_point = existing_comments.partition_point(|(bp, _)| *bp <= span.lo);
+
             let collected_comments = existing_comments
                 .drain(..cut_point)
                 .flat_map(|(_, c)| c)
                 .collect::<Vec<Comment>>();
+
             self.comments
                 .add_leading_comments(span.lo, collected_comments)
         }

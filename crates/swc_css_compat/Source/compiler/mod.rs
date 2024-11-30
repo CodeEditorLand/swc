@@ -99,8 +99,10 @@ impl VisitMut for Compiler {
                         rules.visit_mut_with(self);
 
                         new.push(Rule::QualifiedRule(n));
+
                         new.extend(rules);
                     }
+
                     _ => {
                         new.push(n);
                     }

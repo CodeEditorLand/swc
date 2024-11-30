@@ -79,8 +79,10 @@ impl FastDts {
             Program::Module(module) => {
                 self.transform_module_items(&mut module.body);
             }
+
             Program::Script(script) => {
                 let mut last_function_name: Option<Atom> = None;
+
                 script.body.retain_mut(|stmt| {
                     if let Some(fn_decl) = stmt.as_decl().and_then(|decl| decl.as_fn_decl()) {
                         if fn_decl.function.body.is_some() {
@@ -94,6 +96,7 @@ impl FastDts {
                             last_function_name = Some(fn_decl.ident.sym.clone());
                         }
                     }
+
                     self.transform_module_stmt(stmt)
                 })
             }
@@ -104,9 +107,11 @@ impl FastDts {
 
     fn transform_module_items(&mut self, items: &mut Vec<ModuleItem>) {
         let orig_items = take(items);
+
         let mut new_items = Vec::with_capacity(orig_items.len());
 
         let mut last_function_name: Option<Atom> = None;
+
         let mut is_export_default_function_overloads = false;
 
         for mut item in orig_items {
@@ -175,6 +180,7 @@ impl FastDts {
                     if let Some(fn_expr) = export.decl.as_fn_expr() {
                         if is_export_default_function_overloads && fn_expr.function.body.is_some() {
                             is_export_default_function_overloads = false;
+
                             continue;
                         } else {
                             is_export_default_function_overloads = true;
@@ -187,9 +193,11 @@ impl FastDts {
                         DefaultDecl::Class(class_expr) => {
                             self.class_body_to_type(&mut class_expr.class.body);
                         }
+
                         DefaultDecl::Fn(fn_expr) => {
                             fn_expr.function.body = None;
                         }
+
                         DefaultDecl::TsInterfaceDecl(_) => {}
                     };
 
@@ -198,7 +206,9 @@ impl FastDts {
 
                 ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(export)) => {
                     let name = self.gen_unique_name();
+
                     let name_ident = Ident::new_no_ctxt(name, DUMMY_SP);
+
                     let type_ann = self
                         .expr_to_ts_type(export.expr.clone(), false, true)
                         .map(type_ann);
@@ -258,6 +268,7 @@ impl FastDts {
                     true
                 } else {
                     self.mark_diagnostic_unable_to_infer(decl.span());
+
                     false
                 }
             }
@@ -279,6 +290,7 @@ impl FastDts {
                 for elems in arr.elems {
                     if let Some(expr_or_spread) = elems {
                         let span = expr_or_spread.span();
+
                         if let Some(ts_expr) =
                             self.expr_to_ts_type(expr_or_spread.expr, as_const, as_readonly)
                         {
@@ -306,6 +318,7 @@ impl FastDts {
                 if as_readonly {
                     result = ts_readonly(result);
                 }
+
                 Some(result)
             }
 
@@ -320,15 +333,18 @@ impl FastDts {
                     match item {
                         PropOrSpread::Prop(prop_box) => {
                             let prop = *prop_box;
+
                             match prop {
                                 Prop::KeyValue(key_value) => {
                                     let (key, computed) = match key_value.key {
                                         PropName::Ident(ident) => {
                                             (Expr::Ident(ident.into()), false)
                                         }
+
                                         PropName::Str(str_prop) => {
                                             (Lit::Str(str_prop).into(), false)
                                         }
+
                                         PropName::Num(num) => (Lit::Num(num).into(), true),
                                         PropName::Computed(computed) => (*computed.expr, true),
                                         PropName::BigInt(big_int) => {
@@ -351,6 +367,7 @@ impl FastDts {
                                         },
                                     ));
                                 }
+
                                 Prop::Shorthand(_)
                                 | Prop::Assign(_)
                                 | Prop::Getter(_)
@@ -360,6 +377,7 @@ impl FastDts {
                                 }
                             }
                         }
+
                         PropOrSpread::Spread(_) => {
                             self.mark_diagnostic(DtsIssue::UnableToInferTypeFromSpread {
                                 range: self.source_range_to_range(item.span()),
@@ -373,6 +391,7 @@ impl FastDts {
                     members,
                 })))
             }
+
             Expr::Lit(lit) => {
                 if as_const {
                     maybe_lit_to_ts_type_const(&lit)
@@ -380,10 +399,12 @@ impl FastDts {
                     maybe_lit_to_ts_type(&lit)
                 }
             }
+
             Expr::TsConstAssertion(ts_const) => self.expr_to_ts_type(ts_const.expr, true, true),
             Expr::TsSatisfies(satisifies) => {
                 self.expr_to_ts_type(satisifies.expr, as_const, as_readonly)
             }
+
             Expr::TsAs(ts_as) => Some(ts_as.type_ann),
             Expr::Fn(fn_expr) => {
                 let return_type = fn_expr
@@ -407,6 +428,7 @@ impl FastDts {
                     }),
                 )))
             }
+
             Expr::Arrow(arrow_expr) => {
                 let return_type = arrow_expr.return_type.map_or(any_type_ann(), |val| val);
 
@@ -462,18 +484,26 @@ impl FastDts {
 
     fn decl_to_type_decl(&mut self, decl: &mut Decl) -> Option<()> {
         let is_declare = self.is_top_level;
+
         match decl {
             Decl::Class(class_decl) => {
                 self.class_body_to_type(&mut class_decl.class.body);
+
                 class_decl.declare = is_declare;
+
                 Some(())
             }
+
             Decl::Fn(fn_decl) => {
                 fn_decl.function.body = None;
+
                 fn_decl.declare = is_declare;
+
                 self.handle_func_params(&mut fn_decl.function.params);
+
                 Some(())
             }
+
             Decl::Var(var_decl) => {
                 var_decl.declare = is_declare;
 
@@ -481,6 +511,7 @@ impl FastDts {
                     if let Pat::Ident(ident) = &mut decl.name {
                         if ident.type_ann.is_some() {
                             decl.init = None;
+
                             continue;
                         }
 
@@ -491,8 +522,10 @@ impl FastDts {
                             .map(type_ann)
                             .or_else(|| {
                                 self.mark_diagnostic_any_fallback(ident.span());
+
                                 Some(any_type_ann())
                             });
+
                         ident.type_ann = ts_type;
                     } else {
                         self.mark_diagnostic_unable_to_infer(decl.span());
@@ -503,6 +536,7 @@ impl FastDts {
 
                 Some(())
             }
+
             Decl::TsEnum(ts_enum) => {
                 ts_enum.declare = is_declare;
 
@@ -520,6 +554,7 @@ impl FastDts {
 
                 Some(())
             }
+
             Decl::TsModule(ts_module) => {
                 ts_module.declare = is_declare;
 
@@ -531,11 +566,13 @@ impl FastDts {
                     Some(())
                 }
             }
+
             Decl::TsInterface(_) | Decl::TsTypeAlias(_) => Some(()),
             Decl::Using(_) => {
                 self.mark_diagnostic(DtsIssue::UnsupportedUsing {
                     range: self.source_range_to_range(decl.span()),
                 });
+
                 None
             }
         }
@@ -543,15 +580,21 @@ impl FastDts {
 
     fn transform_ts_ns_body(&mut self, ns: TsNamespaceBody) -> TsNamespaceBody {
         let original_is_top_level = self.is_top_level;
+
         self.is_top_level = false;
+
         let body = match ns {
             TsNamespaceBody::TsModuleBlock(mut ts_module_block) => {
                 self.transform_module_items(&mut ts_module_block.body);
+
                 TsNamespaceBody::TsModuleBlock(ts_module_block)
             }
+
             TsNamespaceBody::TsNamespaceDecl(ts_ns) => self.transform_ts_ns_body(*ts_ns.body),
         };
+
         self.is_top_level = original_is_top_level;
+
         body
     }
 
@@ -572,6 +615,7 @@ impl FastDts {
                 OptChainBase::Member(member_expr) => {
                     self.valid_enum_init_expr(&member_expr.clone().into())
                 }
+
                 OptChainBase::Call(_) => false,
             },
             // TS does infer the type of identifiers
@@ -588,6 +632,7 @@ impl FastDts {
                         return false;
                     }
                 }
+
                 true
             }
 
@@ -700,6 +745,7 @@ impl FastDts {
             Some(type_ann(ts_type))
         } else {
             self.mark_diagnostic_any_fallback(span);
+
             Some(any_type_ann())
         }
     }
@@ -719,25 +765,33 @@ impl FastDts {
                 ClassMember::Constructor(class_constructor) => {
                     let is_overload =
                         class_constructor.body.is_none() && !class_constructor.is_optional;
+
                     if !prev_is_overload || is_overload {
                         prev_is_overload = is_overload;
+
                         true
                     } else {
                         prev_is_overload = false;
+
                         false
                     }
                 }
+
                 ClassMember::Method(method) => {
                     let is_overload = method.function.body.is_none()
                         && !(method.is_abstract || method.is_optional);
+
                     if !prev_is_overload || is_overload {
                         prev_is_overload = is_overload;
+
                         true
                     } else {
                         prev_is_overload = false;
+
                         false
                     }
                 }
+
                 ClassMember::TsIndexSignature(_)
                 | ClassMember::ClassProp(_)
                 | ClassMember::PrivateProp(_)
@@ -746,15 +800,19 @@ impl FastDts {
                 | ClassMember::AutoAccessor(_)
                 | ClassMember::PrivateMethod(_) => {
                     prev_is_overload = false;
+
                     true
                 }
             })
             .filter_map(|member| match member {
                 ClassMember::Constructor(mut class_constructor) => {
                     class_constructor.body = None;
+
                     self.handle_ts_param_props(&mut class_constructor.params);
+
                     Some(ClassMember::Constructor(class_constructor))
                 }
+
                 ClassMember::Method(mut method) => {
                     if let Some(new_prop_name) = valid_prop_name(&method.key) {
                         method.key = new_prop_name;
@@ -763,12 +821,16 @@ impl FastDts {
                     }
 
                     method.function.body = None;
+
                     if method.kind == MethodKind::Setter {
                         method.function.return_type = None;
                     }
+
                     self.handle_func_params(&mut method.function.params);
+
                     Some(ClassMember::Method(method))
                 }
+
                 ClassMember::ClassProp(mut prop) => {
                     if let Some(new_prop_name) = valid_prop_name(&prop.key) {
                         prop.key = new_prop_name;
@@ -784,12 +846,16 @@ impl FastDts {
                                 .or_else(|| Some(any_type_ann()));
                         }
                     }
+
                     prop.value = None;
+
                     prop.definite = false;
+
                     prop.declare = false;
 
                     Some(ClassMember::ClassProp(prop))
                 }
+
                 ClassMember::TsIndexSignature(index_sig) => {
                     Some(ClassMember::TsIndexSignature(index_sig))
                 }
@@ -814,15 +880,18 @@ impl FastDts {
                         TsParamPropParam::Ident(ident) => {
                             self.handle_func_param_ident(ident);
                         }
+
                         TsParamPropParam::Assign(assign) => {
                             if let Some(new_pat) = self.handle_func_param_assign(assign) {
                                 match new_pat {
                                     Pat::Ident(new_ident) => {
                                         param.param = TsParamPropParam::Ident(new_ident)
                                     }
+
                                     Pat::Assign(new_assign) => {
                                         param.param = TsParamPropParam::Assign(new_assign)
                                     }
+
                                     Pat::Rest(_)
                                     | Pat::Object(_)
                                     | Pat::Array(_)
@@ -836,6 +905,7 @@ impl FastDts {
                         }
                     }
                 }
+
                 ParamOrTsParamProp::Param(param) => self.handle_func_param(param),
             }
         }
@@ -852,11 +922,13 @@ impl FastDts {
             Pat::Ident(ident) => {
                 self.handle_func_param_ident(ident);
             }
+
             Pat::Assign(assign_pat) => {
                 if let Some(new_pat) = self.handle_func_param_assign(assign_pat) {
                     param.pat = new_pat;
                 }
             }
+
             Pat::Array(_) | Pat::Rest(_) | Pat::Object(_) | Pat::Invalid(_) | Pat::Expr(_) => {}
         }
     }
@@ -864,6 +936,7 @@ impl FastDts {
     fn handle_func_param_ident(&mut self, ident: &mut BindingIdent) {
         if ident.type_ann.is_none() {
             self.mark_diagnostic_any_fallback(ident.span());
+
             ident.type_ann = Some(any_type_ann());
         }
     }
@@ -877,8 +950,10 @@ impl FastDts {
                 }
 
                 ident.optional = true;
+
                 Some(Pat::Ident(ident.clone()))
             }
+
             Pat::Array(arr_pat) => {
                 if arr_pat.type_ann.is_none() {
                     arr_pat.type_ann =
@@ -886,8 +961,10 @@ impl FastDts {
                 }
 
                 arr_pat.optional = true;
+
                 Some(Pat::Array(arr_pat.clone()))
             }
+
             Pat::Object(obj_pat) => {
                 if obj_pat.type_ann.is_none() {
                     obj_pat.type_ann =
@@ -895,8 +972,10 @@ impl FastDts {
                 }
 
                 obj_pat.optional = true;
+
                 Some(Pat::Object(obj_pat.clone()))
             }
+
             Pat::Rest(_) | Pat::Assign(_) | Pat::Expr(_) | Pat::Invalid(_) => None,
         }
     }
@@ -927,8 +1006,10 @@ impl FastDts {
                         })
                     })
             }
+
             Pat::Expr(expr) => {
                 self.mark_diagnostic_unable_to_infer(expr.span());
+
                 None
             }
             // Invalid code is invalid, not sure why SWC doesn't throw
@@ -939,6 +1020,7 @@ impl FastDts {
 
     fn gen_unique_name(&mut self) -> Atom {
         self.id_counter += 1;
+
         format!("_dts_{}", self.id_counter).into()
     }
 }
@@ -1036,6 +1118,7 @@ fn valid_prop_name(prop_name: &PropName) -> Option<PropName> {
                     None
                 }
             }
+
             Expr::Paren(e) => prop_name_from_expr(&e.expr),
             Expr::TsTypeAssertion(e) => prop_name_from_expr(&e.expr),
             Expr::TsConstAssertion(e) => prop_name_from_expr(&e.expr),
@@ -1082,6 +1165,7 @@ fn valid_prop_name(prop_name: &PropName) -> Option<PropName> {
         PropName::Ident(_) | PropName::Str(_) | PropName::Num(_) | PropName::BigInt(_) => {
             Some(prop_name.clone())
         }
+
         PropName::Computed(computed) => prop_name_from_expr(&computed.expr),
     }
 }

@@ -27,6 +27,7 @@ pub fn font_family_no_duplicate_names(
         .into_iter()
         .map(NamePattern::try_from)
         .collect::<Result<_, _>>()?;
+
     Ok(visitor_rule(
         ctx.reaction(),
         FontFamilyNoDuplicateNames { ctx, ignored },
@@ -49,28 +50,35 @@ impl FontFamilyNoDuplicateNames {
             |(mut fonts, last_identifier), item| match item {
                 ComponentValue::Ident(ident) => {
                     let Ident { value, span, .. } = &**ident;
+
                     if let Some((mut identifier, last_span)) = last_identifier {
                         identifier.push(' ');
+
                         identifier.push_str(value);
                         (fonts, Some((identifier, last_span.with_hi(span.hi()))))
                     } else {
                         (fonts, Some((value.to_string(), *span)))
                     }
                 }
+
                 ComponentValue::Str(s) if s.raw.is_some() => {
                     let raw = s.raw.as_ref().unwrap();
+
                     fonts.push((FontNameKind::from(raw), s.span));
                     (fonts, None)
                 }
+
                 ComponentValue::Delimiter(delimiter) if delimiter.value.is_comma() => {
                     if let Some((identifier, span)) = last_identifier {
                         fonts.push((FontNameKind::from(identifier), span));
                     }
                     (fonts, None)
                 }
+
                 _ => (fonts, last_identifier),
             },
         );
+
         if let Some((identifier, span)) = last {
             fonts.push((FontNameKind::from(identifier), span));
         }
@@ -79,11 +87,14 @@ impl FontFamilyNoDuplicateNames {
             .iter()
             .fold(AHashSet::default(), |mut seen, (font, span)| {
                 let name = font.name();
+
                 if seen.contains(&font) && self.ignored.iter().all(|item| !item.is_match(name)) {
                     self.ctx
                         .report(span, format!("Unexpected duplicate name '{}'.", name));
                 }
+
                 seen.insert(font);
+
                 seen
             });
     }
@@ -97,6 +108,7 @@ impl Visit for FontFamilyNoDuplicateNames {
             {
                 self.check_component_values(&declaration.value);
             }
+
             DeclarationName::Ident(Ident { value, .. }) if value.eq_ignore_ascii_case("font") => {
                 let index = declaration
                     .value
@@ -115,12 +127,15 @@ impl Visit for FontFamilyNoDuplicateNames {
                         )
                     })
                     .map(|(i, _)| i);
+
                 if let Some(index) = index {
                     self.check_component_values(&declaration.value[(index + 1)..]);
                 }
             }
+
             _ => {}
         }
+
         declaration.visit_children_with(self);
     }
 }

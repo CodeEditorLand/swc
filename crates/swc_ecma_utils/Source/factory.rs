@@ -213,7 +213,9 @@ pub trait ExprFactory: Into<Box<Expr>> {
     #[cfg_attr(not(debug_assertions), inline(always))]
     fn wrap_with_paren(self) -> Expr {
         let expr = self.into();
+
         let span = expr.span();
+
         ParenExpr { expr, span }.into()
     }
 
@@ -289,6 +291,7 @@ where
     Self: std::marker::Sized,
 {
     type Item;
+
     fn into_indirect(self) -> Self::Item;
 }
 

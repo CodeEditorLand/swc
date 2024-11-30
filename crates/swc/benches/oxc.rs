@@ -36,6 +36,7 @@ fn bench_full(b:&mut Bencher, filename:&str, opts:&Options) {
 				FileName::Real(filename.to_string().into()).into(),
 				black_box(source.clone()),
 			);
+
 			let _ = c.process_js_file(fm, &handler, opts).unwrap();
 		})
 	});
@@ -113,6 +114,7 @@ fn bench_full(b: &mut Bencher, filename: &str, opts: &Options) {
                 FileName::Real(filename.to_string().into()).into(),
                 black_box(source.clone()),
             );
+
             let _ = c.process_js_file(fm, &handler, opts).unwrap();
         })
     });

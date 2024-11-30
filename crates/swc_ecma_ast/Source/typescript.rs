@@ -314,6 +314,7 @@ pub enum TsType {
 impl Clone for TsType {
     fn clone(&self) -> Self {
         use TsType::*;
+
         match self {
             TsKeywordType(t) => TsKeywordType(t.clone()),
             TsThisType(t) => TsThisType(t.clone()),

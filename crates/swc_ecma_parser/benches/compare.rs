@@ -15,12 +15,17 @@ where
 		let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
 		let mut parser = Parser::new(Syntax::default(), StringInput::from(&*fm), None);
+
 		let module = parser.parse_module().map_err(|_| ()).unwrap();
+
 		b.iter(|| {
 			let module = module.clone();
+
 			let module = op(module);
+
 			black_box(module)
 		});
+
 		Ok(())
 	});
 }
@@ -85,12 +90,17 @@ where
         let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
         let mut parser = Parser::new(Syntax::default(), StringInput::from(&*fm), None);
+
         let module = parser.parse_module().map_err(|_| ()).unwrap();
+
         b.iter(|| {
             let module = module.clone();
+
             let module = op(module);
+
             black_box(module)
         });
+
         Ok(())
     });
 }

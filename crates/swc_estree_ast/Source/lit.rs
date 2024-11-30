@@ -43,8 +43,10 @@ impl Serialize for Literal {
                     Literal::BigInt(l) => BabelLiteral::BigInt(l.clone()),
                     Literal::Decimal(l) => BabelLiteral::Decimal(l.clone()),
                 };
+
                 BabelLiteral::serialize(&b, serializer)
             }
+
             Flavor::Acorn { .. } => {
                 let (base, value, raw) = match self {
                     Literal::String(l) => (
@@ -78,6 +80,7 @@ impl Serialize for Literal {
                             l.base
                                 .serialize(serde::__private::ser::FlatMapSerializer(&mut s))?;
                         }
+
                         s.serialize_entry("type", "Literal")?;
 
                         s.serialize_entry(
@@ -87,9 +90,12 @@ impl Serialize for Literal {
                                 pattern: &l.pattern,
                             },
                         )?;
+
                         s.serialize_entry("value", &Empty {})?;
+
                         return s.end();
                     }
+
                     Literal::Template(..) => todo!(),
                     Literal::BigInt(l) => (
                         &l.base,
@@ -102,6 +108,7 @@ impl Serialize for Literal {
                         Cow::Owned(l.value.to_string()),
                     ),
                 };
+
                 let acorn = AcornLiteral {
                     type_: "Literal",
                     raw: &raw,

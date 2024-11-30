@@ -61,20 +61,24 @@ pub fn get_transform_plugin_config(
     allocated_ret_ptr: u32,
 ) -> i32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let alloc_guest_memory = env.data().alloc_guest_memory.clone();
+
     let alloc_guest_memory = alloc_guest_memory
         .as_ref()
         .expect("Alloc guest memory fn should be available, check initialization");
 
     let config_value = &env.data().transform_plugin_config;
+
     if let Some(config_value) = config_value {
         // Lazy as possible as we can - only deserialize json value if transform plugin
         // actually needs it.
         let config = serde_json::to_string(config_value).ok();
+
         if let Some(config) = config {
             let serialized =
                 PluginSerializedBytes::try_serialize(&VersionedSerializable::new(config))
@@ -91,6 +95,7 @@ pub fn get_transform_plugin_config(
             return 1;
         }
     }
+
     0
 }
 
@@ -101,11 +106,13 @@ pub fn get_transform_context(
     allocated_ret_ptr: u32,
 ) -> i32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let alloc_guest_memory = env.data().alloc_guest_memory.clone();
+
     let alloc_guest_memory = alloc_guest_memory
         .as_ref()
         .expect("Alloc guest memory fn should be available, check initialization");
@@ -135,16 +142,19 @@ pub fn get_experimental_transform_context(
     allocated_ret_ptr: u32,
 ) -> i32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let alloc_guest_memory = env.data().alloc_guest_memory.clone();
+
     let alloc_guest_memory = alloc_guest_memory
         .as_ref()
         .expect("Alloc guest memory fn should be available, check initialization");
 
     let context_key_buffer = env.data().mutable_context_key_buffer.lock().clone();
+
     let key: String = PluginSerializedBytes::from_slice(&context_key_buffer[..])
         .deserialize()
         .expect("Should able to deserialize")
@@ -181,17 +191,20 @@ pub fn get_raw_experiemtal_transform_context(
     allocated_ret_ptr: u32,
 ) -> i32 {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let alloc_guest_memory = env.data().alloc_guest_memory.clone();
+
     let alloc_guest_memory = alloc_guest_memory
         .as_ref()
         .expect("Alloc guest memory fn should be available, check initialization");
 
     let experimental_context =
         VersionedSerializable::new(env.data().metadata_context.experimental.clone());
+
     let serialized_experimental_context_bytes =
         PluginSerializedBytes::try_serialize(&experimental_context)
             .expect("Should be serializable");
@@ -203,5 +216,6 @@ pub fn get_raw_experiemtal_transform_context(
         allocated_ret_ptr,
         &serialized_experimental_context_bytes,
     );
+
     1
 }

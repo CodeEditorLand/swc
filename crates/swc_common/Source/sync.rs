@@ -59,6 +59,7 @@ mod concurrent {
     };
 
     pub use once_cell::sync::{Lazy, OnceCell};
+
     pub use parking_lot::{
         MappedMutexGuard as MappedLockGuard, MappedRwLockReadGuard as MappedReadGuard,
         MappedRwLockWriteGuard as MappedWriteGuard, MutexGuard as LockGuard,
@@ -75,6 +76,7 @@ mod single {
     pub trait Sync {}
 
     impl<T> Send for T where T: ?Sized {}
+
     impl<T> Sync for T where T: ?Sized {}
 
     pub use std::{

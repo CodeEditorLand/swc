@@ -65,6 +65,7 @@ fn collect_exprs_from_object(obj: &mut ObjectLit) -> Vec<Box<Expr>> {
                 Prop::Shorthand(p) => {
                     exprs.push(p.into());
                 }
+
                 Prop::KeyValue(p) => {
                     if let PropName::Computed(e) = p.key {
                         exprs.push(e.expr);
@@ -72,21 +73,25 @@ fn collect_exprs_from_object(obj: &mut ObjectLit) -> Vec<Box<Expr>> {
 
                     exprs.push(p.value);
                 }
+
                 Prop::Getter(p) => {
                     if let PropName::Computed(e) = p.key {
                         exprs.push(e.expr);
                     }
                 }
+
                 Prop::Setter(p) => {
                     if let PropName::Computed(e) = p.key {
                         exprs.push(e.expr);
                     }
                 }
+
                 Prop::Method(p) => {
                     if let PropName::Computed(e) = p.key {
                         exprs.push(e.expr);
                     }
                 }
+
                 _ => {}
             }
         }
@@ -106,6 +111,7 @@ impl Pure<'_> {
         }
 
         let mut new_args = Vec::new();
+
         for arg in args.take() {
             match arg {
                 ExprOrSpread {
@@ -118,6 +124,7 @@ impl Pure<'_> {
                                 Some(ExprOrSpread { expr, spread }) => {
                                     new_args.push(ExprOrSpread { spread, expr });
                                 }
+
                                 None => {
                                     new_args.push(ExprOrSpread {
                                         spread: None,
@@ -127,6 +134,7 @@ impl Pure<'_> {
                             }
                         }
                     }
+
                     _ => {
                         new_args.push(ExprOrSpread {
                             spread: Some(spread),
@@ -139,6 +147,7 @@ impl Pure<'_> {
         }
 
         self.changed = true;
+
         report_change!("Compressing spread array");
 
         *args = new_args;
@@ -158,13 +167,16 @@ impl Pure<'_> {
 
             Expr::Bin(BinExpr { left, right, .. }) => {
                 self.remove_invalid(left);
+
                 self.remove_invalid(right);
 
                 if left.is_invalid() {
                     *e = *right.take();
+
                     self.remove_invalid(e);
                 } else if right.is_invalid() {
                     *e = *left.take();
+
                     self.remove_invalid(e);
                 }
             }
@@ -216,6 +228,7 @@ impl Pure<'_> {
                     return;
                 }
             }
+
             _ => return,
         };
 
@@ -247,6 +260,7 @@ impl Pure<'_> {
             {
                 self.changed = true;
                 *e = new_expr;
+
                 return;
             }
 
@@ -277,6 +291,7 @@ impl Pure<'_> {
                 value: separator,
             })
             .into();
+
             let mut res = Lit::Str(Str {
                 span: DUMMY_SP,
                 raw: None,
@@ -299,7 +314,9 @@ impl Pure<'_> {
                 if let Some(ExprOrSpread { spread: None, expr }) = elem {
                     match &*expr {
                         e if is_pure_undefined(&self.expr_ctx, e) => {}
+
                         Expr::Lit(Lit::Null(..)) => {}
+
                         _ => {
                             add(&mut res, expr);
                         }
@@ -317,6 +334,7 @@ impl Pure<'_> {
         }
 
         let mut res = String::new();
+
         for (last, elem) in arr.elems.iter().identify_last() {
             if let Some(elem) = elem {
                 debug_assert_eq!(elem.spread, None);
@@ -325,11 +343,15 @@ impl Pure<'_> {
                     Expr::Lit(Lit::Str(s)) => {
                         res.push_str(&s.value);
                     }
+
                     Expr::Lit(Lit::Num(n)) => {
                         write!(res, "{}", n.value).unwrap();
                     }
+
                     e if is_pure_undefined(&self.expr_ctx, e) => {}
+
                     Expr::Lit(Lit::Null(..)) => {}
+
                     _ => {
                         unreachable!(
                             "Expression {:#?} cannot be joined and it should be filtered out",
@@ -359,7 +381,9 @@ impl Pure<'_> {
         if let Some(e) = s.arg.as_deref() {
             if is_pure_undefined(&self.expr_ctx, e) {
                 self.changed = true;
+
                 report_change!("Dropped `undefined` from `return undefined`");
+
                 s.arg.take();
             }
         }
@@ -372,7 +396,9 @@ impl Pure<'_> {
 
         if let Some(Stmt::Return(ReturnStmt { arg: None, .. })) = stmts.last() {
             self.changed = true;
+
             report_change!("misc: Removing useless return");
+
             stmts.pop();
         }
     }
@@ -394,9 +420,11 @@ impl Pure<'_> {
                 None
             }
         }
+
         fn valid_flag(flag: &Expr, es_version: EsVersion) -> Option<JsWord> {
             if let Expr::Lit(Lit::Str(s)) = flag {
                 let mut set = FxHashSet::default();
+
                 for c in s.value.chars() {
                     if !(matches!(c, 'g' | 'i' | 'm')
                         || (es_version >= EsVersion::Es2015 && matches!(c, 'u' | 'y'))
@@ -447,7 +475,9 @@ impl Pure<'_> {
                 exp: pattern,
                 flags: {
                     let flag = flag.to_string();
+
                     let mut bytes = flag.into_bytes();
+
                     bytes.sort_unstable();
 
                     String::from_utf8(bytes).unwrap().into()
@@ -475,6 +505,7 @@ impl Pure<'_> {
                             None
                         }
                     }
+
                     Expr::Lit(_) => Some(
                         ArrayLit {
                             span: *span,
@@ -499,6 +530,7 @@ impl Pure<'_> {
     }
 
     /// Object -> {}
+
     fn optimize_object(&mut self, args: &mut Vec<ExprOrSpread>, span: &mut Span) -> Option<Expr> {
         if args.is_empty() {
             Some(
@@ -526,6 +558,7 @@ impl Pure<'_> {
                 _ => false,
             } {
                 self.changed = true;
+
                 report_change!("Optimized optional chaining expression where object is not null");
 
                 *e = MemberExpr {
@@ -563,12 +596,15 @@ impl Pure<'_> {
                     Expr::Ident(Ident { sym, .. }) if &**sym == "RegExp" => {
                         self.optimize_regex(args, span)
                     }
+
                     Expr::Ident(Ident { sym, .. }) if &**sym == "Array" => {
                         self.optimize_array(args, span)
                     }
+
                     Expr::Ident(Ident { sym, .. }) if &**sym == "Object" => {
                         self.optimize_object(args, span)
                     }
+
                     _ => unreachable!(),
                 };
 
@@ -576,11 +612,14 @@ impl Pure<'_> {
                     report_change!(
                         "Converting Regexp/Array/Object call to native constructor into literal"
                     );
+
                     self.changed = true;
                     *e = new_expr;
+
                     return;
                 }
             }
+
             Expr::Call(CallExpr {
                 span,
                 callee: Callee::Expr(callee),
@@ -661,18 +700,23 @@ impl Pure<'_> {
                                 .into(),
                             )
                         }
+
                         _ => None,
                     },
                     Expr::Ident(Ident { sym, .. }) if &**sym == "Symbol" => {
                         if let [ExprOrSpread { spread: None, .. }] = &mut args[..] {
                             if self.options.unsafe_symbols {
                                 args.clear();
+
                                 report_change!("Remove Symbol call parameter");
+
                                 self.changed = true;
                             }
                         }
+
                         None
                     }
+
                     _ => unreachable!(),
                 };
 
@@ -681,11 +725,14 @@ impl Pure<'_> {
                         "Converting Boolean/Number/String/Symbol call to native constructor to \
                          literal"
                     );
+
                     self.changed = true;
                     *e = new_expr;
+
                     return;
                 }
             }
+
             _ => {}
         };
 
@@ -720,6 +767,7 @@ impl Pure<'_> {
                 && can_compress_new_regexp(args.as_deref())) =>
             {
                 self.changed = true;
+
                 report_change!(
                     "new operator: Compressing `new Array/RegExp/..` => `Array()/RegExp()/..`"
                 );
@@ -732,6 +780,7 @@ impl Pure<'_> {
                 }
                 .into()
             }
+
             _ => {}
         }
     }
@@ -790,6 +839,7 @@ impl Pure<'_> {
         }
 
         self.changed = true;
+
         report_change!("Compressing array.join() as template literal");
 
         let mut new_tpl = Tpl {
@@ -797,8 +847,11 @@ impl Pure<'_> {
             quasis: Vec::new(),
             exprs: Vec::new(),
         };
+
         let mut cur_raw = String::new();
+
         let mut cur_cooked = String::new();
+
         let mut first = true;
 
         for elem in elems.take().into_iter().flatten() {
@@ -806,6 +859,7 @@ impl Pure<'_> {
                 first = false;
             } else {
                 cur_raw.push_str(sep);
+
                 cur_cooked.push_str(sep);
             }
 
@@ -818,6 +872,7 @@ impl Pure<'_> {
                             let e = tpl.quasis[idx / 2].take();
 
                             cur_cooked.push_str(&e.cooked.unwrap());
+
                             cur_raw.push_str(&e.raw);
                         } else {
                             new_tpl.quasis.push(TplElement {
@@ -828,6 +883,7 @@ impl Pure<'_> {
                             });
 
                             cur_raw.clear();
+
                             cur_cooked.clear();
 
                             let e = tpl.exprs[idx / 2].take();
@@ -836,10 +892,13 @@ impl Pure<'_> {
                         }
                     }
                 }
+
                 Expr::Lit(Lit::Str(s)) => {
                     cur_cooked.push_str(&convert_str_value_to_tpl_cooked(&s.value));
+
                     cur_raw.push_str(&convert_str_value_to_tpl_raw(&s.value));
                 }
+
                 _ => {
                     unreachable!()
                 }
@@ -862,13 +921,16 @@ impl Pure<'_> {
             Stmt::Block(s) => self.drop_return_value(&mut s.stmts),
             Stmt::Return(ret) => {
                 self.changed = true;
+
                 report_change!("Dropping `return` token");
 
                 let span = ret.span;
+
                 match ret.arg.take() {
                     Some(arg) => {
                         *s = ExprStmt { span, expr: arg }.into();
                     }
+
                     None => {
                         *s = EmptyStmt { span }.into();
                     }
@@ -880,6 +942,7 @@ impl Pure<'_> {
             Stmt::Labeled(s) => self.drop_return_value_of_stmt(&mut s.body),
             Stmt::If(s) => {
                 let c = self.drop_return_value_of_stmt(&mut s.cons);
+
                 let a = s
                     .alt
                     .as_deref_mut()
@@ -936,9 +999,12 @@ impl Pure<'_> {
         if exprs.is_empty() {
             return None;
         }
+
         if exprs.len() == 1 {
             let mut new = *exprs.remove(0);
+
             new.set_span(span);
+
             return Some(new);
         }
 
@@ -960,11 +1026,13 @@ impl Pure<'_> {
             Stmt::Return(s) => {
                 if let Some(arg) = &mut s.arg {
                     self.ignore_return_value(arg, opts);
+
                     if arg.is_invalid() {
                         report_change!(
                             "Dropped the argument of a return statement because the return value \
                              is ignored"
                         );
+
                         s.arg = None;
                     }
                 }
@@ -978,6 +1046,7 @@ impl Pure<'_> {
 
             Stmt::If(s) => {
                 self.ignore_return_value_of_return_stmt(&mut s.cons, opts);
+
                 if let Some(alt) = &mut s.alt {
                     self.ignore_return_value_of_return_stmt(alt, opts);
                 }
@@ -1008,8 +1077,10 @@ impl Pure<'_> {
             Expr::Seq(seq) => {
                 if seq.exprs.is_empty() {
                     e.take();
+
                     return;
                 }
+
                 if seq.exprs.len() == 1 {
                     *e = *seq.exprs.remove(0);
                 }
@@ -1019,12 +1090,14 @@ impl Pure<'_> {
                 span, ctxt, args, ..
             }) if ctxt.has_mark(self.marks.pure) => {
                 report_change!("ignore_return_value: Dropping a pure call");
+
                 self.changed = true;
 
                 let new =
                     self.make_ignored_expr(*span, args.take().into_iter().map(|arg| arg.expr));
 
                 *e = new.unwrap_or(Invalid { span: DUMMY_SP }.into());
+
                 return;
             }
 
@@ -1032,11 +1105,13 @@ impl Pure<'_> {
                 span, ctxt, tpl, ..
             }) if ctxt.has_mark(self.marks.pure) => {
                 report_change!("ignore_return_value: Dropping a pure call");
+
                 self.changed = true;
 
                 let new = self.make_ignored_expr(*span, tpl.exprs.take().into_iter());
 
                 *e = new.unwrap_or(Invalid { span: DUMMY_SP }.into());
+
                 return;
             }
 
@@ -1044,6 +1119,7 @@ impl Pure<'_> {
                 span, ctxt, args, ..
             }) if ctxt.has_mark(self.marks.pure) => {
                 report_change!("ignore_return_value: Dropping a pure call");
+
                 self.changed = true;
 
                 let new = self.make_ignored_expr(
@@ -1052,6 +1128,7 @@ impl Pure<'_> {
                 );
 
                 *e = new.unwrap_or(Invalid { span: DUMMY_SP }.into());
+
                 return;
             }
 
@@ -1067,10 +1144,12 @@ impl Pure<'_> {
             }) => {
                 if callee.is_pure_callee(&self.expr_ctx) {
                     self.changed = true;
+
                     report_change!("Dropping pure call as callee is pure");
                     *e = self
                         .make_ignored_expr(*span, args.take().into_iter().map(|arg| arg.expr))
                         .unwrap_or(Invalid { span: DUMMY_SP }.into());
+
                     return;
                 }
             }
@@ -1083,13 +1162,16 @@ impl Pure<'_> {
             }) => {
                 if callee.is_pure_callee(&self.expr_ctx) {
                     self.changed = true;
+
                     report_change!("Dropping pure tag tpl as callee is pure");
                     *e = self
                         .make_ignored_expr(*span, tpl.exprs.take().into_iter())
                         .unwrap_or(Invalid { span: DUMMY_SP }.into());
+
                     return;
                 }
             }
+
             _ => (),
         }
 
@@ -1099,6 +1181,7 @@ impl Pure<'_> {
                 if n.value != 0.0 && n.value.classify() == FpCategory::Normal {
                     self.changed = true;
                     *e = Invalid { span: DUMMY_SP }.into();
+
                     return;
                 }
             }
@@ -1113,12 +1196,14 @@ impl Pure<'_> {
                     if is_global_var_with_pure_property_access(&i.sym) {
                         report_change!("Dropping a reference to a global variable");
                         *e = Invalid { span: DUMMY_SP }.into();
+
                         return;
                     }
                 }
             } else {
                 report_change!("Dropping an identifier as it's declared");
                 *e = Invalid { span: DUMMY_SP }.into();
+
                 return;
             }
         }
@@ -1143,6 +1228,7 @@ impl Pure<'_> {
                     if arg.is_invalid() {
                         report_change!("Dropping an unary expression");
                         *e = Invalid { span: DUMMY_SP }.into();
+
                         return;
                     }
                 }
@@ -1158,18 +1244,22 @@ impl Pure<'_> {
                     if be.right.is_invalid() {
                         report_change!("Dropping the RHS of a binary expression ('&&' / '||')");
                         *e = *be.left.take();
+
                         return;
                     }
                 }
 
                 Expr::Tpl(tpl) => {
                     self.changed = true;
+
                     report_change!("Dropping a template literal");
 
                     for expr in tpl.exprs.iter_mut() {
                         self.ignore_return_value(&mut *expr, opts);
                     }
+
                     tpl.exprs.retain(|expr| !expr.is_invalid());
+
                     if tpl.exprs.is_empty() {
                         e.take();
                     } else {
@@ -1196,7 +1286,9 @@ impl Pure<'_> {
                         if &*prop.sym == "callee" {
                             return;
                         }
+
                         e.take();
+
                         return;
                     }
                 }
@@ -1211,6 +1303,7 @@ impl Pure<'_> {
                     if n.value == 0.0 && opts.drop_zero {
                         self.changed = true;
                         *e = Invalid { span: DUMMY_SP }.into();
+
                         return;
                     }
                 }
@@ -1221,6 +1314,7 @@ impl Pure<'_> {
 
                         self.changed = true;
                         *e = Invalid { span: DUMMY_SP }.into();
+
                         return;
                     }
                 }
@@ -1230,6 +1324,7 @@ impl Pure<'_> {
 
                     self.changed = true;
                     *e = Invalid { span: DUMMY_SP }.into();
+
                     return;
                 }
 
@@ -1267,6 +1362,7 @@ impl Pure<'_> {
                             ..opts
                         },
                     );
+
                     self.ignore_return_value(
                         &mut bin.right,
                         DropOpts {
@@ -1276,27 +1372,33 @@ impl Pure<'_> {
                             ..opts
                         },
                     );
+
                     let span = bin.span;
 
                     if bin.left.is_invalid() && bin.right.is_invalid() {
                         *e = Invalid { span: DUMMY_SP }.into();
+
                         return;
                     } else if bin.right.is_invalid() {
                         *e = *bin.left.take();
+
                         return;
                     } else if bin.left.is_invalid() {
                         *e = *bin.right.take();
+
                         return;
                     }
 
                     if matches!(*bin.left, Expr::Await(..) | Expr::Update(..)) {
                         self.changed = true;
+
                         report_change!("ignore_return_value: Compressing binary as seq");
                         *e = SeqExpr {
                             span,
                             exprs: vec![bin.left.take(), bin.right.take()],
                         }
                         .into();
+
                         return;
                     }
                 }
@@ -1340,7 +1442,9 @@ impl Pure<'_> {
                 }
 
                 let len = seq.exprs.len();
+
                 seq.exprs.retain(|e| !e.is_invalid());
+
                 if seq.exprs.len() != len {
                     self.changed = true;
                 }
@@ -1348,6 +1452,7 @@ impl Pure<'_> {
                 if seq.exprs.len() == 1 {
                     *e = *seq.exprs.remove(0);
                 }
+
                 return;
             }
 
@@ -1393,17 +1498,20 @@ impl Pure<'_> {
                             }
                         }
                     }
+
                     Expr::Arrow(callee) => match &mut *callee.body {
                         BlockStmtOrExpr::BlockStmt(body) => {
                             for stmt in &mut body.stmts {
                                 self.ignore_return_value_of_return_stmt(stmt, opts);
                             }
                         }
+
                         BlockStmtOrExpr::Expr(body) => {
                             self.ignore_return_value(body, opts);
 
                             if body.is_invalid() {
                                 *body = 0.into();
+
                                 return;
                             }
                         }
@@ -1433,6 +1541,7 @@ impl Pure<'_> {
                             args.iter_mut().flatten().map(|arg| arg.expr.take()),
                         )
                         .unwrap_or(Invalid { span: DUMMY_SP }.into());
+
                     return;
                 }
 
@@ -1452,6 +1561,7 @@ impl Pure<'_> {
                     *e = self
                         .make_ignored_expr(*span, args.iter_mut().map(|arg| arg.expr.take()))
                         .unwrap_or(Invalid { span: DUMMY_SP }.into());
+
                     return;
                 }
 
@@ -1461,8 +1571,11 @@ impl Pure<'_> {
                         *e = self
                             .make_ignored_expr(obj.span, exprs.into_iter())
                             .unwrap_or(Invalid { span: DUMMY_SP }.into());
+
                         report_change!("Ignored an object literal");
+
                         self.changed = true;
+
                         return;
                     }
                 }
@@ -1494,6 +1607,7 @@ impl Pure<'_> {
                                             ..opts
                                         },
                                     );
+
                                     if e.expr.is_invalid() {
                                         return None;
                                     }
@@ -1508,6 +1622,7 @@ impl Pure<'_> {
                             ..*arr
                         }
                         .into();
+
                         return;
                     }
 
@@ -1525,6 +1640,7 @@ impl Pure<'_> {
                                 ..opts
                             },
                         );
+
                         if !expr.is_invalid() {
                             exprs.push(expr);
                         }
@@ -1533,8 +1649,11 @@ impl Pure<'_> {
                     *e = self
                         .make_ignored_expr(arr.span, exprs.into_iter())
                         .unwrap_or(Invalid { span: DUMMY_SP }.into());
+
                     report_change!("Ignored an array literal");
+
                     self.changed = true;
+
                     return;
                 }
 
@@ -1545,6 +1664,7 @@ impl Pure<'_> {
                 // as
                 //
                 //  foo(),basr(),foo;
+
                 Expr::Member(MemberExpr {
                     span,
                     obj,
@@ -1562,13 +1682,16 @@ impl Pure<'_> {
                             },
                         }) {
                             let mut exprs = collect_exprs_from_object(object);
+
                             exprs.push(prop.expr.take());
                             *e = self
                                 .make_ignored_expr(*span, exprs.into_iter())
                                 .unwrap_or(Invalid { span: DUMMY_SP }.into());
+
                             return;
                         }
                     }
+
                     Expr::Array(..) => {
                         self.ignore_return_value(obj, opts);
                         *e = self
@@ -1577,8 +1700,10 @@ impl Pure<'_> {
                                 vec![obj.take(), prop.expr.take()].into_iter(),
                             )
                             .unwrap_or(Invalid { span: DUMMY_SP }.into());
+
                         return;
                     }
+
                     _ => {}
                 },
                 _ => {}
@@ -1592,6 +1717,7 @@ impl Pure<'_> {
                     if obj.ctxt.outer() == self.marks.unresolved_mark {
                         if is_pure_member_access(obj, prop) {
                             self.changed = true;
+
                             report_change!("Remving pure member access to global var");
                             *e = Invalid { span: DUMMY_SP }.into();
                         }
@@ -1635,6 +1761,7 @@ impl Pure<'_> {
                 }
                 .into()
             }
+
             _ => {}
         }
     }
@@ -1653,18 +1780,22 @@ impl Pure<'_> {
         match l {
             Expr::Lit(Lit::Null(..)) => {
                 report_change!("Removing null from lhs of ??");
+
                 self.changed = true;
                 *e = r.take();
             }
+
             Expr::Lit(Lit::Num(..))
             | Expr::Lit(Lit::Str(..))
             | Expr::Lit(Lit::BigInt(..))
             | Expr::Lit(Lit::Bool(..))
             | Expr::Lit(Lit::Regex(..)) => {
                 report_change!("Removing rhs of ?? as lhs cannot be null nor undefined");
+
                 self.changed = true;
                 *e = l.take();
             }
+
             _ => {}
         }
     }
@@ -1678,19 +1809,24 @@ impl Pure<'_> {
         };
 
         let lt = cond.cons.get_type();
+
         let rt = cond.alt.get_type();
+
         match (lt, rt) {
             (Known(Type::Bool), Known(Type::Bool)) => {}
+
             _ => return,
         }
 
         let lb = cond.cons.as_pure_bool(&self.expr_ctx);
+
         let rb = cond.alt.as_pure_bool(&self.expr_ctx);
 
         let lb = match lb {
             Value::Known(v) => v,
             Value::Unknown => return,
         };
+
         let rb = match rb {
             Value::Known(v) => v,
             Value::Unknown => return,
@@ -1699,8 +1835,10 @@ impl Pure<'_> {
         // `cond ? true : false` => !!cond
         if lb && !rb {
             self.negate(&mut cond.test, false, false);
+
             self.negate(&mut cond.test, false, false);
             *expr = *cond.test.take();
+
             return;
         }
 

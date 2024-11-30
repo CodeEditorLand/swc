@@ -360,6 +360,7 @@ where
 
     fn by_ref(&mut self) -> &mut Self {
         self.0.by_ref();
+
         self
     }
 
@@ -400,6 +401,7 @@ where
         F: FnMut(Self::Item, Self::Item) -> Self::Item,
     {
         let first = self.next()?;
+
         Some(self.fold(first, f))
     }
 

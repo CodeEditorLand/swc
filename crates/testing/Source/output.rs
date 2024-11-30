@@ -73,12 +73,15 @@ fn normalize_input(input: String, skip_last_newline: bool) -> String {
             for dir in &manifest_dirs {
                 s = s.replace(&**dir, "$DIR");
             }
+
             s = s.replace("\\\\", "\\").replace('\\', "/");
+
             let s = if cfg!(target_os = "windows") {
                 s.replace("//?/$DIR", "$DIR").replace("/?/$DIR", "$DIR")
             } else {
                 s
             };
+
             buf.push_str(&s)
         } else {
             buf.push_str(line);
@@ -133,12 +136,14 @@ impl NormalizedOutput {
         P: AsRef<Path>,
     {
         let path = path.as_ref();
+
         let path = path.canonicalize().unwrap_or_else(|err| {
             debug!(
                 "compare_to_file: failed to canonicalize outfile path `{}`: {:?}",
                 path.display(),
                 err
             );
+
             path.to_path_buf()
         });
 
@@ -146,7 +151,9 @@ impl NormalizedOutput {
             File::open(&path)
                 .map(|mut file| {
                     let mut buf = String::new();
+
                     file.read_to_string(&mut buf).unwrap();
+
                     buf
                 })
                 .unwrap_or_else(|_| {
@@ -161,13 +168,16 @@ impl NormalizedOutput {
         }
 
         debug!("Comparing output to {}", path.display());
+
         create_dir_all(path.parent().unwrap()).expect("failed to run `mkdir -p`");
 
         let update = std::env::var("UPDATE").unwrap_or_default() == "1";
+
         if update {
             crate::write_to_file(&path, &self.0);
 
             debug!("Updating file {}", path.display());
+
             return Ok(());
         }
 
@@ -225,7 +235,9 @@ fn adjust_canonicalization<P: AsRef<Path>>(p: P) -> String {
 #[cfg(target_os = "windows")]
 fn adjust_canonicalization<P: AsRef<Path>>(p: P) -> String {
     const VERBATIM_PREFIX: &str = r#"\\?\"#;
+
     let p = p.as_ref().display().to_string();
+
     if let Some(stripped) = p.strip_prefix(VERBATIM_PREFIX) {
         stripped.to_string()
     } else {

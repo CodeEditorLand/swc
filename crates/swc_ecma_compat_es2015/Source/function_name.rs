@@ -94,6 +94,7 @@ impl VisitMut for FnName {
             let mut folder = Rename {
                 name: Some(prepare(Ident::from(&*ident))),
             };
+
             decl.init.visit_mut_with(&mut folder);
         }
     }
@@ -109,14 +110,17 @@ macro_rules! impl_for {
                     let name = match self.name.take() {
                         None => {
                             node.ident = None;
+
                             return;
                         }
+
                         Some(name) => name,
                     };
                     // If function's body references the name of variable, we just skip the
                     // function
                     if IdentUsageFinder::find(&name.to_id(), &*node) {
                         // self.name = Some(name);
+
                         node.ident = None;
                     } else {
                         node.ident = Some(private_ident!(DUMMY_SP, name.sym));

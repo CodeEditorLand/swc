@@ -15,6 +15,7 @@ pub(super) struct CoreVerCmd {
 impl CoreVerCmd {
     pub fn run(self) -> Result<()> {
         let from_commit = get_commit_for_core_version(&self.from, false)?;
+
         let to_commit = get_commit_for_core_version(&self.to, true)?;
 
         eprintln!(

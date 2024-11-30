@@ -15,11 +15,14 @@ where
 		let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
 		let lexer = Lexer::new(StringInput::from(&*fm));
+
 		let mut parser = Parser::new(lexer, Default::default());
+
 		let document:Document = parser.parse_document().unwrap();
 
 		b.iter(|| {
 			let document = document.clone();
+
 			let document = op(document);
 
 			black_box(document)
@@ -36,7 +39,9 @@ where
 		let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
 		let lexer = Lexer::new(StringInput::from(&*fm));
+
 		let mut parser = Parser::new(lexer, Default::default());
+
 		let document_fragment:DocumentFragment = parser
 			.parse_document_fragment(
 				Element {
@@ -55,6 +60,7 @@ where
 
 		b.iter(|| {
 			let document_fragment = document_fragment.clone();
+
 			let document_fragment = op(document_fragment);
 
 			black_box(document_fragment)
@@ -176,11 +182,14 @@ where
         let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
         let lexer = Lexer::new(StringInput::from(&*fm));
+
         let mut parser = Parser::new(lexer, Default::default());
+
         let document: Document = parser.parse_document().unwrap();
 
         b.iter(|| {
             let document = document.clone();
+
             let document = op(document);
 
             black_box(document)
@@ -198,7 +207,9 @@ where
         let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
         let lexer = Lexer::new(StringInput::from(&*fm));
+
         let mut parser = Parser::new(lexer, Default::default());
+
         let document_fragment: DocumentFragment = parser
             .parse_document_fragment(
                 Element {
@@ -217,6 +228,7 @@ where
 
         b.iter(|| {
             let document_fragment = document_fragment.clone();
+
             let document_fragment = op(document_fragment);
 
             black_box(document_fragment)

@@ -57,6 +57,7 @@ impl VisitMut for Compressor {
     fn visit_mut_an_plus_b(&mut self, n: &mut AnPlusB) {
         if let AnPlusB::Ident(n) = n {
             n.value = n.value.to_ascii_lowercase();
+
             n.raw = None;
         }
 
@@ -80,6 +81,7 @@ impl VisitMut for Compressor {
     fn visit_mut_at_rule_name(&mut self, n: &mut AtRuleName) {
         if let AtRuleName::Ident(n) = n {
             n.value = n.value.to_ascii_lowercase();
+
             n.raw = None;
         }
 
@@ -207,6 +209,7 @@ impl VisitMut for Compressor {
 
     fn visit_mut_frequency(&mut self, n: &mut Frequency) {
         n.unit.value = n.unit.value.to_ascii_lowercase();
+
         n.unit.raw = None;
 
         n.visit_mut_children_with(self);
@@ -217,6 +220,7 @@ impl VisitMut for Compressor {
     fn visit_mut_function(&mut self, n: &mut Function) {
         if let FunctionName::Ident(n) = &mut n.name {
             n.value = n.value.to_ascii_lowercase();
+
             n.raw = None;
         }
 
@@ -234,8 +238,10 @@ impl VisitMut for Compressor {
 
     fn visit_mut_hex_color(&mut self, n: &mut HexColor) {
         let new = n.value.to_ascii_lowercase();
+
         if new != n.value {
             n.value = new;
+
             n.raw = None;
         }
 
@@ -271,6 +277,7 @@ impl VisitMut for Compressor {
 
     fn visit_mut_length(&mut self, n: &mut Length) {
         n.unit.value = n.unit.value.to_ascii_lowercase();
+
         n.unit.raw = None;
 
         n.visit_mut_children_with(self);
@@ -300,6 +307,7 @@ impl VisitMut for Compressor {
         n.visit_mut_children_with(self);
 
         self.compress_calc_sum_in_media_feature_value(n);
+
         self.compress_media_feature_value_length(n);
     }
 
@@ -318,6 +326,7 @@ impl VisitMut for Compressor {
     fn visit_mut_pseudo_class_selector(&mut self, n: &mut PseudoClassSelector) {
         match &mut n.name {
             Ident { value, .. }
+
                 if matches_eq_ignore_ascii_case!(
                     &**value,
                     "not",
@@ -329,6 +338,7 @@ impl VisitMut for Compressor {
                 ) =>
             {
                 n.name.value = n.name.value.to_ascii_lowercase();
+
                 n.name.raw = None;
 
                 n.visit_mut_children_with(&mut *self.with_ctx(Ctx {
@@ -336,6 +346,7 @@ impl VisitMut for Compressor {
                     ..self.ctx
                 }));
             }
+
             _ => {
                 n.visit_mut_children_with(self);
             }
@@ -344,6 +355,7 @@ impl VisitMut for Compressor {
 
     fn visit_mut_pseudo_element_selector(&mut self, n: &mut PseudoElementSelector) {
         n.name.value = n.name.value.to_ascii_lowercase();
+
         n.name.raw = None;
 
         n.visit_mut_children_with(self);
@@ -371,6 +383,7 @@ impl VisitMut for Compressor {
         n.visit_mut_children_with(self);
 
         self.compress_calc_sum_in_size_feature_value(n);
+
         self.compress_size_feature_value_length(n);
     }
 
@@ -403,6 +416,7 @@ impl VisitMut for Compressor {
     fn visit_mut_subclass_selector(&mut self, n: &mut SubclassSelector) {
         if let SubclassSelector::PseudoClass(PseudoClassSelector { name, .. }) = n {
             name.value = name.value.to_ascii_lowercase();
+
             name.raw = None;
         }
 
@@ -431,6 +445,7 @@ impl VisitMut for Compressor {
 
     fn visit_mut_tag_name_selector(&mut self, n: &mut TagNameSelector) {
         n.name.value.value = n.name.value.value.to_ascii_lowercase();
+
         n.name.value.raw = None;
 
         n.visit_mut_children_with(self);
@@ -452,21 +467,26 @@ impl VisitMut for Compressor {
                 | Token::AtKeyword { value, .. }
                 | Token::String { value, .. }
                 | Token::Url { value, .. }
+
                     if !contains_only_ascii_characters(value) =>
                 {
                     self.need_utf8_at_rule = true;
                 }
+
                 Token::BadString { raw: value, .. } if !contains_only_ascii_characters(value) => {
                     self.need_utf8_at_rule = true;
                 }
+
                 Token::BadUrl { raw: value, .. } if !contains_only_ascii_characters(value) => {
                     self.need_utf8_at_rule = true;
                 }
+
                 Token::Dimension(dimension_token)
                     if !contains_only_ascii_characters(&dimension_token.unit) =>
                 {
                     self.need_utf8_at_rule = true;
                 }
+
                 _ => {}
             }
         }
@@ -480,6 +500,7 @@ impl VisitMut for Compressor {
 
     fn visit_mut_url(&mut self, n: &mut Url) {
         n.name.value = n.name.value.to_ascii_lowercase();
+
         n.name.raw = None;
 
         n.visit_mut_children_with(self);

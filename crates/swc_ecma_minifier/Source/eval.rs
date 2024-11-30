@@ -61,6 +61,7 @@ pub enum EvalResult {
 impl Mode for Eval {
     fn store(&self, id: Id, value: &Expr) {
         let mut w = self.store.lock();
+
         w.cache.insert(id, Box::new(value.clone()));
     }
 
@@ -84,6 +85,7 @@ impl Evaluator {
             self.done = true;
 
             let marks = self.marks;
+
             let data = self.data.clone();
             //
             self.module.visit_mut_with(&mut compressor(
@@ -191,6 +193,7 @@ impl Evaluator {
                 self.run();
 
                 let lock = self.data.store.lock();
+
                 let val = lock.cache.get(&i.to_id())?;
 
                 return Some(val.clone());
@@ -212,8 +215,10 @@ impl Evaluator {
                     self.marks.unresolved_mark,
                     ExprSimplifierConfig {},
                 ));
+
                 return Some(Box::new(e));
             }
+
             _ => {}
         }
 
@@ -227,6 +232,7 @@ impl Evaluator {
 
         for expr in &q.exprs {
             let res = self.eval(expr)?;
+
             exprs.push(match res {
                 EvalResult::Lit(v) => v.into(),
                 EvalResult::Undefined => Expr::undefined(DUMMY_SP),

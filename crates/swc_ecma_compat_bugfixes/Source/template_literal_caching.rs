@@ -31,6 +31,7 @@ struct TemplateLiteralCaching {
 impl TemplateLiteralCaching {
     fn create_binding(&mut self, name: Ident, init: Option<Expr>) {
         let init = init.map(Box::new);
+
         self.decls.push(VarDeclarator {
             span: DUMMY_SP,
             name: name.into(),
@@ -52,6 +53,7 @@ impl TemplateLiteralCaching {
                 .into(),
             );
         }
+
         None
     }
 }
@@ -63,14 +65,18 @@ impl Fold for TemplateLiteralCaching {
 
     fn fold_expr(&mut self, n: Expr) -> Expr {
         let n = n.fold_children_with(self);
+
         match n {
             Expr::TaggedTpl(n) => {
                 if self.helper_ident.is_none() {
                     // Create an identity function helper:
                     //   identity = t => t
                     let helper_ident = private_ident!("_");
+
                     let t = private_ident!("t");
+
                     self.helper_ident = Some(helper_ident.clone());
+
                     self.create_binding(
                         helper_ident,
                         Some(
@@ -106,7 +112,9 @@ impl Fold for TemplateLiteralCaching {
                 // Install an inline cache at the callsite using the global variable:
                 //   _t || (_t = identity`a${0}`)
                 let t = private_ident!("t");
+
                 self.create_binding(t.clone(), None);
+
                 let inline_cache: Expr = BinExpr {
                     span: DUMMY_SP,
                     op: op!("||"),
@@ -136,12 +144,14 @@ impl Fold for TemplateLiteralCaching {
                 }
                 .into()
             }
+
             _ => n,
         }
     }
 
     fn fold_module(&mut self, n: Module) -> Module {
         let mut body = n.body.fold_children_with(self);
+
         if let Some(var) = self.create_var_decl() {
             prepend_stmt(&mut body, var.into())
         }
@@ -151,6 +161,7 @@ impl Fold for TemplateLiteralCaching {
 
     fn fold_script(&mut self, n: Script) -> Script {
         let mut body = n.body.fold_children_with(self);
+
         if let Some(var) = self.create_var_decl() {
             prepend_stmt(&mut body, var)
         }
@@ -162,7 +173,9 @@ impl Fold for TemplateLiteralCaching {
 #[cfg(test)]
 mod tests {
     use swc_common::Mark;
+
     use swc_ecma_transforms_base::resolver;
+
     use swc_ecma_transforms_testing::test;
 
     use super::*;
@@ -194,6 +207,7 @@ mod tests {
         multiple_tags,
         r#"
         t`a`;
+
         x``;
         "#
     );
@@ -239,7 +253,9 @@ mod tests {
         template_literals,
         r#"
         `a`;
+
         t(`a`);
+
         t;
         `a`;
         "#
@@ -251,6 +267,7 @@ mod tests {
         prevent_tag_collision,
         r#"
         const _ = 1;
+
         t``;
         "#
     );

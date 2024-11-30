@@ -12,6 +12,7 @@ where
     };
 
     node.visit_with(&mut v);
+
     v.found
 }
 

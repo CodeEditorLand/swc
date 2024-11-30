@@ -56,6 +56,7 @@ where
 
     pub fn last_pos(&mut self) -> BytePos {
         self.cur();
+
         self.last_pos
     }
 
@@ -139,6 +140,7 @@ where
         }) = &self.cur
         {
             self.last_pos = span.hi;
+
             self.cur = None;
 
             {
@@ -153,8 +155,10 @@ where
                         span,
                     }) => {
                         self.last_pos = span.hi;
+
                         self.cur = None;
                     }
+
                     Some(..) => return,
                     None => {}
                 }
@@ -177,6 +181,7 @@ where
 
     pub(super) fn reset(&mut self, state: &WrappedState<I::State>) {
         self.cur.clone_from(&state.cur);
+
         self.input.reset(&state.inner);
     }
 }
@@ -252,6 +257,7 @@ impl<'a> Input<'a> {
                 idx
             }
         };
+
         let balance_stack = match input {
             InputType::Tokens(_) => None,
             InputType::ListOfComponentValues(_) => Some(Vec::with_capacity(16)),
@@ -279,6 +285,7 @@ impl<'a> Input<'a> {
             Some(ComponentValue::PreservedToken(token_and_span)) => {
                 Some(TokenOrBlock::Token(token_and_span))
             }
+
             Some(ComponentValue::Function(function)) => {
                 if self.idx.len() - 1 == deep {
                     return Some(TokenOrBlock::Function(Box::new((
@@ -298,6 +305,7 @@ impl<'a> Input<'a> {
 
                 res
             }
+
             Some(ComponentValue::SimpleBlock(simple_block)) => {
                 if self.idx.len() - 1 == deep {
                     let close = match simple_block.name.token {
@@ -326,6 +334,7 @@ impl<'a> Input<'a> {
                 if res.is_none() {
                     let span =
                         Span::new(simple_block.span_hi() - BytePos(1), simple_block.span_hi());
+
                     let close = match simple_block.name.token {
                         Token::LBracket => TokenOrBlock::RBracket((span.lo, span.hi)),
                         Token::LParen => TokenOrBlock::RParen((span.lo, span.hi)),
@@ -340,6 +349,7 @@ impl<'a> Input<'a> {
 
                 res
             }
+
             None => return None,
             _ => {
                 unreachable!("Not allowed in the list of component values")
@@ -354,6 +364,7 @@ impl<'a> Input<'a> {
                     Some(idx) => idx,
                     _ => {
                         let bp = input.span.hi;
+
                         let span = Span::new(bp, bp);
 
                         return Err(Error::new(span, ErrorKind::Eof));
@@ -364,6 +375,7 @@ impl<'a> Input<'a> {
                     Some(token_and_span) => token_and_span,
                     None => {
                         let bp = input.span.hi;
+
                         let span = Span::new(bp, bp);
 
                         return Err(Error::new(span, ErrorKind::Eof));
@@ -372,12 +384,14 @@ impl<'a> Input<'a> {
 
                 Ok(Cow::Borrowed(token_and_span))
             }
+
             InputType::ListOfComponentValues(input) => {
                 let token_and_span = match self.get_component_value(&input.children, 0) {
                     Some(token_or_block) => match token_or_block {
                         TokenOrBlock::Token(token_and_span) => {
                             return Ok(Cow::Borrowed(token_and_span))
                         }
+
                         TokenOrBlock::Function(function) => {
                             let name = match function.1 {
                                 FunctionName::Ident(name) => match name.raw {
@@ -401,6 +415,7 @@ impl<'a> Input<'a> {
                                 },
                             }
                         }
+
                         TokenOrBlock::LBracket(span) => TokenAndSpan {
                             span: Span::new(span.0, span.1),
                             token: Token::LBracket,
@@ -428,6 +443,7 @@ impl<'a> Input<'a> {
                     },
                     None => {
                         let bp = input.span.hi;
+
                         let span = Span::new(bp, bp);
 
                         return Err(Error::new(span, ErrorKind::Eof));
@@ -459,6 +475,7 @@ impl ParserInput for Input<'_> {
 
     fn reset(&mut self, state: &Self::State) {
         self.idx.clone_from(&state.idx);
+
         self.balance_stack.clone_from(&state.balance_stack);
     }
 
@@ -504,6 +521,7 @@ impl Iterator for Input<'_> {
                     *idx += 1;
                 }
             }
+
             InputType::ListOfComponentValues(_) => match &token_and_span.token {
                 Token::Function { .. } | Token::LParen | Token::LBracket | Token::LBrace => {
                     self.idx.push(0);
@@ -519,6 +537,7 @@ impl Iterator for Input<'_> {
 
                     self.balance_stack.as_mut().unwrap().push(balance);
                 }
+
                 token => {
                     match token {
                         Token::RBrace | Token::RBracket | Token::RParen => {
@@ -528,12 +547,15 @@ impl Iterator for Input<'_> {
                                     | (Token::RParen, BalanceToken::RParen)
                                     | (Token::RBracket, BalanceToken::RBracket) => {
                                         self.balance_stack.as_mut().unwrap().pop();
+
                                         self.idx.pop();
                                     }
+
                                     _ => {}
                                 }
                             }
                         }
+
                         _ => {}
                     }
 

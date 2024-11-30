@@ -47,6 +47,7 @@ impl VisitMut for OptionalChaining {
                 })],
                 ..Default::default()
             };
+
             stmt.visit_mut_with(self);
 
             // If there are optional chains in this expression, then the visitor will have
@@ -56,6 +57,7 @@ impl VisitMut for OptionalChaining {
                 [Stmt::Return(ReturnStmt { arg: Some(e), .. })] => {
                     *expr = BlockStmtOrExpr::Expr(e.take())
                 }
+
                 _ => *expr = BlockStmtOrExpr::BlockStmt(stmt),
             }
         } else {
@@ -82,6 +84,7 @@ impl VisitMut for OptionalChaining {
                         let data = self.gather(v.take(), Vec::new());
                         *e = self.construct(data, true);
                     }
+
                     _ => e.visit_mut_children_with(self),
                 }
             }
@@ -94,12 +97,15 @@ impl VisitMut for OptionalChaining {
         // The default initializer of an assignment pattern must not leak the memo
         // variable into the enclosing scope.
         // function(a, b = a?.b) {} -> function(a, b = (() => var _a; …)()) {}
+
         let Pat::Assign(a) = n else {
             n.visit_mut_children_with(self);
+
             return;
         };
 
         let uninit = self.vars.take();
+
         a.right.visit_mut_with(self);
 
         // If we found an optional chain, we need to transform into an arrow IIFE to
@@ -116,6 +122,7 @@ impl VisitMut for OptionalChaining {
                     arg: Some(a.right.take()),
                 }),
             ];
+
             a.right = CallExpr {
                 span: DUMMY_SP,
                 callee: ArrowExpr {
@@ -138,6 +145,7 @@ impl VisitMut for OptionalChaining {
         }
 
         self.vars = uninit;
+
         a.left.visit_mut_with(self);
     }
 
@@ -185,7 +193,9 @@ impl OptionalChaining {
         mut chain: Vec<Gathering>,
     ) -> (Expr, usize, Vec<Gathering>) {
         let mut current = v;
+
         let mut count = 0;
+
         loop {
             let OptChainExpr {
                 optional, mut base, ..
@@ -196,10 +206,13 @@ impl OptionalChaining {
             }
 
             let next;
+
             match &mut *base {
                 OptChainBase::Member(m) => {
                     next = m.obj.take();
+
                     m.prop.visit_mut_with(self);
+
                     chain.push(if optional {
                         Gathering::OptMember(m.take(), self.memoize(&next, false))
                     } else {
@@ -209,6 +222,7 @@ impl OptionalChaining {
 
                 OptChainBase::Call(c) => {
                     next = c.callee.take();
+
                     c.args.visit_mut_with(self);
                     // I don't know why c is an OptCall instead of a CallExpr.
                     chain.push(if optional {
@@ -223,8 +237,10 @@ impl OptionalChaining {
                 Expr::OptChain(next) => {
                     current = next;
                 }
+
                 mut base => {
                     base.visit_mut_children_with(self);
+
                     return (base, count, chain);
                 }
             }
@@ -259,14 +275,20 @@ impl OptionalChaining {
             current = match v {
                 Gathering::Call(mut c) => {
                     c.callee = current.as_callee();
+
                     ctx = None;
+
                     c.into()
                 }
+
                 Gathering::Member(mut m) => {
                     m.obj = Box::new(current);
+
                     ctx = None;
+
                     m.into()
                 }
+
                 Gathering::OptCall(mut c, memo) => {
                     let mut call = false;
 
@@ -274,6 +296,7 @@ impl OptionalChaining {
                     match &mut current {
                         Expr::Member(m) => {
                             call = true;
+
                             let this = ctx.unwrap_or_else(|| {
                                 let this = self.memoize(&m.obj, true);
 
@@ -286,17 +309,23 @@ impl OptionalChaining {
                                             right: m.obj.take(),
                                         }
                                         .into();
+
                                         this
                                     }
+
                                     Memo::Raw(_) => this,
                                 }
                             });
+
                             c.args.insert(0, this.into_expr().as_arg());
                         }
+
                         Expr::SuperProp(s) => {
                             call = true;
+
                             c.args.insert(0, ThisExpr { span: s.obj.span }.as_arg());
                         }
+
                         _ => {}
                     }
 
@@ -310,6 +339,7 @@ impl OptionalChaining {
                         },
                         alt: Take::dummy(),
                     });
+
                     c.callee = if call {
                         memo.into_expr()
                             .make_member(quote_ident!("call"))
@@ -317,9 +347,12 @@ impl OptionalChaining {
                     } else {
                         memo.into_expr().as_callee()
                     };
+
                     ctx = None;
+
                     c.into()
                 }
+
                 Gathering::OptMember(mut m, memo) => {
                     committed_cond.push(CondExpr {
                         span: DUMMY_SP,
@@ -331,8 +364,11 @@ impl OptionalChaining {
                         },
                         alt: Take::dummy(),
                     });
+
                     ctx = Some(memo.clone());
+
                     m.obj = memo.into_expr().into();
+
                     m.into()
                 }
             };
@@ -351,8 +387,10 @@ impl OptionalChaining {
         // We now need to reverse iterate the conditionals to construct out tree.
         for mut cond in committed_cond.into_iter().rev() {
             cond.alt = Box::new(current);
+
             current = cond.into()
         }
+
         current
     }
 
@@ -382,12 +420,14 @@ impl OptionalChaining {
     fn memoize(&mut self, expr: &Expr, is_call: bool) -> Memo {
         if self.should_memo(expr, is_call) {
             let memo = alias_ident_for(expr, "_this");
+
             self.vars.push(VarDeclarator {
                 span: DUMMY_SP,
                 name: memo.clone().into(),
                 init: None,
                 definite: false,
             });
+
             Memo::Cache(memo)
         } else {
             Memo::Raw(Box::new(expr.to_owned()))
@@ -400,6 +440,7 @@ impl OptionalChaining {
         Vec<T>: VisitMutWith<Self>,
     {
         let uninit = self.vars.take();
+
         for stmt in stmts.iter_mut() {
             stmt.visit_mut_with(self);
         }

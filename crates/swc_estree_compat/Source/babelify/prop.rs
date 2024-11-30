@@ -17,6 +17,7 @@ impl Babelify for Prop {
         match self {
             Prop::Shorthand(i) => {
                 let id = i.babelify(ctx);
+
                 ObjectMember::Prop(ObjectProperty {
                     base: id.base.clone(),
                     key: ObjectKey::Id(id.clone()),
@@ -26,6 +27,7 @@ impl Babelify for Prop {
                     decorators: Default::default(),
                 })
             }
+
             Prop::KeyValue(k) => ObjectMember::Prop(k.babelify(ctx)),
             Prop::Getter(g) => ObjectMember::Method(g.babelify(ctx)),
             Prop::Setter(s) => ObjectMember::Method(s.babelify(ctx)),
@@ -116,6 +118,7 @@ impl Babelify for MethodProp {
 
     fn babelify(self, ctx: &Context) -> Self::Output {
         let func: FunctionExpression = self.function.babelify(ctx);
+
         ObjectMethod {
             base: func.base,
             kind: ObjectMethodKind::Method,

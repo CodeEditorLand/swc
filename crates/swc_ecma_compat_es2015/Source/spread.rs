@@ -76,6 +76,7 @@ impl VisitMut for Spread {
                 let has_spread = args
                     .iter()
                     .any(|ExprOrSpread { spread, .. }| spread.is_some());
+
                 if !has_spread {
                     return;
                 }
@@ -99,6 +100,7 @@ impl VisitMut for Spread {
 
                     Expr::Member(MemberExpr { span, obj, prop }) => {
                         let ident = alias_ident_for(obj, "_instance");
+
                         self.vars.push(VarDeclarator {
                             span: DUMMY_SP,
                             definite: false,
@@ -109,6 +111,7 @@ impl VisitMut for Spread {
                         });
 
                         let this = ident.clone().into();
+
                         let callee: Expr = AssignExpr {
                             span: DUMMY_SP,
                             left: ident.into(),
@@ -167,6 +170,7 @@ impl VisitMut for Spread {
                 }
                 .into()
             }
+
             Expr::New(NewExpr {
                 callee,
                 args: Some(args),
@@ -176,6 +180,7 @@ impl VisitMut for Spread {
                 let has_spread = args
                     .iter()
                     .any(|ExprOrSpread { spread, .. }| spread.is_some());
+
                 if !has_spread {
                     return;
                 }
@@ -190,6 +195,7 @@ impl VisitMut for Spread {
                 }
                 .into();
             }
+
             _ => {}
         };
     }
@@ -238,18 +244,22 @@ impl Spread {
         let mut first_arr = None;
 
         let mut tmp_arr = Vec::new();
+
         let mut buf = Vec::new();
+
         let args_len = args.len();
 
         macro_rules! make_arr {
             () => {
                 let elems = mem::take(&mut tmp_arr);
+
                 match first_arr {
                     Some(_) => {
                         if !elems.is_empty() {
                             buf.push(ArrayLit { span, elems }.as_arg());
                         }
                     }
+
                     None => {
                         first_arr = Some(Expr::Array(ArrayLit { span, elems }));
                     }
@@ -266,9 +276,12 @@ impl Spread {
         // array args from being flattened.
         if self.c.loose {
             let mut arg_list = Vec::new();
+
             let mut current_elems = Vec::new();
+
             for arg in args.flatten() {
                 let expr = arg.expr;
+
                 match arg.spread {
                     Some(_) => {
                         if !current_elems.is_empty() {
@@ -279,15 +292,19 @@ impl Spread {
                                 }
                                 .as_arg(),
                             );
+
                             current_elems = Vec::new();
                         }
+
                         arg_list.push(expr.as_arg());
                     }
+
                     None => {
                         current_elems.push(Some(expr.as_arg()));
                     }
                 }
             }
+
             if !current_elems.is_empty() {
                 arg_list.push(
                     ArrayLit {
@@ -376,6 +393,7 @@ impl Spread {
                                     .as_arg()
                                 }
                             }
+
                             _ => {
                                 if args_len == 1 && !need_array {
                                     return if self.c.loose {
@@ -403,16 +421,19 @@ impl Spread {
                                         to_consumable_array(expr, span).into()
                                     };
                                 }
+
                                 to_consumable_array(expr, span).as_arg()
                             }
                         });
                     }
+
                     None => tmp_arr.push(Some(expr.as_arg())),
                 }
             } else {
                 tmp_arr.push(None);
             }
         }
+
         make_arr!();
 
         if !buf.is_empty()
@@ -447,6 +468,7 @@ impl Spread {
                     // No arg
 
                     // assert!(args.is_empty());
+
                     Expr::Array(ArrayLit {
                         span,
                         elems: Vec::new(),
@@ -479,8 +501,10 @@ fn expand_literal_args(
                 match *expr {
                     Expr::Array(arr) => {
                         expand(buf, arr.elems.into_iter());
+
                         continue;
                     }
+
                     _ => {
                         arg = Some(ExprOrSpread {
                             spread: Some(spread_span),
@@ -495,7 +519,9 @@ fn expand_literal_args(
     }
 
     let mut buf = Vec::with_capacity(args.len() + 4);
+
     expand(&mut buf, args);
+
     buf
 }
 

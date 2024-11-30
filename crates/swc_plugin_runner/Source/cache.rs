@@ -115,16 +115,20 @@ impl PluginModuleCacheInner {
             // If FilesystemCache is available, store serialized bytes into fs.
             if let Some(fs_cache_store) = &mut self.fs_cache_store {
                 let module_bytes_hash = Hash::generate(&raw_module_bytes);
+
                 let store = new_store();
 
                 let module =
                     if let Ok(module) = unsafe { fs_cache_store.load(&store, module_bytes_hash) } {
                         tracing::debug!("Build WASM from cache: {key}");
+
                         module
                     } else {
                         let module = Module::new(&store, raw_module_bytes.clone())
                             .context("Cannot compile plugin binary")?;
+
                         fs_cache_store.store(module_bytes_hash, &module)?;
+
                         module
                     };
 
@@ -163,8 +167,11 @@ impl PluginModuleCacheInner {
         #[cfg(all(not(target_arch = "wasm32"), feature = "filesystem_cache"))]
         if let Some(fs_cache_store) = &self.fs_cache_store {
             let hash = self.fs_cache_hash_store.get(key)?;
+
             let store = new_store();
+
             let module = unsafe { fs_cache_store.load(&store, *hash) };
+
             if let Ok(module) = module {
                 return Some(Box::new(CompiledPluginModuleBytes::new(
                     key.to_string(),
@@ -182,6 +189,7 @@ impl PluginModuleCacheInner {
                 memory_cache_bytes.clone(),
             )));
         }
+
         None
     }
 }
@@ -230,6 +238,7 @@ fn create_filesystem_cache(filesystem_cache_root: &Option<String>) -> Option<Fil
 
     if let Some(root_path) = &mut root_path {
         root_path.push("plugins");
+
         root_path.push(format!(
             "{}_{}_{}_{}",
             MODULE_SERIALIZATION_VERSION,

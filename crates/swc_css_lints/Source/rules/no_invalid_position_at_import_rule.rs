@@ -27,6 +27,7 @@ pub fn no_invalid_position_at_import_rule(
         .into_iter()
         .map(NamePattern::try_from)
         .collect::<Result<_, _>>()?;
+
     Ok(visitor_rule(
         ctx.reaction(),
         NoInvalidPositionAtImportRule { ctx, ignored },
@@ -69,6 +70,7 @@ impl Visit for NoInvalidPositionAtImportRule {
                     AtRulePrelude::CharsetPrelude(_) | AtRulePrelude::ImportPrelude(_) => {
                         return seen
                     }
+
                     AtRulePrelude::LayerPrelude(_) => match block {
                         Some(block) if block.value.is_empty() => return seen,
                         None => return seen,

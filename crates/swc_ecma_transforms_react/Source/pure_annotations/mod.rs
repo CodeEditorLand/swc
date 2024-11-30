@@ -41,12 +41,14 @@ where
         for item in &module.body {
             if let ModuleItem::ModuleDecl(ModuleDecl::Import(import)) = item {
                 let src_str = &*import.src.value;
+
                 if src_str != "react" && src_str != "react-dom" {
                     continue;
                 }
 
                 for specifier in &import.specifiers {
                     let src = import.src.value.clone();
+
                     match specifier {
                         ImportSpecifier::Named(named) => {
                             let imported = match &named.imported {
@@ -54,12 +56,15 @@ where
                                 Some(ModuleExportName::Str(..)) => named.local.sym.clone(),
                                 None => named.local.sym.clone(),
                             };
+
                             self.imports.insert(named.local.to_id(), (src, imported));
                         }
+
                         ImportSpecifier::Default(default) => {
                             self.imports
                                 .insert(default.local.to_id(), (src, "default".into()));
                         }
+
                         ImportSpecifier::Namespace(ns) => {
                             self.imports.insert(ns.local.to_id(), (src, "*".into()));
                         }
@@ -86,6 +91,7 @@ where
                         false
                     }
                 }
+
                 Expr::Member(member) => match &*member.obj {
                     Expr::Ident(ident) => {
                         if let Some((src, specifier)) = self.imports.get(&ident.to_id()) {
@@ -101,6 +107,7 @@ where
                             false
                         }
                     }
+
                     _ => false,
                 },
                 _ => false,

@@ -56,18 +56,23 @@ impl VisitMut for Wrapper {
             let mut v = Generator::default();
 
             let mut hoister = FnEnvHoister::new(self.unresolved_ctxt);
+
             hoister.disable_super();
+
             hoister.disable_this();
 
             f.visit_mut_children_with(&mut hoister);
 
             v.transform_and_emit_stmts(f.body.as_mut().unwrap().stmts.take(), 0);
+
             f.is_generator = false;
 
             let mut stmts = v.build_stmts();
+
             stmts.visit_mut_with(&mut InvalidToLit {
                 map: v.label_exprs.as_deref(),
             });
+
             let inner_fn = Box::new(Function {
                 span: DUMMY_SP,
                 params: vec![Param {
@@ -84,6 +89,7 @@ impl VisitMut for Wrapper {
                 is_async: false,
                 ..Default::default()
             });
+
             let generator_object = CallExpr {
                 span: DUMMY_SP,
                 callee: helper!(ts, ts_generator),
@@ -98,7 +104,9 @@ impl VisitMut for Wrapper {
                 ..Default::default()
             }
             .into();
+
             let mut stmts = Vec::new();
+
             if !v.hoisted_vars.is_empty() {
                 stmts.push(
                     VarDecl {
@@ -111,7 +119,9 @@ impl VisitMut for Wrapper {
                     .into(),
                 )
             }
+
             let vars = hoister.to_decl();
+
             if !vars.is_empty() {
                 stmts.push(
                     VarDecl {
@@ -124,6 +134,7 @@ impl VisitMut for Wrapper {
                     .into(),
                 )
             }
+
             stmts.extend(v.hoisted_fns.into_iter().map(Decl::Fn).map(Stmt::Decl));
 
             stmts.push(
@@ -133,6 +144,7 @@ impl VisitMut for Wrapper {
                 }
                 .into(),
             );
+
             f.body.as_mut().unwrap().stmts = stmts;
         }
     }
@@ -423,7 +435,9 @@ impl VisitMut for Generator {
                 //      x = %sent%;
 
                 let resume_label = self.define_label();
+
                 node.arg.visit_mut_with(self);
+
                 if node.delegate {
                     let arg = node
                         .arg
@@ -436,6 +450,7 @@ impl VisitMut for Generator {
                         })
                         .map(Expr::from)
                         .map(Box::new);
+
                     self.emit_yield_star(arg, Some(node.span))
                 } else {
                     self.emit_yield(node.arg.take(), Some(node.span));
@@ -469,25 +484,35 @@ impl VisitMut for Generator {
 
                 if contains_yield(&node.cons) || contains_yield(&node.alt) {
                     let when_false_label = self.define_label();
+
                     let result_label = self.define_label();
+
                     let result_local = self.declare_local(None);
 
                     node.test.visit_mut_with(self);
+
                     let cond_span = node.test.span();
+
                     self.emit_break_when_false(when_false_label, node.test.take(), Some(cond_span));
 
                     let cons_span = node.cons.span();
+
                     node.cons.visit_mut_with(self);
+
                     self.emit_assignment(
                         result_local.clone().into(),
                         node.cons.take(),
                         Some(cons_span),
                     );
+
                     self.emit_break(result_label, None);
 
                     self.mark_label(when_false_label);
+
                     let alt_span = node.cons.span();
+
                     node.alt.visit_mut_with(self);
+
                     self.emit_assignment(
                         result_local.clone().into(),
                         node.alt.take(),
@@ -507,6 +532,7 @@ impl VisitMut for Generator {
                     todo!("right-associative binary expression")
                 } else {
                     let new = self.visit_left_associative_bin_expr(node);
+
                     if let Some(new) = new {
                         *e = new;
                     }
@@ -520,6 +546,7 @@ impl VisitMut for Generator {
                 for mut elem in node.exprs.take() {
                     if let Expr::Seq(mut elem) = *elem {
                         elem.visit_mut_with(self);
+
                         pending_expressions.extend(elem.exprs.take());
                     } else {
                         if contains_yield(&elem) && !pending_expressions.is_empty() {
@@ -543,7 +570,9 @@ impl VisitMut for Generator {
                                 None,
                             );
                         }
+
                         elem.visit_mut_with(self);
+
                         pending_expressions.push(elem);
                     }
                 }
@@ -572,7 +601,9 @@ impl VisitMut for Generator {
                     //      a = _a[%sent%]
 
                     *obj = self.cache_expression(obj.take()).into();
+
                     prop.visit_mut_with(self);
+
                     return;
                 }
 
@@ -594,10 +625,12 @@ impl VisitMut for Generator {
                                 //      _a.b = %sent%;
 
                                 left.obj.visit_mut_with(self);
+
                                 let obj = self.cache_expression(left.obj.take());
 
                                 left.obj = obj.into();
                             }
+
                             MemberProp::Computed(prop) => {
                                 // [source]
                                 //      a[b] = yield;
@@ -609,15 +642,19 @@ impl VisitMut for Generator {
                                 //  .yield resumeLabel
                                 //  .mark resumeLabel
                                 //      _a[_b] = %sent%;
+
                                 let prop_span = prop.span;
 
                                 left.obj.visit_mut_with(self);
+
                                 let obj = self.cache_expression(left.obj.take());
 
                                 prop.visit_mut_with(self);
+
                                 let prop = self.cache_expression(prop.expr.take());
 
                                 left.obj = obj.into();
+
                                 left.prop = MemberProp::Computed(ComputedPropName {
                                     span: prop_span,
                                     expr: prop.into(),
@@ -626,10 +663,12 @@ impl VisitMut for Generator {
                         }
                         // [source]
                     }
+
                     _ => {
                         node.left.visit_mut_with(self);
                     }
                 }
+
                 if node.op != op!("=") {
                     let left_of_right =
                         self.cache_expression(node.left.take().expect_simple().into());
@@ -670,6 +709,7 @@ impl VisitMut for Generator {
                 let num_initial_properties = self.count_initial_nodes_without_yield(&node.props);
 
                 let mut temp = self.declare_local(None);
+
                 node.props
                     .iter_mut()
                     .take(num_initial_properties)
@@ -702,6 +742,7 @@ impl VisitMut for Generator {
                             PropOrSpread::Spread(_) => {
                                 unreachable!("spread should be removed before applying generator")
                             }
+
                             PropOrSpread::Prop(p) => match *p {
                                 Prop::Getter(p) => {
                                     if let Some(CompiledProp::Accessor(g, _)) =
@@ -709,6 +750,7 @@ impl VisitMut for Generator {
                                             CompiledProp::Accessor(_, Some(s)) => {
                                                 s.key.eq_ignore_span(&p.key)
                                             }
+
                                             _ => false,
                                         })
                                     {
@@ -717,12 +759,14 @@ impl VisitMut for Generator {
                                         props.push(CompiledProp::Accessor(Some(p), None))
                                     }
                                 }
+
                                 Prop::Setter(p) => {
                                     if let Some(CompiledProp::Accessor(_, s)) =
                                         props.iter_mut().find(|prev| match prev {
                                             CompiledProp::Accessor(Some(prev), _) => {
                                                 prev.key.eq_ignore_span(&p.key)
                                             }
+
                                             _ => false,
                                         })
                                     {
@@ -731,6 +775,7 @@ impl VisitMut for Generator {
                                         props.push(CompiledProp::Accessor(None, Some(p)))
                                     }
                                 }
+
                                 p => {
                                     props.push(CompiledProp::Prop(p));
                                 }
@@ -780,6 +825,7 @@ impl VisitMut for Generator {
             let callee = self.cache_expression(target);
 
             let mut args = node.args.take().into_iter().map(Some).collect::<Vec<_>>();
+
             let arg = self.visit_elements(&mut args, None, None);
 
             let apply = callee.make_member(quote_ident!("apply"));
@@ -790,6 +836,7 @@ impl VisitMut for Generator {
                 args: once(this_arg.as_arg()).chain(once(arg.as_arg())).collect(),
                 ..Default::default()
             };
+
             return;
         }
 
@@ -817,6 +864,7 @@ impl VisitMut for Generator {
 
             let mut arg = if let Some(args) = node.args.take() {
                 let mut args = args.into_iter().map(Some).collect::<Vec<_>>();
+
                 Some(self.visit_elements(
                     &mut args,
                     Some(ExprOrSpread {
@@ -841,6 +889,7 @@ impl VisitMut for Generator {
                 args: None,
                 ..Default::default()
             };
+
             return;
         }
 
@@ -865,6 +914,7 @@ impl VisitMut for Generator {
                 .map(Expr::from)
                 .map(Box::new)
                 .collect::<Vec<_>>();
+
             node.init = if exprs.is_empty() {
                 None
             } else {
@@ -878,8 +928,11 @@ impl VisitMut for Generator {
                     .into()
                 }))
             };
+
             node.test.visit_mut_with(self);
+
             node.update.visit_mut_with(self);
+
             node.body.visit_mut_with(self);
         } else {
             node.visit_mut_children_with(self);
@@ -893,7 +946,9 @@ impl VisitMut for Generator {
     fn visit_mut_do_while_stmt(&mut self, node: &mut DoWhileStmt) {
         if self.in_statement_containing_yield {
             self.begin_script_loop_block();
+
             node.visit_mut_children_with(self);
+
             self.end_loop_block();
         } else {
             node.visit_mut_children_with(self);
@@ -903,7 +958,9 @@ impl VisitMut for Generator {
     fn visit_mut_while_stmt(&mut self, node: &mut WhileStmt) {
         if self.in_statement_containing_yield {
             self.begin_script_loop_block();
+
             node.visit_mut_children_with(self);
+
             self.end_loop_block();
         } else {
             node.visit_mut_children_with(self);
@@ -964,6 +1021,7 @@ impl VisitMut for Generator {
             }
 
             node.right.visit_mut_with(self);
+
             node.body.visit_mut_with(self);
         } else {
             node.visit_mut_children_with(self);
@@ -980,19 +1038,24 @@ impl VisitMut for Generator {
             Stmt::Break(b) => {
                 if self.in_statement_containing_yield {
                     let label = self.find_break_target(b.label.as_ref().map(|l| l.sym.clone()));
+
                     if label.0 > 0 {
                         *node = self.create_inline_break(label, Some(b.span)).into();
+
                         return;
                     }
                 }
 
                 node.visit_mut_children_with(self);
             }
+
             Stmt::Continue(s) => {
                 if self.in_statement_containing_yield {
                     let label = self.find_continue_target(s.label.as_ref().map(|l| l.sym.clone()));
+
                     if label.0 > 0 {
                         *node = self.create_inline_break(label, Some(s.span)).into();
+
                         return;
                     }
                 }
@@ -1003,7 +1066,9 @@ impl VisitMut for Generator {
             Stmt::Decl(Decl::Var(v)) => {
                 if contains_yield(&*v) {
                     self.transform_and_emit_var_decl_list(v.take());
+
                     node.take();
+
                     return;
                 }
 
@@ -1017,8 +1082,10 @@ impl VisitMut for Generator {
                 }
 
                 let variables = self.get_initialized_variables(v);
+
                 if variables.is_empty() {
                     node.take();
+
                     return;
                 }
 
@@ -1031,6 +1098,7 @@ impl VisitMut for Generator {
 
                 if exprs.is_empty() {
                     node.take();
+
                     return;
                 }
 
@@ -1048,10 +1116,13 @@ impl VisitMut for Generator {
                 }
                 .into();
             }
+
             Stmt::Decl(Decl::Fn(f)) => {
                 self.hoisted_fns.push(f.take());
+
                 node.take();
             }
+
             _ => {
                 node.visit_mut_children_with(self);
             }
@@ -1084,6 +1155,7 @@ impl Generator {
         let num_initial_elements = self.count_initial_nodes_without_yield(elements);
 
         let mut temp = None;
+
         if num_initial_elements > 0 {
             temp = Some(self.declare_local(None));
 
@@ -1157,6 +1229,7 @@ impl Generator {
     ) -> Vec<Option<ExprOrSpread>> {
         if contains_yield(&element) && !expressions.is_empty() {
             let has_assigned_temp = temp.is_some();
+
             if temp.is_none() {
                 *temp = Some(self.declare_local(None));
             }
@@ -1199,9 +1272,11 @@ impl Generator {
         }
 
         element.visit_mut_with(self);
+
         if element.is_some() {
             expressions.push(element);
         }
+
         expressions
     }
 
@@ -1256,9 +1331,11 @@ impl Generator {
                 Prop::Assign(_) => {
                     unreachable!("assignment property be removed before generator pass")
                 }
+
                 Prop::Getter(_) | Prop::Setter(_) => {
                     unreachable!("getter/setter property be compiled as CompiledProp::Accessor")
                 }
+
                 Prop::Method(p) => AssignExpr {
                     span: DUMMY_SP,
                     op: op!("="),
@@ -1329,9 +1406,11 @@ impl Generator {
         };
 
         expression.visit_mut_with(self);
+
         if !expression.is_invalid() {
             expressions.push(Box::new(expression));
         }
+
         expressions
     }
 
@@ -1351,12 +1430,16 @@ impl Generator {
             //      _a + %sent% + c()
 
             node.left.visit_mut_with(self);
+
             node.left = self.cache_expression(node.left.take()).into();
+
             node.right.visit_mut_with(self);
+
             return None;
         }
 
         node.visit_mut_children_with(self);
+
         None
     }
 
@@ -1391,10 +1474,13 @@ impl Generator {
         //      x = _a;
 
         let result_label = self.define_label();
+
         let result_local = self.declare_local(None);
 
         let left_span = node.left.span();
+
         node.left.visit_mut_with(self);
+
         self.emit_assignment(
             result_local.clone().into(),
             node.left.take(),
@@ -1418,12 +1504,15 @@ impl Generator {
         }
 
         let right_span = node.right.span();
+
         node.right.visit_mut_with(self);
+
         self.emit_assignment(
             result_local.clone().into(),
             node.right.take(),
             Some(right_span),
         );
+
         self.mark_label(result_label);
 
         result_local.into()
@@ -1447,11 +1536,13 @@ impl Generator {
         let _tracing = dev_span!("transform_and_emit_stmt");
 
         let saved_in_statement_containing_yield = self.in_statement_containing_yield;
+
         if !self.in_statement_containing_yield {
             self.in_statement_containing_yield = contains_yield(&node);
         }
 
         self.transform_and_emit_stmt_worker(node);
+
         self.in_statement_containing_yield = saved_in_statement_containing_yield;
     }
 
@@ -1485,6 +1576,7 @@ impl Generator {
             self.transform_and_emit_stmts(node.stmts, 0);
         } else {
             node.visit_mut_with(self);
+
             self.emit_stmt(node.into());
         }
     }
@@ -1501,9 +1593,13 @@ impl Generator {
         }
 
         let mut variables = self.get_initialized_variables(&mut node);
+
         let var_len = variables.len();
+
         let mut variables_written = 0;
+
         let mut pending_expressions = Vec::new();
+
         let mut cnt = 0;
 
         while variables_written < var_len {
@@ -1519,11 +1615,13 @@ impl Generator {
                 let expr = self.transform_initialized_variable(variable.take());
 
                 pending_expressions.extend(expr.map(Expr::from).map(Box::new));
+
                 cnt += 1;
             }
 
             if cnt > 0 {
                 variables_written += cnt;
+
                 cnt = 0;
 
                 self.emit_stmt(
@@ -1574,26 +1672,34 @@ impl Generator {
 
             if contains_yield(&node.cons) || contains_yield(&node.alt) {
                 let end_label = self.define_label();
+
                 let else_label = node.alt.as_ref().map(|_| self.define_label());
 
                 node.test.visit_mut_with(self);
+
                 let span = node.test.span();
+
                 self.emit_break_when_false(else_label.unwrap_or(end_label), node.test, Some(span));
 
                 self.transform_and_emit_embedded_stmt(*node.cons);
 
                 if let Some(alt) = node.alt {
                     self.emit_break(end_label, None);
+
                     self.mark_label(else_label.unwrap());
+
                     self.transform_and_emit_embedded_stmt(*alt);
                 }
+
                 self.mark_label(end_label);
             } else {
                 node.visit_mut_with(self);
+
                 self.emit_stmt(node.into());
             }
         } else {
             node.visit_mut_with(self);
+
             self.emit_stmt(node.into());
         }
     }
@@ -1616,18 +1722,27 @@ impl Generator {
             //  .mark endLabel
 
             let condition_label = self.define_label();
+
             let loop_label = self.define_label();
 
             self.begin_loop_block(condition_label);
+
             self.mark_label(loop_label);
+
             self.transform_and_emit_embedded_stmt(*node.body);
+
             self.mark_label(condition_label);
+
             node.test.visit_mut_with(self);
+
             let span = node.test.span();
+
             self.emit_break_when_true(loop_label, node.test, Some(span));
+
             self.end_loop_block();
         } else {
             node.visit_mut_with(self);
+
             self.emit_stmt(node.into());
         }
     }
@@ -1651,12 +1766,19 @@ impl Generator {
             //  .mark endLabel
 
             let loop_label = self.define_label();
+
             let end_label = self.begin_loop_block(loop_label);
+
             self.mark_label(loop_label);
+
             node.test.visit_mut_with(self);
+
             self.emit_break_when_false(end_label, node.test, None);
+
             self.transform_and_emit_embedded_stmt(*node.body);
+
             self.emit_break(loop_label, None);
+
             self.end_loop_block();
         } else {
             node.visit_mut_with(self);
@@ -1686,7 +1808,9 @@ impl Generator {
             //  .mark endLoopLabel
 
             let condition_label = self.define_label();
+
             let increment_label = self.define_label();
+
             let end_label = self.begin_loop_block(increment_label);
 
             if let Some(init) = node.init {
@@ -1694,8 +1818,10 @@ impl Generator {
                     VarDeclOrExpr::VarDecl(init) => {
                         self.transform_and_emit_var_decl_list(init);
                     }
+
                     VarDeclOrExpr::Expr(mut init) => {
                         init.visit_mut_with(self);
+
                         self.emit_stmt(
                             ExprStmt {
                                 span: init.span(),
@@ -1711,6 +1837,7 @@ impl Generator {
 
             if let Some(mut cond) = node.test {
                 cond.visit_mut_with(self);
+
                 self.emit_break_when_false(end_label, cond, None);
             }
 
@@ -1731,9 +1858,11 @@ impl Generator {
             }
 
             self.emit_break(condition_label, None);
+
             self.end_loop_block();
         } else {
             node.visit_mut_with(self);
+
             self.emit_stmt(node.into());
         }
     }
@@ -1762,7 +1891,9 @@ impl Generator {
             //  .mark endLoopLabel
 
             let keys_array = self.declare_local(None);
+
             let key = self.declare_local(None);
+
             let keys_index = private_ident!("_i");
 
             self.hoist_variable_declaration(&keys_index);
@@ -1774,6 +1905,7 @@ impl Generator {
             );
 
             node.right.visit_mut_with(self);
+
             self.emit_stmt(
                 ForInStmt {
                     span: DUMMY_SP,
@@ -1799,10 +1931,13 @@ impl Generator {
             self.emit_assignment(keys_index.clone().into(), 0.into(), None);
 
             let condition_label = self.define_label();
+
             let increment_label = self.define_label();
+
             let end_label = self.begin_loop_block(increment_label);
 
             self.mark_label(condition_label);
+
             self.emit_break_when_false(
                 end_label,
                 Box::new(keys_index.clone().make_bin(
@@ -1822,6 +1957,7 @@ impl Generator {
 
                     initializer.decls[0].name.clone()
                 }
+
                 ForHead::Pat(mut initializer) => {
                     initializer.visit_mut_with(self);
                     *initializer
@@ -1831,6 +1967,7 @@ impl Generator {
                     unreachable!("using declaration must be removed by previous pass")
                 }
             };
+
             self.emit_assignment(
                 variable.try_into().unwrap(),
                 MemberExpr {
@@ -1844,9 +1981,11 @@ impl Generator {
                 .into(),
                 None,
             );
+
             self.transform_and_emit_embedded_stmt(*node.body);
 
             self.mark_label(increment_label);
+
             self.emit_stmt(
                 ExprStmt {
                     span: DUMMY_SP,
@@ -1862,15 +2001,18 @@ impl Generator {
             );
 
             self.emit_break(condition_label, None);
+
             self.end_loop_block();
         } else {
             node.visit_mut_with(self);
+
             self.emit_stmt(node.into());
         }
     }
 
     fn transform_and_emit_continue_stmt(&mut self, node: ContinueStmt) {
         let label = self.find_continue_target(node.label.as_ref().map(|l| l.sym.clone()));
+
         if label.0 > 0 {
             self.emit_break(label, Some(node.span));
         } else {
@@ -1882,6 +2024,7 @@ impl Generator {
 
     fn transform_and_emit_break_stmt(&mut self, node: BreakStmt) {
         let label = self.find_break_target(node.label.as_ref().map(|l| l.sym.clone()));
+
         if label.0 > 0 {
             self.emit_break(label, Some(node.span));
         } else {
@@ -1893,6 +2036,7 @@ impl Generator {
 
     fn transform_and_emit_return_stmt(&mut self, mut s: ReturnStmt) {
         s.arg.visit_mut_with(self);
+
         self.emit_return(s.arg, Some(s.span))
     }
 
@@ -1909,12 +2053,17 @@ impl Generator {
             //  .endwith
 
             node.obj.visit_mut_with(self);
+
             let obj = self.cache_expression(node.obj);
+
             self.begin_with_block(obj);
+
             self.transform_and_emit_embedded_stmt(*node.body);
+
             self.end_with_block();
         } else {
             node.visit_mut_with(self);
+
             self.emit_stmt(node.into());
         }
     }
@@ -1954,17 +2103,21 @@ impl Generator {
             //  .mark endLabel
 
             let end_label = self.begin_switch_block();
+
             node.discriminant.visit_mut_with(self);
+
             let expression = self.cache_expression(node.discriminant);
 
             // Create labels for each clause and find the index of the first
             // default clause.
 
             let mut clause_labels = Vec::new();
+
             let mut default_clause_index = -1i32;
 
             for (i, clause) in node.cases.iter().enumerate() {
                 clause_labels.push(self.define_label());
+
                 if clause.test.is_none() && default_clause_index == -1 {
                     default_clause_index = i as _;
                 }
@@ -1975,6 +2128,7 @@ impl Generator {
             // `yield` in its expression, up to the next case clause
             // with a `yield` in its expression.
             let mut clauses_written = 0;
+
             let mut pending_clauses = Vec::new();
 
             while clauses_written < node.cases.len() {
@@ -1990,7 +2144,9 @@ impl Generator {
                         }
 
                         clause.test.visit_mut_with(self);
+
                         let span = clause.test.span();
+
                         pending_clauses.push(SwitchCase {
                             span: DUMMY_SP,
                             test: clause.test.take(),
@@ -2005,6 +2161,7 @@ impl Generator {
 
                 if !pending_clauses.is_empty() {
                     clauses_written += pending_clauses.len();
+
                     self.emit_stmt(
                         SwitchStmt {
                             span: DUMMY_SP,
@@ -2028,12 +2185,14 @@ impl Generator {
 
             for (i, clause) in node.cases.into_iter().enumerate() {
                 self.mark_label(clause_labels[i]);
+
                 self.transform_and_emit_stmts(clause.cons, 0);
             }
 
             self.end_switch_block()
         } else {
             node.visit_mut_with(self);
+
             self.emit_stmt(node.into())
         }
     }
@@ -2054,16 +2213,20 @@ impl Generator {
             //  .endlabeled
             //  .mark endLabel
             self.begin_labeled_block(node.label.sym);
+
             self.transform_and_emit_embedded_stmt(*node.body);
+
             self.end_labeled_block();
         } else {
             node.visit_mut_with(self);
+
             self.emit_stmt(node.into());
         }
     }
 
     fn transform_and_emit_throw_stmt(&mut self, mut node: ThrowStmt) {
         node.arg.visit_mut_with(self);
+
         self.emit_throw(node.arg, Some(node.span))
     }
 
@@ -2102,23 +2265,28 @@ impl Generator {
             //  .mark endLabel
 
             self.begin_exception_block();
+
             self.transform_and_emit_embedded_stmt(node.block.into());
+
             if let Some(catch) = node.handler {
                 self.begin_catch_block(VarDeclarator {
                     name: catch.param.clone().unwrap(),
                     ..Take::dummy()
                 });
+
                 self.transform_and_emit_embedded_stmt(catch.body.into());
             }
 
             if let Some(finalizer) = node.finalizer {
                 self.begin_finally_block();
+
                 self.transform_and_emit_embedded_stmt(finalizer.into());
             }
 
             self.end_exception_block();
         } else {
             node.visit_mut_with(self);
+
             self.emit_stmt(node.into());
         }
     }
@@ -2143,7 +2311,9 @@ impl Generator {
                 let span = node.span();
 
                 let temp = self.create_temp_variable();
+
                 self.emit_assignment(temp.clone().into(), node, Some(span));
+
                 temp
             }
         }
@@ -2155,6 +2325,7 @@ impl Generator {
             .unwrap_or_else(|| private_ident!("_tmp"));
 
         self.hoist_variable_declaration(&temp);
+
         temp
     }
 
@@ -2165,6 +2336,7 @@ impl Generator {
         }
 
         let label = Label(self.next_label_id as _);
+
         self.next_label_id += 1;
         #[cfg(debug_assertions)]
         debug!("define_label: {:?}", label);
@@ -2175,7 +2347,9 @@ impl Generator {
                 .unwrap()
                 .resize(label.0 as usize + 1, 0);
         }
+
         self.label_offsets.as_mut().unwrap()[label.0 as usize] = -1;
+
         label
     }
 
@@ -2207,8 +2381,11 @@ impl Generator {
     fn begin_block(&mut self, block: CodeBlock) -> Ptr<CodeBlock> {
         if self.blocks.is_none() {
             self.blocks = Some(Default::default());
+
             self.block_actions = Some(Default::default());
+
             self.block_offsets = Some(Default::default());
+
             self.block_stack = Some(Default::default());
         }
 
@@ -2222,11 +2399,14 @@ impl Generator {
         let block = Rc::new(RefCell::new(block));
 
         self.block_actions.as_mut().unwrap().push(BlockAction::Open);
+
         self.block_offsets
             .as_mut()
             .unwrap()
             .push(self.operations.as_ref().map_or(0, |v| v.len()));
+
         self.blocks.as_mut().unwrap().push(block.clone());
+
         self.block_stack.as_mut().unwrap().push(block.clone());
 
         block
@@ -2245,12 +2425,16 @@ impl Generator {
             .as_mut()
             .unwrap()
             .push(BlockAction::Close);
+
         self.block_offsets
             .as_mut()
             .unwrap()
             .push(self.operations.as_ref().map_or(0, |v| v.len()));
+
         self.blocks.as_mut().unwrap().push(block.clone());
+
         self.block_stack.as_mut().unwrap().pop();
+
         block
     }
 
@@ -2275,8 +2459,11 @@ impl Generator {
     /// - `expression`: An identifier representing expression for the `with`
     fn begin_with_block(&mut self, expr: Ident) {
         let start_label = self.define_label();
+
         let end_label = self.define_label();
+
         self.mark_label(start_label);
+
         self.begin_block(CodeBlock::With(WithBlock {
             expression: expr,
             start_label,
@@ -2287,8 +2474,11 @@ impl Generator {
     /// Ends a code block for a generated `with` statement.
     fn end_with_block(&mut self) {
         debug_assert!(self.peek_block_kind() == Some(CodeBlockKind::With));
+
         let block = self.end_block();
+
         let b = block.borrow();
+
         if let CodeBlock::With(block) = &*b {
             self.mark_label(block.end_label);
         } else {
@@ -2301,8 +2491,11 @@ impl Generator {
         let _tracing = dev_span!("begin_exception_block");
 
         let start_label = self.define_label();
+
         let end_label = self.define_label();
+
         self.mark_label(start_label);
+
         self.begin_block(CodeBlock::Exception(ExceptionBlock {
             state: ExceptionBlockState::Try,
             start_label,
@@ -2311,7 +2504,9 @@ impl Generator {
             catch_label: Default::default(),
             finally_label: Default::default(),
         }));
+
         self.emit_nop();
+
         end_label
     }
 
@@ -2324,24 +2519,33 @@ impl Generator {
         debug_assert!(self.peek_block_kind() == Some(CodeBlockKind::Exception));
 
         let name = variable.name.expect_ident().into();
+
         self.hoist_variable_declaration(&name);
 
         // ExceptionBlock
         let peeked = self.peek_block().unwrap();
+
         let exception = peeked.borrow_mut();
+
         let mut exception = RefMut::map(exception, |v| match v {
             CodeBlock::Exception(v) => v,
             _ => unreachable!(),
         });
+
         debug_assert!(exception.state < ExceptionBlockState::Catch);
 
         let end_label = exception.end_label;
+
         self.emit_break(end_label, None);
 
         let catch_label = self.define_label();
+
         self.mark_label(catch_label);
+
         exception.state = ExceptionBlockState::Catch;
+
         exception.catch_variable = Some(name.clone());
+
         exception.catch_label = Some(catch_label);
 
         self.emit_assignment(
@@ -2370,16 +2574,22 @@ impl Generator {
         debug_assert!(self.peek_block_kind() == Some(CodeBlockKind::Exception));
 
         let block = self.peek_block().unwrap();
+
         let mut b = block.borrow_mut();
+
         if let CodeBlock::Exception(block) = &mut *b {
             debug_assert!(block.state < ExceptionBlockState::Finally);
 
             let end_label = block.end_label;
+
             self.emit_break(end_label, None);
 
             let finally_label = self.define_label();
+
             self.mark_label(finally_label);
+
             block.state = ExceptionBlockState::Finally;
+
             block.finally_label = Some(finally_label);
         } else {
             unreachable!()
@@ -2389,17 +2599,24 @@ impl Generator {
     /// Ends the code block for a generated `try` statement.
     fn end_exception_block(&mut self) {
         debug_assert!(self.peek_block_kind() == Some(CodeBlockKind::Exception));
+
         let block = self.end_block();
+
         let mut b = block.borrow_mut();
+
         if let CodeBlock::Exception(block) = &mut *b {
             let state = block.state;
+
             if state < ExceptionBlockState::Finally {
                 self.emit_break(block.end_label, None);
             } else {
                 self.emit_endfinally();
             }
+
             self.mark_label(block.end_label);
+
             self.emit_nop();
+
             block.state = ExceptionBlockState::Done;
         } else {
             unreachable!()
@@ -2426,11 +2643,13 @@ impl Generator {
         let _tracing = dev_span!("begin_loop_block");
 
         let break_label = self.define_label();
+
         self.begin_block(CodeBlock::Loop(LoopBlock {
             is_script: false,
             break_label,
             continue_label,
         }));
+
         break_label
     }
 
@@ -2438,10 +2657,14 @@ impl Generator {
     /// are defined in generated code or in the source tree.
     fn end_loop_block(&mut self) {
         debug_assert!(self.peek_block_kind() == Some(CodeBlockKind::Loop));
+
         let block = self.end_block();
+
         let block = block.borrow();
+
         if let CodeBlock::Loop(block) = &*block {
             let break_label = block.break_label;
+
             if !block.is_script {
                 self.mark_label(break_label);
             }
@@ -2466,10 +2689,12 @@ impl Generator {
     /// `break` statement targets this block.
     fn begin_switch_block(&mut self) -> Label {
         let break_label = self.define_label();
+
         self.begin_block(CodeBlock::Switch(SwitchBlock {
             is_script: false,
             break_label,
         }));
+
         break_label
     }
 
@@ -2477,10 +2702,14 @@ impl Generator {
     /// generated code.
     fn end_switch_block(&mut self) {
         debug_assert!(self.peek_block_kind() == Some(CodeBlockKind::Switch));
+
         let block = self.end_block();
+
         let block = block.borrow();
+
         if let CodeBlock::Switch(block) = &*block {
             let break_label = block.break_label;
+
             if !block.is_script {
                 self.mark_label(break_label);
             }
@@ -2499,6 +2728,7 @@ impl Generator {
 
     fn begin_labeled_block(&mut self, label_text: JsWord) {
         let break_label = self.define_label();
+
         self.begin_block(CodeBlock::Labeled(LabeledBlock {
             is_script: false,
             label_text,
@@ -2508,11 +2738,13 @@ impl Generator {
 
     fn end_labeled_block(&mut self) {
         let block = self.end_block();
+
         if !block.borrow().is_script() {
             let break_label = match &*block.borrow() {
                 CodeBlock::Labeled(block) => block.break_label,
                 _ => unreachable!(),
             };
+
             self.mark_label(break_label);
         }
     }
@@ -2536,6 +2768,7 @@ impl Generator {
     fn has_immediate_containing_labeled_block(&self, label_text: &JsWord, start: usize) -> bool {
         for i in (0..=start).rev() {
             let block = self.block_stack.as_ref().unwrap()[i].clone();
+
             if self.supports_labeled_break_or_continue(&block.borrow()) {
                 if let CodeBlock::Labeled(block) = &*block.borrow() {
                     if block.label_text == *label_text {
@@ -2563,6 +2796,7 @@ impl Generator {
             if let Some(label_text) = label_text {
                 for i in (0..=block_stack.len() - 1).rev() {
                     let block = &block_stack[i];
+
                     if (self.supports_labeled_break_or_continue(&block.borrow())
                         && block.borrow().label_text().unwrap() == label_text)
                         || (self.supports_unlabeled_break(&block.borrow())
@@ -2574,6 +2808,7 @@ impl Generator {
             } else {
                 for i in (0..=block_stack.len() - 1).rev() {
                     let block = &block_stack[i];
+
                     if self.supports_unlabeled_break(&block.borrow()) {
                         return block.borrow().break_label().unwrap();
                     }
@@ -2592,6 +2827,7 @@ impl Generator {
             if let Some(label_text) = label_text {
                 for i in (0..=block_stack.len() - 1).rev() {
                     let block = &block_stack[i];
+
                     if self.supports_unlabeled_continue(&block.borrow())
                         && self.has_immediate_containing_labeled_block(&label_text, i - 1)
                     {
@@ -2601,6 +2837,7 @@ impl Generator {
             } else {
                 for i in (0..=block_stack.len() - 1).rev() {
                     let block = &block_stack[i];
+
                     if self.supports_unlabeled_continue(&block.borrow()) {
                         return block.borrow().continue_label().unwrap();
                     }
@@ -2622,11 +2859,14 @@ impl Generator {
                 if self.label_exprs.is_none() {
                     self.label_exprs = Some(Default::default());
                 }
+
                 let label_expressions = self.label_exprs.as_mut().unwrap();
+
                 let expr = Loc {
                     pos: BytePos(label.0 as _),
                     value: -1,
                 };
+
                 if label_expressions.get(label.0 as usize).is_none() {
                     if label.0 as usize >= label_expressions.len() {
                         label_expressions.resize(label.0 as usize + 1, Vec::new());
@@ -2639,6 +2879,7 @@ impl Generator {
                         .unwrap()
                         .push(expr);
                 }
+
                 return Invalid {
                     span: Span::new(BytePos(label.0 as _), BytePos(label.0 as _)),
                 }
@@ -2657,6 +2898,7 @@ impl Generator {
         //     SyntaxKind::MultiLineCommentTrivia,
         //     get_instruction_name(instruction),
         // );
+
         Number {
             span: DUMMY_SP,
             value: instruction as u16 as _,
@@ -2671,10 +2913,12 @@ impl Generator {
     /// - `location`: An optional source map location for the statement.
     fn create_inline_break(&mut self, label: Label, span: Option<Span>) -> ReturnStmt {
         debug_assert!(label.0 >= 0, "Invalid label");
+
         let args = vec![
             Some(self.create_instruction(Instruction::Break).as_arg()),
             Some(self.create_label(Some(label)).as_arg()),
         ];
+
         ReturnStmt {
             span: span.unwrap_or(DUMMY_SP),
             arg: Some(
@@ -2831,26 +3075,35 @@ impl Generator {
     fn emit_worker(&mut self, code: OpCode, args: Option<OpArgs>, loc: Option<Span>) {
         if self.operations.is_none() {
             self.operations = Some(Vec::new());
+
             self.operation_args = Some(Vec::new());
+
             self.operation_locs = Some(Vec::new());
         }
+
         if self.label_offsets.is_none() {
             // mark entry point
             let label = self.define_label();
+
             self.mark_label(label);
         }
+
         debug_assert!(self.operations.is_some());
+
         debug_assert_eq!(
             self.operations.as_ref().unwrap().len(),
             self.operation_args.as_ref().unwrap().len()
         );
+
         debug_assert_eq!(
             self.operations.as_ref().unwrap().len(),
             self.operation_locs.as_ref().unwrap().len()
         );
 
         self.operations.as_mut().unwrap().push(code);
+
         self.operation_args.as_mut().unwrap().push(args);
+
         self.operation_locs
             .as_mut()
             .unwrap()
@@ -2871,11 +3124,13 @@ impl Generator {
 
         if let Some(clauses) = self.clauses.take() {
             let label_expr = self.state.clone().make_member(quote_ident!("label"));
+
             let switch_stmt = SwitchStmt {
                 span: DUMMY_SP,
                 discriminant: label_expr.into(),
                 cases: clauses,
             };
+
             return vec![Stmt::Switch(switch_stmt)];
         }
 
@@ -2895,7 +3150,9 @@ impl Generator {
         self.append_label(!self.last_operation_was_abrupt);
 
         self.last_operation_was_abrupt = false;
+
         self.last_operation_was_completion = false;
+
         self.label_number += 1;
     }
 
@@ -2903,7 +3160,9 @@ impl Generator {
     fn flush_final_label(&mut self, op_index: usize) {
         if self.is_final_label_reachable(op_index) {
             self.try_enter_label(op_index);
+
             self.with_block_stack = None;
+
             self.write_return(None, None);
         }
 
@@ -2979,6 +3238,7 @@ impl Generator {
                     .rev()
                 {
                     let b = with_block.borrow();
+
                     let with_block = match &*b {
                         CodeBlock::With(v) => v,
                         _ => {
@@ -3007,6 +3267,7 @@ impl Generator {
 
             if let Some(current_exception_block) = self.current_exception_block.take() {
                 let b = current_exception_block.borrow();
+
                 let ExceptionBlock {
                     start_label,
                     catch_label,
@@ -3021,8 +3282,11 @@ impl Generator {
                 };
 
                 let start_label = self.create_label(Some(*start_label));
+
                 let catch_label = self.create_label(*catch_label);
+
                 let finally_label = self.create_label(*finally_label);
+
                 let end_label = self.create_label(Some(*end_label));
 
                 stmts.insert(
@@ -3128,6 +3392,7 @@ impl Generator {
             for (label_number, labels) in self.label_numbers.as_ref().unwrap().iter().enumerate() {
                 for &label in labels {
                     let exprs = self.label_exprs.as_mut().unwrap().get_mut(label);
+
                     if let Some(exprs) = exprs {
                         for expr in exprs {
                             expr.value = label_number as _;
@@ -3151,6 +3416,7 @@ impl Generator {
                 debug!("try_enter_or_leave_block: iter");
 
                 let block_index = self.block_index;
+
                 self.block_index += 1;
 
                 if cfg!(debug_assertions) {
@@ -3159,9 +3425,11 @@ impl Generator {
 
                 //
                 let block = blocks[block_index].clone();
+
                 let block_action = self.block_actions.as_ref().unwrap()[block_index];
 
                 let b = block.borrow();
+
                 match &*b {
                     CodeBlock::Exception(_) => {
                         if block_action == BlockAction::Open {
@@ -3176,6 +3444,7 @@ impl Generator {
 
                             #[cfg(debug_assertions)]
                             debug!("Current exception block: open = Some({:?})", block);
+
                             self.current_exception_block = Some(block.clone());
                         } else if block_action == BlockAction::Close {
                             self.current_exception_block =
@@ -3215,6 +3484,7 @@ impl Generator {
         }
 
         self.try_enter_label(op_index);
+
         self.try_enter_or_leave_block(op_index);
 
         // early termination, nothing else to process in this label
@@ -3223,22 +3493,28 @@ impl Generator {
         }
 
         self.last_operation_was_abrupt = false;
+
         self.last_operation_was_completion = false;
 
         let opcode = self.operations.as_ref().unwrap()[op_index];
+
         if opcode == OpCode::Nop {
             return;
         } else if opcode == OpCode::Endfinally {
             self.write_end_finally();
+
             return;
         }
 
         let args = self.operation_args.as_mut().unwrap()[op_index]
             .take()
             .expect("failed to take operation arguments");
+
         if opcode == OpCode::Statement {
             let args = args.expect_stmt();
+
             self.write_stmt(*args);
+
             return;
         }
 
@@ -3247,40 +3523,52 @@ impl Generator {
         match opcode {
             OpCode::Assign => {
                 let args = args.expect_pat_and_expr();
+
                 self.write_assign(args.0, args.1, Some(loc));
             }
+
             OpCode::Break => {
                 let args = args.expect_label();
+
                 self.write_break(args, Some(loc));
             }
+
             OpCode::BreakWhenTrue => {
                 let args = args.expect_label_expr();
+
                 self.write_break_when_true(args.0, args.1, Some(loc));
             }
+
             OpCode::BreakWhenFalse => {
                 let args = args.expect_label_expr();
+
                 self.write_break_when_false(args.0, args.1, Some(loc));
             }
+
             OpCode::Yield => {
                 let args = args.expect_opt_expr();
 
                 self.write_yield(args, Some(loc));
             }
+
             OpCode::YieldStar => {
                 let args = args.expect_opt_expr().unwrap();
 
                 self.write_yield_star(args, Some(loc));
             }
+
             OpCode::Return => {
                 let args = args.expect_opt_expr();
 
                 self.write_return(args, Some(loc));
             }
+
             OpCode::Throw => {
                 let args = args.expect_opt_expr().unwrap();
 
                 self.write_throw(args, Some(loc));
             }
+
             _ => {}
         }
     }
@@ -3290,6 +3578,7 @@ impl Generator {
         if stmt.is_empty() {
             return;
         }
+
         match self.stmts {
             Some(ref mut stmts) => stmts.push(stmt),
             None => self.stmts = Some(vec![stmt]),
@@ -3319,9 +3608,11 @@ impl Generator {
     /// @param operationLocation The source map location for the operation.
     fn write_throw(&mut self, expr: Box<Expr>, op_loc: Option<Span>) {
         self.last_operation_was_abrupt = true;
+
         self.last_operation_was_completion = true;
 
         // let inst = self.create_instruction(Instruction::Return);
+
         self.write_stmt(
             ThrowStmt {
                 span: op_loc.unwrap_or(DUMMY_SP),
@@ -3337,9 +3628,11 @@ impl Generator {
     /// @param operationLocation The source map location for the operation.
     fn write_return(&mut self, expr: Option<Box<Expr>>, op_loc: Option<Span>) {
         self.last_operation_was_abrupt = true;
+
         self.last_operation_was_completion = true;
 
         let inst = self.create_instruction(Instruction::Return);
+
         self.write_stmt(
             ReturnStmt {
                 span: op_loc.unwrap_or(DUMMY_SP),
@@ -3350,6 +3643,7 @@ impl Generator {
                             Some(expr) => {
                                 vec![Some(inst.as_arg()), Some(expr.as_arg())]
                             }
+
                             _ => {
                                 vec![Some(inst.as_arg())]
                             }
@@ -3370,7 +3664,9 @@ impl Generator {
         self.last_operation_was_abrupt = true;
 
         let inst = self.create_instruction(Instruction::Break);
+
         let label = self.create_label(Some(label));
+
         self.write_stmt(
             ReturnStmt {
                 span: op_loc.unwrap_or(DUMMY_SP),
@@ -3393,7 +3689,9 @@ impl Generator {
     /// @param operationLocation The source map location for the operation.
     fn write_break_when_true(&mut self, label: Label, cond: Box<Expr>, op_loc: Option<Span>) {
         let inst = self.create_instruction(Instruction::Break);
+
         let label = self.create_label(Some(label));
+
         self.write_stmt(
             IfStmt {
                 span: DUMMY_SP,
@@ -3421,7 +3719,9 @@ impl Generator {
     /// @param operationLocation The source map location for the operation.
     fn write_break_when_false(&mut self, label: Label, cond: Box<Expr>, op_loc: Option<Span>) {
         let inst = self.create_instruction(Instruction::Break);
+
         let label = self.create_label(Some(label));
+
         self.write_stmt(
             IfStmt {
                 span: DUMMY_SP,
@@ -3455,14 +3755,17 @@ impl Generator {
         self.last_operation_was_abrupt = true;
 
         let inst = self.create_instruction(Instruction::Yield);
+
         let elems = match expr {
             Some(expr) => {
                 vec![Some(inst.as_arg()), Some(expr.as_arg())]
             }
+
             None => {
                 vec![Some(inst.as_arg())]
             }
         };
+
         self.write_stmt(
             ReturnStmt {
                 span: op_loc.unwrap_or(DUMMY_SP),
@@ -3486,6 +3789,7 @@ impl Generator {
         self.last_operation_was_abrupt = true;
 
         let arg1 = self.create_instruction(Instruction::YieldStar);
+
         self.write_stmt(
             ReturnStmt {
                 span: op_loc.unwrap_or(DUMMY_SP),
@@ -3506,6 +3810,7 @@ impl Generator {
         self.last_operation_was_abrupt = true;
 
         let arg = self.create_instruction(Instruction::Endfinally);
+
         self.write_stmt(
             ReturnStmt {
                 span: DUMMY_SP,
@@ -3575,6 +3880,7 @@ impl Generator {
             Expr::Member(MemberExpr { obj, .. }) if !is_new_call => {
                 if obj.is_ident() {
                     let this_arg = obj.clone();
+
                     return (callee, this_arg);
                 }
 
@@ -3589,6 +3895,7 @@ impl Generator {
                     (callee, Expr::undefined(DUMMY_SP))
                 } else {
                     let this_arg = self.create_temp_variable();
+
                     let target = callee.make_assign_to(op!("="), this_arg.clone().into());
                     (Box::new(target), this_arg.into())
                 }
@@ -3602,7 +3909,9 @@ where
     N: VisitWith<YieldFinder>,
 {
     let mut v = YieldFinder { found: false };
+
     node.visit_with(&mut v);
+
     v.found
 }
 
@@ -3623,6 +3932,7 @@ impl Visit for YieldFinder {
 
     fn visit_function(&mut self, f: &Function) {
         f.decorators.visit_with(self);
+
         f.params.visit_with(self);
     }
 }

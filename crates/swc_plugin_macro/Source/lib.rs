@@ -10,7 +10,9 @@ pub fn plugin_transform(
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let token = proc_macro2::TokenStream::from(input);
+
     let parsed_results = syn::parse2::<SynItem>(token).expect("Failed to parse tokens");
+
     match parsed_results {
         SynItem::Fn(func) => handle_func(func, Ident::new("Program", Span::call_site())),
         _ => panic!("Please confirm if plugin macro is specified for the function"),
@@ -23,7 +25,9 @@ pub fn css_plugin_transform(
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let token = proc_macro2::TokenStream::from(input);
+
     let parsed_results = syn::parse2::<SynItem>(token).expect("Failed to parse tokens");
+
     match parsed_results {
         SynItem::Fn(func) => handle_func(func, Ident::new("Stylesheet", Span::call_site())),
         _ => panic!("Please confirm if plugin macro is specified for the function"),
@@ -33,8 +37,10 @@ pub fn css_plugin_transform(
 #[allow(clippy::redundant_clone)]
 fn handle_func(func: ItemFn, ast_type: Ident) -> TokenStream {
     let ident = func.sig.ident.clone();
+
     let transform_process_impl_ident =
         Ident::new("__transform_plugin_process_impl", Span::call_site());
+
     let transform_core_pkg_diag_ident =
         Ident::new("__get_transform_plugin_core_pkg_diag", Span::call_site());
 
@@ -46,7 +52,9 @@ fn handle_func(func: ItemFn, ast_type: Ident) -> TokenStream {
         #[cfg(target_arch = "wasm32")] // Allow testing
         extern "C" {
             fn __set_transform_result(bytes_ptr: u32, bytes_ptr_len: u32);
+
             fn __set_transform_plugin_core_pkg_diagnostics(bytes_ptr: u32, bytes_ptr_len: u32);
+
             fn __emit_diagnostics(bytes_ptr: u32, bytes_ptr_len: u32);
         }
 
@@ -62,6 +70,7 @@ fn handle_func(func: ItemFn, ast_type: Ident) -> TokenStream {
             fn emit(&mut self, db: &swc_core::common::errors::DiagnosticBuilder<'_>) {
                 let diag = swc_core::common::plugin::serialized::PluginSerializedBytes::try_serialize(&swc_core::common::plugin::serialized::VersionedSerializable::new(*db.diagnostic.clone()))
                     .expect("Should able to serialize Diagnostic");
+
                 let (ptr, len) = diag.as_ptr();
 
                 #[cfg(target_arch = "wasm32")] // Allow testing
@@ -84,12 +93,14 @@ fn handle_func(func: ItemFn, ast_type: Ident) -> TokenStream {
         /// Internal function plugin_macro uses to create ptr to PluginError.
         fn construct_error_ptr(plugin_error: swc_core::common::plugin::serialized::PluginError) -> u32 {
             let ret = swc_core::common::plugin::serialized::PluginSerializedBytes::try_serialize(&swc_core::common::plugin::serialized::VersionedSerializable::new(plugin_error)).expect("Should able to serialize PluginError");
+
             let (ptr, len) = ret.as_ptr();
 
             send_transform_result_to_host(
                 ptr as _,
                 len as u32
             );
+
             1
         }
 
@@ -97,6 +108,7 @@ fn handle_func(func: ItemFn, ast_type: Ident) -> TokenStream {
         #[allow(clippy::not_unsafe_ptr_arg_deref)]
         pub fn #transform_core_pkg_diag_ident() -> u32 {
             let schema_version = swc_core::common::plugin::PLUGIN_TRANSFORM_AST_SCHEMA_VERSION;
+
             let core_pkg_diag = swc_core::diagnostics::get_core_engine_diagnostics();
 
             let result = swc_core::common::plugin::diagnostics::PluginCorePkgDiagnostics {
@@ -116,6 +128,7 @@ fn handle_func(func: ItemFn, ast_type: Ident) -> TokenStream {
             unsafe {
                 __set_transform_plugin_core_pkg_diagnostics(serialized_result_ptr as _, serialized_result_ptr_len as u32);
             }
+
             0
         }
 
@@ -131,10 +144,13 @@ fn handle_func(func: ItemFn, ast_type: Ident) -> TokenStream {
             // Reconstruct `Program` & config string from serialized program
             // Host (SWC) should allocate memory, copy bytes and pass ptr to plugin.
             let program = swc_core::common::plugin::serialized::PluginSerializedBytes::from_raw_ptr(ast_ptr, ast_ptr_len.try_into().expect("Should able to convert ptr length")).deserialize();
+
             if program.is_err() {
                 let err = swc_core::common::plugin::serialized::PluginError::Deserialize("Failed to deserialize program received from host".to_string());
+
                 return construct_error_ptr(err);
             }
+
             let program: #ast_type = program.expect("Should be a program").into_inner();
 
             // Create a handler wired with plugin's diagnostic emitter, set it for global context.
@@ -146,6 +162,7 @@ fn handle_func(func: ItemFn, ast_type: Ident) -> TokenStream {
 
             // Construct metadata to the `Program` for the transform plugin.
             let plugin_comments_proxy = if should_enable_comments_proxy == 1 { Some(swc_core::plugin::proxies::PluginCommentsProxy) } else { None };
+
             let mut metadata = swc_core::plugin::metadata::TransformPluginProgramMetadata {
                 comments: plugin_comments_proxy,
                 source_map: swc_core::plugin::proxies::PluginSourceMapProxy { source_file: swc_core::common::sync::OnceCell::new() },
@@ -164,13 +181,16 @@ fn handle_func(func: ItemFn, ast_type: Ident) -> TokenStream {
 
             if serialized_result.is_err() {
                 let err = swc_core::common::plugin::serialized::PluginError::Serialize("Failed to serialize transformed program".to_string());
+
                 return construct_error_ptr(err);
             }
 
             let serialized_result = serialized_result.expect("Should be a realized transformed program");
+
             let (serialized_result_ptr, serialized_result_ptr_len) = serialized_result.as_ptr();
 
             send_transform_result_to_host(serialized_result_ptr as _, serialized_result_ptr_len as u32);
+
             0
         }
     };

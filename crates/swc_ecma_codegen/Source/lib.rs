@@ -53,6 +53,7 @@ pub fn to_code_default(
             comments,
             wr: text_writer::JsWriter::new(cm, "\n", &mut buf, None),
         };
+
         node.emit_with(&mut emitter).unwrap();
     }
 
@@ -109,6 +110,7 @@ where
 
 fn replace_close_inline_script(raw: &str) -> Cow<str> {
     let chars = raw.as_bytes();
+
     let pattern_len = 8; // </script>
 
     let mut matched_indexes = chars
@@ -167,14 +169,18 @@ where
 
         if let Some(ref shebang) = node.shebang {
             punct!("#!");
+
             self.wr.write_str_lit(DUMMY_SP, shebang)?;
+
             self.wr.write_line()?;
         }
+
         for stmt in &node.body {
             emit!(stmt);
         }
 
         self.emit_trailing_comments_of_pos(node.span().hi, true, true)?;
+
         if !self.cfg.omit_last_semi {
             self.wr.commit_pending_semi()?;
         }
@@ -191,14 +197,18 @@ where
 
         if let Some(ref shebang) = node.shebang {
             punct!("#!");
+
             self.wr.write_str_lit(DUMMY_SP, shebang)?;
+
             self.wr.write_line()?;
         }
+
         for stmt in &node.body {
             emit!(stmt);
         }
 
         self.emit_trailing_comments_of_pos(node.span().hi, true, true)?;
+
         if !self.cfg.omit_last_semi {
             self.wr.commit_pending_semi()?;
         }
@@ -207,10 +217,12 @@ where
     #[emitter]
     pub fn emit_module_item(&mut self, node: &ModuleItem) -> Result {
         self.emit_leading_comments_of_span(node.span(), false)?;
+
         match *node {
             ModuleItem::Stmt(ref stmt) => emit!(stmt),
             ModuleItem::ModuleDecl(ref decl) => emit!(decl),
         }
+
         self.emit_trailing_comments_of_pos(node.span().hi, true, true)?;
     }
 
@@ -250,12 +262,15 @@ where
                 keyword!("export");
 
                 space!();
+
                 self.emit_class_decl_inner(decl, true)?;
             }
+
             _ => {
                 keyword!("export");
 
                 space!();
+
                 emit!(n.decl);
             }
         }
@@ -268,16 +283,20 @@ where
         keyword!("export");
 
         space!();
+
         keyword!("default");
         {
             let starts_with_alpha_num = n.expr.starts_with_alpha_num();
+
             if starts_with_alpha_num {
                 space!();
             } else {
                 formatting_space!();
             }
+
             emit!(n.expr);
         }
+
         semi!();
 
         srcmap!(n, false);
@@ -292,8 +311,11 @@ where
         keyword!("export");
 
         space!();
+
         keyword!("default");
+
         space!();
+
         match n.decl {
             DefaultDecl::Class(ref n) => emit!(n),
             DefaultDecl::Fn(ref n) => emit!(n),
@@ -311,17 +333,22 @@ where
 
         if n.type_only {
             space!();
+
             keyword!("type");
         }
 
         match n.phase {
             ImportPhase::Evaluation => {}
+
             ImportPhase::Source => {
                 space!();
+
                 keyword!("source");
             }
+
             ImportPhase::Defer => {
                 space!();
+
                 keyword!("defer");
             }
         }
@@ -331,6 +358,7 @@ where
                 ImportSpecifier::Default(_) => true,
                 _ => false,
             };
+
         if starts_with_ident {
             space!();
         } else {
@@ -338,30 +366,42 @@ where
         }
 
         let mut specifiers = Vec::new();
+
         let mut emitted_default = false;
+
         let mut emitted_ns = false;
+
         for specifier in &n.specifiers {
             match specifier {
                 ImportSpecifier::Named(ref s) => {
                     specifiers.push(s);
                 }
+
                 ImportSpecifier::Default(ref s) => {
                     emit!(s.local);
+
                     emitted_default = true;
                 }
+
                 ImportSpecifier::Namespace(ref ns) => {
                     if emitted_default {
                         punct!(",");
+
                         formatting_space!();
                     }
 
                     emitted_ns = true;
 
                     assert!(n.specifiers.len() <= 2);
+
                     punct!("*");
+
                     formatting_space!();
+
                     keyword!("as");
+
                     space!();
+
                     emit!(ns.local);
                 }
             }
@@ -370,25 +410,32 @@ where
         if specifiers.is_empty() {
             if emitted_ns || emitted_default {
                 space!();
+
                 keyword!("from");
+
                 formatting_space!();
             }
         } else {
             if emitted_default {
                 punct!(",");
+
                 formatting_space!();
             }
 
             punct!("{");
+
             self.emit_list(
                 n.span(),
                 Some(&specifiers),
                 ListFormat::NamedImportsOrExportsElements,
             )?;
+
             punct!("}");
+
             formatting_space!();
 
             keyword!("from");
+
             formatting_space!();
         }
 
@@ -396,12 +443,15 @@ where
 
         if let Some(with) = &n.with {
             formatting_space!();
+
             if self.cfg.emit_assert_for_import_attributes {
                 keyword!("assert");
             } else {
                 keyword!("with")
             };
+
             formatting_space!();
+
             emit!(with);
         }
 
@@ -416,13 +466,17 @@ where
 
         if node.is_type_only {
             keyword!("type");
+
             space!();
         }
 
         if let Some(ref imported) = node.imported {
             emit!(imported);
+
             space!();
+
             keyword!("as");
+
             space!();
         }
 
@@ -437,6 +491,7 @@ where
             ExportSpecifier::Default(..) => {
                 unimplemented!("codegen of `export default from 'foo';`")
             }
+
             ExportSpecifier::Namespace(ref node) => emit!(node),
             ExportSpecifier::Named(ref node) => emit!(node),
         }
@@ -449,9 +504,13 @@ where
         srcmap!(node, true);
 
         punct!("*");
+
         formatting_space!();
+
         keyword!("as");
+
         space!();
+
         emit!(node.name);
 
         srcmap!(node, false);
@@ -465,18 +524,24 @@ where
 
         if node.is_type_only {
             keyword!("type");
+
             space!();
         }
 
         if let Some(exported) = &node.exported {
             emit!(node.orig);
+
             space!();
+
             keyword!("as");
+
             space!();
+
             emit!(exported);
         } else {
             emit!(node.orig);
         }
+
         srcmap!(node, false);
     }
 
@@ -492,6 +557,7 @@ where
             has_named_specs: bool,
             named_specs: Vec<&'a ExportSpecifier>,
         }
+
         let Specifiers {
             has_namespace_spec,
             namespace_spec,
@@ -511,11 +577,15 @@ where
                     if result.namespace_spec.is_none() {
                         result.namespace_spec = Some(spec)
                     }
+
                     result
                 }
+
                 spec => {
                     result.has_named_specs = true;
+
                     result.named_specs.push(spec);
+
                     result
                 }
             },
@@ -525,24 +595,31 @@ where
 
         if node.type_only {
             space!();
+
             keyword!("type");
         }
+
         formatting_space!();
 
         if let Some(spec) = namespace_spec {
             emit!(spec);
+
             if has_named_specs {
                 punct!(",");
+
                 formatting_space!();
             }
         }
+
         if has_named_specs || !has_namespace_spec {
             punct!("{");
+
             self.emit_list(
                 node.span,
                 Some(&named_specs),
                 ListFormat::NamedImportsOrExportsElements,
             )?;
+
             punct!("}");
         }
 
@@ -552,21 +629,28 @@ where
             } else if has_namespace_spec {
                 space!();
             }
+
             keyword!("from");
+
             formatting_space!();
+
             emit!(src);
 
             if let Some(with) = &node.with {
                 formatting_space!();
+
                 if self.cfg.emit_assert_for_import_attributes {
                     keyword!("assert");
                 } else {
                     keyword!("with")
                 };
+
                 formatting_space!();
+
                 emit!(with);
             }
         }
+
         semi!();
 
         srcmap!(node, false);
@@ -582,26 +666,35 @@ where
 
         if node.type_only {
             space!();
+
             keyword!("type");
+
             space!();
         } else {
             formatting_space!();
         }
 
         punct!("*");
+
         formatting_space!();
+
         keyword!("from");
+
         formatting_space!();
+
         emit!(node.src);
 
         if let Some(with) = &node.with {
             formatting_space!();
+
             if self.cfg.emit_assert_for_import_attributes {
                 keyword!("assert");
             } else {
                 keyword!("with")
             };
+
             formatting_space!();
+
             emit!(with);
         }
 
@@ -625,16 +718,21 @@ where
                     keyword!("false")
                 }
             }
+
             Lit::Null(Null { .. }) => keyword!("null"),
             Lit::Str(ref s) => emit!(s),
             Lit::BigInt(ref s) => emit!(s),
             Lit::Num(ref n) => emit!(n),
             Lit::Regex(ref n) => {
                 punct!("/");
+
                 self.wr.write_str(&n.exp)?;
+
                 punct!("/");
+
                 self.wr.write_str(&n.flags)?;
             }
+
             Lit::JSXText(ref n) => emit!(n),
         }
     }
@@ -675,6 +773,7 @@ where
                     && (!self.cfg.inline_script || !node.raw.as_ref().unwrap().contains("script"))
                 {
                     self.wr.write_str_lit(DUMMY_SP, raw)?;
+
                     return Ok(());
                 }
             }
@@ -715,12 +814,14 @@ where
             if num.value.is_sign_negative() {
                 self.wr.write_str_lit(num.span, "-")?;
             }
+
             self.wr.write_str_lit(num.span, "Infinity")?;
 
             return Ok(false);
         }
 
         let mut striped_raw = None;
+
         let mut value = String::default();
 
         srcmap!(self, num, true);
@@ -730,6 +831,7 @@ where
                 self.wr.write_str_lit(DUMMY_SP, num.raw.as_ref().unwrap())?;
             } else {
                 value = minify_number(num.value, &mut detect_dot);
+
                 self.wr.write_str_lit(DUMMY_SP, &value)?;
             }
         } else {
@@ -737,12 +839,14 @@ where
                 Some(raw) => {
                     if raw.len() > 2 && self.cfg.target < EsVersion::Es2015 && {
                         let slice = &raw.as_bytes()[..2];
+
                         slice == b"0b" || slice == b"0o" || slice == b"0B" || slice == b"0O"
                     } {
                         if num.value.is_infinite() && num.raw.is_some() {
                             self.wr.write_str_lit(DUMMY_SP, num.raw.as_ref().unwrap())?;
                         } else {
                             value = num.value.to_string();
+
                             self.wr.write_str_lit(DUMMY_SP, &value)?;
                         }
                     } else if raw.len() > 2
@@ -750,6 +854,7 @@ where
                         && raw.contains('_')
                     {
                         let value = raw.replace('_', "");
+
                         self.wr.write_str_lit(DUMMY_SP, &value)?;
 
                         striped_raw = Some(value);
@@ -763,8 +868,10 @@ where
                         striped_raw = Some(raw.replace('_', ""));
                     }
                 }
+
                 _ => {
                     value = num.value.to_string();
+
                     self.wr.write_str_lit(DUMMY_SP, &value)?;
                 }
             }
@@ -781,6 +888,7 @@ where
                     // Maybe legacy octal
                     // Do we really need to support pre es5?
                     let slice = raw.as_bytes();
+
                     if slice.len() >= 2 && slice[0] == b'0' {
                         return false;
                     }
@@ -813,7 +921,9 @@ where
             } else {
                 v.value.to_string()
             };
+
             self.wr.write_lit(v.span, &value)?;
+
             self.wr.write_lit(v.span, "n")?;
         } else {
             match &v.raw {
@@ -824,8 +934,10 @@ where
                         self.wr.write_str_lit(v.span, raw)?;
                     }
                 }
+
                 _ => {
                     self.wr.write_lit(v.span, &v.value.to_string())?;
+
                     self.wr.write_lit(v.span, "n")?;
                 }
             }
@@ -866,6 +978,7 @@ where
                     emit!(e);
                 }
             }
+
             Callee::Super(ref n) => emit!(n),
             Callee::Import(ref n) => emit!(n),
         }
@@ -879,15 +992,20 @@ where
     #[emitter]
     fn emit_import_callee(&mut self, node: &Import) -> Result {
         keyword!(node.span, "import");
+
         match node.phase {
             ImportPhase::Source => {
                 punct!(".");
+
                 keyword!("source")
             }
+
             ImportPhase::Defer => {
                 punct!(".");
+
                 keyword!("defer")
             }
+
             _ => {}
         }
     }
@@ -956,6 +1074,7 @@ where
                 } else {
                     emit!(e.obj);
                 }
+
                 if n.optional {
                     punct!("?.");
                 } else if !e.prop.is_computed() {
@@ -968,8 +1087,10 @@ where
                     MemberProp::PrivateName(p) => emit!(p),
                 }
             }
+
             OptChainBase::Call(ref e) => {
                 debug_assert!(!e.callee.is_new());
+
                 emit!(e.callee);
 
                 if n.optional {
@@ -977,7 +1098,9 @@ where
                 }
 
                 punct!("(");
+
                 self.emit_expr_or_spreads(n.span(), &e.args, ListFormat::CallExpressionArguments)?;
+
                 punct!(")");
             }
         }
@@ -1005,7 +1128,9 @@ where
         }
 
         punct!("(");
+
         self.emit_expr_or_spreads(node.span(), &node.args, ListFormat::CallExpressionArguments)?;
+
         punct!(")");
 
         // srcmap!(node, false);
@@ -1027,6 +1152,7 @@ where
         } else {
             formatting_space!(self);
         }
+
         emit!(self, node.callee);
 
         if let Some(type_args) = &node.type_args {
@@ -1036,7 +1162,9 @@ where
         if let Some(ref args) = node.args {
             if !(self.cfg.minify && args.is_empty() && should_ignore_empty_args) {
                 punct!(self, "(");
+
                 self.emit_expr_or_spreads(node.span(), args, ListFormat::NewExpressionArguments)?;
+
                 punct!(self, ")");
             }
         }
@@ -1069,9 +1197,11 @@ where
             Expr::New(new) => {
                 self.emit_new(new, false)?;
             }
+
             Expr::Lit(Lit::Num(num)) => {
                 needs_2dots_for_property_access = self.emit_num_lit_internal(num, true)?;
             }
+
             _ => {
                 emit!(node.obj);
             }
@@ -1084,25 +1214,34 @@ where
                     if node.prop.span().lo() >= BytePos(2) {
                         self.emit_leading_comments(node.prop.span().lo() - BytePos(2), false)?;
                     }
+
                     punct!(".");
                 }
+
                 if node.prop.span().lo() >= BytePos(1) {
                     self.emit_leading_comments(node.prop.span().lo() - BytePos(1), false)?;
                 }
+
                 punct!(".");
+
                 emit!(ident);
             }
+
             MemberProp::PrivateName(private) => {
                 if needs_2dots_for_property_access {
                     if node.prop.span().lo() >= BytePos(2) {
                         self.emit_leading_comments(node.prop.span().lo() - BytePos(2), false)?;
                     }
+
                     punct!(".");
                 }
+
                 if node.prop.span().lo() >= BytePos(1) {
                     self.emit_leading_comments(node.prop.span().lo() - BytePos(1), false)?;
                 }
+
                 punct!(".");
+
                 emit!(private);
             }
         }
@@ -1124,7 +1263,9 @@ where
                 if node.prop.span().lo() >= BytePos(1) {
                     self.emit_leading_comments(node.prop.span().lo() - BytePos(1), false)?;
                 }
+
                 punct!(".");
+
                 emit!(i);
             }
         }
@@ -1144,12 +1285,14 @@ where
 
         if node.is_async {
             keyword!("async");
+
             if space {
                 space!();
             } else {
                 formatting_space!();
             }
         }
+
         if node.is_generator {
             punct!("*")
         }
@@ -1167,18 +1310,23 @@ where
         }
 
         self.emit_list(node.span, Some(&node.params), ListFormat::CommaListElements)?;
+
         if parens {
             punct!(")");
         }
 
         if let Some(ty) = &node.return_type {
             punct!(":");
+
             formatting_space!();
+
             emit!(ty);
+
             formatting_space!();
         }
 
         punct!("=>");
+
         emit!(node.body);
     }
 
@@ -1210,6 +1358,7 @@ where
                 first = false
             } else {
                 punct!(",");
+
                 formatting_space!();
             }
 
@@ -1222,9 +1371,13 @@ where
         self.emit_leading_comments_of_span(node.span(), false)?;
 
         emit!(node.left);
+
         formatting_space!();
+
         operator!(node.op.as_str());
+
         formatting_space!();
+
         emit!(node.right);
     }
 
@@ -1233,6 +1386,7 @@ where
     fn emit_bin_expr_trailing(&mut self, node: &BinExpr) -> Result {
         // let indent_before_op = needs_indention(node, &node.left, node.op);
         // let indent_after_op = needs_indention(node, node.op, &node.right);
+
         let is_kwd_op = match node.op {
             op!("in") | op!("instanceof") => true,
             _ => false,
@@ -1260,11 +1414,13 @@ where
                     _ => false,
                 }
         };
+
         if need_pre_space {
             space!(self);
         } else {
             formatting_space!(self);
         }
+
         operator!(self, node.op.as_str());
 
         let need_post_space = if self.cfg.minify {
@@ -1287,11 +1443,13 @@ where
                     _ => false,
                 }
         };
+
         if need_post_space {
             space!(self);
         } else {
             formatting_space!(self);
         }
+
         emit!(self, node.right);
 
         Ok(())
@@ -1305,7 +1463,9 @@ where
 
         {
             let mut left = Some(node);
+
             let mut lefts = Vec::new();
+
             while let Some(l) = left {
                 lefts.push(l);
 
@@ -1313,6 +1473,7 @@ where
                     Expr::Bin(b) => {
                         left = Some(b);
                     }
+
                     _ => break,
                 }
             }
@@ -1340,7 +1501,9 @@ where
         srcmap!(node, true);
 
         punct!("@");
+
         emit!(node.expr);
+
         self.wr.write_line()?;
 
         srcmap!(node, false);
@@ -1358,6 +1521,7 @@ where
 
         if node.class.is_abstract {
             keyword!("abstract");
+
             space!();
         }
 
@@ -1365,7 +1529,9 @@ where
 
         if let Some(ref i) = node.ident {
             space!();
+
             emit!(i);
+
             emit!(node.class.type_params);
         }
 
@@ -1376,6 +1542,7 @@ where
     fn emit_class_trailing(&mut self, node: &Class) -> Result {
         if node.super_class.is_some() {
             space!();
+
             keyword!("extends");
 
             {
@@ -1388,12 +1555,15 @@ where
                     formatting_space!()
                 }
             }
+
             emit!(node.super_class);
+
             emit!(node.super_type_params);
         }
 
         if !node.implements.is_empty() {
             space!();
+
             keyword!("implements");
 
             space!();
@@ -1412,6 +1582,7 @@ where
         self.emit_list(node.span, Some(&node.body), ListFormat::ClassMembers)?;
 
         srcmap!(node, false, true);
+
         punct!("}");
     }
 
@@ -1439,20 +1610,24 @@ where
 
         if n.is_static {
             keyword!("static");
+
             space!();
         }
 
         if n.is_abstract {
             keyword!("abstract");
+
             space!();
         }
 
         if n.is_override {
             keyword!("override");
+
             space!();
         }
 
         keyword!("accessor");
+
         space!();
 
         emit!(n.key);
@@ -1461,15 +1636,21 @@ where
             if n.definite {
                 punct!("!");
             }
+
             punct!(":");
+
             space!();
+
             emit!(type_ann);
         }
 
         if let Some(init) = &n.value {
             formatting_space!();
+
             punct!("=");
+
             formatting_space!();
+
             emit!(init);
         }
 
@@ -1492,28 +1673,36 @@ where
 
         if n.is_static {
             keyword!("static");
+
             space!();
         }
+
         match n.kind {
             MethodKind::Method => {
                 if n.function.is_async {
                     keyword!("async");
+
                     space!();
                 }
+
                 if n.function.is_generator {
                     punct!("*");
                 }
 
                 emit!(n.key);
             }
+
             MethodKind::Getter => {
                 keyword!("get");
+
                 space!();
 
                 emit!(n.key);
             }
+
             MethodKind::Setter => {
                 keyword!("set");
+
                 space!();
 
                 emit!(n.key);
@@ -1561,6 +1750,7 @@ where
                         n.key.starts_with_alpha_num()
                     }
                 }
+
                 MethodKind::Getter => true,
                 MethodKind::Setter => true,
             };
@@ -1574,11 +1764,13 @@ where
 
         if n.is_abstract {
             keyword!("abstract");
+
             space!()
         }
 
         if n.is_override {
             keyword!("override");
+
             space!()
         }
 
@@ -1586,14 +1778,17 @@ where
             MethodKind::Method => {
                 if n.function.is_async {
                     keyword!("async");
+
                     space!();
                 }
+
                 if n.function.is_generator {
                     punct!("*");
                 }
 
                 emit!(n.key);
             }
+
             MethodKind::Getter => {
                 keyword!("get");
 
@@ -1605,6 +1800,7 @@ where
 
                 emit!(n.key);
             }
+
             MethodKind::Setter => {
                 keyword!("set");
 
@@ -1627,6 +1823,7 @@ where
         }
 
         punct!("(");
+
         self.emit_list(
             n.function.span,
             Some(&n.function.params),
@@ -1637,12 +1834,15 @@ where
 
         if let Some(ty) = &n.function.return_type {
             punct!(":");
+
             formatting_space!();
+
             emit!(ty);
         }
 
         if let Some(body) = &n.function.body {
             formatting_space!();
+
             emit!(body);
         } else {
             formatting_semi!()
@@ -1661,16 +1861,19 @@ where
 
         if n.is_static {
             keyword!("static");
+
             space!();
         }
 
         if n.is_override {
             keyword!("override");
+
             space!()
         }
 
         if n.readonly {
             keyword!("readonly");
+
             space!();
         }
 
@@ -1684,19 +1887,26 @@ where
             if n.definite {
                 punct!("!");
             }
+
             punct!(":");
+
             space!();
+
             emit!(type_ann);
         }
 
         if let Some(value) = &n.value {
             formatting_space!();
+
             punct!("=");
+
             formatting_space!();
 
             if value.is_seq() {
                 punct!("(");
+
                 emit!(value);
+
                 punct!(")");
             } else {
                 emit!(value);
@@ -1711,6 +1921,7 @@ where
     #[emitter]
     fn emit_class_prop(&mut self, n: &ClassProp) -> Result {
         self.emit_leading_comments_of_span(n.span(), false)?;
+
         srcmap!(n, true);
 
         for dec in &n.decorators {
@@ -1719,6 +1930,7 @@ where
 
         if n.declare {
             keyword!("declare");
+
             space!();
         }
 
@@ -1726,21 +1938,25 @@ where
 
         if n.is_static {
             keyword!("static");
+
             space!();
         }
 
         if n.is_abstract {
             keyword!("abstract");
+
             space!()
         }
 
         if n.is_override {
             keyword!("override");
+
             space!()
         }
 
         if n.readonly {
             keyword!("readonly");
+
             space!()
         }
 
@@ -1754,19 +1970,26 @@ where
             if n.definite {
                 punct!("!");
             }
+
             punct!(":");
+
             space!();
+
             emit!(ty);
         }
 
         if let Some(v) = &n.value {
             formatting_space!();
+
             punct!("=");
+
             formatting_space!();
 
             if v.is_seq() {
                 punct!("(");
+
                 emit!(v);
+
                 punct!(")");
             } else {
                 emit!(v);
@@ -1785,6 +2008,7 @@ where
                 Accessibility::Protected => keyword!(self, "protected"),
                 Accessibility::Private => keyword!(self, "private"),
             }
+
             space!(self);
         }
 
@@ -1801,8 +2025,11 @@ where
         self.emit_accessibility(n.accessibility)?;
 
         keyword!("constructor");
+
         punct!("(");
+
         self.emit_list(n.span(), Some(&n.params), ListFormat::Parameters)?;
+
         punct!(")");
 
         if let Some(body) = &n.body {
@@ -1819,6 +2046,7 @@ where
         srcmap!(n, true);
 
         keyword!("static");
+
         emit!(n.body);
 
         srcmap!(n, false);
@@ -1856,6 +2084,7 @@ where
                     emit!(ident);
                 }
             }
+
             PropName::Str(ref n) => emit!(n),
             PropName::Num(ref n) => emit!(n),
             PropName::BigInt(ref n) => emit!(n),
@@ -1868,7 +2097,9 @@ where
         srcmap!(n, true);
 
         punct!("[");
+
         emit!(n.expr);
+
         punct!("]");
 
         srcmap!(n, false);
@@ -1881,13 +2112,21 @@ where
         srcmap!(node, true);
 
         emit!(node.test);
+
         formatting_space!();
+
         punct!("?");
+
         formatting_space!();
+
         emit!(node.cons);
+
         formatting_space!();
+
         punct!(":");
+
         formatting_space!();
+
         emit!(node.alt);
     }
 
@@ -1901,7 +2140,9 @@ where
 
         if n.function.is_async {
             keyword!("async");
+
             space!();
+
             keyword!("function");
         } else {
             keyword!("function");
@@ -1910,8 +2151,10 @@ where
         if n.function.is_generator {
             punct!("*");
         }
+
         if let Some(ref i) = n.ident {
             space!();
+
             emit!(i);
         }
 
@@ -1926,17 +2169,22 @@ where
         }
 
         punct!("(");
+
         self.emit_list(node.span, Some(&node.params), ListFormat::CommaListElements)?;
+
         punct!(")");
 
         if let Some(ty) = &node.return_type {
             punct!(":");
+
             formatting_space!();
+
             emit!(ty);
         }
 
         if let Some(body) = &node.body {
             formatting_space!();
+
             self.emit_block_stmt_inner(body, true)?;
         } else {
             semi!();
@@ -1951,9 +2199,12 @@ where
             BlockStmtOrExpr::BlockStmt(block) => {
                 self.emit_block_stmt_inner(block, true)?;
             }
+
             BlockStmtOrExpr::Expr(expr) => {
                 self.wr.increase_indent()?;
+
                 emit!(expr);
+
                 self.wr.decrease_indent()?;
             }
         }
@@ -1981,7 +2232,9 @@ where
                 emit!(node.quasis[i / 2]);
             } else {
                 punct!("${");
+
                 emit!(node.exprs[i / 2]);
+
                 punct!("}");
             }
         }
@@ -1994,12 +2247,16 @@ where
     #[emitter]
     fn emit_quasi(&mut self, node: &TplElement) -> Result {
         let raw = node.raw.replace("\r\n", "\n").replace('\r', "\n");
+
         if self.cfg.minify || (self.cfg.ascii_only && !node.raw.is_ascii()) {
             let v = get_template_element_from_raw(&raw, self.cfg.ascii_only);
+
             let span = node.span();
 
             let mut last_offset_gen = 0;
+
             let mut last_offset_origin = 0;
+
             for ((offset_gen, _), mat) in v
                 .match_indices('\n')
                 .zip(NEW_LINE_TPL_REGEX.find_iter(&raw))
@@ -2013,12 +2270,17 @@ where
 
                 self.wr
                     .write_str_lit(DUMMY_SP, &v[last_offset_gen..=offset_gen])?;
+
                 last_offset_gen = offset_gen + 1;
+
                 last_offset_origin = mat.end();
             }
+
             self.wr
                 .add_srcmap(span.lo + BytePos(last_offset_origin as u32))?;
+
             self.wr.write_str_lit(DUMMY_SP, &v[last_offset_gen..])?;
+
             self.wr.add_srcmap(span.hi)?;
         } else {
             self.wr.write_str_lit(node.span(), &raw)?;
@@ -2038,6 +2300,7 @@ where
         }
 
         emit!(node.type_params);
+
         self.emit_template_for_tagged_template(&node.tpl)?;
 
         srcmap!(node, false);
@@ -2057,7 +2320,9 @@ where
                 self.emit_template_element_for_tagged_template(&node.quasis[i / 2])?;
             } else {
                 punct!(self, "${");
+
                 emit!(self, node.exprs[i / 2]);
+
                 punct!(self, "}");
             }
         }
@@ -2091,8 +2356,10 @@ where
 
                 true
             }
+
             op!(unary, "+") | op!(unary, "-") | op!("!") | op!("~") => {
                 punct!(n.op.as_str());
+
                 false
             }
         };
@@ -2118,6 +2385,7 @@ where
             emit!(node.arg);
         } else {
             emit!(node.arg);
+
             operator!(node.op.as_str());
         }
     }
@@ -2129,6 +2397,7 @@ where
         srcmap!(node, true);
 
         keyword!("yield");
+
         if node.delegate {
             operator!("*");
         }
@@ -2139,6 +2408,7 @@ where
                 .as_deref()
                 .map(|expr| self.has_leading_comment(expr))
                 .unwrap_or(false);
+
             if need_paren {
                 punct!("(")
             } else if !node.delegate && arg.starts_with_alpha_num() {
@@ -2148,6 +2418,7 @@ where
             }
 
             emit!(node.arg);
+
             if need_paren {
                 punct!(")")
             }
@@ -2181,6 +2452,7 @@ where
         srcmap!(n, true);
 
         keyword!("await");
+
         space!();
 
         emit!(&n.arg);
@@ -2193,12 +2465,15 @@ where
         srcmap!(node, true);
 
         punct!("[");
+
         let mut format = ListFormat::ArrayLiteralExpressionElements;
+
         if let Some(None) = node.elems.last() {
             format |= ListFormat::ForceTrailingComma;
         }
 
         self.emit_list(node.span(), Some(&node.elems), format)?;
+
         punct!("]");
 
         srcmap!(node, false);
@@ -2233,6 +2508,7 @@ where
         }
 
         srcmap!(node, false, true);
+
         punct!("}");
     }
 
@@ -2251,20 +2527,29 @@ where
     #[emitter]
     fn emit_kv_prop(&mut self, node: &KeyValueProp) -> Result {
         self.emit_leading_comments_of_span(node.span(), false)?;
+
         let key_span = node.key.span();
+
         let value_span = node.value.span();
+
         if !key_span.is_dummy() {
             self.wr.add_srcmap(key_span.lo)?;
         }
+
         emit!(node.key);
+
         if !key_span.is_dummy() && value_span.is_dummy() {
             self.wr.add_srcmap(key_span.hi)?;
         }
+
         punct!(":");
+
         formatting_space!();
+
         if key_span.is_dummy() && !value_span.is_dummy() {
             self.wr.add_srcmap(value_span.lo)?;
         }
+
         emit!(node.value);
     }
 
@@ -2275,7 +2560,9 @@ where
         srcmap!(node, true);
 
         emit!(node.key);
+
         punct!("=");
+
         emit!(node.value);
     }
 
@@ -2291,16 +2578,23 @@ where
             PropName::Str(_) | PropName::Computed(_) => false,
             _ => true,
         };
+
         if starts_with_alpha_num {
             space!();
         } else {
             formatting_space!();
         }
+
         emit!(node.key);
+
         formatting_space!();
+
         punct!("(");
+
         punct!(")");
+
         formatting_space!();
+
         emit!(node.body);
     }
 
@@ -2324,11 +2618,14 @@ where
         }
 
         emit!(node.key);
+
         formatting_space!();
 
         punct!("(");
+
         if let Some(this) = &node.this_param {
             emit!(this);
+
             punct!(",");
 
             formatting_space!();
@@ -2349,6 +2646,7 @@ where
 
         if node.function.is_async {
             keyword!("async");
+
             space!();
         }
 
@@ -2357,6 +2655,7 @@ where
         }
 
         emit!(node.key);
+
         formatting_space!();
         // TODO
         self.emit_fn_trailing(&node.function)?;
@@ -2371,9 +2670,11 @@ where
         srcmap!(node, true);
 
         punct!("(");
+
         emit!(node.expr);
 
         srcmap!(node, false, true);
+
         punct!(")");
     }
 
@@ -2384,6 +2685,7 @@ where
         srcmap!(n, true);
 
         punct!("#");
+
         self.emit_ident_like(n.span, &n.name, false)?;
 
         srcmap!(n, false);
@@ -2395,7 +2697,9 @@ where
 
         if let Some(ty) = &ident.type_ann {
             punct!(":");
+
             formatting_space!();
+
             emit!(ty);
         }
 
@@ -2484,6 +2788,7 @@ where
         }
 
         let is_empty = children.is_none() || start > children.unwrap() || count == 0;
+
         if is_empty && format.contains(ListFormat::OptionalIfEmpty) {
             return Some(Ok(()));
         }
@@ -2590,11 +2895,13 @@ where
                                 false
                             } else {
                                 let last_char = snippet.chars().last().unwrap();
+
                                 snippet[..snippet.len() - last_char.len_utf8()]
                                     .trim()
                                     .ends_with(',')
                             }
                         }
+
                         _ => false,
                     }
                 }
@@ -2605,6 +2912,7 @@ where
             && (!self.cfg.minify || !format.contains(ListFormat::CanSkipTrailingComma))
         {
             punct!(self, ",");
+
             formatting_space!(self);
         }
 
@@ -2676,6 +2984,7 @@ where
                     true,
                 )?; // Emit leading comments within empty lists
             }
+
             self.wr.write_punct(None, format.closing_bracket())?;
         }
 
@@ -2717,7 +3026,9 @@ where
             // Write the opening line terminator or leading whitespace.
             let may_emit_intervening_comments =
                 !format.intersects(ListFormat::NoInterveningComments);
+
             let mut should_emit_intervening_comments = may_emit_intervening_comments;
+
             if self.cm.should_write_leading_line_terminator(
                 parent_node,
                 children.first().map(|v| v.span()),
@@ -2726,6 +3037,7 @@ where
                 if !self.cfg.minify {
                     self.wr.write_line()?;
                 }
+
                 should_emit_intervening_comments = false;
             } else if format.contains(ListFormat::SpaceBetweenBraces) && !self.cfg.minify {
                 self.wr.write_space()?;
@@ -2738,7 +3050,9 @@ where
 
             // Emit each child.
             let mut previous_sibling: Option<Span> = None;
+
             let mut should_decrease_indent_after_emit = false;
+
             for i in 0..count {
                 let child = &children[start + i];
 
@@ -2757,6 +3071,7 @@ where
                 if should_emit_intervening_comments {
                     if self.comments.is_some() {
                         let comment_range = child.comment_range();
+
                         self.emit_trailing_comments_of_pos(comment_range.hi(), false, true)?;
                     }
                 } else {
@@ -2765,6 +3080,7 @@ where
 
                 if should_decrease_indent_after_emit {
                     self.wr.decrease_indent()?;
+
                     should_decrease_indent_after_emit = false;
                 }
 
@@ -2782,6 +3098,7 @@ where
         // self.handlers.onAfterEmitNodeArray(children);
 
         self.emit_last_of_list5(parent_node, is_empty, format, start, count)?;
+
         Ok(())
     }
 }
@@ -2827,11 +3144,14 @@ where
         self.emit_leading_comments_of_span(node.span(), false)?;
 
         punct!(node.dot3_token, "...");
+
         emit!(node.arg);
 
         if let Some(type_ann) = &node.type_ann {
             punct!(":");
+
             formatting_space!();
+
             emit!(type_ann);
         }
     }
@@ -2853,6 +3173,7 @@ where
         srcmap!(node, true);
 
         punct!("...");
+
         emit!(node.expr);
 
         srcmap!(node, false);
@@ -2899,19 +3220,24 @@ where
         srcmap!(node, true);
 
         punct!("[");
+
         self.emit_list(
             node.span(),
             Some(&node.elems),
             ListFormat::ArrayBindingPatternElements,
         )?;
+
         punct!("]");
+
         if node.optional {
             punct!("?");
         }
 
         if let Some(type_ann) = &node.type_ann {
             punct!(":");
+
             space!();
+
             emit!(type_ann);
         }
 
@@ -2925,9 +3251,13 @@ where
         srcmap!(node, true);
 
         emit!(node.left);
+
         formatting_space!();
+
         punct!("=");
+
         formatting_space!();
+
         emit!(node.right);
 
         srcmap!(node, false);
@@ -2938,6 +3268,7 @@ where
         self.emit_leading_comments_of_span(node.span(), false)?;
 
         srcmap!(node, true);
+
         punct!("{");
 
         self.emit_list(
@@ -2954,7 +3285,9 @@ where
 
         if let Some(type_ann) = &node.type_ann {
             punct!(":");
+
             space!();
+
             emit!(type_ann);
         }
 
@@ -2977,8 +3310,11 @@ where
         srcmap!(node, true);
 
         emit!(node.key);
+
         punct!(":");
+
         formatting_space!();
+
         emit!(node.value);
 
         srcmap!(node, false);
@@ -2991,10 +3327,14 @@ where
         srcmap!(node, true);
 
         emit!(node.key);
+
         if let Some(value) = &node.value {
             formatting_space!();
+
             punct!("=");
+
             formatting_space!();
+
             emit!(value);
         }
 
@@ -3023,8 +3363,10 @@ where
             Stmt::Expr(ref e) => emit!(e),
             Stmt::Block(ref e) => {
                 emit!(e);
+
                 return Ok(());
             }
+
             Stmt::Empty(ref e) => emit!(e),
             Stmt::Debugger(ref e) => emit!(e),
             Stmt::With(ref e) => emit!(e),
@@ -3043,10 +3385,13 @@ where
             Stmt::ForOf(ref e) => emit!(e),
             Stmt::Decl(Decl::Var(e)) => {
                 emit!(e);
+
                 semi!();
             }
+
             Stmt::Decl(ref e) => emit!(e),
         }
+
         if self.comments.is_some() {
             self.emit_trailing_comments_of_pos(node.span().hi(), true, true)?;
         }
@@ -3078,6 +3423,7 @@ where
         if !skip_first_src_map {
             srcmap!(self, node, true);
         }
+
         punct!(self, "{");
 
         let emit_new_line = !self.cfg.minify
@@ -3094,6 +3440,7 @@ where
         self.emit_leading_comments_of_span(node.span(), true)?;
 
         srcmap!(self, node, false, true);
+
         punct!(self, "}");
 
         Ok(())
@@ -3113,6 +3460,7 @@ where
         self.emit_leading_comments_of_span(node.span(), false)?;
 
         keyword!(node.span, "debugger");
+
         semi!();
     }
 
@@ -3123,10 +3471,13 @@ where
         srcmap!(node, true);
 
         keyword!("with");
+
         formatting_space!();
 
         punct!("(");
+
         emit!(node.obj);
+
         punct!(")");
 
         emit!(node.body);
@@ -3149,6 +3500,7 @@ where
             SimpleAssignTarget::Ident(i) => {
                 span_has_leading_comment(self.comments.as_ref().unwrap(), i.span)
             }
+
             SimpleAssignTarget::Member(m) => {
                 if self.has_leading_comment(&m.obj) {
                     return true;
@@ -3253,6 +3605,7 @@ where
                         return true;
                     }
                 }
+
                 OptChainBase::Call(c) => {
                     if self.has_leading_comment(&c.callee) {
                         return true;
@@ -3282,6 +3635,7 @@ where
                 .as_deref()
                 .map(|expr| self.has_leading_comment(expr))
                 .unwrap_or(false);
+
             if need_paren {
                 punct!("(");
             } else if arg.starts_with_alpha_num() {
@@ -3291,6 +3645,7 @@ where
             }
 
             emit!(arg);
+
             if need_paren {
                 punct!(")");
             }
@@ -3307,6 +3662,7 @@ where
 
         // TODO: Comment
         punct!(":");
+
         formatting_space!();
 
         emit!(node.body);
@@ -3322,6 +3678,7 @@ where
 
         if let Some(ref label) = n.label {
             space!();
+
             emit!(label);
         }
 
@@ -3338,6 +3695,7 @@ where
 
         if let Some(ref label) = n.label {
             space!();
+
             emit!(label);
         }
 
@@ -3355,9 +3713,13 @@ where
         keyword!("if");
 
         formatting_space!();
+
         punct!("(");
+
         emit!(n.test);
+
         punct!(")");
+
         formatting_space!();
 
         let is_cons_block = match *n.cons {
@@ -3371,12 +3733,15 @@ where
             if is_cons_block {
                 formatting_space!();
             }
+
             keyword!("else");
+
             if alt.starts_with_alpha_num() {
                 space!();
             } else {
                 formatting_space!();
             }
+
             emit!(alt);
         }
     }
@@ -3392,13 +3757,17 @@ where
         keyword!("switch");
 
         punct!("(");
+
         emit!(n.discriminant);
+
         punct!(")");
 
         punct!("{");
+
         self.emit_list(n.span(), Some(&n.cases), ListFormat::CaseBlockClauses)?;
 
         srcmap!(n, false, true);
+
         punct!("}");
     }
 
@@ -3414,7 +3783,9 @@ where
 
         if let Some(param) = &n.param {
             punct!("(");
+
             emit!(param);
+
             punct!(")");
         }
 
@@ -3455,13 +3826,17 @@ where
         };
 
         let mut format = ListFormat::CaseOrDefaultClauseStatements;
+
         if emit_as_single_stmt {
             punct!(":");
+
             space!();
+
             format &= !(ListFormat::MultiLine | ListFormat::Indented);
         } else {
             punct!(":");
         }
+
         self.emit_list(n.span(), Some(&n.cons), format)?;
     }
 
@@ -3475,6 +3850,7 @@ where
 
         {
             let need_paren = self.has_leading_comment(&n.arg);
+
             if need_paren {
                 punct!("(");
             } else if n.arg.starts_with_alpha_num() {
@@ -3484,10 +3860,12 @@ where
             }
 
             emit!(n.arg);
+
             if need_paren {
                 punct!(")");
             }
         }
+
         semi!();
     }
 
@@ -3503,17 +3881,21 @@ where
         keyword!("try");
 
         formatting_space!();
+
         emit!(n.block);
 
         if let Some(ref catch) = n.handler {
             formatting_space!();
+
             emit!(catch);
         }
 
         if let Some(ref finally) = n.finalizer {
             formatting_space!();
+
             keyword!("finally");
             // space!();
+
             emit!(finally);
         }
     }
@@ -3529,7 +3911,9 @@ where
         keyword!("while");
 
         punct!("(");
+
         emit!(node.test);
+
         punct!(")");
 
         emit!(node.body);
@@ -3544,11 +3928,13 @@ where
         srcmap!(node, true);
 
         keyword!("do");
+
         if node.body.starts_with_alpha_num() {
             space!();
         } else {
             formatting_space!()
         }
+
         emit!(node.body);
 
         keyword!("while");
@@ -3556,7 +3942,9 @@ where
         formatting_space!();
 
         punct!("(");
+
         emit!(node.test);
+
         punct!(")");
 
         if self.cfg.target <= EsVersion::Es5 {
@@ -3577,11 +3965,17 @@ where
         keyword!("for");
 
         punct!("(");
+
         opt!(n.init);
+
         self.wr.write_punct(None, ";")?;
+
         opt_leading_space!(n.test);
+
         self.wr.write_punct(None, ";")?;
+
         opt_leading_space!(n.update);
+
         punct!(")");
 
         emit!(n.body);
@@ -3598,6 +3992,7 @@ where
         keyword!("for");
 
         punct!("(");
+
         emit!(n.left);
 
         if n.left.ends_with_alpha_num() {
@@ -3605,6 +4000,7 @@ where
         } else {
             formatting_space!();
         }
+
         keyword!("in");
 
         {
@@ -3615,6 +4011,7 @@ where
             } else {
                 formatting_space!()
             }
+
             emit!(n.right);
         }
 
@@ -3635,16 +4032,22 @@ where
 
         if n.is_await {
             space!();
+
             keyword!("await");
         }
+
         formatting_space!();
+
         punct!("(");
+
         emit!(n.left);
+
         if n.left.ends_with_alpha_num() {
             space!();
         } else {
             formatting_space!();
         }
+
         keyword!("of");
 
         {
@@ -3655,9 +4058,12 @@ where
             } else {
                 formatting_space!()
             }
+
             emit!(n.right);
         }
+
         punct!(")");
+
         emit!(n.body);
     }
 
@@ -3678,19 +4084,24 @@ where
     fn write_delim(&mut self, f: ListFormat) -> Result {
         match f & ListFormat::DelimitersMask {
             ListFormat::None => {}
+
             ListFormat::CommaDelimited => self.wr.write_punct(None, ",")?,
             ListFormat::BarDelimited => {
                 if !self.cfg.minify {
                     self.wr.write_space()?;
                 }
+
                 self.wr.write_punct(None, "|")?;
             }
+
             ListFormat::AmpersandDelimited => {
                 if !self.cfg.minify {
                     self.wr.write_space()?;
                 }
+
                 self.wr.write_punct(None, "&")?;
             }
+
             _ => unreachable!(),
         }
 
@@ -3784,12 +4195,14 @@ fn get_template_element_from_raw(s: &str, ascii_only: bool) -> String {
         iter: impl Iterator<Item = char>,
     ) {
         let mut v = 0;
+
         let mut pending = None;
 
         for (i, c) in iter.enumerate() {
             if let Some(len) = len {
                 if i == len {
                     pending = Some(c);
+
                     break;
                 }
             }
@@ -3797,8 +4210,10 @@ fn get_template_element_from_raw(s: &str, ascii_only: bool) -> String {
             match c.to_digit(radix) {
                 None => {
                     pending = Some(c);
+
                     break;
                 }
+
                 Some(d) => {
                     v = v * radix + d;
                 }
@@ -3841,6 +4256,7 @@ fn get_template_element_from_raw(s: &str, ascii_only: bool) -> String {
     }
 
     let mut buf = String::with_capacity(s.len());
+
     let mut iter = s.chars().peekable();
 
     let mut is_dollar_prev = false;
@@ -3863,24 +4279,28 @@ fn get_template_element_from_raw(s: &str, ascii_only: bool) -> String {
                     // characters `\xXX` can be replaced on character
                     '\\' | 'r' | 'v' | 'b' | 'f' | 'u' | '\r' | '\n' | '`' | '0'..='7' => {
                         buf.push('\\');
+
                         buf.push(c);
 
                         None
                     }
                     '$' if iter.peek() == Some(&'{') => {
                         buf.push('\\');
+
                         buf.push('$');
 
                         None
                     }
                     '{' if is_dollar_prev => {
                         buf.push('\\');
+
                         buf.push('{');
 
                         is_dollar_prev = false;
 
                         None
                     }
+
                     _ => Some(c),
                 },
                 None => Some('\\'),
@@ -3894,6 +4314,7 @@ fn get_template_element_from_raw(s: &str, ascii_only: bool) -> String {
 
                 buf.push(c);
             }
+
             Some('\x00') => {
                 let next = iter.peek();
 
@@ -3914,15 +4335,19 @@ fn get_template_element_from_raw(s: &str, ascii_only: bool) -> String {
             Some(c @ '\x20'..='\x7e') => {
                 buf.push(c);
             }
+
             Some(c @ '\u{7f}'..='\u{ff}') => {
                 let _ = write!(buf, "\\x{:x}", c as u8);
             }
+
             Some('\u{2028}') => {
                 buf.push_str("\\u2028");
             }
+
             Some('\u{2029}') => {
                 buf.push_str("\\u2029");
             }
+
             Some('\u{FEFF}') => {
                 buf.push_str("\\uFEFF");
             }
@@ -3940,6 +4365,7 @@ fn get_template_element_from_raw(s: &str, ascii_only: bool) -> String {
                     }));
                 }
             }
+
             None => {}
         }
     }
@@ -3953,8 +4379,11 @@ fn get_ascii_only_ident(sym: &str, may_need_quote: bool, target: EsVersion) -> C
     }
 
     let mut first = true;
+
     let mut buf = String::with_capacity(sym.len() + 8);
+
     let mut iter = sym.chars().peekable();
+
     let mut need_quote = false;
 
     while let Some(c) = iter.next() {
@@ -3962,6 +4391,7 @@ fn get_ascii_only_ident(sym: &str, may_need_quote: bool, target: EsVersion) -> C
             '\x00' => {
                 if may_need_quote {
                     need_quote = true;
+
                     let _ = write!(buf, "\\x00");
                 } else {
                     let _ = write!(buf, "\\u0000");
@@ -3984,12 +4414,14 @@ fn get_ascii_only_ident(sym: &str, may_need_quote: bool, target: EsVersion) -> C
                         inner_iter.next();
 
                         let mut is_curly = false;
+
                         let mut next = inner_iter.peek();
 
                         if next == Some(&'{') {
                             is_curly = true;
 
                             inner_iter.next();
+
                             next = inner_iter.peek();
                         }
 
@@ -3997,6 +4429,7 @@ fn get_ascii_only_ident(sym: &str, may_need_quote: bool, target: EsVersion) -> C
                             let mut inner_buf = String::new();
 
                             inner_buf.push('\\');
+
                             inner_buf.push('u');
 
                             if is_curly {
@@ -4016,6 +4449,7 @@ fn get_ascii_only_ident(sym: &str, may_need_quote: bool, target: EsVersion) -> C
                                     Some('0'..='9') | Some('a'..='f') | Some('A'..='F') => {
                                         inner_buf.push(c.unwrap());
                                     }
+
                                     _ => {
                                         is_valid = false;
 
@@ -4041,6 +4475,7 @@ fn get_ascii_only_ident(sym: &str, may_need_quote: bool, target: EsVersion) -> C
                             buf.push_str("\\\\");
                         }
                     }
+
                     _ => {
                         buf.push_str("\\\\");
                     }
@@ -4055,6 +4490,7 @@ fn get_ascii_only_ident(sym: &str, may_need_quote: bool, target: EsVersion) -> C
             '\x01'..='\x0f' if !first => {
                 if may_need_quote {
                     need_quote = true;
+
                     let _ = write!(buf, "\\x{:x}", c as u8);
                 } else {
                     let _ = write!(buf, "\\u00{:x}", c as u8);
@@ -4063,6 +4499,7 @@ fn get_ascii_only_ident(sym: &str, may_need_quote: bool, target: EsVersion) -> C
             '\x10'..='\x1f' if !first => {
                 if may_need_quote {
                     need_quote = true;
+
                     let _ = write!(buf, "\\x{:x}", c as u8);
                 } else {
                     let _ = write!(buf, "\\u00{:x}", c as u8);
@@ -4074,6 +4511,7 @@ fn get_ascii_only_ident(sym: &str, may_need_quote: bool, target: EsVersion) -> C
             '\u{7f}'..='\u{ff}' => {
                 if may_need_quote {
                     need_quote = true;
+
                     let _ = write!(buf, "\\x{:x}", c as u8);
                 } else {
                     let _ = write!(buf, "\\u00{:x}", c as u8);
@@ -4088,6 +4526,7 @@ fn get_ascii_only_ident(sym: &str, may_need_quote: bool, target: EsVersion) -> C
             '\u{FEFF}' => {
                 buf.push_str("\\uFEFF");
             }
+
             _ => {
                 if c.is_ascii() {
                     buf.push(c);
@@ -4100,6 +4539,7 @@ fn get_ascii_only_ident(sym: &str, may_need_quote: bool, target: EsVersion) -> C
                     if target <= EsVersion::Es5 {
                         // https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
                         let h = ((c as u32 - 0x10000) / 0x400) + 0xd800;
+
                         let l = (c as u32 - 0x10000) % 0x400 + 0xdc00;
 
                         let _ = write!(buf, r#""\u{:04X}\u{:04X}""#, h, l);
@@ -4111,6 +4551,7 @@ fn get_ascii_only_ident(sym: &str, may_need_quote: bool, target: EsVersion) -> C
                 }
             }
         }
+
         first = false;
     }
 
@@ -4123,9 +4564,11 @@ fn get_ascii_only_ident(sym: &str, may_need_quote: bool, target: EsVersion) -> C
 
 fn get_quoted_utf16(v: &str, ascii_only: bool, target: EsVersion) -> String {
     let mut buf = String::with_capacity(v.len() + 2);
+
     let mut iter = v.chars().peekable();
 
     let mut single_quote_count = 0;
+
     let mut double_quote_count = 0;
 
     while let Some(c) = iter.next() {
@@ -4154,12 +4597,14 @@ fn get_quoted_utf16(v: &str, ascii_only: bool, target: EsVersion) -> String {
                         inner_iter.next();
 
                         let mut is_curly = false;
+
                         let mut next = inner_iter.peek();
 
                         if next == Some(&'{') {
                             is_curly = true;
 
                             inner_iter.next();
+
                             next = inner_iter.peek();
                         } else if next != Some(&'D') && next != Some(&'d') {
                             buf.push('\\');
@@ -4169,6 +4614,7 @@ fn get_quoted_utf16(v: &str, ascii_only: bool, target: EsVersion) -> String {
                             let mut inner_buf = String::new();
 
                             inner_buf.push('\\');
+
                             inner_buf.push('u');
 
                             if is_curly {
@@ -4188,6 +4634,7 @@ fn get_quoted_utf16(v: &str, ascii_only: bool, target: EsVersion) -> String {
                                     Some('0'..='9') | Some('a'..='f') | Some('A'..='F') => {
                                         inner_buf.push(c.unwrap());
                                     }
+
                                     _ => {
                                         is_valid = false;
 
@@ -4238,6 +4685,7 @@ fn get_quoted_utf16(v: &str, ascii_only: bool, target: EsVersion) -> String {
                             buf.push('\\');
                         }
                     }
+
                     _ => {
                         buf.push_str("\\\\");
                     }
@@ -4245,10 +4693,12 @@ fn get_quoted_utf16(v: &str, ascii_only: bool, target: EsVersion) -> String {
             }
             '\'' => {
                 single_quote_count += 1;
+
                 buf.push('\'');
             }
             '"' => {
                 double_quote_count += 1;
+
                 buf.push('"');
             }
             '\x01'..='\x0f' => {
@@ -4276,6 +4726,7 @@ fn get_quoted_utf16(v: &str, ascii_only: bool, target: EsVersion) -> String {
             '\u{FEFF}' => {
                 buf.push_str("\\uFEFF");
             }
+
             _ => {
                 if c.is_ascii() {
                     buf.push(c);
@@ -4288,6 +4739,7 @@ fn get_quoted_utf16(v: &str, ascii_only: bool, target: EsVersion) -> String {
                     if target <= EsVersion::Es5 {
                         // https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
                         let h = ((c as u32 - 0x10000) / 0x400) + 0xd800;
+
                         let l = (c as u32 - 0x10000) % 0x400 + 0xdc00;
 
                         let _ = write!(buf, "\\u{:04X}\\u{:04X}", h, l);
@@ -4314,6 +4766,7 @@ fn get_quoted_utf16(v: &str, ascii_only: bool, target: EsVersion) -> String {
 
 fn handle_invalid_unicodes(s: &str) -> Cow<str> {
     static NEEDLE: Lazy<Finder> = Lazy::new(|| Finder::new("\\\0"));
+
     if NEEDLE.find(s.as_bytes()).is_none() {
         return Cow::Borrowed(s);
     }
@@ -4378,6 +4831,7 @@ fn minify_number(num: f64, detect_dot: &mut bool) -> String {
             }
 
             *detect_dot = false;
+
             return format!(
                 "{}{:#x}",
                 if num.is_sign_negative() { "-" } else { "" },
@@ -4394,17 +4848,21 @@ fn minify_number(num: f64, detect_dot: &mut bool) -> String {
 
     if let Some(num) = num.strip_prefix("0.") {
         let cnt = clz(num);
+
         if cnt > 2 {
             return format!("{}e-{}", &num[cnt..], num.len());
         }
+
         return format!(".{}", num);
     }
 
     if let Some(num) = num.strip_prefix("-0.") {
         let cnt = clz(num);
+
         if cnt > 2 {
             return format!("-{}e-{}", &num[cnt..], num.len());
         }
+
         return format!("-.{}", num);
     }
 
@@ -4421,7 +4879,9 @@ fn minify_number(num: f64, detect_dot: &mut bool) -> String {
             + 3;
 
         num.truncate(num.len() - cnt);
+
         num.push('e');
+
         num.push_str(&cnt.to_string());
     }
 

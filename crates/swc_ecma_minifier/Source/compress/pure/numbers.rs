@@ -17,6 +17,7 @@ impl Pure<'_> {
             };
 
             self.changed = true;
+
             report_change!("numbers: Converting a string literal to {:?}", value);
             *e = Lit::Num(Number {
                 span: *span,
@@ -46,6 +47,7 @@ impl Pure<'_> {
                     ..
                 }) => {
                     self.changed = true;
+
                     report_change!("numbers: Lifting `-`");
 
                     *e = UnaryExpr {
@@ -65,6 +67,7 @@ impl Pure<'_> {
                 Expr::Lit(Lit::Num(Number { span, value, .. })) => {
                     if value.is_sign_negative() {
                         self.changed = true;
+
                         report_change!("numbers: Lifting `-` in a literal");
 
                         *e = UnaryExpr {

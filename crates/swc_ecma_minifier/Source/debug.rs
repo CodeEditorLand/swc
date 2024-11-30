@@ -27,6 +27,7 @@ impl VisitMut for Debugger {
         }
 
         n.sym = format!("{}{:?}", n.sym, n.ctxt).into();
+
         n.ctxt = SyntaxContext::empty();
     }
 }
@@ -43,9 +44,13 @@ where
     }
 
     let mut node = node.clone();
+
     node.visit_mut_with(&mut Debugger {});
+
     node = drop_span(node);
+
     let mut buf = Vec::new();
+
     let cm = Lrc::new(SourceMap::default());
 
     {
@@ -73,6 +78,7 @@ pub(crate) fn invoke_module(module: &Module) {
 
     let should_run =
         cfg!(debug_assertions) && cfg!(feature = "debug") && option_env!("SWC_RUN") == Some("1");
+
     let should_check = cfg!(debug_assertions) && option_env!("SWC_CHECK") == Some("1");
 
     if !should_run && !should_check {
@@ -82,9 +88,11 @@ pub(crate) fn invoke_module(module: &Module) {
     let module = Program::Module(module.clone())
         .apply(hygiene())
         .apply(fixer(None));
+
     let module = drop_span(module);
 
     let mut buf = Vec::new();
+
     let cm = Lrc::new(SourceMap::default());
 
     {
@@ -114,6 +122,7 @@ pub(crate) fn invoke_module(module: &Module) {
 
         {
             let child_stdin = child.stdin.as_mut().unwrap();
+
             child_stdin
                 .write_all(code.as_bytes())
                 .expect("failed to write");
@@ -136,6 +145,7 @@ pub(crate) fn invoke_module(module: &Module) {
             .arg(&code)
             .output()
             .expect("[SWC_RUN] failed to validate code using `node`");
+
         if !output.status.success() {
             panic!(
                 "[SWC_RUN] Failed to validate code:\n{}\n===== ===== ===== ===== =====\n{}\n{}",
@@ -164,6 +174,7 @@ pub(crate) fn invoke_script(script: &Script) {
 
     let should_run =
         cfg!(debug_assertions) && cfg!(feature = "debug") && option_env!("SWC_RUN") == Some("1");
+
     let should_check = cfg!(debug_assertions) && option_env!("SWC_CHECK") == Some("1");
 
     if !should_run && !should_check {
@@ -173,9 +184,11 @@ pub(crate) fn invoke_script(script: &Script) {
     let script = Program::Script(script.clone())
         .apply(hygiene())
         .apply(fixer(None));
+
     let script = drop_span(script);
 
     let mut buf = Vec::new();
+
     let cm = Lrc::new(SourceMap::default());
 
     {
@@ -205,6 +218,7 @@ pub(crate) fn invoke_script(script: &Script) {
 
         {
             let child_stdin = child.stdin.as_mut().unwrap();
+
             child_stdin
                 .write_all(code.as_bytes())
                 .expect("failed to write");
@@ -226,6 +240,7 @@ pub(crate) fn invoke_script(script: &Script) {
             .arg(&code)
             .output()
             .expect("[SWC_RUN] failed to validate code using `node`");
+
         if !output.status.success() {
             panic!(
                 "[SWC_RUN] Failed to validate code:\n{}\n===== ===== ===== ===== =====\n{}\n{}",

@@ -169,17 +169,21 @@ impl Diagnostic {
     /// called the primary span.
     pub fn span_label<T: Into<String>>(&mut self, span: Span, label: T) -> &mut Self {
         self.span.push_span_label(span, label.into());
+
         self
     }
 
     pub fn replace_span_with(&mut self, after: Span) -> &mut Self {
         let before = self.span.clone();
+
         self.set_span(after);
+
         for span_label in before.span_labels() {
             if let Some(label) = span_label.label {
                 self.span_label(after, label);
             }
         }
+
         self
     }
 
@@ -201,20 +205,26 @@ impl Diagnostic {
         found_extra: &dyn fmt::Display,
     ) -> &mut Self {
         let mut msg: Vec<_> = vec![Message(format!("expected {} `", label), Style::NoStyle)];
+
         msg.extend(expected.0.iter().map(|x| match *x {
             StringPart::Normal(ref s) => Message(s.to_owned(), Style::NoStyle),
             StringPart::Highlighted(ref s) => Message(s.to_owned(), Style::Highlight),
         }));
+
         msg.push(Message(format!("`{}\n", expected_extra), Style::NoStyle));
+
         msg.push(Message(format!("   found {} `", label), Style::NoStyle));
+
         msg.extend(found.0.iter().map(|x| match *x {
             StringPart::Normal(ref s) => Message(s.to_owned(), Style::NoStyle),
             StringPart::Highlighted(ref s) => Message(s.to_owned(), Style::Highlight),
         }));
+
         msg.push(Message(format!("`{}", found_extra), Style::NoStyle));
 
         // For now, just attach these as notes
         self.highlighted_note(msg);
+
         self
     }
 
@@ -224,41 +234,49 @@ impl Diagnostic {
             Message(signature, Style::Highlight),
             Message("`".to_string(), Style::NoStyle),
         ]);
+
         self
     }
 
     pub fn note(&mut self, msg: &str) -> &mut Self {
         self.sub(Level::Note, msg, MultiSpan::new(), None);
+
         self
     }
 
     pub fn highlighted_note(&mut self, msg: Vec<Message>) -> &mut Self {
         self.sub_with_highlights(Level::Note, msg, MultiSpan::new(), None);
+
         self
     }
 
     pub fn span_note<S: Into<MultiSpan>>(&mut self, sp: S, msg: &str) -> &mut Self {
         self.sub(Level::Note, msg, sp.into(), None);
+
         self
     }
 
     pub fn warn(&mut self, msg: &str) -> &mut Self {
         self.sub(Level::Warning, msg, MultiSpan::new(), None);
+
         self
     }
 
     pub fn span_warn<S: Into<MultiSpan>>(&mut self, sp: S, msg: &str) -> &mut Self {
         self.sub(Level::Warning, msg, sp.into(), None);
+
         self
     }
 
     pub fn help(&mut self, msg: &str) -> &mut Self {
         self.sub(Level::Help, msg, MultiSpan::new(), None);
+
         self
     }
 
     pub fn span_help<S: Into<MultiSpan>>(&mut self, sp: S, msg: &str) -> &mut Self {
         self.sub(Level::Help, msg, sp.into(), None);
+
         self
     }
 
@@ -280,6 +298,7 @@ impl Diagnostic {
             show_code_when_inline: false,
             applicability: Applicability::Unspecified,
         });
+
         self
     }
 
@@ -313,6 +332,7 @@ impl Diagnostic {
             show_code_when_inline: true,
             applicability: Applicability::Unspecified,
         });
+
         self
     }
 
@@ -333,6 +353,7 @@ impl Diagnostic {
             show_code_when_inline: true,
             applicability,
         });
+
         self
     }
 
@@ -359,6 +380,7 @@ impl Diagnostic {
             show_code_when_inline: true,
             applicability: Applicability::Unspecified,
         });
+
         self
     }
 
@@ -382,6 +404,7 @@ impl Diagnostic {
             show_code_when_inline: true,
             applicability,
         });
+
         self
     }
 
@@ -402,6 +425,7 @@ impl Diagnostic {
             show_code_when_inline: true,
             applicability,
         });
+
         self
     }
 
@@ -423,16 +447,19 @@ impl Diagnostic {
             show_code_when_inline: false,
             applicability,
         });
+
         self
     }
 
     pub fn set_span<S: Into<MultiSpan>>(&mut self, sp: S) -> &mut Self {
         self.span = sp.into();
+
         self
     }
 
     pub fn code(&mut self, s: DiagnosticId) -> &mut Self {
         self.code = Some(s);
+
         self
     }
 
@@ -455,7 +482,9 @@ impl Diagnostic {
     /// message".
     pub fn copy_details_not_message(&mut self, from: &Diagnostic) {
         self.span = from.span.clone();
+
         self.code.clone_from(&from.code);
+
         self.children.extend(from.children.iter().cloned())
     }
 
@@ -474,6 +503,7 @@ impl Diagnostic {
             span,
             render_span,
         };
+
         self.children.push(sub);
     }
 
@@ -492,6 +522,7 @@ impl Diagnostic {
             span,
             render_span,
         };
+
         self.children.push(sub);
     }
 }

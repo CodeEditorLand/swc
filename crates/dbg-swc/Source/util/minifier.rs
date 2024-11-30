@@ -66,6 +66,7 @@ pub fn get_minified_with_opts(
     };
 
     module.visit_mut_with(&mut Normalizer {});
+
     module.visit_mut_with(&mut fixer(None));
 
     Ok(ModuleRecord { module, ..m })
@@ -74,17 +75,23 @@ pub fn get_minified_with_opts(
 pub fn get_terser_output(file: &Path, compress: bool, mangle: bool) -> Result<String> {
     wrap_task(|| {
         let mut cmd = Command::new("npx");
+
         cmd.arg("terser");
+
         cmd.stderr(Stdio::inherit());
 
         if compress {
             cmd.arg("--compress");
         }
+
         if mangle {
             cmd.arg("--mangle");
         }
+
         cmd.args(["--comments", "false"]);
+
         cmd.arg("--");
+
         cmd.arg(file);
 
         let output = cmd.output().context("failed to get output")?;
@@ -97,7 +104,9 @@ pub fn get_terser_output(file: &Path, compress: bool, mangle: bool) -> Result<St
 
         // Drop comments
         let cm = Arc::new(SourceMap::default());
+
         let fm = cm.new_source_file(FileName::Anon.into(), output);
+
         let m = parse_js(fm)?;
 
         let code = print_js(cm, &m.module, true)?;
@@ -110,6 +119,7 @@ pub fn get_terser_output(file: &Path, compress: bool, mangle: bool) -> Result<St
 pub fn get_esbuild_output(file: &Path, mangle: bool) -> Result<String> {
     wrap_task(|| {
         let mut cmd = Command::new("esbuild");
+
         cmd.stderr(Stdio::inherit());
 
         cmd.arg(file);

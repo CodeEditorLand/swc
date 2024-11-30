@@ -126,6 +126,7 @@ impl Compressor {
             ComponentValue::LengthPercentage(length_percentage) => {
                 length_percentage.as_mut_length()
             }
+
             _ => None,
         };
 
@@ -149,6 +150,7 @@ impl Compressor {
                         value: new_value,
                         raw: None,
                     };
+
                     length.unit = Ident {
                         span: length.unit.span,
                         value: "in".into(),
@@ -162,6 +164,7 @@ impl Compressor {
                         value: new_value,
                         raw: None,
                     };
+
                     length.unit = Ident {
                         span: length.unit.span,
                         value: "mm".into(),
@@ -178,6 +181,7 @@ impl Compressor {
                         value: new_value,
                         raw: None,
                     };
+
                     length.unit = Ident {
                         span: length.unit.span,
                         value: "in".into(),
@@ -191,6 +195,7 @@ impl Compressor {
                         value: new_value,
                         raw: None,
                     };
+
                     length.unit = Ident {
                         span: length.unit.span,
                         value: "cm".into(),
@@ -207,6 +212,7 @@ impl Compressor {
                         value: new_value,
                         raw: None,
                     };
+
                     length.unit = Ident {
                         span: length.unit.span,
                         value: "cm".into(),
@@ -220,6 +226,7 @@ impl Compressor {
                         value: new_value,
                         raw: None,
                     };
+
                     length.unit = Ident {
                         span: length.unit.span,
                         value: "in".into(),
@@ -236,6 +243,7 @@ impl Compressor {
                         value: new_value,
                         raw: None,
                     };
+
                     length.unit = Ident {
                         span: length.unit.span,
                         value: "in".into(),
@@ -252,6 +260,7 @@ impl Compressor {
                         value: new_value,
                         raw: None,
                     };
+
                     length.unit = Ident {
                         span: length.unit.span,
                         value: "in".into(),
@@ -265,6 +274,7 @@ impl Compressor {
                         value: new_value,
                         raw: None,
                     };
+
                     length.unit = Ident {
                         span: length.unit.span,
                         value: "pc".into(),
@@ -278,6 +288,7 @@ impl Compressor {
                         value: new_value,
                         raw: None,
                     };
+
                     length.unit = Ident {
                         span: length.unit.span,
                         value: "px".into(),
@@ -285,6 +296,7 @@ impl Compressor {
                     };
                 }
             }
+
             _ => {}
         }
     }

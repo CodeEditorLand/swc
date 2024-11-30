@@ -29,6 +29,7 @@ impl Optimizer<'_> {
         if self.mode.preserve_vars() {
             return;
         }
+
         if var.name.is_invalid() {
             return;
         }
@@ -44,12 +45,15 @@ impl Optimizer<'_> {
                 // I don't know why, but terser preserves this
                 Expr::Fn(FnExpr { function, .. })
                     if matches!(&**function, Function { is_async: true, .. }) => {}
+
                 _ => {
                     self.drop_unused_vars(&mut var.name, Some(init));
 
                     if var.name.is_invalid() {
                         report_change!("unused: Removing an unused variable declarator");
+
                         let side_effects = self.ignore_return_value(init).map(Box::new);
+
                         if let Some(e) = side_effects {
                             *storage_for_side_effects = Some(e);
                         }
@@ -119,6 +123,7 @@ impl Optimizer<'_> {
                     "unused: Preserving `{}` because of usages",
                     dump(&*name, false)
                 );
+
                 return;
             }
         }
@@ -170,6 +175,7 @@ impl Optimizer<'_> {
 
         if !self.may_remove_ident(i) {
             log_abort!("unused: Preserving var `{:#?}` because it's top-level", i);
+
             return;
         }
 
@@ -180,6 +186,7 @@ impl Optimizer<'_> {
                 && v.property_mutation_count == 0
             {
                 self.changed = true;
+
                 report_change!(
                     "unused: Dropping a variable '{}{:?}' because it is not used",
                     i.sym,
@@ -187,6 +194,7 @@ impl Optimizer<'_> {
                 );
                 // This will remove variable.
                 i.take();
+
                 return;
             }
 
@@ -199,6 +207,7 @@ impl Optimizer<'_> {
                     }
 
                     let ret = self.ignore_return_value(e);
+
                     if let Some(ret) = ret {
                         *e = ret;
                     } else {
@@ -262,6 +271,7 @@ impl Optimizer<'_> {
 
                             false
                         }
+
                         Prop::KeyValue(k) => {
                             // Check if `k` is __proto__
 
@@ -290,6 +300,7 @@ impl Optimizer<'_> {
                 if let Some(last) = e.exprs.last() {
                     return self.should_preserve_property_access(last, opts);
                 }
+
                 return true;
             }
 
@@ -315,6 +326,7 @@ impl Optimizer<'_> {
         trace_op!("unused: take_pat_if_unused({})", dump(&*name, false));
 
         let pure_mark = self.marks.pure;
+
         let has_pure_ann = match init {
             Some(Expr::Call(c)) => c.ctxt.has_mark(pure_mark),
             Some(Expr::New(n)) => n.ctxt.has_mark(pure_mark),
@@ -392,6 +404,7 @@ impl Optimizer<'_> {
 
                             self.take_pat_if_unused(&mut p.value, None, is_var_decl);
                         }
+
                         ObjectPatProp::Assign(AssignPatProp { key, value, .. }) => {
                             if has_pure_ann {
                                 if let Some(e) = value {
@@ -403,6 +416,7 @@ impl Optimizer<'_> {
                                 self.take_ident_of_pat_if_unused(key, None);
                             }
                         }
+
                         _ => {}
                     }
                 }
@@ -414,11 +428,13 @@ impl Optimizer<'_> {
                                 return false;
                             }
                         }
+
                         ObjectPatProp::Assign(p) => {
                             if p.key.is_dummy() {
                                 return false;
                             }
                         }
+
                         ObjectPatProp::Rest(_) => {}
                     }
 
@@ -431,9 +447,11 @@ impl Optimizer<'_> {
             }
 
             Pat::Rest(_) => {}
+
             Pat::Assign(_) => {
                 // TODO
             }
+
             _ => {}
         }
     }
@@ -483,6 +501,7 @@ impl Optimizer<'_> {
                     }) if !stmts.is_empty() => true,
                     _ => false,
                 });
+
                 if may_have_side_effect {
                     return;
                 }
@@ -496,6 +515,7 @@ impl Optimizer<'_> {
                     .unwrap_or(false)
                 {
                     self.changed = true;
+
                     report_change!(
                         "unused: Dropping a decl '{}{:?}' because it is not used",
                         ident.sym,
@@ -503,6 +523,7 @@ impl Optimizer<'_> {
                     );
                     // This will remove the declaration.
                     let class = decl.take().class().unwrap();
+
                     let mut side_effects =
                         extract_class_side_effect(&self.ctx.expr_ctx, *class.class);
 
@@ -525,6 +546,7 @@ impl Optimizer<'_> {
                     }
                 }
             }
+
             Decl::Fn(FnDecl { ident, .. }) => {
                 // We should skip if the name of decl is arguments.
                 if ident.sym == "arguments" {
@@ -536,6 +558,7 @@ impl Optimizer<'_> {
                         "unused: Preserving function `{}` because it's top-level",
                         ident.sym
                     );
+
                     return;
                 }
 
@@ -548,6 +571,7 @@ impl Optimizer<'_> {
                     .unwrap_or(false)
                 {
                     self.changed = true;
+
                     report_change!(
                         "unused: Dropping a decl '{}{:?}' because it is not used",
                         ident.sym,
@@ -589,6 +613,7 @@ impl Optimizer<'_> {
                 // Update is counted as usage
                 if var.declared && var.is_fn_local && var.usage_count == 1 {
                     self.changed = true;
+
                     report_change!(
                         "unused: Dropping an update '{}{:?}' because it is not used",
                         arg.sym,
@@ -629,6 +654,7 @@ impl Optimizer<'_> {
                 // TODO: We don't need fn_local check
                 if var.declared && var.is_fn_local && var.usage_count == 1 {
                     self.changed = true;
+
                     report_change!(
                         "unused: Dropping an op-assign '{}{:?}' because it is not used",
                         left.id.sym,
@@ -695,7 +721,9 @@ impl Optimizer<'_> {
                         i.id.sym,
                         i.id.ctxt
                     );
+
                     self.changed = true;
+
                     if self.ctx.is_this_aware_callee {
                         *e = SeqExpr {
                             span: DUMMY_SP,
@@ -740,6 +768,7 @@ impl Optimizer<'_> {
 
             if can_remove_ident {
                 self.changed = true;
+
                 report_change!("Removing ident of an class / function expression");
                 *name = None;
             }
@@ -765,11 +794,13 @@ impl Optimizer<'_> {
                             && usage.declared_count >= 2
                         {
                             d.name.take();
+
                             usage.declared_count -= 1;
 
                             report_change!(
                                 "Removing a variable statement because it's a function parameter"
                             );
+
                             self.changed = true;
                         }
                     }
@@ -798,9 +829,11 @@ impl Optimizer<'_> {
             }
 
             self.changed = true;
+
             report_change!(
                 "unused: Removing the name of a function expression because it's not used by it'"
             );
+
             f.ident = None;
         }
     }
@@ -815,6 +848,7 @@ impl Optimizer<'_> {
         }
 
         let name = v.name.as_ident()?;
+
         let obj = v.init.as_mut()?.as_mut_object()?;
 
         let usage = self.data.vars.get(&name.to_id())?;
@@ -830,6 +864,7 @@ impl Optimizer<'_> {
                 Prop::KeyValue(p) => {
                     p.key.is_computed() || p.value.may_have_side_effects(&self.ctx.expr_ctx)
                 }
+
                 Prop::Assign(_) => true,
                 Prop::Getter(p) => p.key.is_computed(),
                 Prop::Setter(p) => p.key.is_computed(),
@@ -841,10 +876,13 @@ impl Optimizer<'_> {
 
         let properties_used_via_this = {
             let mut v = ThisPropertyVisitor::default();
+
             obj.visit_with(&mut v);
+
             if v.should_abort {
                 return None;
             }
+
             v.properties
         };
 
@@ -869,27 +907,32 @@ impl Optimizer<'_> {
                         return None;
                     }
                 }
+
                 Prop::Getter(prop) => {
                     if contains_this_expr(&prop.body) {
                         return None;
                     }
                 }
+
                 Prop::Setter(prop) => {
                     if contains_this_expr(&prop.body) {
                         return None;
                     }
                 }
+
                 Prop::KeyValue(prop) => match &*prop.value {
                     Expr::Fn(f) => {
                         if contains_this_expr(&f.function.body) {
                             return None;
                         }
                     }
+
                     Expr::Arrow(f) => {
                         if contains_this_expr(&f.body) {
                             return None;
                         }
                     }
+
                     _ => {}
                 },
                 _ => {}
@@ -910,6 +953,7 @@ impl Optimizer<'_> {
                             *v = 0;
                         }
                     }
+
                     PropName::Ident(i) => {
                         if !can_remove_property(&i.sym) {
                             return None;
@@ -919,6 +963,7 @@ impl Optimizer<'_> {
                             *v = 0;
                         }
                     }
+
                     _ => return None,
                 },
                 Prop::Shorthand(p) => {
@@ -930,12 +975,14 @@ impl Optimizer<'_> {
                         *v = 0;
                     }
                 }
+
                 _ => return None,
             }
         }
 
         if !unknown_used_props.iter().all(|(_, v)| *v == 0) {
             log_abort!("[x] unknown used props: {:?}", unknown_used_props);
+
             return None;
         }
 
@@ -945,6 +992,7 @@ impl Optimizer<'_> {
             }
             !usage.accessed_props.contains_key(sym) && !properties_used_via_this.contains(sym)
         };
+
         let should_preserve = |key: &PropName| match key {
             PropName::Ident(k) => should_preserve_property(&k.sym),
             PropName::Str(k) => should_preserve_property(&k.value),
@@ -954,16 +1002,19 @@ impl Optimizer<'_> {
         };
 
         let len = obj.props.len();
+
         obj.props.retain(|prop| match prop {
             PropOrSpread::Spread(_) => {
                 unreachable!()
             }
+
             PropOrSpread::Prop(p) => match &**p {
                 Prop::Shorthand(p) => !should_preserve_property(&p.sym),
                 Prop::KeyValue(p) => !should_preserve(&p.key),
                 Prop::Assign(..) => {
                     unreachable!()
                 }
+
                 Prop::Getter(p) => !should_preserve(&p.key),
                 Prop::Setter(p) => !should_preserve(&p.key),
                 Prop::Method(p) => !should_preserve(&p.key),
@@ -972,6 +1023,7 @@ impl Optimizer<'_> {
 
         if obj.props.len() != len {
             self.changed = true;
+
             report_change!("unused: Removing unused properties");
         }
 
@@ -1025,6 +1077,7 @@ impl Visit for ThisPropertyVisitor {
         for arg in &n.args {
             if arg.expr.is_this() {
                 self.should_abort = true;
+
                 return;
             }
         }
@@ -1074,9 +1127,11 @@ impl Visit for ThisPropertyVisitor {
                 MemberProp::Ident(p) => {
                     self.properties.insert(p.sym.clone());
                 }
+
                 MemberProp::Computed(_) => {
                     self.should_abort = true;
                 }
+
                 _ => {}
             }
         }

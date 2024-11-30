@@ -40,6 +40,7 @@ impl Visit for DeclarationNoImportant {
             Some(span) if span.contains(important_flag.span) => {
                 // This rule doesn't check `!important` flag inside `@keyframe`.
             }
+
             _ => self.ctx.report(important_flag, MESSAGE),
         }
 

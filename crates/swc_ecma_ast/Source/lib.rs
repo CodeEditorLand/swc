@@ -170,6 +170,7 @@ where
     fn process(&mut self, program: &mut Program) {
         loop {
             self.pass.reset();
+
             self.pass.process(program);
 
             if !self.pass.changed() {
@@ -194,6 +195,7 @@ impl Program {
         P: Pass,
     {
         pass.process(&mut self);
+
         self
     }
 }
@@ -372,6 +374,7 @@ impl<'de> Deserialize<'de> for EsVersion {
         use serde::de::Error;
 
         let s = String::deserialize(deserializer)?;
+
         match s.to_lowercase().as_str() {
             "es3" => Ok(EsVersion::Es3),
             "es5" => Ok(EsVersion::Es5),

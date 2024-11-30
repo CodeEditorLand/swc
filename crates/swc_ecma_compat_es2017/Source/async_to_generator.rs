@@ -79,7 +79,9 @@ impl VisitMut for AsyncToGenerator {
         if c.super_class.is_some() {
             self.in_subclass = true;
         }
+
         c.visit_mut_children_with(self);
+
         self.in_subclass = false;
     }
 
@@ -113,12 +115,16 @@ impl AsyncToGenerator {
             };
 
             stmt.visit_mut_with(&mut actual);
+
             stmts_updated.extend(actual.hoister.to_stmt().into_iter().map(T::from));
+
             stmts_updated.push(stmt);
+
             stmts_updated.extend(actual.extra_stmts.into_iter().map(T::from));
         }
 
         *stmts = stmts_updated;
+
         stmts.visit_mut_children_with(self);
     }
 }
@@ -134,7 +140,9 @@ impl VisitMut for Actual {
         if c.super_class.is_some() {
             self.in_subclass = true;
         }
+
         c.visit_mut_children_with(self);
+
         self.in_subclass = old;
     }
 
@@ -177,9 +185,11 @@ impl VisitMut for Actual {
         if m.kind != MethodKind::Method || !m.function.is_async {
             return;
         }
+
         let params = m.function.params.clone();
 
         let mut visitor = FnEnvHoister::new(self.unresolved_ctxt);
+
         m.function.params.clear();
 
         m.function.body.visit_mut_with(&mut visitor);
@@ -224,9 +234,11 @@ impl VisitMut for Actual {
     fn visit_mut_call_expr(&mut self, expr: &mut CallExpr) {
         if let Callee::Expr(e) = &mut expr.callee {
             let mut e = &mut **e;
+
             while let Expr::Paren(ParenExpr { expr, .. }) = e {
                 e = &mut **expr;
             }
+
             self.visit_mut_expr_with_binding(e, None, true);
         }
 
@@ -267,6 +279,7 @@ impl VisitMut for Actual {
 
     fn visit_mut_setter_prop(&mut self, f: &mut SetterProp) {
         f.key.visit_mut_with(self);
+
         f.param.visit_mut_with(self);
 
         if let Some(body) = &mut f.body {
@@ -284,12 +297,15 @@ impl VisitMut for Actual {
 
     fn visit_mut_fn_decl(&mut self, f: &mut FnDecl) {
         f.visit_mut_children_with(self);
+
         if !f.function.is_async {
             return;
         }
 
         let mut wrapper = FunctionWrapper::from(f.take());
+
         wrapper.ignore_function_name = self.c.ignore_function_name;
+
         wrapper.ignore_function_length = self.c.ignore_function_length;
 
         let fn_expr = wrapper.function.fn_expr().unwrap();
@@ -298,6 +314,7 @@ impl VisitMut for Actual {
 
         let FnWrapperResult { name_fn, ref_fn } = wrapper.into();
         *f = name_fn;
+
         self.extra_stmts.push(ref_fn.into());
     }
 
@@ -308,7 +325,9 @@ impl VisitMut for Actual {
                 if let DefaultDecl::Fn(expr) = &mut export_default.decl {
                     if expr.function.is_async {
                         let mut wrapper = FunctionWrapper::from(expr.take());
+
                         wrapper.ignore_function_name = self.c.ignore_function_name;
+
                         wrapper.ignore_function_length = self.c.ignore_function_length;
 
                         let fn_expr = wrapper.function.fn_expr().unwrap();
@@ -322,12 +341,14 @@ impl VisitMut for Actual {
                             decl: name_fn.into(),
                         }
                         .into();
+
                         self.extra_stmts.push(ref_fn.into());
                     };
                 } else {
                     export_default.visit_mut_children_with(self);
                 }
             }
+
             _ => item.visit_mut_children_with(self),
         };
     }
@@ -344,11 +365,13 @@ impl VisitMut for Actual {
         let original_fn_params = prop.function.params.take();
 
         let prop_method_span = prop.function.span;
+
         let prop_method_body_span = if let Some(body) = &prop.function.body {
             body.span
         } else {
             DUMMY_SP
         };
+
         prop.function.span = prop_method_body_span;
 
         let fn_ref = make_fn_ref(
@@ -404,11 +427,13 @@ impl VisitMut for Actual {
                     ref function,
                 }) if function.is_async || function.is_generator => {
                     self.visit_mut_expr_with_binding(init, Some(Ident::from(&*id)), false);
+
                     return;
                 }
 
                 Expr::Arrow(arrow_expr) if arrow_expr.is_async || arrow_expr.is_generator => {
                     self.visit_mut_expr_with_binding(init, Some(Ident::from(&*id)), false);
+
                     return;
                 }
 
@@ -435,14 +460,18 @@ impl Actual {
                 arrow_expr.visit_mut_with(&mut self.hoister);
 
                 let mut wrapper = FunctionWrapper::from(arrow_expr.take());
+
                 wrapper.ignore_function_name = self.c.ignore_function_name;
+
                 wrapper.ignore_function_length = self.c.ignore_function_length;
+
                 wrapper.binding_ident = binding_ident;
 
                 let fn_expr = wrapper.function.expect_fn_expr();
 
                 wrapper.function = make_fn_ref(fn_expr);
                 *expr = wrapper.into();
+
                 if !in_iife {
                     expr.set_span(PURE_SP);
                 }
@@ -450,8 +479,11 @@ impl Actual {
 
             Expr::Fn(fn_expr) if fn_expr.function.is_async => {
                 let mut wrapper = FunctionWrapper::from(fn_expr.take());
+
                 wrapper.ignore_function_name = self.c.ignore_function_name;
+
                 wrapper.ignore_function_length = self.c.ignore_function_length;
+
                 wrapper.binding_ident = binding_ident;
 
                 let fn_expr = wrapper.function.expect_fn_expr();
@@ -459,6 +491,7 @@ impl Actual {
                 wrapper.function = make_fn_ref(fn_expr);
 
                 *expr = wrapper.into();
+
                 if !in_iife {
                     expr.set_span(PURE_SP);
                 }
@@ -476,6 +509,7 @@ impl Actual {
 fn make_fn_ref(mut expr: FnExpr) -> Expr {
     {
         let param_ids: Vec<Id> = find_pat_ids(&expr.function.params);
+
         let mapping = param_ids
             .into_iter()
             .map(|id| (id, SyntaxContext::empty().apply_mark(Mark::new())))
@@ -489,6 +523,7 @@ fn make_fn_ref(mut expr: FnExpr) -> Expr {
     });
 
     assert!(expr.function.is_async);
+
     expr.function.is_async = false;
 
     let helper = if expr.function.is_generator {
@@ -543,6 +578,7 @@ impl VisitMut for AsyncFnBodyHandler {
                 delegate: true,
             }) => {
                 let callee = helper!(async_generator_delegate);
+
                 let arg = CallExpr {
                     span: *span,
                     callee,
@@ -570,6 +606,7 @@ impl VisitMut for AsyncFnBodyHandler {
             Expr::Await(AwaitExpr { span, arg }) => {
                 if self.is_async_generator {
                     let callee = helper!(await_async_generator);
+
                     let arg = CallExpr {
                         span: *span,
                         callee,
@@ -592,6 +629,7 @@ impl VisitMut for AsyncFnBodyHandler {
                     .into()
                 }
             }
+
             _ => {}
         }
     }
@@ -615,16 +653,20 @@ impl Visit for ShouldWork {
     fn visit_function(&mut self, f: &Function) {
         if f.is_async {
             self.found = true;
+
             return;
         }
+
         f.visit_children_with(self);
     }
 
     fn visit_arrow_expr(&mut self, f: &ArrowExpr) {
         if f.is_async {
             self.found = true;
+
             return;
         }
+
         f.visit_children_with(self);
     }
 }
@@ -643,15 +685,22 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
     };
 
     let value = private_ident!("_value");
+
     let iterator = private_ident!("_iterator");
+
     let iterator_error = private_ident!("_iteratorError");
+
     let step = private_ident!("_step");
+
     let did_iteration_error = private_ident!("_didIteratorError");
+
     let iterator_abrupt_completion = private_ident!("_iteratorAbruptCompletion");
+
     let err_param = private_ident!("err");
 
     let try_body = {
         let body_span = s.body.span();
+
         let orig_body = match *s.body {
             Stmt::Block(s) => s.stmts,
             _ => vec![*s.body],
@@ -660,12 +709,14 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
         let mut for_loop_body = Vec::new();
         {
             // let value = _step.value;
+
             let value_var = VarDeclarator {
                 span: DUMMY_SP,
                 name: value.clone().into(),
                 init: Some(step.clone().make_member(quote_ident!("value")).into()),
                 definite: false,
             };
+
             for_loop_body.push(
                 VarDecl {
                     span: DUMMY_SP,
@@ -681,12 +732,14 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
         match s.left {
             ForHead::VarDecl(v) => {
                 let var = v.decls.into_iter().next().unwrap();
+
                 let var_decl = VarDeclarator {
                     span: DUMMY_SP,
                     name: var.name,
                     init: Some(value.into()),
                     definite: false,
                 };
+
                 for_loop_body.push(
                     VarDecl {
                         span: DUMMY_SP,
@@ -698,6 +751,7 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
                     .into(),
                 );
             }
+
             ForHead::Pat(p) => {
                 for_loop_body.push(
                     ExprStmt {
@@ -747,6 +801,7 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
             },
             definite: false,
         });
+
         init_var_decls.push(VarDeclarator {
             span: DUMMY_SP,
             name: step.clone().into(),
@@ -757,6 +812,7 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
         let for_stmt = ForStmt {
             span: s.span,
             // var _iterator = _async_iterator(lol()), _step;
+
             init: Some(
                 VarDecl {
                     span: DUMMY_SP,
@@ -770,6 +826,7 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
             // _iteratorAbruptCompletion = !(_step = yield _iterator.next()).done
             test: {
                 let iter_next = iterator.clone().make_member(quote_ident!("next"));
+
                 let iter_next = CallExpr {
                     span: DUMMY_SP,
                     callee: iter_next.as_callee(),
@@ -844,6 +901,7 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
 
     let catch_clause = {
         // _didIteratorError = true;
+
         let mark_as_errorred = ExprStmt {
             span: DUMMY_SP,
             expr: AssignExpr {
@@ -856,6 +914,7 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
         }
         .into();
         // _iteratorError = err;
+
         let store_error = ExprStmt {
             span: DUMMY_SP,
             expr: AssignExpr {
@@ -884,6 +943,7 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
             arg: iterator_error.clone().into(),
         }
         .into();
+
         let throw_iterator_error = IfStmt {
             span: DUMMY_SP,
             test: did_iteration_error.clone().into(),
@@ -910,6 +970,7 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
         // yield _iterator.return();
         // or
         // yield _awaitAsyncGenerator(_iterator.return());
+
         let yield_stmt = ExprStmt {
             span: DUMMY_SP,
             expr: YieldExpr {
@@ -958,6 +1019,7 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
             alt: None,
         }
         .into();
+
         let body = BlockStmt {
             stmts: vec![conditional_yield],
             ..Default::default()
@@ -973,6 +1035,7 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
             }),
         }
         .into();
+
         BlockStmt {
             stmts: vec![inner_try],
             ..Default::default()
@@ -991,6 +1054,7 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
             kind: VarDeclKind::Var,
             decls: vec![
                 // var _iteratorAbruptCompletion = false;
+
                 VarDeclarator {
                     span: DUMMY_SP,
                     name: iterator_abrupt_completion.into(),
@@ -998,6 +1062,7 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
                     definite: false,
                 },
                 // var _didIteratorError = false;
+
                 VarDeclarator {
                     span: DUMMY_SP,
                     name: did_iteration_error.into(),
@@ -1005,6 +1070,7 @@ fn handle_await_for(stmt: &mut Stmt, is_async_generator: bool) {
                     definite: false,
                 },
                 // var _iteratorError;
+
                 VarDeclarator {
                     span: DUMMY_SP,
                     name: iterator_error.into(),

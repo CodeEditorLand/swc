@@ -13,6 +13,7 @@ pub fn derive_from_variant(input: proc_macro::TokenStream) -> proc_macro::TokenS
         .into_iter()
         .fold(TokenStream::new(), |mut t, item| {
             item.to_tokens(&mut t);
+
             t
         });
 
@@ -36,6 +37,7 @@ fn derive(
 
     for v in variants {
         let variant_name = v.ident;
+
         match v.fields {
             Fields::Unnamed(FieldsUnnamed { unnamed, .. }) => {
                 if unnamed.len() != 1 {
@@ -44,6 +46,7 @@ fn derive(
                          one field"
                     )
                 }
+
                 let field = unnamed.into_iter().next().unwrap();
 
                 let variant_type = &field.ty;
@@ -60,6 +63,7 @@ fn derive(
 
                 from_impls.push(from_impl);
             }
+
             _ => panic!(
                 "#[derive(FromVariant)] requires all variants to be tuple with exactly one field"
             ),

@@ -67,6 +67,7 @@ where
     let unresolved_ctxt = config
         .marks
         .map(|m| SyntaxContext::empty().apply_mark(m.unresolved_mark));
+
     let decls = collect_decls(node);
 
     let mut visitor = InfectionCollector {
@@ -150,14 +151,17 @@ impl Visit for InfectionCollector<'_> {
                     is_callee: false,
                     ..self.ctx
                 };
+
                 e.visit_children_with(&mut *self.with_ctx(ctx));
             }
+
             _ => {
                 let ctx = Ctx {
                     track_expr_ident: true,
                     is_callee: false,
                     ..self.ctx
                 };
+
                 e.visit_children_with(&mut *self.with_ctx(ctx));
             }
         }
@@ -170,6 +174,7 @@ impl Visit for InfectionCollector<'_> {
                 is_callee: false,
                 ..self.ctx
             };
+
             e.test.visit_with(&mut *self.with_ctx(ctx));
         }
 
@@ -178,7 +183,9 @@ impl Visit for InfectionCollector<'_> {
                 track_expr_ident: true,
                 ..self.ctx
             };
+
             e.cons.visit_with(&mut *self.with_ctx(ctx));
+
             e.alt.visit_with(&mut *self.with_ctx(ctx));
         }
     }
@@ -200,6 +207,7 @@ impl Visit for InfectionCollector<'_> {
                     track_expr_ident: true,
                     ..self.ctx
                 };
+
                 e.visit_children_with(&mut *self.with_ctx(ctx));
             }
         }
@@ -211,6 +219,7 @@ impl Visit for InfectionCollector<'_> {
                 track_expr_ident: self.config.need_all,
                 ..self.ctx
             };
+
             n.obj.visit_with(&mut *self.with_ctx(ctx));
         }
 
@@ -219,6 +228,7 @@ impl Visit for InfectionCollector<'_> {
                 track_expr_ident: self.config.need_all,
                 ..self.ctx
             };
+
             n.prop.visit_with(&mut *self.with_ctx(ctx));
         }
     }
@@ -254,6 +264,7 @@ impl Visit for InfectionCollector<'_> {
                     is_callee: false,
                     ..self.ctx
                 };
+
                 e.visit_children_with(&mut *self.with_ctx(ctx));
             }
 
@@ -263,6 +274,7 @@ impl Visit for InfectionCollector<'_> {
                     is_callee: false,
                     ..self.ctx
                 };
+
                 e.visit_children_with(&mut *self.with_ctx(ctx));
             }
         }
@@ -274,6 +286,7 @@ impl Visit for InfectionCollector<'_> {
             is_callee: false,
             ..self.ctx
         };
+
         e.arg.visit_with(&mut *self.with_ctx(ctx));
     }
 
@@ -291,6 +304,7 @@ impl Visit for InfectionCollector<'_> {
             is_callee: true,
             ..self.ctx
         };
+
         n.visit_children_with(&mut *self.with_ctx(ctx));
     }
 }

@@ -67,10 +67,12 @@ impl Tester<'_> {
             HANDLER.set(handler, || {
                 HELPERS.set(&Default::default(), || {
                     let cmts = comments.clone();
+
                     let c = Box::new(unsafe {
                         // Safety: This is unsafe but it's used only for testing.
                         transmute::<&dyn Comments, &'static dyn Comments>(&*cmts)
                     }) as Box<dyn Comments>;
+
                     swc_common::comments::COMMENTS.set(&c, || {
                         op(&mut Tester {
                             cm,
@@ -93,6 +95,7 @@ impl Tester<'_> {
         F: FnOnce(&mut Tester<'_>) -> Result<T, ()>,
     {
         let mut res = None;
+
         let output = ::testing::Tester::new().print_errors(|cm, handler| -> Result<(), _> {
             HANDLER.set(&handler, || {
                 HELPERS.set(&Default::default(), || {
@@ -132,6 +135,7 @@ impl Tester<'_> {
             .new_source_file(FileName::Real(file_name.into()).into(), src.into());
 
         let mut p = Parser::new(syntax, StringInput::from(&*fm), Some(&self.comments));
+
         let res = op(&mut p).map_err(|e| e.into_diagnostic(self.handler).emit());
 
         for e in p.take_errors() {
@@ -155,6 +159,7 @@ impl Tester<'_> {
 
     pub fn parse_stmt(&mut self, file_name: &str, src: &str) -> Result<Stmt, ()> {
         let mut stmts = self.parse_stmts(file_name, src)?;
+
         assert!(stmts.len() == 1);
 
         Ok(stmts.pop().unwrap())
@@ -260,6 +265,7 @@ pub fn test_transform<F, P>(
         println!("----- Actual -----");
 
         let tr = (tr(tester), visit_mut_pass(RegeneratorHandler));
+
         let actual = tester.apply_transform(tr, "input.js", syntax, is_module, input)?;
 
         match ::std::env::var("PRINT_HYGIENE") {
@@ -268,8 +274,10 @@ pub fn test_transform<F, P>(
                     &actual.clone().fold_with(&mut HygieneVisualizer),
                     &tester.comments.clone(),
                 );
+
                 println!("----- Hygiene -----\n{}", hygiene_src);
             }
+
             _ => {}
         }
 
@@ -279,10 +287,12 @@ pub fn test_transform<F, P>(
             .apply(fixer::fixer(Some(&tester.comments)));
 
         println!("{:?}", tester.comments);
+
         println!("{:?}", expected_comments);
 
         {
             let (actual_leading, actual_trailing) = tester.comments.borrow_all();
+
             let (expected_leading, expected_trailing) = expected_comments.borrow_all();
 
             if actual == expected
@@ -303,6 +313,7 @@ pub fn test_transform<F, P>(
         }
 
         println!(">>>>> {} <<<<<\n{}", Color::Green.paint("Orig"), input);
+
         println!(">>>>> {} <<<<<\n{}", Color::Green.paint("Code"), actual_src);
 
         if actual_src != expected_src {
@@ -364,12 +375,14 @@ pub fn test_inline_input_output<F, P>(
                     &actual.clone().fold_with(&mut HygieneVisualizer),
                     &Default::default(),
                 );
+
                 println!(
                     "----- {} -----\n{}",
                     Color::Green.paint("Hygiene"),
                     hygiene_src
                 );
             }
+
             _ => {}
         }
 
@@ -546,8 +559,10 @@ where
                     &program.clone().fold_with(&mut HygieneVisualizer),
                     &tester.comments.clone(),
                 );
+
                 println!("----- Hygiene -----\n{}", hygiene_src);
             }
+
             _ => {}
         }
 
@@ -556,6 +571,7 @@ where
             .apply(fixer::fixer(Some(&tester.comments)));
 
         let src_without_helpers = tester.print(&program, &tester.comments.clone());
+
         program = program.apply(inject_helpers(Mark::fresh(Mark::root())));
 
         let transformed_src = tester.print(&program, &tester.comments.clone());
@@ -598,14 +614,17 @@ where
                 input
             ),
         )?;
+
         match ::std::env::var("PRINT_HYGIENE") {
             Ok(ref s) if s == "1" => {
                 let hygiene_src = tester.print(
                     &program.clone().fold_with(&mut HygieneVisualizer),
                     &tester.comments.clone(),
                 );
+
                 println!("----- Hygiene -----\n{}", hygiene_src);
             }
+
             _ => {}
         }
 
@@ -614,6 +633,7 @@ where
             .apply(fixer::fixer(Some(&tester.comments)));
 
         let src_without_helpers = tester.print(&program, &tester.comments.clone());
+
         program = program.apply(inject_helpers(Mark::fresh(Mark::root())));
 
         let src = tester.print(&program, &tester.comments.clone());
@@ -632,7 +652,9 @@ where
 
 fn calc_hash(s: &str) -> String {
     let mut hasher = Sha256::new();
+
     hasher.update(s.as_bytes());
+
     let sum = hasher.finalize();
 
     hex::encode(sum)
@@ -644,6 +666,7 @@ fn exec_with_node_test_runner(src: &str) -> Result<(), ()> {
     create_dir_all(&root).expect("failed to create parent directory for temp directory");
 
     let hash = calc_hash(src);
+
     let success_cache = root.join(format!("{}.success", hash));
 
     if env::var("SWC_CACHE_TEST").unwrap_or_default() == "1" {
@@ -651,11 +674,13 @@ fn exec_with_node_test_runner(src: &str) -> Result<(), ()> {
 
         if success_cache.exists() {
             println!("Cache: success");
+
             return Ok(());
         }
     }
 
     let tmp_dir = tempdir_in(&root).expect("failed to create a temp directory");
+
     create_dir_all(&tmp_dir).unwrap();
 
     let path = tmp_dir.path().join(format!("{}.test.js", hash));
@@ -666,14 +691,18 @@ fn exec_with_node_test_runner(src: &str) -> Result<(), ()> {
         .write(true)
         .open(&path)
         .expect("failed to create a temp file");
+
     write!(tmp, "{}", src).expect("failed to write to temp file");
+
     tmp.flush().unwrap();
 
     let test_runner_path = find_executable("mocha").expect("failed to find `mocha` from path");
 
     let mut base_cmd = if cfg!(target_os = "windows") {
         let mut c = Command::new("cmd");
+
         c.arg("/C").arg(&test_runner_path);
+
         c
     } else {
         Command::new(&test_runner_path)
@@ -687,16 +716,22 @@ fn exec_with_node_test_runner(src: &str) -> Result<(), ()> {
         .expect("failed to run mocha");
 
     println!(">>>>> {} <<<<<", Color::Red.paint("Stdout"));
+
     println!("{}", String::from_utf8_lossy(&output.stdout));
+
     println!(">>>>> {} <<<<<", Color::Red.paint("Stderr"));
+
     println!("{}", String::from_utf8_lossy(&output.stderr));
 
     if output.status.success() {
         fs::write(&success_cache, "").unwrap();
+
         return Ok(());
     }
+
     let dir_name = path.display().to_string();
     ::std::mem::forget(tmp_dir);
+
     panic!("Execution failed: {dir_name}")
 }
 
@@ -796,8 +831,10 @@ where
 
     fn check(dir: &Path) -> Option<Map> {
         let file = dir.join("options.json");
+
         if let Ok(v) = read_to_string(&file) {
             eprintln!("Using options.json at {}", file.display());
+
             eprintln!("----- {} -----\n{}", Color::Green.paint("Options"), v);
 
             return Some(serde_json::from_str(&v).unwrap_or_else(|err| {
@@ -881,7 +918,9 @@ fn test_fixture_inner<'a>(
     let _logger = testing::init();
 
     let expected = read_to_string(output);
+
     let _is_really_expected = expected.is_ok();
+
     let expected = expected.unwrap_or_default();
 
     let expected_src = Tester::run(|tester| {
@@ -917,6 +956,7 @@ fn test_fixture_inner<'a>(
         let actual = tester.apply_transform(tr, "input.js", syntax, config.module, input)?;
 
         eprintln!("----- {} -----", Color::Green.paint("Comments"));
+
         eprintln!("{:?}", tester.comments);
 
         match ::std::env::var("PRINT_HYGIENE") {
@@ -925,12 +965,14 @@ fn test_fixture_inner<'a>(
                     &actual.clone().fold_with(&mut HygieneVisualizer),
                     &tester.comments.clone(),
                 );
+
                 println!(
                     "----- {} -----\n{}",
                     Color::Green.paint("Hygiene"),
                     hygiene_src
                 );
             }
+
             _ => {}
         }
 
@@ -940,6 +982,7 @@ fn test_fixture_inner<'a>(
 
         let actual_src = {
             let module = &actual;
+
             let comments: &Rc<SingleThreadedComments> = &tester.comments.clone();
 
             if let Some(src_map) = &mut src_map {
@@ -969,6 +1012,7 @@ fn test_fixture_inner<'a>(
 
         if let Some(sourcemap) = &sourcemap {
             eprintln!("----- ----- ----- ----- -----");
+
             eprintln!("SourceMap: {}", visualizer_url(&actual_src, sourcemap));
         }
 
@@ -982,9 +1026,12 @@ fn test_fixture_inner<'a>(
     if let Some(sourcemap) = sourcemap {
         let map = {
             let mut buf = Vec::new();
+
             sourcemap.to_writer(&mut buf).unwrap();
+
             String::from_utf8(buf).unwrap()
         };
+
         NormalizedOutput::from(map)
             .compare_to_file(output.with_extension("map"))
             .unwrap();
@@ -995,12 +1042,16 @@ fn test_fixture_inner<'a>(
 fn visualizer_url(code: &str, map: &sourcemap::SourceMap) -> String {
     let map = {
         let mut buf = Vec::new();
+
         map.to_writer(&mut buf).unwrap();
+
         String::from_utf8(buf).unwrap()
     };
 
     let code_len = format!("{}\0", code.len());
+
     let map_len = format!("{}\0", map.len());
+
     let hash = BASE64_STANDARD.encode(format!("{}{}{}{}", code_len, code, map_len, map));
 
     format!("https://evanw.github.io/source-map-visualization/#{}", hash)

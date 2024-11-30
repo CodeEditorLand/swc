@@ -38,6 +38,7 @@ impl NoLoopFunc {
         let root_scope = DUMMY_SP;
 
         let mut scoped_vars: AHashMap<Span, AHashSet<Id>> = Default::default();
+
         scoped_vars.insert(root_scope, Default::default());
 
         Self {
@@ -77,9 +78,11 @@ impl NoLoopFunc {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, &message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, &message).emit();
             }
+
             _ => {}
         });
     }
@@ -99,6 +102,7 @@ impl NoLoopFunc {
                     .unwrap()
                     .insert(ident.to_id());
             }
+
             Pat::Array(ArrayPat { elems, .. }) => {
                 elems.iter().for_each(|elem| {
                     if let Some(elem) = elem {
@@ -106,6 +110,7 @@ impl NoLoopFunc {
                     }
                 });
             }
+
             Pat::Object(ObjectPat { props, .. }) => {
                 props.iter().for_each(|prop| match prop {
                     ObjectPatProp::Assign(AssignPatProp { key, .. }) => {
@@ -114,21 +119,27 @@ impl NoLoopFunc {
                             .unwrap()
                             .insert(key.to_id());
                     }
+
                     ObjectPatProp::KeyValue(KeyValuePatProp { value, .. }) => {
                         self.extract_vars(value.as_ref());
                     }
+
                     ObjectPatProp::Rest(RestPat { arg, .. }) => {
                         self.extract_vars(arg.as_ref());
                     }
                 });
             }
+
             Pat::Rest(RestPat { arg, .. }) => {
                 self.extract_vars(arg.as_ref());
             }
+
             Pat::Assign(AssignPat { left, .. }) => {
                 self.extract_vars(left.as_ref());
             }
+
             Pat::Invalid(_) => {}
+
             Pat::Expr(_) => {}
         }
     }
@@ -139,12 +150,14 @@ impl Visit for NoLoopFunc {
 
     fn visit_block_stmt(&mut self, block: &BlockStmt) {
         self.scopes.push(block.span);
+
         self.scoped_unsafe_vars
             .insert(block.span, Default::default());
 
         block.visit_children_with(self);
 
         self.scopes.pop();
+
         self.scoped_unsafe_vars.remove(&block.span);
     }
 
@@ -178,6 +191,7 @@ impl Visit for NoLoopFunc {
         self.inside_loop_decl = true;
 
         for_of_stmt.left.visit_children_with(self);
+
         for_of_stmt.right.visit_children_with(self);
 
         self.inside_loop_decl = false;
@@ -193,6 +207,7 @@ impl Visit for NoLoopFunc {
         self.inside_loop_decl = true;
 
         for_in_stmt.left.visit_children_with(self);
+
         for_in_stmt.right.visit_children_with(self);
 
         self.inside_loop_decl = false;
@@ -244,6 +259,7 @@ impl Visit for NoLoopFunc {
                 // const always safe
                 return;
             }
+
             Some(VarDeclKind::Let) => {
                 if self.inside_loop_decl {
                     // case when var declared into loop head
@@ -254,10 +270,12 @@ impl Visit for NoLoopFunc {
 
                 // case when var declared into loop
                 // while (cond) { let x = v; ... }
+
                 if self.loop_depth > 0 {
                     return;
                 }
             }
+
             _ => {}
         };
 
@@ -276,6 +294,7 @@ impl Visit for NoLoopFunc {
         }
 
         self.current_fn_unsafe_vars = prev_fn_vars;
+
         self.function_depth -= 1;
     }
 
@@ -291,6 +310,7 @@ impl Visit for NoLoopFunc {
         }
 
         self.current_fn_unsafe_vars = prev_fn_vars;
+
         self.function_depth -= 1;
     }
 

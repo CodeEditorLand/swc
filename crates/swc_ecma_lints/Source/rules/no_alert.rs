@@ -68,9 +68,11 @@ impl NoAlert {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, &message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, &message).emit();
             }
+
             _ => {}
         });
     }
@@ -120,11 +122,13 @@ impl NoAlert {
             MemberProp::Ident(IdentName { sym, .. }) => {
                 self.prop = Some(sym.clone());
             }
+
             MemberProp::Computed(comp) => {
                 if let Expr::Lit(Lit::Str(Str { value, .. })) = comp.expr.as_ref() {
                     self.prop = Some(value.clone());
                 }
             }
+
             _ => {}
         }
     }
@@ -142,8 +146,10 @@ impl NoAlert {
 
                 self.handle_member_prop(prop);
             }
+
             Expr::This(_) => {
                 let inside_arrow_fn = self.is_inside_arrow_fn();
+
                 let inside_class = self.is_inside_class();
 
                 if inside_arrow_fn && inside_class {
@@ -156,6 +162,7 @@ impl NoAlert {
 
                 self.handle_member_prop(prop);
             }
+
             _ => {}
         }
     }
@@ -167,17 +174,22 @@ impl NoAlert {
                     self.prop = Some(ident.sym.clone());
                 }
             }
+
             Expr::Member(member_expr) => self.handle_member_expr(member_expr),
             Expr::OptChain(OptChainExpr { base, .. }) if base.is_member() => {
                 let member_expr = base.as_member().unwrap();
+
                 self.handle_member_expr(member_expr);
             }
+
             Expr::OptChain(opt_chain) => {
                 opt_chain.visit_children_with(self);
             }
+
             Expr::Paren(paren) => {
                 paren.visit_children_with(self);
             }
+
             _ => {}
         }
     }
@@ -195,6 +207,7 @@ impl NoAlert {
             self.check(call_expr.span, &self.obj, prop);
 
             self.obj = None;
+
             self.prop = None;
         }
     }

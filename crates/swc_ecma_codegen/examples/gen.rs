@@ -18,7 +18,9 @@ fn parse_and_gen(entry:&Path) {
 			SourceFileInput::from(&*fm),
 			None,
 		);
+
 		let mut parser = Parser::new_from(lexer);
+
 		let m = parser.parse_module().expect("failed to parse input as a module");
 
 		let code = {
@@ -53,7 +55,9 @@ fn parse_and_gen(entry: &Path) {
             SourceFileInput::from(&*fm),
             None,
         );
+
         let mut parser = Parser::new_from(lexer);
+
         let m = parser
             .parse_module()
             .expect("failed to parse input as a module");
@@ -87,13 +91,20 @@ fn main() {
 	let main_file = env::args().nth(1).unwrap();
 
 	let start = Instant::now();
+
 	parse_and_gen(Path::new(&main_file));
+
 	let dur = start.elapsed();
+
 	println!("Took {:?}", dur);
+
     let main_file = env::args().nth(1).unwrap();
 
     let start = Instant::now();
+
     parse_and_gen(Path::new(&main_file));
+
     let dur = start.elapsed();
+
     println!("Took {:?}", dur);
 }

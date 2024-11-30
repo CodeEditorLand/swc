@@ -47,10 +47,13 @@ where
     C: Comments + Clone,
 {
     let loose = c.loose;
+
     let targets: Versions = targets_to_versions(c.targets).expect("failed to parse targets");
+
     let is_any_target = targets.is_any_target();
 
     let (include, included_modules) = FeatureOrModule::split(c.include);
+
     let (exclude, excluded_modules) = FeatureOrModule::split(c.exclude);
 
     let pass = noop_pass();
@@ -96,10 +99,15 @@ where
 
     let pass = {
         let enable_dot_all_regex = should_enable!(DotAllRegex, false);
+
         let enable_named_capturing_groups_regex = should_enable!(NamedCapturingGroupsRegex, false);
+
         let enable_sticky_regex = should_enable!(StickyRegex, false);
+
         let enable_unicode_property_regex = should_enable!(UnicodePropertyRegex, false);
+
         let enable_unicode_regex = should_enable!(UnicodeRegex, false);
+
         let enable_unicode_sets_regex = should_enable!(UnicodeSetsRegex, false);
 
         let enable = enable_dot_all_regex
@@ -135,6 +143,7 @@ where
     // because it transforms into private static property
 
     let pass = add!(pass, ClassStaticBlock, es2022::static_blocks());
+
     let pass = add!(
         pass,
         ClassProperties,
@@ -149,6 +158,7 @@ where
             unresolved_mark
         )
     );
+
     let pass = add!(pass, PrivatePropertyInObject, es2022::private_in_object());
 
     // ES2021
@@ -161,6 +171,7 @@ where
     // ES2020
 
     let pass = add!(pass, ExportNamespaceFrom, es2020::export_namespace_from());
+
     let pass = add!(
         pass,
         NullishCoalescing,
@@ -213,6 +224,7 @@ where
 
     // ES2015
     let pass = add!(pass, BlockScopedFunctions, es2015::block_scoped_functions());
+
     let pass = add!(
         pass,
         TemplateLiterals,
@@ -222,6 +234,7 @@ where
         }),
         true
     );
+
     let pass = add!(
         pass,
         Classes,
@@ -232,15 +245,20 @@ where
             super_is_callable_constructor: loose || assumptions.super_is_callable_constructor,
         })
     );
+
     let pass = add!(
         pass,
         Spread,
         es2015::spread(es2015::spread::Config { loose }),
         true
     );
+
     let pass = add!(pass, ObjectSuper, es2015::object_super());
+
     let pass = add!(pass, FunctionName, es2015::function_name());
+
     let pass = add!(pass, ShorthandProperties, es2015::shorthand());
+
     let pass = add!(
         pass,
         Parameters,
@@ -251,11 +269,15 @@ where
             unresolved_mark
         )
     );
+
     let pass = add!(pass, ArrowFunctions, es2015::arrow(unresolved_mark));
+
     let pass = add!(pass, DuplicateKeys, es2015::duplicate_keys());
+
     let pass = add!(pass, StickyRegex, es2015::sticky_regex());
     // TODO:    InstanceOf,
     let pass = add!(pass, TypeOfSymbol, es2015::typeof_symbol());
+
     let pass = add!(
         pass,
         ForOf,
@@ -265,24 +287,28 @@ where
         }),
         true
     );
+
     let pass = add!(
         pass,
         ComputedProperties,
         es2015::computed_properties(es2015::computed_props::Config { loose }),
         true
     );
+
     let pass = add!(
         pass,
         Destructuring,
         es2015::destructuring(es2015::destructuring::Config { loose }),
         true
     );
+
     let pass = add!(
         pass,
         BlockScoping,
         es2015::block_scoping(unresolved_mark),
         true
     );
+
     let pass = add!(
         pass,
         Regenerator,
@@ -304,25 +330,30 @@ where
 
     // ES 3
     let pass = add!(pass, PropertyLiterals, es3::property_literals());
+
     let pass = add!(
         pass,
         MemberExpressionLiterals,
         es3::member_expression_literals()
     );
+
     let pass = add!(pass, ReservedWords, es3::reserved_words(c.dynamic_import));
 
     // Bugfixes
     let pass = add!(pass, BugfixEdgeDefaultParam, bugfixes::edge_default_param());
+
     let pass = add!(
         pass,
         BugfixAsyncArrowsInClass,
         bugfixes::async_arrows_in_class(unresolved_mark)
     );
+
     let pass = add!(
         pass,
         BugfixTaggedTemplateCaching,
         bugfixes::template_literal_caching()
     );
+
     let pass = add!(
         pass,
         BugfixSafariIdDestructuringCollisionInFunctionExpression,
@@ -377,17 +408,21 @@ impl Polyfills {
                 let mut r = match self.corejs {
                     Version { major: 2, .. } => {
                         let mut v = corejs2::UsageVisitor::new(self.targets);
+
                         m.visit_with(&mut v);
 
                         v.required
                     }
+
                     Version { major: 3, .. } => {
                         let mut v = corejs3::UsageVisitor::new(
                             self.targets,
                             self.shipped_proposals,
                             self.corejs,
                         );
+
                         m.visit_with(&mut v);
+
                         v.required
                     }
 
@@ -400,22 +435,28 @@ impl Polyfills {
 
                 r
             }
+
             Some(Mode::Entry) => match self.corejs {
                 Version { major: 2, .. } => {
                     let mut v = corejs2::Entry::new(self.targets, self.regenerator);
+
                     m.visit_mut_with(&mut v);
+
                     v.imports
                 }
 
                 Version { major: 3, .. } => {
                     let mut v = corejs3::Entry::new(self.targets, self.corejs, !self.regenerator);
+
                     m.visit_mut_with(&mut v);
+
                     v.imports
                 }
 
                 _ => unimplemented!("corejs version other than 2 / 3"),
             },
         };
+
         required
             .iter()
             .filter(|s| {
@@ -442,10 +483,14 @@ impl Polyfills {
 impl VisitMut for Polyfills {
     fn visit_mut_module(&mut self, m: &mut Module) {
         let span = m.span;
+
         let required = self.collect(m);
+
         if cfg!(debug_assertions) {
             let mut v = required.into_iter().collect::<Vec<_>>();
+
             v.sort();
+
             prepend_stmts(
                 &mut m.body,
                 v.into_iter().map(|src| {
@@ -492,10 +537,14 @@ impl VisitMut for Polyfills {
 
     fn visit_mut_script(&mut self, m: &mut Script) {
         let span = m.span;
+
         let required = self.collect(m);
+
         if cfg!(debug_assertions) {
             let mut v = required.into_iter().collect::<Vec<_>>();
+
             v.sort();
+
             prepend_stmts(
                 &mut m.body,
                 v.into_iter().map(|src| {
@@ -628,6 +677,7 @@ pub enum FeatureOrModule {
 impl FeatureOrModule {
     pub fn split(vec: Vec<FeatureOrModule>) -> (Vec<Feature>, AHashSet<String>) {
         let mut features: Vec<_> = Default::default();
+
         let mut modules: AHashSet<_> = Default::default();
 
         for v in vec {

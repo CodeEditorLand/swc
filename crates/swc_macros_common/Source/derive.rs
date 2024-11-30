@@ -27,6 +27,7 @@ impl<'a> Derive<'a> {
                 .map(|mut pair| {
                     if let GenericParam::Type(ref mut t) = *pair.value_mut() {
                         t.eq_token = None;
+
                         t.default = None;
                     }
 
@@ -44,9 +45,13 @@ impl<'a> Derive<'a> {
             // Handle generic declared on type.
             let ty: Box<Type> = {
                 let (_, ty_generics, _) = input.generics.split_for_impl();
+
                 let mut t = TokenStream::new();
+
                 input.ident.to_tokens(&mut t);
+
                 ty_generics.to_tokens(&mut t);
+
                 Box::new(
                     parse2(t.into_token_stream())
                         .unwrap_or_else(|err| panic!("failed to parse type: {}", err)),
@@ -88,6 +93,7 @@ impl<'a> Derive<'a> {
 
     pub fn append_to(mut self, item: ItemImpl) -> ItemImpl {
         assert_eq!(self.out.trait_, None);
+
         if !self.out.generics.params.empty_or_trailing() {
             self.out.generics.params.push_punct(Token![,](def_site()));
         }
@@ -100,6 +106,7 @@ impl<'a> Derive<'a> {
         self.out.trait_ = item.trait_;
 
         self.out.attrs.extend(item.attrs);
+
         self.out.items.extend(item.items);
 
         self.out

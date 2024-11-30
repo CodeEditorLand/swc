@@ -22,7 +22,9 @@ pub fn emit_diagnostics(
         HANDLER.with(|handler| {
             let diagnostics_bytes =
                 copy_bytes_into_host(&memory.view(&env), bytes_ptr, bytes_ptr_len);
+
             let serialized = PluginSerializedBytes::from_slice(&diagnostics_bytes[..]);
+
             let diagnostic = PluginSerializedBytes::deserialize::<Diagnostic>(&serialized)
                 .expect("Should able to be deserialized into diagnostic");
 
@@ -30,6 +32,7 @@ pub fn emit_diagnostics(
                 handler,
                 diagnostic.into_inner(),
             );
+
             builder.emit();
         })
     }

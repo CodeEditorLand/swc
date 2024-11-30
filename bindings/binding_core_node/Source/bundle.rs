@@ -53,6 +53,7 @@ pub(crate) struct BundleTask {
 #[napi]
 impl Task for BundleTask {
     type JsValue = AHashMap<String, TransformOutput>;
+
     type Output = AHashMap<String, TransformOutput>;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
@@ -75,6 +76,7 @@ impl Task for BundleTask {
             .unwrap_or_default();
 
         let globals = Globals::default();
+
         GLOBALS.set(&globals, || {
             let res = catch_unwind(AssertUnwindSafe(|| {
                 let mut bundler = Bundler::new(
@@ -110,6 +112,7 @@ impl Task for BundleTask {
                         BundleKind::Named { name } | BundleKind::Lib { name } => {
                             Ok((name, bundle.module))
                         }
+
                         BundleKind::Dynamic => bail!("unimplemented: dynamic code splitting"),
                     })
                     .map(|res| {
@@ -173,6 +176,7 @@ impl Task for BundleTask {
 #[cfg(feature = "swc_v2")]
 impl Task for BundleTask {
     type JsValue = AHashMap<String, TransformOutput>;
+
     type Output = AHashMap<String, TransformOutput>;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {

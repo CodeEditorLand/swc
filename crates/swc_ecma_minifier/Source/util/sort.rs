@@ -16,6 +16,7 @@ where
             if let Some(Ordering::Greater) | None = compare(&last, &curr) {
                 return Err(());
             }
+
             Ok(curr)
         })
         .is_ok()

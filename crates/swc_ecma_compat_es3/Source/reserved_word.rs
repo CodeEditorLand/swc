@@ -53,6 +53,7 @@ impl VisitMut for ReservedWord {
                     *module_item = decl.take().into();
 
                     let mut orig = ident.clone();
+
                     orig.visit_mut_with(self);
 
                     extra_exports.push(
@@ -88,6 +89,7 @@ impl VisitMut for ReservedWord {
                         }
 
                         let mut orig = ident.clone();
+
                         orig.visit_mut_with(self);
 
                         extra_exports.push(
@@ -127,6 +129,7 @@ impl VisitMut for ReservedWord {
     fn visit_mut_export_named_specifier(&mut self, n: &mut ExportNamedSpecifier) {
         if matches!(&n.orig, ModuleExportName::Ident(ident) if ident.is_reserved_in_es3()) {
             n.exported.get_or_insert_with(|| n.orig.clone());
+
             n.orig.visit_mut_with(self);
         }
     }
@@ -150,6 +153,7 @@ impl VisitMut for ReservedWord {
     fn visit_mut_import_named_specifier(&mut self, s: &mut ImportNamedSpecifier) {
         if s.local.is_reserved_in_es3() {
             s.imported.get_or_insert_with(|| s.local.clone().into());
+
             s.local.visit_mut_with(self);
         }
     }
@@ -217,6 +221,7 @@ function utf8CheckByte(byte) {
         r#"
         export function char() {
             console.log("char====char");
+
             return "";
         }
         "#

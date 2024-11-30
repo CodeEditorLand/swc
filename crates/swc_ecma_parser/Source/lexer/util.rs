@@ -24,6 +24,7 @@ use crate::{
 impl Lexer<'_> {
     pub(super) fn span(&self, start: BytePos) -> Span {
         let end = self.last_pos();
+
         if cfg!(debug_assertions) && start > end {
             unreachable!(
                 "assertion failed: (span.start <= span.end).
@@ -31,6 +32,7 @@ impl Lexer<'_> {
                 start.0, end.0
             )
         }
+
         Span { lo: start, hi: end }
     }
 
@@ -87,6 +89,7 @@ impl Lexer<'_> {
     #[inline(never)]
     pub(super) fn error<T>(&mut self, start: BytePos, kind: SyntaxError) -> LexResult<T> {
         let span = self.span(start);
+
         self.error_span(span, kind)
     }
 
@@ -100,6 +103,7 @@ impl Lexer<'_> {
     #[inline(never)]
     pub(super) fn emit_error(&mut self, start: BytePos, kind: SyntaxError) {
         let span = self.span(start);
+
         self.emit_error_span(span, kind)
     }
 
@@ -111,7 +115,9 @@ impl Lexer<'_> {
         }
 
         warn!("Lexer error at {:?}", span);
+
         let err = Error::new(span, kind);
+
         self.errors.borrow_mut().push(err);
     }
 
@@ -119,6 +125,7 @@ impl Lexer<'_> {
     #[inline(never)]
     pub(super) fn emit_strict_mode_error(&mut self, start: BytePos, kind: SyntaxError) {
         let span = self.span(start);
+
         self.emit_strict_mode_error_span(span, kind)
     }
 
@@ -127,6 +134,7 @@ impl Lexer<'_> {
     pub(super) fn emit_strict_mode_error_span(&mut self, span: Span, kind: SyntaxError) {
         if self.ctx.strict {
             self.emit_error_span(span, kind);
+
             return;
         }
 
@@ -139,6 +147,7 @@ impl Lexer<'_> {
     #[inline(never)]
     pub(super) fn emit_module_mode_error(&mut self, start: BytePos, kind: SyntaxError) {
         let span = self.span(start);
+
         self.emit_module_mode_error_span(span, kind)
     }
 
@@ -171,6 +180,7 @@ impl Lexer<'_> {
             };
 
             self.input.bump_bytes(offset as usize);
+
             if newline {
                 self.state.had_line_break = true;
             }
@@ -178,9 +188,11 @@ impl Lexer<'_> {
             if LEX_COMMENTS && self.input.is_byte(b'/') {
                 if self.peek() == Some('/') {
                     self.skip_line_comment(2);
+
                     continue;
                 } else if self.peek() == Some('*') {
                     self.skip_block_comment();
+
                     continue;
                 }
             }
@@ -192,7 +204,9 @@ impl Lexer<'_> {
     #[inline(never)]
     pub(super) fn skip_line_comment(&mut self, start_skip: usize) {
         let start = self.cur_pos();
+
         self.input.bump_bytes(start_skip);
+
         let slice_start = self.cur_pos();
 
         // foo // comment for foo
@@ -210,10 +224,12 @@ impl Lexer<'_> {
             .find(['\r', '\n', '\u{2028}', '\u{2029}'])
             .map_or(self.input.as_str().len(), |v| {
                 self.state.had_line_break = true;
+
                 v
             });
 
         self.input.bump_bytes(idx);
+
         let end = self.cur_pos();
 
         if let Some(comments) = self.comments_buffer.as_mut() {
@@ -221,6 +237,7 @@ impl Lexer<'_> {
                 // Safety: We know that the start and the end are valid
                 self.input.slice(slice_start, end)
             };
+
             let cmt = Comment {
                 kind: CommentKind::Line,
                 span: Span::new(start, end),
@@ -250,14 +267,17 @@ impl Lexer<'_> {
         let start = self.cur_pos();
 
         debug_assert_eq!(self.cur(), Some('/'));
+
         debug_assert_eq!(self.peek(), Some('*'));
 
         self.input.bump_bytes(2);
 
         // jsdoc
         let slice_start = self.cur_pos();
+
         let mut was_star = if self.input.is_byte(b'*') {
             self.bump();
+
             true
         } else {
             false
@@ -268,6 +288,7 @@ impl Lexer<'_> {
         while let Some(c) = self.cur() {
             if was_star && c == '/' {
                 debug_assert_eq!(self.cur(), Some('/'));
+
                 self.bump(); // '/'
 
                 let end = self.cur_pos();
@@ -282,16 +303,20 @@ impl Lexer<'_> {
 
                 return;
             }
+
             if c.is_line_terminator() {
                 self.state.had_line_break = true;
             }
 
             was_star = c == '*';
+
             self.bump();
         }
 
         let end = self.input.end_pos();
+
         let span = Span::new(end, end);
+
         self.emit_error_span(span, SyntaxError::UnterminatedBlockComment)
     }
 
@@ -308,7 +333,9 @@ impl Lexer<'_> {
                 // Safety: We got slice_start and end from self.input so those are valid.
                 self.input.slice(slice_start, end)
             };
+
             let s = &src[..src.len() - 2];
+
             let cmt = Comment {
                 kind: CommentKind::Block,
                 span: Span::new(start, end),
@@ -316,6 +343,7 @@ impl Lexer<'_> {
             };
 
             let _ = self.input.peek();
+
             if is_for_next {
                 comments.push_pending_leading(cmt);
             } else {
@@ -342,6 +370,7 @@ pub trait CharExt: Copy {
             Some(c) => c,
             None => return false,
         };
+
         Ident::is_valid_start(c)
     }
 
@@ -352,6 +381,7 @@ pub trait CharExt: Copy {
             Some(c) => c,
             None => return false,
         };
+
         Ident::is_valid_continue(c)
     }
 
@@ -362,6 +392,7 @@ pub trait CharExt: Copy {
             Some(c) => c,
             None => return false,
         };
+
         matches!(c, '\r' | '\n' | '\u{2028}' | '\u{2029}')
     }
 
@@ -372,6 +403,7 @@ pub trait CharExt: Copy {
             Some(c) => c,
             None => return false,
         };
+
         matches!(c, '\r' | '\n')
     }
 
@@ -382,6 +414,7 @@ pub trait CharExt: Copy {
             Some(c) => c,
             None => return false,
         };
+
         match c {
             '\u{0009}' | '\u{000b}' | '\u{000c}' | '\u{0020}' | '\u{00a0}' | '\u{feff}' => true,
             _ => {

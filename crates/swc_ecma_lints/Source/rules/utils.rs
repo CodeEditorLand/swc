@@ -65,6 +65,7 @@ pub fn extract_arg_val(unresolved_ctxt: SyntaxContext, expr: &Expr) -> ArgValue 
                 ArgValue::Other
             }
         }
+
         Expr::TaggedTpl(TaggedTpl { tag, tpl, .. }) => {
             if tpl.exprs.is_empty() {
                 if let Expr::Member(MemberExpr { obj, prop, .. }) = tag.as_ref() {
@@ -88,6 +89,7 @@ pub fn extract_arg_val(unresolved_ctxt: SyntaxContext, expr: &Expr) -> ArgValue 
 
             ArgValue::Other
         }
+
         _ => ArgValue::Other,
     }
 }

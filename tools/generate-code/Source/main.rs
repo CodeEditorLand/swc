@@ -51,7 +51,9 @@ fn run_visitor_codegen(input_dir: &Path, output: &Path, excludes: &[String]) -> 
         .join("src");
 
     eprintln!("Generating visitor for crate in directory: {:?}", input_dir);
+
     let input_files = collect_input_files(&input_dir)?;
+
     eprintln!("Found {} input files", input_files.len());
 
     eprintln!("Generating visitor in directory: {:?}", output);
@@ -65,6 +67,7 @@ fn run_visitor_codegen(input_dir: &Path, output: &Path, excludes: &[String]) -> 
         .collect::<Result<Vec<_>>>()?;
 
     let mut all_type_defs = inputs.iter().flat_map(get_type_defs).collect::<Vec<_>>();
+
     all_type_defs.retain(|type_def| {
         let ident = match type_def {
             Item::Struct(data) => &data.ident,
@@ -157,6 +160,7 @@ fn test_xml() {
 
 fn get_type_defs(file: &syn::File) -> Vec<&Item> {
     let mut type_defs = Vec::new();
+
     for item in &file.items {
         match item {
             Item::Struct(_) | Item::Enum(_) => {
@@ -166,12 +170,15 @@ fn get_type_defs(file: &syn::File) -> Vec<&Item> {
             _ => {}
         }
     }
+
     type_defs
 }
 
 fn parse_rust_file(file: &Path) -> Result<syn::File> {
     let content = std::fs::read_to_string(file).context("failed to read the input file")?;
+
     let syntax = syn::parse_file(&content).context("failed to parse the input file using syn")?;
+
     Ok(syntax)
 }
 
@@ -188,9 +195,11 @@ fn run_cargo_fmt(file: &Path) -> Result<()> {
     let file = file.canonicalize().context("failed to canonicalize file")?;
 
     let mut cmd = std::process::Command::new("cargo");
+
     cmd.arg("fmt").arg("--").arg(file);
 
     eprintln!("Running: {:?}", cmd);
+
     let status = cmd.status().context("failed to run cargo fmt")?;
 
     if !status.success() {

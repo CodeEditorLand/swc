@@ -80,24 +80,30 @@ impl Pure<'_> {
             {
                 true
             }
+
             _ => false,
         }) {
             return;
         }
 
         self.changed = true;
+
         report_change!(
             "if_return: Negating `foo` in `if (foo) return; bar()` to make it `if (!foo) bar()`"
         );
 
         let mut new = Vec::with_capacity(stmts.len());
+
         let mut fn_decls = Vec::with_capacity(stmts.len());
+
         new.extend(stmts.drain(..pos_of_if));
+
         let cons = stmts
             .drain(1..)
             .filter_map(|stmt| {
                 if matches!(stmt, Stmt::Decl(Decl::Fn(..))) {
                     fn_decls.push(stmt);
+
                     return None;
                 }
 
@@ -106,9 +112,11 @@ impl Pure<'_> {
             .collect::<Vec<_>>();
 
         let if_stmt = stmts.take().into_iter().next().unwrap();
+
         match if_stmt {
             Stmt::If(mut s) => {
                 assert_eq!(s.alt, None);
+
                 negate(&self.expr_ctx, &mut s.test, false, false);
 
                 s.cons = if cons.len() == 1 && is_fine_for_if_cons(&cons[0]) {
@@ -126,6 +134,7 @@ impl Pure<'_> {
 
                 new.push(s.into())
             }
+
             _ => {
                 unreachable!()
             }
@@ -147,11 +156,13 @@ impl Pure<'_> {
         {
             match &**cons_of_alt {
                 Stmt::Return(..) | Stmt::Continue(ContinueStmt { label: None, .. }) => {}
+
                 _ => return,
             }
 
             match &mut **alt_of_alt {
                 Stmt::Block(..) => {}
+
                 Stmt::Expr(..) => {
                     *alt_of_alt = Box::new(
                         BlockStmt {
@@ -162,12 +173,14 @@ impl Pure<'_> {
                         .into(),
                     );
                 }
+
                 _ => {
                     return;
                 }
             }
 
             self.changed = true;
+
             report_change!("if_return: Merging `else if` into `else`");
 
             match &mut **alt_of_alt {

@@ -74,7 +74,9 @@ impl Visit for UsageCollect {
 
         if n.is_export {
             id.visit_with(self);
+
             n.id.visit_with(self);
+
             return;
         }
 
@@ -118,17 +120,23 @@ impl UsageCollect {
         }
 
         let mut new_usage = AHashSet::default();
+
         for id in &self.id_usage {
             let mut next = self.import_chain.remove(id);
+
             while let Some(id) = next {
                 next = self.import_chain.remove(&id);
+
                 new_usage.insert(id);
             }
+
             if self.import_chain.is_empty() {
                 break;
             }
         }
+
         self.import_chain.clear();
+
         self.id_usage.extend(new_usage);
     }
 }
@@ -138,6 +146,7 @@ fn get_module_ident(ts_entity_name: &TsEntityName) -> &Ident {
         TsEntityName::TsQualifiedName(ts_qualified_name) => {
             get_module_ident(&ts_qualified_name.left)
         }
+
         TsEntityName::Ident(ident) => ident,
     }
 }
@@ -182,11 +191,13 @@ impl Visit for DeclareCollect {
             }) => {
                 self.id_value.insert(ident.to_id());
             }
+
             DefaultDecl::Fn(FnExpr {
                 ident: Some(ident), ..
             }) => {
                 self.id_value.insert(ident.to_id());
             }
+
             _ => {}
         };
     }
@@ -230,11 +241,13 @@ impl Visit for DeclareCollect {
                         self.id_type.insert(named.local.to_id());
                     }
                 }
+
                 ImportSpecifier::Default(default) => {
                     if n.type_only {
                         self.id_type.insert(default.local.to_id());
                     }
                 }
+
                 ImportSpecifier::Namespace(namespace) => {
                     if n.type_only {
                         self.id_type.insert(namespace.local.to_id());
@@ -290,6 +303,7 @@ pub(crate) struct StripImportExport {
 impl VisitMut for StripImportExport {
     fn visit_mut_module(&mut self, n: &mut Module) {
         n.visit_with(&mut self.usage_info);
+
         n.visit_with(&mut self.declare_info);
 
         self.usage_info.analyze_import_chain();
@@ -323,6 +337,7 @@ impl VisitMut for StripImportExport {
 
                         self.usage_info.has_usage(&id)
                     }
+
                     ImportSpecifier::Default(default) => {
                         let id = default.local.to_id();
 
@@ -332,6 +347,7 @@ impl VisitMut for StripImportExport {
 
                         self.usage_info.has_usage(&id)
                     }
+
                     ImportSpecifier::Namespace(namespace) => {
                         let id = namespace.local.to_id();
 
@@ -346,6 +362,7 @@ impl VisitMut for StripImportExport {
                 self.import_not_used_as_values == ImportsNotUsedAsValues::Preserve
                     || !specifiers.is_empty()
             }
+
             ModuleItem::ModuleDecl(ModuleDecl::ExportNamed(NamedExport {
                 specifiers,
                 src,
@@ -365,6 +382,7 @@ impl VisitMut for StripImportExport {
 
                         !self.declare_info.has_pure_type(&id)
                     }
+
                     ExportSpecifier::Named(ExportNamedSpecifier { is_type_only, .. }) => {
                         !is_type_only
                     }
@@ -372,6 +390,7 @@ impl VisitMut for StripImportExport {
 
                 !specifiers.is_empty()
             }
+
             ModuleItem::ModuleDecl(ModuleDecl::ExportNamed(NamedExport {
                 ref type_only, ..
             })) => !type_only,
@@ -397,6 +416,7 @@ impl VisitMut for StripImportExport {
 
                 self.usage_info.has_usage(&ts_import_equals_decl.id.to_id())
             }
+
             ModuleItem::Stmt(Stmt::Decl(Decl::TsModule(ref ts_module)))
                 if ts_module.body.is_some() =>
             {
@@ -404,12 +424,14 @@ impl VisitMut for StripImportExport {
 
                 true
             }
+
             _ => true,
         });
     }
 
     fn visit_mut_script(&mut self, n: &mut Script) {
         let mut visitor = StripTsImportEquals;
+
         for stmt in n.body.iter_mut() {
             if let Stmt::Decl(Decl::TsModule(..)) = stmt {
                 stmt.visit_mut_with(&mut visitor);
@@ -456,6 +478,7 @@ impl VisitMut for StripTsImportEquals {
 
                     usage_info.has_usage(&ts_import_equals_decl.id.to_id())
                 }
+
                 _ => true,
             })
         }

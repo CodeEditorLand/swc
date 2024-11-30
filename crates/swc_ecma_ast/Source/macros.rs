@@ -208,6 +208,7 @@ macro_rules! bridge_from {
             #[cfg_attr(not(debug_assertions), inline(always))]
             fn from(src: $src) -> $dst {
                 let src: $bridge = src.into();
+
                 src.into()
             }
         }
@@ -217,6 +218,7 @@ macro_rules! bridge_from {
 macro_rules! bridge_expr_from {
     ($bridge:ty, $src:ty) => {
         bridge_from!(crate::Expr, $bridge, $src);
+
         bridge_from!(Box<crate::Expr>, crate::Expr, $src);
     };
 }
@@ -224,7 +226,9 @@ macro_rules! bridge_expr_from {
 macro_rules! bridge_pat_from {
     ($bridge:ty, $src:ty) => {
         bridge_from!(crate::Pat, $bridge, $src);
+
         bridge_from!(crate::Param, crate::Pat, $src);
+
         bridge_from!(Box<crate::Pat>, crate::Pat, $src);
     };
 }

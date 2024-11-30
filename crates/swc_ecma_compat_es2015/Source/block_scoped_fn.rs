@@ -28,12 +28,14 @@ impl VisitMut for BlockScopedFns {
         n.visit_mut_children_with(self);
 
         let mut stmts = Vec::with_capacity(n.stmts.len());
+
         let mut extra_stmts = Vec::with_capacity(n.stmts.len());
 
         for stmt in n.stmts.take() {
             if let Stmt::Expr(ExprStmt { ref expr, .. }) = stmt {
                 if let Expr::Lit(Lit::Str(..)) = &**expr {
                     stmts.push(stmt);
+
                     continue;
                 }
             }
@@ -41,8 +43,10 @@ impl VisitMut for BlockScopedFns {
             if let Stmt::Decl(Decl::Fn(decl)) = stmt {
                 if IdentUsageFinder::find(&decl.ident.to_id(), &decl.function) {
                     extra_stmts.push(decl.into());
+
                     continue;
                 }
+
                 stmts.push(
                     VarDecl {
                         span: DUMMY_SP,
@@ -117,6 +121,7 @@ name("Steve");"#
                         function baz() {}
                     }
                 };
+
                 function baz() {}
                 {
                     function bar() {}
@@ -187,6 +192,7 @@ function foo(scope) {
         hoisting_directives,
         "function foo() {
             'use strict';
+
             function _interop_require_default(obj) {
               return obj && obj.__esModule ? obj : {
                 default: obj

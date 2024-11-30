@@ -84,7 +84,9 @@ macro_rules! make_color {
         let need_alpha_value = $a != 1.0;
 
         let r = $r.round();
+
         let g = $g.round();
+
         let b = $b.round();
 
         if need_alpha_value {
@@ -93,10 +95,12 @@ macro_rules! make_color {
 
             if is_alpha_hex_supported {
                 let alpha = (($a * 255.0) as f64).round().max(0.0).min(255.0) as u8;
+
                 let hex: u32 =
                     ((r as u32) << 24) | ((g as u32) << 16) | ((b as u32) << 8) | (alpha as u32);
 
                 let compact = get_short_hex(hex);
+
                 let value = if hex == get_long_hex(compact) {
                     format!("{:04x}", compact)
                 } else {
@@ -167,6 +171,7 @@ macro_rules! make_color {
                 }))
             } else {
                 let compact = get_short_hex(hex);
+
                 let value = if hex == get_long_hex(compact) {
                     format!("{:03x}", compact)
                 } else {
@@ -239,6 +244,7 @@ impl Compressor {
 
                     Some(*value)
                 }
+
                 AlphaValue::Percentage(Percentage {
                     value: Number { value, .. },
                     ..
@@ -277,9 +283,11 @@ impl Compressor {
 
                 Some(value)
             }
+
             Some(ComponentValue::Ident(ident)) if ident.value.eq_ignore_ascii_case("none") => {
                 Some(0.0)
             }
+
             _ => None,
         }
     }
@@ -288,6 +296,7 @@ impl Compressor {
         match percentage {
             Some(ComponentValue::Percentage(percentage)) => {
                 let Number { value, .. } = &percentage.value;
+
                 if *value > 100.0 {
                     return Some(1.0);
                 } else if *value < 0.0 {
@@ -296,9 +305,11 @@ impl Compressor {
 
                 Some(*value / 100.0)
             }
+
             Some(ComponentValue::Ident(ident)) if ident.value.eq_ignore_ascii_case("none") => {
                 Some(0.0)
             }
+
             _ => None,
         }
     }
@@ -317,6 +328,7 @@ impl Compressor {
 
                 Some(number.value)
             }
+
             Some(ComponentValue::Percentage(percentage)) => {
                 if percentage.value.value > 100.0 {
                     return Some(255.0);
@@ -326,9 +338,11 @@ impl Compressor {
 
                 Some((2.55 * percentage.value.value).round())
             }
+
             Some(ComponentValue::Ident(ident)) if ident.value.eq_ignore_ascii_case("none") => {
                 Some(0.0)
             }
+
             _ => None,
         }
     }
@@ -345,6 +359,7 @@ impl Compressor {
                 ref s if *s == "transparent" => {
                     *color = make_color!(*span, 0.0_f64, 0.0_f64, 0.0_f64, 0.0_f64);
                 }
+
                 name => {
                     if let Some(value) = NAMED_COLORS.get(&name) {
                         *color = make_color!(
@@ -372,6 +387,7 @@ impl Compressor {
                     *value = new_value.into();
                 }
             }
+
             Color::AbsoluteColorBase(AbsoluteColorBase::Function(Function {
                 span,
                 name,
@@ -392,14 +408,17 @@ impl Compressor {
                     Some(value) => value,
                     _ => return,
                 };
+
                 let g = match self.get_number_or_percentage(rgba.get(1)) {
                     Some(value) => value,
                     _ => return,
                 };
+
                 let b = match self.get_number_or_percentage(rgba.get(2)) {
                     Some(value) => value,
                     _ => return,
                 };
+
                 let a = match self.get_alpha_value(rgba.get(3)) {
                     Some(value) => value,
                     _ => return,
@@ -407,6 +426,7 @@ impl Compressor {
 
                 *color = make_color!(*span, r, g, b, a);
             }
+
             Color::AbsoluteColorBase(AbsoluteColorBase::Function(Function {
                 span,
                 name,
@@ -427,14 +447,17 @@ impl Compressor {
                     Some(value) => value,
                     _ => return,
                 };
+
                 let s = match self.get_percentage(hsla.get(1)) {
                     Some(value) => value,
                     _ => return,
                 };
+
                 let l = match self.get_percentage(hsla.get(2)) {
                     Some(value) => value,
                     _ => return,
                 };
+
                 let a = match self.get_alpha_value(hsla.get(3)) {
                     Some(value) => value,
                     _ => return,
@@ -444,6 +467,7 @@ impl Compressor {
 
                 *color = make_color!(*span, rgb[0], rgb[1], rgb[2], a);
             }
+
             Color::AbsoluteColorBase(AbsoluteColorBase::Function(Function {
                 span,
                 name,
@@ -454,14 +478,17 @@ impl Compressor {
                     Some(value) => value,
                     _ => return,
                 };
+
                 let w = match self.get_percentage(value.get(1).as_ref()) {
                     Some(value) => value,
                     _ => return,
                 };
+
                 let b = match self.get_percentage(value.get(2).as_ref()) {
                     Some(value) => value,
                     _ => return,
                 };
+
                 let a = match self.get_alpha_value(value.get(4).as_ref()) {
                     Some(value) => value,
                     _ => return,
@@ -471,6 +498,7 @@ impl Compressor {
 
                 *color = make_color!(*span, rgb[0], rgb[1], rgb[2], a);
             }
+
             _ => {}
         }
     }

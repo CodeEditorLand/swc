@@ -119,45 +119,54 @@ fn get_modifiers<const MAX_ATTRS: usize>(
     }: FunctionMarkers,
 ) -> (usize, [FunctionModifiers; MAX_ATTRS]) {
     let mut modifiers: [FunctionModifiers; MAX_ATTRS] = [FunctionModifiers::Simple; MAX_ATTRS];
+
     let mut idx: usize = 0;
 
     if is_async {
         modifiers[idx] = FunctionModifiers::Async;
+
         idx += 1;
     }
 
     if is_generator {
         modifiers[idx] = FunctionModifiers::Generator;
+
         idx += 1;
     }
 
     if is_private {
         modifiers[idx] = FunctionModifiers::Private;
+
         idx += 1;
     }
 
     if is_static {
         modifiers[idx] = FunctionModifiers::Static;
+
         idx += 1;
     }
 
     if is_protected {
         modifiers[idx] = FunctionModifiers::Protected;
+
         idx += 1;
     }
 
     if is_public {
         modifiers[idx] = FunctionModifiers::Public;
+
         idx += 1;
     }
 
     if is_getter {
         modifiers[idx] = FunctionModifiers::Getter;
+
         idx += 1;
     }
 
     if is_setter {
         modifiers[idx] = FunctionModifiers::Setter;
+
         idx += 1;
     }
 
@@ -200,9 +209,11 @@ impl NoEmptyFunction {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, &message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, &message).emit();
             }
+
             _ => {}
         });
     }
@@ -233,8 +244,11 @@ impl NoEmptyFunction {
 
     fn has_comment_in_body(&self, span: &Span) -> bool {
         let fn_lo = self.source_map.lookup_byte_offset(span.lo);
+
         let fn_hi = self.source_map.lookup_byte_offset(span.hi);
+
         let lo_idx = fn_lo.pos.0 as usize;
+
         let hi_idx = fn_hi.pos.0 as usize;
 
         let body = &fn_lo.sf.src.as_str()[lo_idx..hi_idx];
@@ -249,6 +263,7 @@ impl NoEmptyFunction {
                 ('/', '*') => {
                     return true;
                 }
+
                 _ => {}
             }
 

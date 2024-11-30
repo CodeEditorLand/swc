@@ -94,6 +94,7 @@ impl Comments for SwcComments {
 
     fn add_pure_comment(&self, pos: BytePos) {
         let mut leading = self.leading.entry(pos).or_default();
+
         let pure_comment = Comment {
             kind: CommentKind::Block,
             span: DUMMY_SP,
@@ -140,6 +141,7 @@ impl Comments for SwcComments {
                     for line in c.text.lines() {
                         // jsdoc
                         let line = line.trim_start_matches(['*', ' ']);
+
                         let line = line.trim();
 
                         //

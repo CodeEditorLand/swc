@@ -68,7 +68,9 @@ where
 {
     pub fn new(wr: W, config: CodegenConfig<'a>) -> Self {
         let tag_omission = config.tag_omission.unwrap_or(config.minify);
+
         let self_closing_void_elements = config.tag_omission.unwrap_or(!config.minify);
+
         let quotes = config.quotes.unwrap_or(!config.minify);
 
         CodeGenerator {
@@ -141,6 +143,7 @@ where
         );
 
         doctype.push('<');
+
         doctype.push('!');
 
         if self.config.minify {
@@ -151,6 +154,7 @@ where
 
         if let Some(name) = &n.name {
             doctype.push(' ');
+
             doctype.push_str(name);
         }
 
@@ -168,7 +172,9 @@ where
             let public_id_quote = if public_id.contains('"') { '\'' } else { '"' };
 
             doctype.push(public_id_quote);
+
             doctype.push_str(public_id);
+
             doctype.push(public_id_quote);
 
             if let Some(system_id) = &n.system_id {
@@ -177,7 +183,9 @@ where
                 let system_id_quote = if system_id.contains('"') { '\'' } else { '"' };
 
                 doctype.push(system_id_quote);
+
                 doctype.push_str(system_id);
+
                 doctype.push(system_id_quote);
             }
         } else if let Some(system_id) = &n.system_id {
@@ -194,13 +202,16 @@ where
             let system_id_quote = if system_id.contains('"') { '\'' } else { '"' };
 
             doctype.push(system_id_quote);
+
             doctype.push_str(system_id);
+
             doctype.push(system_id_quote);
         }
 
         doctype.push('>');
 
         write_multiline_raw!(self, n.span, &doctype);
+
         formatting_newline!(self);
     }
 
@@ -216,6 +227,7 @@ where
         }
 
         let has_attributes = !n.attributes.is_empty();
+
         let can_omit_start_tag = self.tag_omission
             && !has_attributes
             && n.namespace == Namespace::HTML
@@ -244,6 +256,7 @@ where
                             {
                                 false
                             }
+
                             Some(Child::Comment(..)) => false,
                             Some(Child::Element(Element {
                                 namespace,
@@ -268,6 +281,7 @@ where
                             {
                                 false
                             }
+
                             _ => true,
                         }) =>
                 {
@@ -286,6 +300,7 @@ where
                             !matches!(prev, Some(Child::Element(element)) if element.namespace == Namespace::HTML
                                         && element.tag_name == "colgroup")
                         }
+
                         _ => false,
                     } =>
                 {
@@ -306,11 +321,13 @@ where
                                 "tbody" | "thead" | "tfoot"
                             ))
                         }
+
                         _ => false,
                     } =>
                 {
                     true
                 }
+
                 _ => false,
             };
 
@@ -343,6 +360,7 @@ where
 
         if !can_omit_start_tag {
             write_raw!(self, "<");
+
             write_raw!(self, &n.tag_name);
 
             if has_attributes {
@@ -441,6 +459,7 @@ where
                         {
                             false
                         }
+
                         Some(Child::Comment(..)) => false,
                         _ => true,
                     },
@@ -493,6 +512,7 @@ where
                         {
                             true
                         }
+
                         None if match parent {
                             Some(Element {
                                 namespace,
@@ -518,11 +538,13 @@ where
                             {
                                 true
                             }
+
                             _ => false,
                         } =>
                         {
                             true
                         }
+
                         _ => false,
                     },
                     // An li element's end tag can be omitted if the li element is immediately
@@ -538,6 +560,7 @@ where
                         {
                             true
                         }
+
                         _ => false,
                     } =>
                     {
@@ -563,6 +586,7 @@ where
                         {
                             true
                         }
+
                         _ => false,
                     },
                     // A dd element's end tag can be omitted if the dd element is immediately
@@ -578,6 +602,7 @@ where
                         {
                             true
                         }
+
                         None => true,
                         _ => false,
                     },
@@ -598,6 +623,7 @@ where
                         {
                             true
                         }
+
                         None => true,
                         _ => false,
                     },
@@ -617,6 +643,7 @@ where
                         {
                             true
                         }
+
                         None => true,
                         _ => false,
                     },
@@ -633,6 +660,7 @@ where
                         {
                             true
                         }
+
                         None => true,
                         _ => false,
                     },
@@ -662,6 +690,7 @@ where
                         {
                             true
                         }
+
                         None => true,
                         _ => false,
                     },
@@ -676,6 +705,7 @@ where
                         {
                             false
                         }
+
                         Some(Child::Comment(..)) => false,
                         _ => true,
                     },
@@ -692,6 +722,7 @@ where
                         {
                             true
                         }
+
                         None => true,
                         _ => false,
                     },
@@ -707,6 +738,7 @@ where
                         {
                             true
                         }
+
                         _ => false,
                     },
                     // A tfoot element's end tag can be omitted if there is no more content in the
@@ -737,6 +769,7 @@ where
                         {
                             true
                         }
+
                         None => true,
                         _ => false,
                     },
@@ -748,8 +781,11 @@ where
         }
 
         write_raw!(self, "<");
+
         write_raw!(self, "/");
+
         write_raw!(self, &n.tag_name);
+
         write_raw!(self, ">");
 
         Ok(())
@@ -777,6 +813,7 @@ where
 
         if let Some(prefix) = &n.prefix {
             attribute.push_str(prefix);
+
             attribute.push(':');
         }
 
@@ -801,7 +838,9 @@ where
                 let normalized = escape_string(value, true);
 
                 attribute.push('"');
+
                 attribute.push_str(&normalized);
+
                 attribute.push('"');
             }
         }
@@ -827,7 +866,9 @@ where
         let mut comment = String::with_capacity(n.data.len() + 7);
 
         comment.push_str("<!--");
+
         comment.push_str(&n.data);
+
         comment.push_str("-->");
 
         write_multiline_raw!(self, n.span, &comment);
@@ -853,6 +894,7 @@ where
             TagOmissionParent::DocumentFragment(document_fragment) => &document_fragment.children,
             TagOmissionParent::Element(element) => &element.children,
         };
+
         let parent = match parent {
             TagOmissionParent::Element(element) => Some(element),
             _ => None,
@@ -862,10 +904,12 @@ where
             match node {
                 Child::Element(element) => {
                     let prev = if idx > 0 { nodes.get(idx - 1) } else { None };
+
                     let next = nodes.get(idx + 1);
 
                     self.basic_emit_element(element, parent, prev, next)?;
                 }
+
                 _ => {
                     emit!(self, node)
                 }
@@ -898,9 +942,11 @@ where
     fn write_delim(&mut self, f: ListFormat) -> Result {
         match f & ListFormat::DelimitersMask {
             ListFormat::None => {}
+
             ListFormat::SpaceDelimited => {
                 space!(self)
             }
+
             _ => unreachable!(),
         }
 
@@ -928,7 +974,9 @@ fn minify_attribute_value(value: &str, quotes: bool) -> (Cow<'_, str>, Option<ch
     let mut minified = String::with_capacity(value.len());
 
     let mut unquoted = true;
+
     let mut dq = 0;
+
     let mut sq = 0;
 
     let mut chars = value.chars().peekable();
@@ -943,6 +991,7 @@ fn minify_attribute_value(value: &str, quotes: bool) -> (Cow<'_, str>, Option<ch
                         minified.push_str(&minify_amp(next, &mut chars));
                     } else {
                         minified.push('&');
+
                         minified.push(next);
                     }
                 } else {
@@ -951,6 +1000,7 @@ fn minify_attribute_value(value: &str, quotes: bool) -> (Cow<'_, str>, Option<ch
 
                 continue;
             }
+
             c if c.is_ascii_whitespace() => {
                 unquoted = false;
             }
@@ -959,10 +1009,12 @@ fn minify_attribute_value(value: &str, quotes: bool) -> (Cow<'_, str>, Option<ch
             }
             '"' => {
                 unquoted = false;
+
                 dq += 1;
             }
             '\'' => {
                 unquoted = false;
+
                 sq += 1;
             }
 
@@ -999,6 +1051,7 @@ fn minify_text(value: &str) -> Cow<'_, str> {
     }
 
     let mut result = String::with_capacity(value.len());
+
     let mut chars = value.chars().peekable();
 
     while let Some(c) = chars.next() {
@@ -1011,6 +1064,7 @@ fn minify_text(value: &str) -> Cow<'_, str> {
                         result.push_str(&minify_amp(next, &mut chars));
                     } else {
                         result.push('&');
+
                         result.push(next);
                     }
                 } else {
@@ -1020,6 +1074,7 @@ fn minify_text(value: &str) -> Cow<'_, str> {
             '<' => {
                 result.push_str("&lt;");
             }
+
             _ => result.push(c),
         }
     }
@@ -1037,27 +1092,37 @@ fn minify_amp(next: char, chars: &mut Peekable<Chars>) -> String {
                 // Prevent `&amp;#38;` -> `&#38`
                 Some(number @ '0'..='9') => {
                     result.push_str("&amp;");
+
                     result.push(hash);
+
                     result.push(number);
                 }
+
                 Some(x @ 'x' | x @ 'X') => {
                     match chars.peek() {
                         // HEX CODE
                         // Prevent `&amp;#x38;` -> `&#x38`
                         Some(c) if c.is_ascii_hexdigit() => {
                             result.push_str("&amp;");
+
                             result.push(hash);
+
                             result.push(x);
                         }
+
                         _ => {
                             result.push('&');
+
                             result.push(hash);
+
                             result.push(x);
                         }
                     }
                 }
+
                 any => {
                     result.push('&');
+
                     result.push(hash);
 
                     if let Some(any) = any {
@@ -1072,6 +1137,7 @@ fn minify_amp(next: char, chars: &mut Peekable<Chars>) -> String {
             let mut entity_temporary_buffer = String::with_capacity(33);
 
             entity_temporary_buffer.push('&');
+
             entity_temporary_buffer.push(c);
 
             let mut found_entity = false;
@@ -1097,14 +1163,18 @@ fn minify_amp(next: char, chars: &mut Peekable<Chars>) -> String {
 
             if found_entity {
                 result.push_str("&amp;");
+
                 result.push_str(&entity_temporary_buffer[1..]);
             } else {
                 result.push('&');
+
                 result.push_str(&entity_temporary_buffer[1..]);
             }
         }
+
         any => {
             result.push('&');
+
             result.push(any);
         }
     }
@@ -1157,6 +1227,7 @@ fn escape_string(value: &str, is_attribute_mode: bool) -> Cow<'_, str> {
             '>' if !is_attribute_mode => {
                 result.push_str("&gt;");
             }
+
             _ => result.push(c),
         }
     }

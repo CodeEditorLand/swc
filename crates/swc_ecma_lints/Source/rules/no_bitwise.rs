@@ -36,7 +36,9 @@ impl NoBitwise {
         let rule_config = config.get_rule_config();
 
         let mut allow_binary_ops: Option<AHashSet<BinaryOp>> = None;
+
         let mut allow_assign_ops: Option<AHashSet<AssignOp>> = None;
+
         let mut allow_bitwise_not: bool = false;
 
         if let Some(allow) = &rule_config.allow {
@@ -80,6 +82,7 @@ impl NoBitwise {
                             _ => false,
                         };
                     }
+
                     _ => {}
                 };
             });
@@ -101,9 +104,11 @@ impl NoBitwise {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, &message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, &message).emit();
             }
+
             _ => {}
         });
     }
@@ -123,6 +128,7 @@ impl Visit for NoBitwise {
             op!("&") | op!("^") | op!("<<") | op!(">>") | op!(">>>") | op!(">>>") => {
                 self.emit_report(bin_expr.span, bin_expr.op.as_str());
             }
+
             op!("|") => {
                 if self.allow_int_32_hint {
                     if let Expr::Lit(Lit::Num(Number { value, .. })) = bin_expr.right.as_ref() {
@@ -134,6 +140,7 @@ impl Visit for NoBitwise {
 
                 self.emit_report(bin_expr.span, bin_expr.op.as_str());
             }
+
             _ => {}
         }
 
@@ -163,6 +170,7 @@ impl Visit for NoBitwise {
             op!("|=") | op!("&=") | op!("<<=") | op!(">>=") | op!(">>>=") | op!("^=") => {
                 self.emit_report(assign_expr.span, assign_expr.op.as_str());
             }
+
             _ => {}
         }
     }

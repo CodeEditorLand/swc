@@ -55,9 +55,11 @@ impl Eqeqeq {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, &message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, &message).emit();
             }
+
             _ => {}
         });
     }
@@ -69,21 +71,25 @@ impl Eqeqeq {
                     self.emit_report(span, "==", "===");
                 }
             }
+
             op!("!=") => {
                 if let EqEqEqMode::Always = self.mode {
                     self.emit_report(span, "!=", "!==");
                 }
             }
+
             op!("===") => {
                 if let EqEqEqMode::Never = self.mode {
                     self.emit_report(span, "===", "==");
                 }
             }
+
             op!("!==") => {
                 if let EqEqEqMode::Never = self.mode {
                     self.emit_report(span, "!==", "!=");
                 }
             }
+
             _ => {}
         }
     }

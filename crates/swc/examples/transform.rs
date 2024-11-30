@@ -8,6 +8,7 @@ fn main() {
 	let cm = Arc::<SourceMap>::default();
 
 	let c = swc::Compiler::new(cm.clone());
+
 	let output = GLOBALS
 		.set(&Default::default(), || {
 			try_with_handler(cm.clone(), Default::default(), |handler| {
@@ -22,9 +23,11 @@ fn main() {
 		.unwrap();
 
 	println!("{}", output.code);
+
 	let cm = Arc::<SourceMap>::default();
 
 	let c = swc::Compiler::new(cm.clone());
+
 	let output = GLOBALS
 		.set(&Default::default(), || {
 			try_with_handler(cm.clone(), Default::default(), |handler| {
@@ -39,9 +42,11 @@ fn main() {
 		.unwrap();
 
 	println!("{}", output.code);
+
     let cm = Arc::<SourceMap>::default();
 
     let c = swc::Compiler::new(cm.clone());
+
     let output = GLOBALS
         .set(&Default::default(), || {
             try_with_handler(cm.clone(), Default::default(), |handler| {

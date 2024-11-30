@@ -100,7 +100,9 @@ pub fn optimize(
     let _timer = timer!("minify");
 
     let mut marks = Marks::new();
+
     marks.top_level_ctxt = SyntaxContext::empty().apply_mark(extra.top_level_mark);
+
     marks.unresolved_mark = extra.unresolved_mark;
 
     debug_assert_valid(&n);
@@ -115,6 +117,7 @@ pub fn optimize(
 
         if !defs.is_empty() {
             let defs = defs.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+
             n.visit_mut_with(&mut global_defs::globals_defs(
                 defs,
                 extra.unresolved_mark,
@@ -127,6 +130,7 @@ pub fn optimize(
         let _timer = timer!("precompress");
 
         n.visit_mut_with(&mut precompress_optimizer());
+
         debug_assert_valid(&n);
     }
 
@@ -137,6 +141,7 @@ pub fn optimize(
             marks,
             // extra.unresolved_mark,
         ));
+
         debug_assert_valid(&n);
     }
 
@@ -149,12 +154,15 @@ pub fn optimize(
         // TODO: enclose
         // toplevel = toplevel.wrap_enclose(options.enclose);
     }
+
     if let Some(ref mut t) = timings {
         t.section("compress");
     }
+
     if let Some(options) = &options.compress {
         if options.unused {
             perform_dce(&mut n, options, extra);
+
             debug_assert_valid(&n);
         }
     }
@@ -176,6 +184,7 @@ pub fn optimize(
     if let Some(ref mut t) = timings {
         t.section("compress");
     }
+
     if let Some(c) = &options.compress {
         {
             let _timer = timer!("compress ast");
@@ -195,6 +204,7 @@ pub fn optimize(
         n.visit_mut_with(&mut postcompress_optimizer(c));
 
         let mut pass = 0;
+
         loop {
             pass += 1;
 
@@ -208,7 +218,9 @@ pub fn optimize(
                     debug_infinite_loop: false,
                 },
             );
+
             n.visit_mut_with(&mut v);
+
             if !v.changed() || c.passes <= pass {
                 break;
             }
@@ -218,6 +230,7 @@ pub fn optimize(
     if let Some(ref mut _t) = timings {
         // TODO: store `scope`
     }
+
     if options.mangle.is_some() {
         // toplevel.figure_out_scope(options.mangle);
     }
@@ -257,6 +270,7 @@ pub fn optimize(
 
     if let Some(ref mut t) = timings {
         t.section("hygiene");
+
         t.end_section();
     }
 
@@ -285,6 +299,7 @@ fn perform_dce(m: &mut Program, options: &CompressOptions, extra: &ExtraOptions)
         #[cfg(feature = "debug")]
         if visitor.changed() {
             let src = crate::debug::dump(&*m, false);
+
             tracing::debug!(
                 "===== Before DCE =====\n{}\n===== After DCE =====\n{}",
                 start,

@@ -309,6 +309,7 @@ impl<T> Default for Vec<T> {
 
 impl<T> IntoIterator for Vec<T> {
     type IntoIter = std::vec::IntoIter<T, FastAlloc>;
+
     type Item = T;
 
     #[inline(always)]
@@ -318,6 +319,7 @@ impl<T> IntoIterator for Vec<T> {
 }
 impl<'a, T> IntoIterator for &'a Vec<T> {
     type IntoIter = std::slice::Iter<'a, T>;
+
     type Item = &'a T;
 
     #[inline(always)]
@@ -328,6 +330,7 @@ impl<'a, T> IntoIterator for &'a Vec<T> {
 
 impl<'a, T> IntoIterator for &'a mut Vec<T> {
     type IntoIter = std::slice::IterMut<'a, T>;
+
     type Item = &'a mut T;
 
     #[inline(always)]
@@ -340,7 +343,9 @@ impl<T> FromIterator<T> for Vec<T> {
     #[inline(always)]
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut vec = Vec::default();
+
         vec.extend(iter);
+
         vec
     }
 }

@@ -52,6 +52,7 @@ impl PrivateRecord {
         }
 
         let error = format!("private name #{} is not defined.", name);
+
         HANDLER.with(|handler| handler.struct_span_err(span, &error).emit());
         (Mark::root(), PrivateKind::default(), &self.0[0].class_name)
     }
@@ -99,8 +100,10 @@ impl VisitMut for BrandCheckHandler<'_> {
                 right,
             }) if left.is_private_name() => {
                 let n = left.as_private_name().unwrap();
+
                 if let Expr::Ident(right) = &**right {
                     let curr_class = self.private.curr_class();
+
                     if curr_class.sym == right.sym && curr_class.ctxt == right.ctxt {
                         *e = BinExpr {
                             span: *span,
@@ -109,6 +112,7 @@ impl VisitMut for BrandCheckHandler<'_> {
                             right: right.clone().into(),
                         }
                         .into();
+
                         return;
                     }
                 }
@@ -127,6 +131,7 @@ impl VisitMut for BrandCheckHandler<'_> {
                         right: class_name.clone().into(),
                     }
                     .into();
+
                     return;
                 }
 
@@ -236,8 +241,11 @@ impl VisitMut for PrivateAccessVisitor<'_> {
                     },
                     self.unresolved_mark,
                 );
+
                 e.visit_mut_with(&mut v);
+
                 assert!(!e.is_opt_chain(), "optional chaining should be removed");
+
                 self.vars.extend(v.take_vars());
             }
         }
@@ -250,7 +258,9 @@ impl VisitMut for PrivateAccessVisitor<'_> {
             }) = e
             {
                 obj.visit_mut_children_with(self);
+
                 let (mark, _, _) = self.private.get(n.span, &n.name);
+
                 let ident = Ident::new(
                     format!("_{}", n.name).into(),
                     n.span,
@@ -268,6 +278,7 @@ impl VisitMut for PrivateAccessVisitor<'_> {
             } else {
                 e.visit_mut_children_with(self)
             }
+
             return;
         }
 
@@ -276,7 +287,9 @@ impl VisitMut for PrivateAccessVisitor<'_> {
                 let old_access_type = self.private_access_type;
 
                 self.private_access_type = PrivateAccessType::Update;
+
                 arg.visit_mut_with(self);
+
                 self.private_access_type = old_access_type;
             }
 
@@ -287,7 +300,9 @@ impl VisitMut for PrivateAccessVisitor<'_> {
                 right,
             }) if left.as_simple().is_some() && left.as_simple().unwrap().is_member() => {
                 let mut left: MemberExpr = left.take().expect_simple().expect_member();
+
                 left.visit_mut_with(self);
+
                 right.visit_mut_with(self);
 
                 let n = match &left.prop {
@@ -308,6 +323,7 @@ impl VisitMut for PrivateAccessVisitor<'_> {
                 let obj = left.obj.clone();
 
                 let (mark, kind, class_name) = self.private.get(n.span, &n.name);
+
                 if mark == Mark::root() {
                     return;
                 }
@@ -331,6 +347,7 @@ impl VisitMut for PrivateAccessVisitor<'_> {
                         init: None,
                         definite: false,
                     });
+
                     Box::new(
                         AssignExpr {
                             span: obj.span(),
@@ -406,17 +423,22 @@ impl VisitMut for PrivateAccessVisitor<'_> {
                 ..
             }) => {
                 right.visit_mut_with(self);
+
                 let old_access_type = self.private_access_type;
 
                 self.private_access_type = PrivateAccessType::DestructureSet;
+
                 left.visit_mut_with(self);
+
                 self.private_access_type = old_access_type;
             }
 
             // Actually this is a call and we should bind `this`.
             Expr::TaggedTpl(TaggedTpl { span, tag, tpl, .. }) if tag.is_member() => {
                 let mut tag = tag.take().member().unwrap();
+
                 tag.visit_mut_with(self);
+
                 tpl.visit_mut_with(self);
 
                 let (expr, this) = self.visit_mut_private_get(&mut tag, None);
@@ -453,10 +475,13 @@ impl VisitMut for PrivateAccessVisitor<'_> {
                 ..
             }) if callee.is_member() => {
                 let mut callee = callee.take().member().unwrap();
+
                 callee.visit_mut_with(self);
+
                 args.visit_mut_with(self);
 
                 let (expr, this) = self.visit_mut_private_get(&mut callee, None);
+
                 if let Some(this) = this {
                     *e = CallExpr {
                         span: *span,
@@ -510,8 +535,11 @@ impl VisitMut for PrivateAccessVisitor<'_> {
                     },
                     self.unresolved_mark,
                 );
+
                 e.visit_mut_with(&mut v);
+
                 assert!(!e.is_opt_chain(), "optional chaining should be removed");
+
                 self.vars.extend(v.take_vars());
             }
         }
@@ -524,7 +552,9 @@ impl VisitMut for PrivateAccessVisitor<'_> {
             }) = e
             {
                 obj.visit_mut_children_with(self);
+
                 let (mark, _, _) = self.private.get(n.span, &n.name);
+
                 let ident = Ident::new(
                     format!("_{}", n.name).into(),
                     n.span,
@@ -542,6 +572,7 @@ impl VisitMut for PrivateAccessVisitor<'_> {
             } else {
                 e.visit_mut_children_with(self)
             }
+
             return;
         }
 
@@ -553,8 +584,11 @@ impl VisitMut for PrivateAccessVisitor<'_> {
             if let Expr::Member(me) = &**expr {
                 if let MemberProp::PrivateName(..) = &me.prop {
                     let old_access_type = self.private_access_type;
+
                     self.private_access_type = PrivateAccessType::DestructureSet;
+
                     p.visit_mut_children_with(self);
+
                     self.private_access_type = old_access_type;
 
                     return;
@@ -563,6 +597,7 @@ impl VisitMut for PrivateAccessVisitor<'_> {
         }
 
         self.private_access_type = Default::default();
+
         p.visit_mut_children_with(self);
     }
 }
@@ -607,6 +642,7 @@ impl PrivateAccessVisitor<'_> {
         let mut obj = e.obj.take();
 
         let (mark, kind, class_name) = self.private.get(n.span, &n.name);
+
         if mark == Mark::root() {
             return (Expr::dummy(), None);
         }
@@ -620,6 +656,7 @@ impl PrivateAccessVisitor<'_> {
             n.span,
             SyntaxContext::empty().apply_mark(mark),
         );
+
         let ident = Ident::new(
             format!("_{}", n.name).into(),
             n.span,
@@ -647,6 +684,7 @@ impl PrivateAccessVisitor<'_> {
                         Some(*obj),
                     );
                 }
+
                 PrivateAccessType::Update => {
                     let set = helper!(class_static_private_field_update);
 
@@ -667,6 +705,7 @@ impl PrivateAccessVisitor<'_> {
                         Some(*obj),
                     );
                 }
+
                 _ => {}
             }
 
@@ -719,6 +758,7 @@ impl PrivateAccessVisitor<'_> {
                         Some(*obj),
                     )
                 }
+
                 PrivateAccessType::Update => {
                     let set = helper!(class_private_field_update);
 
@@ -738,6 +778,7 @@ impl PrivateAccessVisitor<'_> {
 
                 PrivateAccessType::Get if kind.is_writeonly() => {
                     let helper = helper!(write_only_error);
+
                     let expr = Box::new(
                         CallExpr {
                             span: DUMMY_SP,
@@ -793,10 +834,13 @@ impl PrivateAccessVisitor<'_> {
                         ),
                         _ => {
                             let mut aliased = false;
+
                             let var = obj_alias.unwrap_or_else(|| {
                                 let (var, a) = alias_if_required(&obj, "_ref");
+
                                 if a {
                                     aliased = true;
+
                                     self.vars.push(VarDeclarator {
                                         span: DUMMY_SP,
                                         name: var.clone().into(),
@@ -804,6 +848,7 @@ impl PrivateAccessVisitor<'_> {
                                         definite: false,
                                     });
                                 }
+
                                 var
                             });
 

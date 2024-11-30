@@ -66,6 +66,7 @@ where
         if let Some(top_level_ctxt) = self.top_level_for_eval {
             if i.ctxt == top_level_ctxt {
                 self.preserved.insert(I::from_ident(i));
+
                 return;
             }
         }
@@ -85,10 +86,12 @@ where
 
         for p in &n.params {
             self.is_pat_decl = true;
+
             p.visit_with(self);
         }
 
         n.body.visit_with(self);
+
         self.is_pat_decl = old;
     }
 
@@ -110,11 +113,15 @@ where
 
     fn visit_catch_clause(&mut self, node: &CatchClause) {
         let old = self.is_pat_decl;
+
         self.is_pat_decl = true;
+
         node.param.visit_with(self);
 
         self.is_pat_decl = false;
+
         node.body.visit_with(self);
+
         self.is_pat_decl = old;
     }
 
@@ -134,8 +141,11 @@ where
 
     fn visit_expr(&mut self, node: &Expr) {
         let old = self.is_pat_decl;
+
         self.is_pat_decl = false;
+
         node.visit_children_with(self);
+
         self.is_pat_decl = old;
     }
 
@@ -171,8 +181,11 @@ where
 
     fn visit_param(&mut self, node: &Param) {
         let old = self.is_pat_decl;
+
         self.is_pat_decl = true;
+
         node.visit_children_with(self);
+
         self.is_pat_decl = old;
     }
 
@@ -180,6 +193,7 @@ where
         let old = self.is_pat_decl;
 
         self.is_pat_decl = true;
+
         p.visit_children_with(self);
 
         self.is_pat_decl = old;
@@ -187,11 +201,15 @@ where
 
     fn visit_var_declarator(&mut self, node: &VarDeclarator) {
         let old = self.is_pat_decl;
+
         self.is_pat_decl = true;
+
         node.name.visit_with(self);
 
         self.is_pat_decl = false;
+
         node.init.visit_with(self);
+
         self.is_pat_decl = old;
     }
 }
@@ -211,6 +229,7 @@ where
         is_pat_decl: false,
         top_level_for_eval: top_level_mark_for_eval.map(|m| SyntaxContext::empty().apply_mark(m)),
     };
+
     n.visit_with(&mut v);
     (v.bindings, v.preserved)
 }

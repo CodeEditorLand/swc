@@ -51,6 +51,7 @@ macro_rules! forward {
         pub fn $n(&self, $($name: $ty),*) -> &Self {
             #[allow(deprecated)]
             self.diagnostic.$n($($name),*);
+
             self
         }
     };
@@ -60,6 +61,7 @@ macro_rules! forward {
         pub fn $n(&mut self, $($name: $ty),*) -> &mut Self {
             #[allow(deprecated)]
             self.diagnostic.$n($($name),*);
+
             self
         }
     };
@@ -73,6 +75,7 @@ macro_rules! forward {
         pub fn $n<S: Into<MultiSpan>>(&mut self, $($name: $ty),*) -> &mut Self {
             #[allow(deprecated)]
             self.diagnostic.$n($($name),*);
+
             self
         }
     };
@@ -161,6 +164,7 @@ impl<'a> DiagnosticBuilder<'a> {
         }
 
         self.handler.emit_db(self);
+
         self.cancel();
     }
 
@@ -169,12 +173,14 @@ impl<'a> DiagnosticBuilder<'a> {
     pub fn buffer(mut self, buffered_diagnostics: &mut Vec<Diagnostic>) {
         if self.handler.flags.dont_buffer_diagnostics || self.handler.flags.treat_err_as_bug {
             self.emit();
+
             return;
         }
 
         // We need to use `ptr::read` because `DiagnosticBuilder`
         // implements `Drop`.
         let diagnostic;
+
         unsafe {
             diagnostic = ::std::ptr::read(&self.diagnostic);
             ::std::mem::forget(self);
@@ -184,6 +190,7 @@ impl<'a> DiagnosticBuilder<'a> {
         if cfg!(feature = "debug") {
             debug!("buffer: diagnostic={:?}", diagnostic);
         }
+
         buffered_diagnostics.push(*diagnostic);
     }
 
@@ -196,7 +203,9 @@ impl<'a> DiagnosticBuilder<'a> {
         span: Option<S>,
     ) -> &mut Self {
         let span = span.map(|s| s.into()).unwrap_or_default();
+
         self.diagnostic.sub(level, message, span, None);
+
         self
     }
 
@@ -212,7 +221,9 @@ impl<'a> DiagnosticBuilder<'a> {
     /// locally in whichever way makes the most sense.
     pub fn delay_as_bug(&mut self) {
         self.level = Level::Bug;
+
         self.handler.delay_as_bug(*self.diagnostic.clone());
+
         self.cancel();
     }
 
@@ -224,6 +235,7 @@ impl<'a> DiagnosticBuilder<'a> {
     /// called the primary span.
     pub fn span_label<T: Into<String>>(&mut self, span: Span, label: T) -> &mut Self {
         self.diagnostic.span_label(span, label);
+
         self
     }
 
@@ -236,8 +248,10 @@ impl<'a> DiagnosticBuilder<'a> {
         if !self.allow_suggestions {
             return self;
         }
+
         self.diagnostic
             .multipart_suggestion_with_applicability(msg, suggestion, applicability);
+
         self
     }
 
@@ -251,8 +265,10 @@ impl<'a> DiagnosticBuilder<'a> {
         if !self.allow_suggestions {
             return self;
         }
+
         self.diagnostic
             .span_suggestion_with_applicability(sp, msg, suggestion, applicability);
+
         self
     }
 
@@ -266,8 +282,10 @@ impl<'a> DiagnosticBuilder<'a> {
         if !self.allow_suggestions {
             return self;
         }
+
         self.diagnostic
             .span_suggestions_with_applicability(sp, msg, suggestions, applicability);
+
         self
     }
 
@@ -281,17 +299,20 @@ impl<'a> DiagnosticBuilder<'a> {
         if !self.allow_suggestions {
             return self;
         }
+
         self.diagnostic.span_suggestion_short_with_applicability(
             sp,
             msg,
             suggestion,
             applicability,
         );
+
         self
     }
 
     pub fn allow_suggestions(&mut self, allow: bool) -> &mut Self {
         self.allow_suggestions = allow;
+
         self
     }
 
@@ -310,6 +331,7 @@ impl<'a> DiagnosticBuilder<'a> {
         message: &str,
     ) -> DiagnosticBuilder<'a> {
         let diagnostic = Diagnostic::new_with_code(level, code, message);
+
         DiagnosticBuilder::new_diagnostic(handler, diagnostic)
     }
 
@@ -341,7 +363,9 @@ impl Drop for DiagnosticBuilder<'_> {
                 Level::Bug,
                 "Error constructed but not emitted",
             );
+
             db.emit();
+
             panic!();
         }
     }

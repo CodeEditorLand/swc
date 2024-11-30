@@ -49,6 +49,7 @@ impl Pure<'_> {
                             {
                                 l.kind == VarDeclKind::Var
                             }
+
                             _ => false,
                         },
                         _ => false,
@@ -60,11 +61,13 @@ impl Pure<'_> {
         }
 
         report_change!("join_vars: Joining variables");
+
         self.changed = true;
 
         let mut cur: Option<Box<VarDecl>> = None;
 
         let mut new: Vec<T> = Vec::with_capacity(stmts.len() * 2 + 1);
+
         stmts.take().into_iter().for_each(|stmt| {
             match stmt.try_into_stmt() {
                 Ok(stmt) => {
@@ -77,10 +80,12 @@ impl Pure<'_> {
                             Some(v) if var.kind == v.kind => {
                                 v.decls.extend(var.decls);
                             }
+
                             _ => {
                                 if let Some(s) = cur.take().map(|c| c.into()) {
                                     new.push(T::from(s));
                                 }
+
                                 cur = Some(var);
                             }
                         },
@@ -98,18 +103,22 @@ impl Pure<'_> {
                                     Some(cur) if cur.kind == var.kind => {
                                         // Merge
                                         cur.decls.append(&mut var.decls);
+
                                         var.decls = cur.decls.take();
 
                                         new.push(T::from(stmt.into()));
                                     }
+
                                     _ => {
                                         if let Some(s) = cur.take() {
                                             new.push(T::from(s.into()));
                                         }
+
                                         new.push(T::from(stmt.into()));
                                     }
                                 }
                             }
+
                             None if cur
                                 .as_ref()
                                 .map(|v| v.kind == VarDeclKind::Var)
@@ -122,10 +131,12 @@ impl Pure<'_> {
 
                                 new.push(T::from(stmt.into()));
                             }
+
                             _ => {
                                 if let Some(s) = cur.take() {
                                     new.push(T::from(s.into()));
                                 }
+
                                 new.push(T::from(stmt.into()));
                             }
                         },
@@ -133,14 +144,17 @@ impl Pure<'_> {
                             if let Some(s) = cur.take() {
                                 new.push(T::from(s.into()));
                             }
+
                             new.push(T::from(stmt));
                         }
                     }
                 }
+
                 Err(item) => {
                     if let Some(s) = cur.take() {
                         new.push(T::from(s.into()));
                     }
+
                     new.push(item);
                 }
             }
@@ -188,8 +202,11 @@ impl Pure<'_> {
 
         {
             let mut need_work = false;
+
             let mut found_vars_without_init = false;
+
             let mut found_other = false;
+
             let if_need_work = stmts.iter().any(|stmt| {
                 match stmt.as_stmt() {
                     Some(Stmt::Decl(Decl::Var(v))) if v.kind == target => {
@@ -205,6 +222,7 @@ impl Pure<'_> {
                             if found_vars_without_init && self.options.join_vars {
                                 need_work = true;
                             }
+
                             found_other = true;
                         }
                     }
@@ -212,6 +230,7 @@ impl Pure<'_> {
                     // Directives
                     Some(Stmt::Expr(s)) => match &*s.expr {
                         Expr::Lit(Lit::Str(..)) => {}
+
                         _ => {
                             found_other = true;
                         }
@@ -221,6 +240,7 @@ impl Pure<'_> {
                         found_other = true;
                     }
                 }
+
                 need_work
             });
 
@@ -232,11 +252,14 @@ impl Pure<'_> {
                     found_var_without_init: Default::default(),
                     found_var_with_init: Default::default(),
                 };
+
                 stmts.visit_with(&mut v);
+
                 v.need_work
             } else {
                 false
             };
+
             if !if_need_work && !visitor_need_work {
                 return;
             }
@@ -244,6 +267,7 @@ impl Pure<'_> {
 
         // TODO(kdy1): Fix this. This results in an infinite loop.
         // self.changed = true;
+
         report_change!("collapse_vars: Collapsing variables without an initializer");
 
         let vars = {
@@ -252,6 +276,7 @@ impl Pure<'_> {
                 vars: Default::default(),
                 var_decl_kind: Default::default(),
             };
+
             stmts.visit_mut_with(&mut v);
 
             v.vars
@@ -260,6 +285,7 @@ impl Pure<'_> {
         // Prepend vars
 
         let mut prepender = VarPrepender { target, vars };
+
         if target == VarDeclKind::Var {
             stmts.visit_mut_with(&mut prepender);
         }
@@ -268,8 +294,10 @@ impl Pure<'_> {
             match stmts.get_mut(0).and_then(|v| v.as_stmt_mut()) {
                 Some(Stmt::Decl(Decl::Var(v))) if v.kind == target => {
                     prepender.vars.append(&mut v.decls);
+
                     v.decls = prepender.vars;
                 }
+
                 _ => {
                     prepend_stmt(
                         stmts,
@@ -320,12 +348,14 @@ impl Visit for VarWithOutInitCounter {
         }
 
         let mut found_init = false;
+
         for d in &v.decls {
             if d.init.is_some() {
                 found_init = true;
             } else {
                 if found_init {
                     self.need_work = true;
+
                     return;
                 }
             }
@@ -335,6 +365,7 @@ impl Visit for VarWithOutInitCounter {
             if self.found_var_without_init || self.found_var_with_init {
                 self.need_work = true;
             }
+
             self.found_var_without_init = true;
         } else {
             self.found_var_with_init = true;
@@ -415,14 +446,18 @@ impl VisitMut for VarMover {
             Stmt::Decl(Decl::Var(v)) if v.decls.is_empty() => {
                 s.take();
             }
+
             _ => {}
         }
     }
 
     fn visit_mut_var_decl(&mut self, v: &mut VarDecl) {
         let old = self.var_decl_kind.take();
+
         self.var_decl_kind = Some(v.kind);
+
         v.visit_mut_children_with(self);
+
         self.var_decl_kind = old;
     }
 
@@ -521,6 +556,7 @@ impl VisitMut for VarPrepender {
 
         if v.decls.iter().any(|d| d.init.is_some()) {
             let mut decls = self.vars.take();
+
             decls.extend(v.decls.take());
 
             v.decls = decls;

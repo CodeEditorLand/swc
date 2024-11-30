@@ -26,27 +26,34 @@ impl<'a, I: Tokens> Parser<I> {
         let old_ctx = self.ctx();
 
         let stmts = Arena::new();
+
         while {
             if self.input.cur().is_none() && end.is_some() {
                 let eof_text = self.input.dump_cur();
+
                 self.emit_err(
                     self.input.cur_span(),
                     SyntaxError::Expected(end.unwrap(), eof_text),
                 );
+
                 false
             } else {
                 let c = cur!(self, false).ok();
+
                 c != end
             }
         } {
             let stmt = self.parse_stmt_like(true, top_level)?;
+
             if allow_directives {
                 allow_directives = false;
+
                 if stmt.is_use_strict() {
                     let ctx = Context {
                         strict: true,
                         ..old_ctx
                     };
+
                     self.set_ctx(ctx);
 
                     if self.input.knows_cur() && !is!(self, ';') {
@@ -74,12 +81,14 @@ impl<'a, I: Tokens> Parser<I> {
     /// Parse a statement but not a declaration.
     pub fn parse_stmt(&mut self, top_level: bool) -> PResult<Stmt> {
         trace_cur!(self, parse_stmt);
+
         self.parse_stmt_like(false, top_level)
     }
 
     /// Parse a statement and maybe a declaration.
     pub fn parse_stmt_list_item(&mut self, top_level: bool) -> PResult<Stmt> {
         trace_cur!(self, parse_stmt_list_item);
+
         self.parse_stmt_like(true, top_level)
     }
 
@@ -94,6 +103,7 @@ impl<'a, I: Tokens> Parser<I> {
         let _tracing = debug_tracing!(self, "parse_stmt_like");
 
         let start = cur_pos!(self);
+
         let decorators = self.parse_decorators(true)?;
 
         if is_one_of!(self, "import", "export") {
@@ -105,6 +115,7 @@ impl<'a, I: Tokens> Parser<I> {
             allow_using_decl: true,
             ..self.ctx()
         };
+
         self.with_ctx(ctx)
             .parse_stmt_internal(start, include_decl, top_level, decorators)
             .map(From::from)
@@ -124,7 +135,9 @@ impl<'a, I: Tokens> Parser<I> {
 
         if is_typescript && is!(self, "const") && peeked_is!(self, "enum") {
             assert_and_bump!(self, "const");
+
             assert_and_bump!(self, "enum");
+
             return self
                 .parse_ts_enum_decl(start, true)
                 .map(Decl::from)
@@ -135,6 +148,7 @@ impl<'a, I: Tokens> Parser<I> {
             tok!("await") if include_decl || top_level => {
                 if top_level {
                     self.state.found_module_item = true;
+
                     if !self.ctx().can_be_module {
                         self.emit_err(self.input.cur_span(), SyntaxError::TopLevelAwaitInScript);
                     }
@@ -142,36 +156,46 @@ impl<'a, I: Tokens> Parser<I> {
 
                 if peeked_is!(self, "using") {
                     let eaten_await = Some(self.input.cur_pos());
+
                     assert_and_bump!(self, "await");
+
                     let v = self.parse_using_decl(start, true)?;
+
                     if let Some(v) = v {
                         return Ok(v.into());
                     }
 
                     let expr = self.parse_await_expr(eaten_await)?;
+
                     let expr = self
                         .include_in_expr(true)
                         .parse_bin_op_recursively(expr, 0)?;
+
                     eat!(self, ';');
 
                     let span = span!(self, start);
+
                     return Ok(ExprStmt { span, expr }.into());
                 }
             }
 
             tok!("break") | tok!("continue") => {
                 let is_break = is!(self, "break");
+
                 bump!(self);
 
                 let label = if eat!(self, ';') {
                     None
                 } else {
                     let i = self.parse_label_ident().map(Some)?;
+
                     expect!(self, ';');
+
                     i
                 };
 
                 let span = span!(self, start);
+
                 if is_break {
                     if label.is_some() && !self.state.labels.contains(&label.as_ref().unwrap().sym)
                     {
@@ -196,7 +220,9 @@ impl<'a, I: Tokens> Parser<I> {
 
             tok!("debugger") => {
                 bump!(self);
+
                 expect!(self, ';');
+
                 return Ok(DebuggerStmt {
                     span: span!(self, start),
                 }
@@ -223,6 +249,7 @@ impl<'a, I: Tokens> Parser<I> {
                 if !include_decl {
                     self.emit_err(self.input.cur_span(), SyntaxError::DeclNotAllowed);
                 }
+
                 return self
                     .parse_class_decl(start, start, decorators, false)
                     .map(Stmt::from);
@@ -247,9 +274,11 @@ impl<'a, I: Tokens> Parser<I> {
             // Error recovery
             tok!("catch") => {
                 let span = self.input.cur_span();
+
                 self.emit_err(span, SyntaxError::TS1005);
 
                 let _ = self.parse_catch_clause();
+
                 let _ = self.parse_finally_block();
 
                 return Ok(ExprStmt {
@@ -262,6 +291,7 @@ impl<'a, I: Tokens> Parser<I> {
             // Error recovery
             tok!("finally") => {
                 let span = self.input.cur_span();
+
                 self.emit_err(span, SyntaxError::TS1005);
 
                 let _ = self.parse_finally_block();
@@ -287,17 +317,20 @@ impl<'a, I: Tokens> Parser<I> {
 
             tok!("var") => {
                 let v = self.parse_var_stmt(false)?;
+
                 return Ok(v.into());
             }
 
             tok!("const") if include_decl => {
                 let v = self.parse_var_stmt(false)?;
+
                 return Ok(v.into());
             }
 
             // 'let' can start an identifier reference.
             tok!("let") if include_decl => {
                 let strict = self.ctx().strict;
+
                 let is_keyword = match peek!(self) {
                     Some(t) => t.kind().follows_keyword_let(strict),
                     _ => false,
@@ -305,12 +338,14 @@ impl<'a, I: Tokens> Parser<I> {
 
                 if is_keyword {
                     let v = self.parse_var_stmt(false)?;
+
                     return Ok(v.into());
                 }
             }
 
             tok!("using") if include_decl => {
                 let v = self.parse_using_decl(start, false)?;
+
                 if let Some(v) = v {
                     return Ok(v.into());
                 }
@@ -322,7 +357,9 @@ impl<'a, I: Tokens> Parser<I> {
                     && !self.input.has_linebreak_between_cur_and_peeked()
                 {
                     let start = self.input.cur_pos();
+
                     bump!(self);
+
                     return Ok(self.parse_ts_interface_decl(start)?.into());
                 }
             }
@@ -333,7 +370,9 @@ impl<'a, I: Tokens> Parser<I> {
                     && !self.input.has_linebreak_between_cur_and_peeked()
                 {
                     let start = self.input.cur_pos();
+
                     bump!(self);
+
                     return Ok(self.parse_ts_type_alias_decl(start)?.into());
                 }
             }
@@ -344,7 +383,9 @@ impl<'a, I: Tokens> Parser<I> {
                     && !self.input.has_linebreak_between_cur_and_peeked()
                 {
                     let start = self.input.cur_pos();
+
                     bump!(self);
+
                     return Ok(self.parse_ts_enum_decl(start, false)?.into());
                 }
             }
@@ -354,6 +395,7 @@ impl<'a, I: Tokens> Parser<I> {
                     allow_using_decl: true,
                     ..self.ctx()
                 };
+
                 return self.with_ctx(ctx).parse_block(false).map(Stmt::Block);
             }
 
@@ -368,6 +410,7 @@ impl<'a, I: Tokens> Parser<I> {
         }
 
         // Handle async function foo() {}
+
         if is!(self, "async")
             && peeked_is!(self, "function")
             && !self.input.has_linebreak_between_cur_and_peeked()
@@ -387,10 +430,13 @@ impl<'a, I: Tokens> Parser<I> {
                 if eat!(self, ':') {
                     return self.parse_labelled_stmt(ident);
                 }
+
                 ident.into()
             }
+
             _ => self.verify_expr(expr)?,
         };
+
         if let Expr::Ident(ref ident) = *expr {
             if &*ident.sym == "interface" && self.input.had_line_break_before_cur() {
                 self.emit_strict_mode_err(
@@ -419,6 +465,7 @@ impl<'a, I: Tokens> Parser<I> {
                 "enum" | "interface" => {
                     self.emit_strict_mode_err(span, SyntaxError::InvalidIdentInStrict(sym.clone()));
                 }
+
                 _ => {}
             }
         }
@@ -429,12 +476,14 @@ impl<'a, I: Tokens> Parser<I> {
                     "public" | "static" | "abstract" => {
                         if eat!(self, "interface") {
                             self.emit_err(i.span, SyntaxError::TS2427);
+
                             return self
                                 .parse_ts_interface_decl(start)
                                 .map(Decl::from)
                                 .map(Stmt::from);
                         }
                     }
+
                     _ => {}
                 }
             }
@@ -449,7 +498,9 @@ impl<'a, I: Tokens> Parser<I> {
         } else {
             if let Token::BinOp(..) = *cur!(self, false)? {
                 self.emit_err(self.input.cur_span(), SyntaxError::TS1005);
+
                 let expr = self.parse_bin_op_recursively(expr, 0)?;
+
                 return Ok(ExprStmt {
                     span: span!(self, start),
                     expr,
@@ -475,6 +526,7 @@ impl<'a, I: Tokens> Parser<I> {
             self.adjust_if_else_clause(prev_alt, alt)
         } else {
             debug_assert_eq!(cur.alt, None);
+
             cur.alt = Some(alt);
         }
     }
@@ -483,13 +535,16 @@ impl<'a, I: Tokens> Parser<I> {
         let start = cur_pos!(self);
 
         assert_and_bump!(self, "if");
+
         let if_token = self.input.prev_span();
 
         expect!(self, '(');
+
         let ctx = Context {
             ignore_else_clause: false,
             ..self.ctx()
         };
+
         let test = self
             .with_ctx(ctx)
             .include_in_expr(true)
@@ -514,10 +569,12 @@ impl<'a, I: Tokens> Parser<I> {
                 if !self.ctx().strict && is!(self, "function") {
                     // TODO: report error?
                 }
+
                 let ctx = Context {
                     ignore_else_clause: false,
                     ..self.ctx()
                 };
+
                 self.with_ctx(ctx).parse_stmt(false).map(Box::new)
             })?
         };
@@ -548,6 +605,7 @@ impl<'a, I: Tokens> Parser<I> {
 
                     // As we eat `else` above, we need to parse statement once.
                     let last = self.with_ctx(ctx).parse_stmt(false)?;
+
                     break Some(last);
                 }
 
@@ -559,6 +617,7 @@ impl<'a, I: Tokens> Parser<I> {
                     Some(cur) => {
                         self.adjust_if_else_clause(cur, Box::new(alt.into()));
                     }
+
                     _ => {
                         cur = Some(alt);
                     }
@@ -570,14 +629,17 @@ impl<'a, I: Tokens> Parser<I> {
                     if let Some(last) = last {
                         self.adjust_if_else_clause(&mut cur, Box::new(last));
                     }
+
                     Some(cur.into())
                 }
+
                 _ => last,
             }
         }
         .map(Box::new);
 
         let span = span!(self, start);
+
         Ok(IfStmt {
             span,
             test,
@@ -597,7 +659,9 @@ impl<'a, I: Tokens> Parser<I> {
             } else {
                 p.include_in_expr(true).parse_expr().map(Some)?
             };
+
             expect!(p, ';');
+
             Ok(ReturnStmt {
                 span: span!(p, start),
                 arg,
@@ -618,13 +682,17 @@ impl<'a, I: Tokens> Parser<I> {
         assert_and_bump!(self, "switch");
 
         expect!(self, '(');
+
         let discriminant = self.include_in_expr(true).parse_expr()?;
+
         expect!(self, ')');
 
         let mut cases = Vec::new();
+
         let mut span_of_previous_default = None;
 
         expect!(self, '{');
+
         let ctx = Context {
             is_break_allowed: true,
             ..self.ctx()
@@ -633,19 +701,25 @@ impl<'a, I: Tokens> Parser<I> {
         self.with_ctx(ctx).parse_with(|p| {
             while is_one_of!(p, "case", "default") {
                 let mut cons = Vec::new();
+
                 let is_case = is!(p, "case");
+
                 let case_start = cur_pos!(p);
+
                 bump!(p);
+
                 let test = if is_case {
                     p.include_in_expr(true).parse_expr().map(Some)?
                 } else {
                     if let Some(previous) = span_of_previous_default {
                         syntax_error!(p, SyntaxError::MultipleDefault { previous });
                     }
+
                     span_of_previous_default = Some(span!(p, case_start));
 
                     None
                 };
+
                 expect!(p, ':');
 
                 while !eof!(p) && !is_one_of!(p, "case", "default", '}') {
@@ -680,24 +754,30 @@ impl<'a, I: Tokens> Parser<I> {
 
         if self.input.had_line_break_before_cur() {
             // TODO: Suggest throw arg;
+
             syntax_error!(self, SyntaxError::LineBreakInThrow);
         }
 
         let arg = self.include_in_expr(true).parse_expr()?;
+
         expect!(self, ';');
 
         let span = span!(self, start);
+
         Ok(ThrowStmt { span, arg }.into())
     }
 
     fn parse_try_stmt(&mut self) -> PResult<Stmt> {
         let start = cur_pos!(self);
+
         assert_and_bump!(self, "try");
 
         let block = self.parse_block(false)?;
 
         let catch_start = cur_pos!(self);
+
         let handler = self.parse_catch_clause()?;
+
         let finalizer = self.parse_finally_block()?;
 
         if handler.is_none() && finalizer.is_none() {
@@ -705,6 +785,7 @@ impl<'a, I: Tokens> Parser<I> {
         }
 
         let span = span!(self, start);
+
         Ok(TryStmt {
             span,
             block,
@@ -766,12 +847,17 @@ impl<'a, I: Tokens> Parser<I> {
                             type_ann: ty,
                         }));
                     }
+
                     Pat::Assign(..) => {}
+
                     Pat::Invalid(_) => {}
+
                     Pat::Expr(_) => {}
                 }
             }
+
             expect!(self, ')');
+
             Ok(Some(pat))
         } else {
             Ok(None)
@@ -788,6 +874,7 @@ impl<'a, I: Tokens> Parser<I> {
 
         // is two statements
         let _ = cur!(self, false);
+
         if self.input.has_linebreak_between_cur_and_peeked() {
             return Ok(None);
         }
@@ -799,7 +886,9 @@ impl<'a, I: Tokens> Parser<I> {
         assert_and_bump!(self, "using");
 
         let mut decls = Vec::new();
+
         let mut first = true;
+
         while first || eat!(self, ',') {
             if first {
                 first = false;
@@ -811,7 +900,9 @@ impl<'a, I: Tokens> Parser<I> {
             // NewLine is ok
             if is_exact!(self, ';') || eof!(self) {
                 let span = self.input.prev_span();
+
                 self.emit_err(span, SyntaxError::TS1009);
+
                 break;
             }
 
@@ -829,6 +920,7 @@ impl<'a, I: Tokens> Parser<I> {
         for decl in &decls {
             match decl.name {
                 Pat::Ident(..) => {}
+
                 _ => {
                     self.emit_err(span!(self, start), SyntaxError::InvalidNameInUsingDecl);
                 }
@@ -848,13 +940,16 @@ impl<'a, I: Tokens> Parser<I> {
 
     pub(super) fn parse_var_stmt(&mut self, for_loop: bool) -> PResult<Box<VarDecl>> {
         let start = cur_pos!(self);
+
         let kind = match bump!(self) {
             tok!("const") => VarDeclKind::Const,
             tok!("let") => VarDeclKind::Let,
             tok!("var") => VarDeclKind::Var,
             _ => unreachable!(),
         };
+
         let var_span = span!(self, start);
+
         let should_include_in = kind != VarDeclKind::Var || !for_loop;
 
         if self.syntax().typescript() && for_loop {
@@ -866,6 +961,7 @@ impl<'a, I: Tokens> Parser<I> {
                     }
 
                     p.parse_assignment_expr()?;
+
                     expect!(p, ')');
 
                     Ok(true)
@@ -877,7 +973,9 @@ impl<'a, I: Tokens> Parser<I> {
             match res {
                 Ok(true) => {
                     let pos = var_span.hi();
+
                     let span = Span::new(pos, pos);
+
                     self.emit_err(span, SyntaxError::TS1123);
 
                     return Ok(Box::new(VarDecl {
@@ -888,13 +986,17 @@ impl<'a, I: Tokens> Parser<I> {
                         ..Default::default()
                     }));
                 }
+
                 Err(..) => {}
+
                 _ => {}
             }
         }
 
         let mut decls = Vec::new();
+
         let mut first = true;
+
         while first || eat!(self, ',') {
             if first {
                 first = false;
@@ -915,12 +1017,15 @@ impl<'a, I: Tokens> Parser<I> {
             // NewLine is ok
             if is_exact!(self, ';') || eof!(self) {
                 let prev_span = self.input.prev_span();
+
                 let span = if prev_span == var_span {
                     Span::new(prev_span.hi, prev_span.hi)
                 } else {
                     prev_span
                 };
+
                 self.emit_err(span, SyntaxError::TS1009);
+
                 break;
             }
 
@@ -973,6 +1078,7 @@ impl<'a, I: Tokens> Parser<I> {
         // Typescript extension
         if self.input.syntax().typescript() && is!(self, ':') {
             let type_annotation = self.try_parse_ts_type_ann()?;
+
             match name {
                 Pat::Array(ArrayPat {
                     ref mut type_ann, ..
@@ -988,6 +1094,7 @@ impl<'a, I: Tokens> Parser<I> {
                 }) => {
                     *type_ann = type_annotation;
                 }
+
                 _ => unreachable!("invalid syntax: Pat: {:?}", name),
             }
         }
@@ -996,6 +1103,7 @@ impl<'a, I: Tokens> Parser<I> {
         let init = if !for_loop || !is_one_of!(self, "in", "of") {
             if eat!(self, '=') {
                 let expr = self.parse_assignment_expr()?;
+
                 let expr = self.verify_expr(expr)?;
 
                 Some(expr)
@@ -1044,10 +1152,15 @@ impl<'a, I: Tokens> Parser<I> {
             is_continue_allowed: true,
             ..self.ctx()
         };
+
         let body = self.with_ctx(ctx).parse_stmt(false).map(Box::new)?;
+
         expect!(self, "while");
+
         expect!(self, '(');
+
         let test = self.include_in_expr(true).parse_expr()?;
+
         expect!(self, ')');
         // We *may* eat semicolon.
         let _ = eat!(self, ';');
@@ -1063,7 +1176,9 @@ impl<'a, I: Tokens> Parser<I> {
         assert_and_bump!(self, "while");
 
         expect!(self, '(');
+
         let test = self.include_in_expr(true).parse_expr()?;
+
         expect!(self, ')');
 
         let ctx = Context {
@@ -1071,20 +1186,24 @@ impl<'a, I: Tokens> Parser<I> {
             is_continue_allowed: true,
             ..self.ctx()
         };
+
         let body = self.with_ctx(ctx).parse_stmt(false).map(Box::new)?;
 
         let span = span!(self, start);
+
         Ok(WhileStmt { span, test, body }.into())
     }
 
     fn parse_with_stmt(&mut self) -> PResult<Stmt> {
         if self.syntax().typescript() {
             let span = self.input.cur_span();
+
             self.emit_err(span, SyntaxError::TS2410);
         }
 
         {
             let span = self.input.cur_span();
+
             self.emit_strict_mode_err(span, SyntaxError::WithInStrict);
         }
 
@@ -1093,16 +1212,20 @@ impl<'a, I: Tokens> Parser<I> {
         assert_and_bump!(self, "with");
 
         expect!(self, '(');
+
         let obj = self.include_in_expr(true).parse_expr()?;
+
         expect!(self, ')');
 
         let ctx = Context {
             in_function: true,
             ..self.ctx()
         };
+
         let body = self.with_ctx(ctx).parse_stmt(false).map(Box::new)?;
 
         let span = span!(self, start);
+
         Ok(WithStmt { span, obj, body }.into())
     }
 
@@ -1114,6 +1237,7 @@ impl<'a, I: Tokens> Parser<I> {
         let stmts = self.parse_block_body(allow_directives, false, Some(&tok!('}')))?;
 
         let span = span!(self, start);
+
         Ok(BlockStmt {
             span,
             stmts,
@@ -1127,10 +1251,12 @@ impl<'a, I: Tokens> Parser<I> {
             allow_using_decl: false,
             ..self.ctx()
         };
+
         self.with_ctx(ctx).parse_with(|p| {
             let start = l.span.lo();
 
             let mut errors = Vec::new();
+
             for lb in &p.state.labels {
                 if l.sym == *lb {
                     errors.push(Error::new(
@@ -1139,14 +1265,17 @@ impl<'a, I: Tokens> Parser<I> {
                     ));
                 }
             }
+
             p.state.labels.push(l.sym.clone());
 
             let body = Box::new(if is!(p, "function") {
                 let f = p.parse_fn_decl(Vec::new())?;
+
                 if let Decl::Fn(FnDecl { function, .. }) = &f {
                     if p.ctx().strict {
                         p.emit_err(function.span, SyntaxError::LabelledFunctionInStrict)
                     }
+
                     if function.is_generator || function.is_async {
                         p.emit_err(function.span, SyntaxError::LabelledGeneratorOrAsync)
                     }
@@ -1163,6 +1292,7 @@ impl<'a, I: Tokens> Parser<I> {
 
             {
                 let pos = p.state.labels.iter().position(|v| v == &l.sym);
+
                 if let Some(pos) = pos {
                     p.state.labels.remove(pos);
                 }
@@ -1181,28 +1311,37 @@ impl<'a, I: Tokens> Parser<I> {
         let start = cur_pos!(self);
 
         assert_and_bump!(self, "for");
+
         let await_start = cur_pos!(self);
+
         let await_token = if eat!(self, "await") {
             Some(span!(self, await_start))
         } else {
             None
         };
+
         expect!(self, '(');
 
         let mut ctx = self.ctx();
+
         ctx.expr_ctx.for_loop_init = true;
+
         ctx.expr_ctx.for_await_loop_init = await_token.is_some();
 
         let head = self.with_ctx(ctx).parse_for_head()?;
+
         expect!(self, ')');
+
         let ctx = Context {
             is_break_allowed: true,
             is_continue_allowed: true,
             ..self.ctx()
         };
+
         let body = self.with_ctx(ctx).parse_stmt(false).map(Box::new)?;
 
         let span = span!(self, start);
+
         Ok(match head {
             TempForHead::For { init, test, update } => {
                 if let Some(await_token) = await_token {
@@ -1218,6 +1357,7 @@ impl<'a, I: Tokens> Parser<I> {
                 }
                 .into()
             }
+
             TempForHead::ForIn { left, right } => {
                 if let Some(await_token) = await_token {
                     syntax_error!(self, await_token, SyntaxError::AwaitForStmt);
@@ -1231,6 +1371,7 @@ impl<'a, I: Tokens> Parser<I> {
                 }
                 .into()
             }
+
             TempForHead::ForOf { left, right } => ForOfStmt {
                 span,
                 is_await: await_token.is_some(),
@@ -1285,6 +1426,7 @@ impl<'a, I: Tokens> Parser<I> {
             }
 
             expect_exact!(self, ';');
+
             return self.parse_normal_for_head(Some(VarDeclOrExpr::VarDecl(decl)));
         }
 
@@ -1293,14 +1435,17 @@ impl<'a, I: Tokens> Parser<I> {
         }
 
         let start = cur_pos!(self);
+
         let init = self.include_in_expr(false).parse_for_head_prefix()?;
 
         let mut is_using_decl = false;
+
         let mut is_await_using_decl = false;
 
         if self.input.syntax().explicit_resource_management() {
             // using foo
             let mut maybe_using_decl = init.is_ident_ref_to("using");
+
             let mut maybe_await_using_decl = false;
 
             // await using foo
@@ -1311,6 +1456,7 @@ impl<'a, I: Tokens> Parser<I> {
                     .is_some()
             {
                 maybe_using_decl = true;
+
                 maybe_await_using_decl = true;
             }
 
@@ -1319,12 +1465,14 @@ impl<'a, I: Tokens> Parser<I> {
                 && (peeked_is!(self, "of") || peeked_is!(self, "in"))
             {
                 is_using_decl = maybe_using_decl;
+
                 is_await_using_decl = maybe_await_using_decl;
             }
         }
 
         if is_using_decl {
             let name = self.parse_binding_ident(false)?;
+
             let decl = VarDeclarator {
                 name: name.into(),
                 span: span!(self, start),
@@ -1353,7 +1501,9 @@ impl<'a, I: Tokens> Parser<I> {
             if self.input.syntax().typescript() && is_in {
                 match pat {
                     Pat::Ident(..) => {}
+
                     Pat::Expr(..) => {}
+
                     ref v => self.emit_err(v.span(), SyntaxError::TS2491),
                 }
             }
@@ -1364,13 +1514,16 @@ impl<'a, I: Tokens> Parser<I> {
         expect_exact!(self, ';');
 
         let init = self.verify_expr(init)?;
+
         self.parse_normal_for_head(Some(VarDeclOrExpr::Expr(init)))
     }
 
     fn parse_for_each_head(&mut self, left: ForHead) -> PResult<TempForHead> {
         let is_of = bump!(self) == tok!("of");
+
         if is_of {
             let right = self.include_in_expr(true).parse_assignment_expr()?;
+
             Ok(TempForHead::ForOf { left, right })
         } else {
             if let ForHead::UsingDecl(d) = &left {
@@ -1378,6 +1531,7 @@ impl<'a, I: Tokens> Parser<I> {
             }
 
             let right = self.include_in_expr(true).parse_expr()?;
+
             Ok(TempForHead::ForIn { left, right })
         }
     }
@@ -1387,7 +1541,9 @@ impl<'a, I: Tokens> Parser<I> {
             None
         } else {
             let test = self.include_in_expr(true).parse_expr().map(Some)?;
+
             expect_exact!(self, ';');
+
             test
         };
 
@@ -1420,6 +1576,7 @@ enum TempForHead {
 
 pub(super) trait IsDirective {
     fn as_ref(&self) -> Option<&Stmt>;
+
     fn is_use_strict(&self) -> bool {
         self.as_ref().map_or(false, Stmt::is_use_strict)
     }
@@ -1465,6 +1622,7 @@ where
 impl<I: Tokens> StmtLikeParser<'_, Stmt> for Parser<I> {
     fn handle_import_export(&mut self, _: bool, _: Vec<Decorator>) -> PResult<Stmt> {
         let start = cur_pos!(self);
+
         if is!(self, "import") && peeked_is!(self, '(') {
             let expr = self.parse_expr()?;
 
@@ -1496,9 +1654,11 @@ impl<I: Tokens> StmtLikeParser<'_, Stmt> for Parser<I> {
 #[cfg(test)]
 mod tests {
     use swc_common::{comments::SingleThreadedComments, DUMMY_SP as span};
+
     use swc_ecma_visit::assert_eq_ignore_span;
 
     use super::*;
+
     use crate::EsSyntax;
 
     fn stmt(s: &'static str) -> Stmt {
@@ -1508,6 +1668,7 @@ mod tests {
     fn module_item(s: &'static str) -> ModuleItem {
         test_parser(s, Syntax::default(), |p| p.parse_stmt_like(true, true))
     }
+
     fn expr(s: &'static str) -> Box<Expr> {
         test_parser(s, Syntax::default(), |p| p.parse_expr())
     }
@@ -1681,6 +1842,7 @@ function App() {
 ReactDOM.render(<App />, document.getElementById('root'))
 
 "#;
+
         test_parser(
             src,
             Syntax::Es(EsSyntax {
@@ -1700,6 +1862,7 @@ function App() {
 }
 
 export default App"#;
+
         test_parser(
             src,
             Syntax::Es(EsSyntax {
@@ -1713,6 +1876,7 @@ export default App"#;
     #[test]
     fn export_default() {
         let src = "export v, { x, y as w } from 'mod';";
+
         test_parser(
             src,
             Syntax::Es(EsSyntax {
@@ -1726,6 +1890,7 @@ export default App"#;
     #[test]
     fn export_default_2() {
         let src = "export foo from 'bar';";
+
         test_parser(
             src,
             Syntax::Es(EsSyntax {
@@ -1739,6 +1904,7 @@ export default App"#;
     #[test]
     fn export_default_3() {
         let src = "export default from 'bar';";
+
         test_parser(
             src,
             Syntax::Es(EsSyntax {
@@ -1752,6 +1918,7 @@ export default App"#;
     #[test]
     fn export_default_4() {
         let src = "export default, {foo} from 'bar';";
+
         test_parser(
             src,
             Syntax::Es(EsSyntax {
@@ -1765,6 +1932,7 @@ export default App"#;
     #[test]
     fn shebang_01() {
         let src = "#!/usr/bin/env node";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_module());
     }
 
@@ -1772,6 +1940,7 @@ export default App"#;
     fn shebang_02() {
         let src = "#!/usr/bin/env node
 let x = 4";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_module());
     }
 
@@ -1979,6 +2148,7 @@ export default function waitUntil(callback, options = {}) {
     #[test]
     fn issue_856() {
         let c = SingleThreadedComments::default();
+
         let s = "class Foo {
     static _extensions: {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1986,18 +2156,22 @@ export default function waitUntil(callback, options = {}) {
     } = Object.create(null);
 }
 ";
+
         let _ = test_parser_comment(&c, s, Syntax::Typescript(Default::default()), |p| {
             p.parse_typescript_module()
         });
 
         let (leading, trailing) = c.take_all();
+
         assert!(trailing.borrow().is_empty());
+
         assert_eq!(leading.borrow().len(), 1);
     }
 
     #[test]
     fn issue_856_2() {
         let c = SingleThreadedComments::default();
+
         let s = "type ConsoleExamineFunc = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   csl: any,
@@ -2011,13 +2185,16 @@ export default function waitUntil(callback, options = {}) {
         });
 
         let (leading, trailing) = c.take_all();
+
         assert!(trailing.borrow().is_empty());
+
         assert_eq!(leading.borrow().len(), 1);
     }
 
     #[test]
     fn issue_856_3() {
         let c = SingleThreadedComments::default();
+
         let s = "type RequireWrapper = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   exports: any,
@@ -2033,13 +2210,16 @@ export default function waitUntil(callback, options = {}) {
         });
 
         let (leading, trailing) = c.take_all();
+
         assert!(trailing.borrow().is_empty());
+
         assert_eq!(leading.borrow().len(), 2);
     }
 
     #[test]
     fn issue_856_4() {
         let c = SingleThreadedComments::default();
+
         let s = "const _extensions: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: (module: Module, filename: string) => any;
@@ -2050,9 +2230,12 @@ export default function waitUntil(callback, options = {}) {
         });
 
         let (leading, trailing) = c.take_all();
+
         assert!(trailing.borrow().is_empty());
+
         assert_eq!(leading.borrow().len(), 1);
     }
+
     fn parse_for_head(str: &'static str) -> TempForHead {
         test_parser(str, Syntax::default(), |p| p.parse_for_head())
     }
@@ -2127,12 +2310,14 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "'import.meta' cannot be used outside of module code.")]
     fn import_meta_in_script() {
         let src = "const foo = import.meta.url;";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_script());
     }
 
     #[test]
     fn import_meta_in_program() {
         let src = "const foo = import.meta.url;";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_program());
     }
 
@@ -2140,6 +2325,7 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "'import', and 'export' cannot be used outside of module code")]
     fn import_statement_in_script() {
         let src = "import 'foo';";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_script());
     }
 
@@ -2147,24 +2333,28 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "top level await is only allowed in module")]
     fn top_level_await_in_script() {
         let src = "await promise";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_script());
     }
 
     #[test]
     fn top_level_await_in_program() {
         let src = "await promise";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_program());
     }
 
     #[test]
     fn for_of_head_lhs_async_dot() {
         let src = "for (async.x of [1]) ;";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_module());
     }
 
     #[test]
     fn for_head_init_async_of() {
         let src = "for (async of => {}; i < 10; ++i) { ++counter; }";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_module());
     }
 
@@ -2172,6 +2362,7 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "await isn't allowed in non-async function")]
     fn await_in_function_in_module() {
         let src = "function foo (p) { await p; }";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_module());
     }
 
@@ -2179,6 +2370,7 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "await isn't allowed in non-async function")]
     fn await_in_function_in_script() {
         let src = "function foo (p) { await p; }";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_script());
     }
 
@@ -2186,6 +2378,7 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "await isn't allowed in non-async function")]
     fn await_in_function_in_program() {
         let src = "function foo (p) { await p; }";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_program());
     }
 
@@ -2193,18 +2386,21 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "`await` cannot be used as an identifier in an async context")]
     fn await_in_nested_async_function_in_module() {
         let src = "async function foo () { function bar(x = await) {} }";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_module());
     }
 
     #[test]
     fn await_in_nested_async_function_in_script() {
         let src = "async function foo () { function bar(x = await) {} }";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_script());
     }
 
     #[test]
     fn await_in_nested_async_function_in_program() {
         let src = "async function foo () { function bar(x = await) {} }";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_program());
     }
 
@@ -2212,12 +2408,14 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "`await` cannot be used as an identifier in an async context")]
     fn await_as_param_ident_in_module() {
         let src = "function foo (x = await) { }";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_module());
     }
 
     #[test]
     fn await_as_param_ident_in_script() {
         let src = "function foo (x = await) { }";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_script());
     }
 
@@ -2225,12 +2423,14 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "`await` cannot be used as an identifier in an async context")]
     fn await_as_ident_in_module() {
         let src = "let await = 1";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_module());
     }
 
     #[test]
     fn await_as_ident_in_script() {
         let src = "let await = 1";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_script());
     }
 
@@ -2238,18 +2438,21 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "`await` cannot be used as an identifier in an async context")]
     fn await_as_ident_in_async() {
         let src = "async function foo() { let await = 1; }";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_script());
     }
 
     #[test]
     fn top_level_await_in_block() {
         let src = "if (true) { await promise; }";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_module());
     }
 
     #[test]
     fn class_static_blocks() {
         let src = "class Foo { static { 1 + 1; } }";
+
         assert_eq_ignore_span!(
             test_parser(src, Syntax::Es(Default::default()), |p| p.parse_expr()),
             Box::new(Expr::Class(ClassExpr {
@@ -2283,6 +2486,7 @@ export default function waitUntil(callback, options = {}) {
     #[test]
     fn multiple_class_static_blocks() {
         let src = "class Foo { static { 1 + 1; } static { 1 + 1; } }";
+
         assert_eq_ignore_span!(
             test_parser(src, Syntax::Es(Default::default()), |p| p.parse_expr()),
             Box::new(Expr::Class(ClassExpr {
@@ -2328,6 +2532,7 @@ export default function waitUntil(callback, options = {}) {
                 1 + 1;
             }
         }";
+
         assert_eq_ignore_span!(
             test_parser(src, Syntax::Es(Default::default()), |p| p.parse_expr()),
             Box::new(Expr::Class(ClassExpr {
@@ -2359,6 +2564,7 @@ export default function waitUntil(callback, options = {}) {
             static
             {}
         }";
+
         assert_eq_ignore_span!(
             test_parser(src, Syntax::Es(Default::default()), |p| p.parse_expr()),
             Box::new(Expr::Class(ClassExpr {
@@ -2387,6 +2593,7 @@ export default function waitUntil(callback, options = {}) {
     #[test]
     fn class_static_blocks_in_ts() {
         let src = "class Foo { static { 1 + 1 }; }";
+
         test_parser(src, Syntax::Typescript(Default::default()), |p| {
             p.parse_expr()
         });
@@ -2400,6 +2607,7 @@ export default function waitUntil(callback, options = {}) {
                 1 + 1;
             }
         }";
+
         test_parser(src, Syntax::Typescript(Default::default()), |p| {
             p.parse_expr()
         });
@@ -2411,6 +2619,7 @@ export default function waitUntil(callback, options = {}) {
             static
             {}
         }";
+
         test_parser(src, Syntax::Typescript(Default::default()), |p| {
             p.parse_expr()
         });
@@ -2424,6 +2633,7 @@ export default function waitUntil(callback, options = {}) {
                 var await = 'bar';
             }
         }";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_expr());
     }
 
@@ -2441,6 +2651,7 @@ export default function waitUntil(callback, options = {}) {
                 }
             }
         }";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_expr());
     }
 
@@ -2453,6 +2664,7 @@ export default function waitUntil(callback, options = {}) {
                 }
             }
         }";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_expr());
     }
 
@@ -2460,6 +2672,7 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "Modifiers cannot appear here")]
     fn class_static_blocks_in_ts_with_invalid_modifier_01() {
         let src = "class Foo { abstract static { 1 + 1 }; }";
+
         test_parser(src, Syntax::Typescript(Default::default()), |p| {
             p.parse_expr()
         });
@@ -2469,6 +2682,7 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "Modifiers cannot appear here")]
     fn class_static_blocks_in_ts_with_invalid_modifier_02() {
         let src = "class Foo { static static { 1 + 1 }; }";
+
         test_parser(src, Syntax::Typescript(Default::default()), |p| {
             p.parse_expr()
         });
@@ -2478,6 +2692,7 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "Modifiers cannot appear here")]
     fn class_static_blocks_in_ts_with_invalid_modifier_03() {
         let src = "class Foo { declare static { 1 + 1 }; }";
+
         test_parser(src, Syntax::Typescript(Default::default()), |p| {
             p.parse_expr()
         });
@@ -2487,6 +2702,7 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "Modifiers cannot appear here")]
     fn class_static_blocks_in_ts_with_invalid_modifier_04() {
         let src = "class Foo { private static { 1 + 1 }; }";
+
         test_parser(src, Syntax::Typescript(Default::default()), |p| {
             p.parse_expr()
         });
@@ -2496,12 +2712,14 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "Trailing comma is disallowed inside import(...) arguments")]
     fn error_for_trailing_comma_inside_dynamic_import() {
         let src = "import('foo',)";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_expr());
     }
 
     #[test]
     fn no_error_for_trailing_comma_inside_dynamic_import_with_import_assertions() {
         let src = "import('foo',)";
+
         test_parser(
             src,
             Syntax::Es(EsSyntax {
@@ -2515,6 +2733,7 @@ export default function waitUntil(callback, options = {}) {
     #[test]
     fn type_only_star_exports_with_name() {
         let src = "export type * as bar from 'mod'";
+
         test_parser(src, Syntax::Typescript(Default::default()), |p| {
             p.parse_module()
         });
@@ -2523,6 +2742,7 @@ export default function waitUntil(callback, options = {}) {
     #[test]
     fn type_only_star_exports_without_name() {
         let src = "export type * from 'mod'";
+
         test_parser(src, Syntax::Typescript(Default::default()), |p| {
             p.parse_module()
         });
@@ -2532,6 +2752,7 @@ export default function waitUntil(callback, options = {}) {
     #[should_panic(expected = "A string literal cannot be used as an imported binding.")]
     fn error_for_string_literal_is_import_binding() {
         let src = "import { \"str\" } from \"mod\"";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_module());
     }
 
@@ -2541,6 +2762,7 @@ export default function waitUntil(callback, options = {}) {
     )]
     fn error_for_string_literal_is_export_binding() {
         let src = "export { 'foo' };";
+
         test_parser(src, Syntax::Es(Default::default()), |p| p.parse_module());
     }
 

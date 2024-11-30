@@ -105,6 +105,7 @@ impl UsageVisitor {
             Expr::Ident(i) => &i.sym,
             _ => {
                 self.add_property_deps_inner(None, prop);
+
                 return;
             }
         };
@@ -121,6 +122,7 @@ impl UsageVisitor {
             if let Some(map) = STATIC_PROPERTIES.get(&**obj) {
                 if let Some(features) = map.get(&**prop) {
                     self.add(features);
+
                     return;
                 }
             }
@@ -204,6 +206,7 @@ impl Visit for UsageVisitor {
     /// `[...spread]`
     fn visit_expr_or_spread(&mut self, e: &ExprOrSpread) {
         e.visit_children_with(self);
+
         if e.spread.is_some() {
             self.may_inject_global(COMMON_ITERATORS)
         }
@@ -226,10 +229,12 @@ impl Visit for UsageVisitor {
 
     fn visit_member_expr(&mut self, e: &MemberExpr) {
         e.obj.visit_with(self);
+
         if let MemberProp::Computed(c) = &e.prop {
             if let Expr::Lit(Lit::Str(s)) = &*c.expr {
                 self.add_property_deps(&e.obj, &s.value);
             }
+
             c.visit_with(self);
         }
 

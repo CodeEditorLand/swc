@@ -105,6 +105,7 @@ impl VisitMut for Exponentiation {
                             init: Some(e.clone().into()),
                             definite: false,
                         });
+
                         ref_ident
                     }
 
@@ -116,6 +117,7 @@ impl VisitMut for Exponentiation {
                             right: right.take(),
                         }
                         .into();
+
                         return;
                     }
                 };
@@ -123,6 +125,7 @@ impl VisitMut for Exponentiation {
                 *op = op!("=");
                 *right = Box::new(mk_call(*span, Box::new(lhs.into()), right.take()));
             }
+
             Expr::Bin(BinExpr {
                 span,
                 left,
@@ -131,6 +134,7 @@ impl VisitMut for Exponentiation {
             }) => {
                 *e = mk_call(*span, left.take(), right.take());
             }
+
             _ => {}
         }
     }
@@ -178,6 +182,7 @@ var q = {q: 3};
 var o = {
   get p() {
     calls++;
+
     return q;
   }
 };
@@ -200,6 +205,7 @@ expect(2 ** 3 ** 2).toBe(512);"#
 Object.defineProperty(global, "reader", {
   get: function () {
     counters += 1;
+
     return { x: 2 };
   },
   configurable: true

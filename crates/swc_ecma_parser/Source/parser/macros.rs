@@ -1,6 +1,7 @@
 macro_rules! unexpected {
     ($p:expr, $expected:literal) => {{
         let got = $p.input.dump_cur();
+
         syntax_error!(
             $p,
             $p.input.cur_span(),
@@ -18,6 +19,7 @@ macro_rules! unexpected {
 macro_rules! is {
     ($p:expr, BindingIdent) => {{
         let ctx = $p.ctx();
+
         match $p.input.cur() {
             Some(&Word(ref w)) => !ctx.is_reserved(w),
             _ => false,
@@ -26,6 +28,7 @@ macro_rules! is {
 
     ($p:expr, IdentRef) => {{
         let ctx = $p.ctx();
+
         match $p.input.cur() {
             Some(&Word(ref w)) => !ctx.is_reserved(w),
             _ => false,
@@ -83,6 +86,7 @@ macro_rules! is {
 macro_rules! peeked_is {
     ($p:expr, BindingIdent) => {{
         let ctx = $p.ctx();
+
         match peek!($p) {
             Some(&Word(ref w)) => !ctx.is_reserved(w),
             _ => false,
@@ -91,6 +95,7 @@ macro_rules! peeked_is {
 
     ($p:expr, IdentRef) => {{
         let ctx = $p.ctx();
+
         match peek!($p) {
             Some(&Word(ref w)) => !ctx.is_reserved(w),
             _ => false,
@@ -143,6 +148,7 @@ macro_rules! is_one_of {
 macro_rules! assert_and_bump {
     ($p:expr, $t:tt) => {{
         const TOKEN: &Token = &tok!($t);
+
         if cfg!(debug_assertions) && !is!($p, $t) {
             unreachable!(
                 "assertion failed: expected {:?}, got {:?}",
@@ -150,7 +156,9 @@ macro_rules! assert_and_bump {
                 $p.input.cur()
             );
         }
+
         let _ = cur!($p, true);
+
         bump!($p);
     }};
 }
@@ -164,11 +172,14 @@ macro_rules! eat {
         if cfg!(feature = "debug") {
             tracing::trace!("eat(';'): cur={:?}", cur!($p, false));
         }
+
         match $p.input.cur() {
             Some(&Token::Semi) => {
                 $p.input.bump();
+
                 true
             }
+
             None | Some(&tok!('}')) => true,
             _ => $p.input.had_line_break_before_cur(),
         }
@@ -177,6 +188,7 @@ macro_rules! eat {
     ($p:expr, $t:tt) => {{
         if is!($p, $t) {
             bump!($p);
+
             true
         } else {
             false
@@ -188,6 +200,7 @@ macro_rules! eat_exact {
     ($p:expr, $t:tt) => {{
         if is_exact!($p, $t) {
             bump!($p);
+
             true
         } else {
             false
@@ -208,8 +221,10 @@ macro_rules! is_exact {
 macro_rules! expect {
     ($p:expr, $t:tt) => {{
         const TOKEN: &Token = &token_including_semi!($t);
+
         if !eat!($p, $t) {
             let cur = $p.input.dump_cur();
+
             syntax_error!($p, $p.input.cur_span(), SyntaxError::Expected(TOKEN, cur))
         }
     }};
@@ -218,8 +233,10 @@ macro_rules! expect {
 macro_rules! expect_exact {
     ($p:expr, $t:tt) => {{
         const TOKEN: &Token = &token_including_semi!($t);
+
         if !eat_exact!($p, $t) {
             let cur = $p.input.dump_cur();
+
             syntax_error!($p, $p.input.cur_span(), SyntaxError::Expected(TOKEN, cur))
         }
     }};
@@ -240,6 +257,7 @@ macro_rules! cur {
             Some(c) => Ok(c),
             None => {
                 let pos = $p.input.end_pos();
+
                 let last = Span::new(pos, pos);
 
                 Err(crate::error::Error::new(
@@ -257,6 +275,7 @@ macro_rules! cur {
                     $crate::token::Token::Error(e) => {
                         return Err(e);
                     }
+
                     _ => unreachable!(),
                 },
 
@@ -264,8 +283,11 @@ macro_rules! cur {
             },
             None => {
                 let pos = $p.input.end_pos();
+
                 let span = Span::new(pos, pos);
+
                 let err = crate::error::Error::new(span, crate::error::SyntaxError::Eof);
+
                 return Err(err);
             }
         }
@@ -337,7 +359,9 @@ macro_rules! trace_cur {
 macro_rules! span {
     ($p:expr, $start:expr) => {{
         let start: ::swc_common::BytePos = $start;
+
         let end: ::swc_common::BytePos = last_pos!($p);
+
         if cfg!(debug_assertions) && start > end {
             unreachable!(
                 "assertion failed: (span.start <= span.end).
@@ -368,11 +392,13 @@ macro_rules! syntax_error {
                 Some(&$crate::token::Token::Error(..)) => true,
                 _ => false,
             };
+
             if is_err_token {
                 match $p.input.bump() {
                     $crate::token::Token::Error(e) => {
                         $p.emit_error(e);
                     }
+
                     _ => unreachable!(),
                 }
             }
@@ -387,6 +413,7 @@ macro_rules! syntax_error {
                 $p.input.cur()
             );
         }
+
         return Err(err.into());
     }};
 }

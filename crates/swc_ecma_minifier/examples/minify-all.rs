@@ -29,10 +29,13 @@ use walkdir::WalkDir;
 
 fn main() {
 	let dirs = env::args().skip(1).collect::<Vec<_>>();
+
 	let files = expand_dirs(dirs);
+
 	eprintln!("Using {} files", files.len());
 
 	let start = Instant::now();
+
 	testing::run_test2(false, |cm, handler| {
 		GLOBALS.with(|globals| {
 			HANDLER.set(&handler, || {
@@ -43,6 +46,7 @@ fn main() {
 							let fm = cm.load_file(&path).expect("failed to load file");
 
 							let unresolved_mark = Mark::new();
+
 							let top_level_mark = Mark::new();
 
 							let program = parse_file_as_module(
@@ -147,10 +151,13 @@ fn print<N:swc_ecma_codegen::Node>(cm:Lrc<SourceMap>, nodes:&[N], minify:bool) -
 
 	String::from_utf8(buf).unwrap()
     let dirs = env::args().skip(1).collect::<Vec<_>>();
+
     let files = expand_dirs(dirs);
+
     eprintln!("Using {} files", files.len());
 
     let start = Instant::now();
+
     testing::run_test2(false, |cm, handler| {
         GLOBALS.with(|globals| {
             HANDLER.set(&handler, || {
@@ -161,6 +168,7 @@ fn print<N:swc_ecma_codegen::Node>(cm:Lrc<SourceMap>, nodes:&[N], minify:bool) -
                             let fm = cm.load_file(&path).expect("failed to load file");
 
                             let unresolved_mark = Mark::new();
+
                             let top_level_mark = Mark::new();
 
                             let program = parse_file_as_module(

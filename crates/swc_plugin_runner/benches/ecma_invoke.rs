@@ -43,9 +43,11 @@ fn plugin_group(c:&mut Criterion) {
 		let mut cmd = Command::new("cargo");
 
 		cmd.current_dir(&plugin_dir);
+
 		cmd.arg("build").arg("--release").arg("--target=wasm32-wasi");
 
 		let status = cmd.status().unwrap();
+
 		assert!(status.success());
 	}
 
@@ -58,9 +60,11 @@ fn bench_transform(b:&mut Bencher, plugin_dir:&Path) {
 		.join("wasm32-wasi")
 		.join("release")
 		.join("swc_noop_plugin.wasm");
+
 	let raw_module_bytes = std::fs::read(path).expect("Should able to read plugin bytes");
 
 	let store = wasmer::Store::default();
+
 	let module = wasmer::Module::new(&store, raw_module_bytes).unwrap();
 
 	let plugin_module = swc_plugin_runner::plugin_module_bytes::CompiledPluginModuleBytes::new(
@@ -90,6 +94,7 @@ fn bench_transform(b:&mut Bencher, plugin_dir:&Path) {
 				.unwrap();
 
 				let program = VersionedSerializable::new(program);
+
 				let program_ser = PluginSerializedBytes::try_serialize(&program).unwrap();
 
 				let mut transform_plugin_executor =
@@ -108,6 +113,7 @@ fn bench_transform(b:&mut Bencher, plugin_dir:&Path) {
 
 				let experimental_metadata:VersionedSerializable<AHashMap<String, String>> =
 					VersionedSerializable::new(AHashMap::default());
+
 				let _experimental_metadata =
 					PluginSerializedBytes::try_serialize(&experimental_metadata)
 						.expect("Should be a hashmap");
@@ -130,11 +136,13 @@ fn plugin_group(c: &mut Criterion) {
         let mut cmd = Command::new("cargo");
 
         cmd.current_dir(&plugin_dir);
+
         cmd.arg("build")
             .arg("--release")
             .arg("--target=wasm32-wasi");
 
         let status = cmd.status().unwrap();
+
         assert!(status.success());
     }
 
@@ -147,9 +155,11 @@ fn bench_transform(b: &mut Bencher, plugin_dir: &Path) {
         .join("wasm32-wasi")
         .join("release")
         .join("swc_noop_plugin.wasm");
+
     let raw_module_bytes = std::fs::read(path).expect("Should able to read plugin bytes");
 
     let store = wasmer::Store::default();
+
     let module = wasmer::Module::new(&store, raw_module_bytes).unwrap();
 
     let plugin_module = swc_plugin_runner::plugin_module_bytes::CompiledPluginModuleBytes::new(
@@ -182,6 +192,7 @@ fn bench_transform(b: &mut Bencher, plugin_dir: &Path) {
                 .unwrap();
 
                 let program = VersionedSerializable::new(program);
+
                 let program_ser = PluginSerializedBytes::try_serialize(&program).unwrap();
 
                 let mut transform_plugin_executor =
@@ -200,6 +211,7 @@ fn bench_transform(b: &mut Bencher, plugin_dir: &Path) {
 
                 let experimental_metadata: VersionedSerializable<AHashMap<String, String>> =
                     VersionedSerializable::new(AHashMap::default());
+
                 let _experimental_metadata =
                     PluginSerializedBytes::try_serialize(&experimental_metadata)
                         .expect("Should be a hashmap");

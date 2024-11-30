@@ -31,7 +31,9 @@ pub fn parse_file_as_document(
     errors: &mut Vec<Error>,
 ) -> PResult<Document> {
     let lexer = Lexer::new(StringInput::from(fm));
+
     let mut parser = Parser::new(lexer, config);
+
     let result = parser.parse_document();
 
     errors.extend(parser.take_errors());
@@ -52,7 +54,9 @@ pub fn parse_file_as_document_fragment(
     errors: &mut Vec<Error>,
 ) -> PResult<DocumentFragment> {
     let lexer = Lexer::new(StringInput::from(fm));
+
     let mut parser = Parser::new(lexer, config);
+
     let result =
         parser.parse_document_fragment(context_element.clone(), mode, form_element.cloned());
 

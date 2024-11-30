@@ -140,6 +140,7 @@ pub fn parse_expr_for_jsx(
     .map(drop_span)
     .map(|mut expr| {
         apply_mark(&mut expr, top_level_mark);
+
         expr
     })
     .map(Arc::new)
@@ -156,9 +157,11 @@ fn apply_mark(e: &mut Expr, mark: Mark) {
         Expr::Ident(i) => {
             i.ctxt = i.ctxt.apply_mark(mark);
         }
+
         Expr::Member(MemberExpr { obj, .. }) => {
             apply_mark(obj, mark);
         }
+
         _ => {}
     }
 }
@@ -275,11 +278,14 @@ fn respan(e: &mut Expr, span: Span) {
     match e {
         Expr::Ident(i) => {
             i.span.lo = span.lo;
+
             i.span.hi = span.hi;
         }
+
         Expr::Member(e) => {
             e.span = span;
         }
+
         _ => {}
     }
 }
@@ -300,6 +306,7 @@ impl JsxDirectives {
 
             for line in cmt.text.lines() {
                 let mut line = line.trim();
+
                 if line.starts_with('*') {
                     line = line[1..].trim();
                 }
@@ -309,11 +316,14 @@ impl JsxDirectives {
                 }
 
                 let mut words = line.split_whitespace();
+
                 loop {
                     let pragma = words.next();
+
                     if pragma.is_none() {
                         break;
                     }
+
                     let val = words.next();
 
                     match pragma {
@@ -321,6 +331,7 @@ impl JsxDirectives {
                             Some("classic") => res.runtime = Some(Runtime::Classic),
                             Some("automatic") => res.runtime = Some(Runtime::Automatic),
                             None => {}
+
                             _ => {
                                 HANDLER.with(|handler| {
                                     handler
@@ -335,9 +346,11 @@ impl JsxDirectives {
                         Some("@jsxImportSource") => {
                             if let Some(src) = val {
                                 res.runtime = Some(Runtime::Automatic);
+
                                 res.import_source = Some(src.into());
                             }
                         }
+
                         Some("@jsxFrag") => {
                             if let Some(src) = val {
                                 if is_valid_for_pragma(src) {
@@ -349,11 +362,14 @@ impl JsxDirectives {
                                         top_level_mark,
                                     ))
                                     .clone();
+
                                     respan(&mut e, cmt.span);
+
                                     res.pragma_frag = Some(e.into())
                                 }
                             }
                         }
+
                         Some("@jsx") => {
                             if let Some(src) = val {
                                 if is_valid_for_pragma(src) {
@@ -365,11 +381,14 @@ impl JsxDirectives {
                                         top_level_mark,
                                     ))
                                     .clone();
+
                                     respan(&mut e, cmt.span);
+
                                     res.pragma = Some(e.into());
                                 }
                             }
                         }
+
                         _ => {}
                     }
                 }
@@ -418,6 +437,7 @@ where
             }
 
             let imports = self.import_jsx.take();
+
             let imports = if self.development {
                 imports
                     .map(|local| (local, quote_ident!("jsxDEV")))
@@ -453,6 +473,7 @@ where
                 };
 
                 let value = format!("{}/{}", self.import_source, jsx_runtime);
+
                 inject(imports, &value, body)
             }
         }
@@ -462,6 +483,7 @@ where
         let mut span = el.span();
 
         let count = count_children(&el.children);
+
         let use_jsxs = count > 1
             || (count == 1 && matches!(&el.children[0], JSXElementChild::JSXSpreadChild(..)));
 
@@ -481,6 +503,7 @@ where
                         .clone()
                 } else {
                     let jsx = if self.development { "_jsxDEV" } else { "_jsx" };
+
                     self.import_jsx
                         .get_or_insert_with(|| private_ident!(jsx))
                         .clone()
@@ -513,6 +536,7 @@ where
                                 value: children.into_iter().next().flatten().unwrap().expr,
                             }))));
                     }
+
                     _ => {
                         props_obj
                             .props
@@ -545,6 +569,7 @@ where
                 }
                 .into()
             }
+
             Runtime::Classic => {
                 CallExpr {
                     span,
@@ -573,10 +598,14 @@ where
     /// # Classic
     ///
     /// <div></div> => React.createElement('div', null);
+
     fn jsx_elem_to_expr(&mut self, el: JSXElement) -> Expr {
         let top_level_node = self.top_level_node;
+
         let mut span = el.span();
+
         let use_create_element = should_use_create_element(&el.opening.attrs);
+
         self.top_level_node = false;
 
         let name = self.jsx_name(el.opening.name);
@@ -594,6 +623,7 @@ where
                 // function jsx(tagName: string, props: { children: Node[], ... }, key: string)
 
                 let count = count_children(&el.children);
+
                 let use_jsxs = count > 1
                     || (count == 1
                         && matches!(&el.children[0], JSXElementChild::JSXSpreadChild(..)));
@@ -608,6 +638,7 @@ where
                         .clone()
                 } else {
                     let jsx = if self.development { "_jsxDEV" } else { "_jsx" };
+
                     self.import_jsx
                         .get_or_insert_with(|| private_ident!(jsx))
                         .clone()
@@ -619,7 +650,9 @@ where
                 };
 
                 let mut key = None;
+
                 let mut source_props = None;
+
                 let mut self_props = None;
 
                 for attr in el.opening.attrs {
@@ -646,6 +679,7 @@ where
                                                     .emit();
                                             });
                                         }
+
                                         continue;
                                     }
 
@@ -656,14 +690,17 @@ where
                                         if source_props.is_some() {
                                             panic!("Duplicate __source is found");
                                         }
+
                                         source_props = attr
                                             .value
                                             .and_then(jsx_attr_value_to_expr)
                                             .map(|expr| expr.as_arg());
+
                                         assert_ne!(
                                             source_props, None,
                                             "value of property '__source' should not be empty"
                                         );
+
                                         continue;
                                     }
 
@@ -674,14 +711,17 @@ where
                                         if self_props.is_some() {
                                             panic!("Duplicate __self is found");
                                         }
+
                                         self_props = attr
                                             .value
                                             .and_then(jsx_attr_value_to_expr)
                                             .map(|expr| expr.as_arg());
+
                                         assert_ne!(
                                             self_props, None,
                                             "value of property '__self' should not be empty"
                                         );
+
                                         continue;
                                     }
 
@@ -701,10 +741,12 @@ where
                                     } else {
                                         PropName::Ident(i)
                                     };
+
                                     props_obj.props.push(PropOrSpread::Prop(Box::new(
                                         Prop::KeyValue(KeyValueProp { key, value }),
                                     )));
                                 }
+
                                 JSXAttrName::JSXNamespacedName(JSXNamespacedName {
                                     ns,
                                     name,
@@ -731,11 +773,13 @@ where
                                     };
 
                                     let str_value = format!("{}:{}", ns.sym, name.sym);
+
                                     let key = Str {
                                         span,
                                         raw: None,
                                         value: str_value.into(),
                                     };
+
                                     let key = PropName::Str(key);
 
                                     props_obj.props.push(PropOrSpread::Prop(Box::new(
@@ -744,10 +788,12 @@ where
                                 }
                             }
                         }
+
                         JSXAttrOrSpread::SpreadElement(attr) => match *attr.expr {
                             Expr::Object(obj) => {
                                 props_obj.props.extend(obj.props);
                             }
+
                             _ => {
                                 props_obj.props.push(PropOrSpread::Spread(attr));
                             }
@@ -764,6 +810,7 @@ where
 
                 match children.len() {
                     0 => {}
+
                     1 if children[0].as_ref().unwrap().spread.is_none() => {
                         if !use_create_element {
                             props_obj
@@ -780,6 +827,7 @@ where
                                 }))));
                         }
                     }
+
                     _ => {
                         props_obj
                             .props
@@ -797,6 +845,7 @@ where
                 self.top_level_node = top_level_node;
 
                 let args = once(name.as_arg()).chain(once(props_obj.as_arg()));
+
                 let args = if use_create_element {
                     args.chain(children.into_iter().flatten()).collect()
                 } else if self.development {
@@ -817,6 +866,7 @@ where
                         Some(self_props) => self_props,
                         None => Expr::undefined(DUMMY_SP).as_arg(),
                     };
+
                     args.chain(once(key))
                         .chain(once(use_jsxs.as_arg()))
                         .chain(once(source_props))
@@ -825,6 +875,7 @@ where
                 } else {
                     args.chain(key).collect()
                 };
+
                 CallExpr {
                     span,
                     callee: jsx.as_callee(),
@@ -833,6 +884,7 @@ where
                 }
                 .into()
             }
+
             Runtime::Classic => {
                 CallExpr {
                     span,
@@ -863,6 +915,7 @@ where
             JSXElementChild::JSXText(text) => {
                 // TODO(kdy1): Optimize
                 let value = jsx_text_to_str(text.value);
+
                 let s = Str {
                     span: text.span,
                     raw: None,
@@ -875,6 +928,7 @@ where
 
                 Lit::Str(s).as_arg()
             }
+
             JSXElementChild::JSXExprContainer(JSXExprContainer {
                 expr: JSXExpr::Expr(e),
                 ..
@@ -896,14 +950,17 @@ where
         if attrs.is_empty() {
             return Lit::Null(Null { span: DUMMY_SP }).into();
         }
+
         let attr_cnt = attrs.len();
 
         let mut props = Vec::new();
+
         for attr in attrs {
             match attr {
                 JSXAttrOrSpread::JSXAttr(attr) => {
                     props.push(PropOrSpread::Prop(Box::new(self.attr_to_prop(attr))))
                 }
+
                 JSXAttrOrSpread::SpreadElement(spread) => {
                     if attr_cnt == 1 {
                         return spread.expr;
@@ -927,6 +984,7 @@ where
 
     fn attr_to_prop(&mut self, a: JSXAttr) -> Prop {
         let key = to_prop_name(a.name);
+
         let value = a
             .value
             .map(|v| match v {
@@ -940,6 +998,7 @@ where
                     })
                     .into()
                 }
+
                 JSXAttrValue::JSXExprContainer(JSXExprContainer {
                     expr: JSXExpr::Expr(e),
                     ..
@@ -959,6 +1018,7 @@ where
                 })
                 .into()
             });
+
         Prop::KeyValue(KeyValueProp { key, value })
     }
 }
@@ -984,11 +1044,13 @@ where
 
         if let Some(runtime) = runtime {
             found = true;
+
             self.runtime = runtime;
         }
 
         if let Some(import_source) = import_source {
             found = true;
+
             self.import_source = import_source;
         }
 
@@ -1005,6 +1067,7 @@ where
             }
 
             found = true;
+
             self.pragma = pragma;
         }
 
@@ -1021,6 +1084,7 @@ where
             }
 
             found = true;
+
             self.pragma_frag = pragma_frag;
         }
 
@@ -1036,6 +1100,7 @@ where
 
     fn visit_mut_expr(&mut self, expr: &mut Expr) {
         let top_level_node = self.top_level_node;
+
         let mut did_work = false;
 
         if let Expr::JSXElement(el) = expr {
@@ -1044,6 +1109,7 @@ where
             *expr = self.jsx_elem_to_expr(*el.take());
         } else if let Expr::JSXFragment(frag) = expr {
             // <></> => React.createElement(React.Fragment, null);
+
             did_work = true;
             *expr = self.jsx_frag_to_expr(frag.take());
         } else if let Expr::Paren(ParenExpr {
@@ -1055,6 +1121,7 @@ where
                 *expr = self.jsx_elem_to_expr(*el.take());
             } else if let Expr::JSXFragment(frag) = &mut **inner_expr {
                 // <></> => React.createElement(React.Fragment, null);
+
                 did_work = true;
                 *expr = self.jsx_frag_to_expr(frag.take());
             }
@@ -1074,6 +1141,7 @@ where
 
         for item in &module.body {
             let span = item.span();
+
             if self.parse_directives(span) {
                 break;
             }
@@ -1121,6 +1189,7 @@ where
 
         for item in &script.body {
             let span = item.span();
+
             if self.parse_directives(span) {
                 break;
             }
@@ -1130,6 +1199,7 @@ where
 
         if self.runtime == Runtime::Automatic {
             let mark = self.unresolved_mark;
+
             self.inject_runtime(&mut script.body, |imports, src, stmts| {
                 prepend_stmt(stmts, add_require(imports, src, mark))
             });
@@ -1200,6 +1270,7 @@ where
 {
     fn jsx_name(&self, name: JSXElementName) -> Box<Expr> {
         let span = name.span();
+
         match name {
             JSXElementName::Ident(i) => {
                 if i.sym == "this" {
@@ -1218,6 +1289,7 @@ where
                     i.into()
                 }
             }
+
             JSXElementName::JSXNamespacedName(JSXNamespacedName {
                 ref ns, ref name, ..
             }) => {
@@ -1244,6 +1316,7 @@ where
                 })
                 .into()
             }
+
             JSXElementName::JSXMemberExpr(JSXMemberExpr { obj, prop, .. }) => {
                 fn convert_obj(obj: JSXObject) -> Box<Expr> {
                     let span = obj.span();
@@ -1256,6 +1329,7 @@ where
                                 i.into()
                             }
                         }
+
                         JSXObject::JSXMemberExpr(e) => MemberExpr {
                             span,
                             obj: convert_obj(e.obj),
@@ -1265,6 +1339,7 @@ where
                     })
                     .into()
                 }
+
                 MemberExpr {
                     span,
                     obj: convert_obj(obj),
@@ -1291,6 +1366,7 @@ fn to_prop_name(n: JSXAttrName) -> PropName {
                 PropName::Ident(i)
             }
         }
+
         JSXAttrName::JSXNamespacedName(JSXNamespacedName { ns, name, .. }) => {
             let value = format!("{}:{}", ns.sym, name.sym);
 
@@ -1306,31 +1382,39 @@ fn to_prop_name(n: JSXAttrName) -> PropName {
 #[inline]
 fn jsx_text_to_str(t: Atom) -> JsWord {
     let mut buf = String::new();
+
     let replaced = t.replace('\t', " ");
 
     for (is_last, (i, line)) in replaced.lines().enumerate().identify_last() {
         if line.is_empty() {
             continue;
         }
+
         let line = Cow::from(line);
+
         let line = if i != 0 {
             Cow::Borrowed(line.trim_start_matches(' '))
         } else {
             line
         };
+
         let line = if is_last {
             line
         } else {
             Cow::Borrowed(line.trim_end_matches(' '))
         };
+
         if line.len() == 0 {
             continue;
         }
+
         if i != 0 && !buf.is_empty() {
             buf.push(' ')
         }
+
         buf.push_str(&line);
     }
+
     buf.into()
 }
 
@@ -1346,6 +1430,7 @@ fn jsx_attr_value_to_expr(v: JSXAttrValue) -> Option<Box<Expr>> {
             })
             .into()
         }
+
         JSXAttrValue::Lit(lit) => Box::new(lit.into()),
         JSXAttrValue::JSXExprContainer(e) => match e.expr {
             JSXExpr::JSXEmptyExpr(_) => None?,
@@ -1364,6 +1449,7 @@ fn count_children(children: &[JSXElementChild]) -> usize {
                 let text = jsx_text_to_str(text.value.clone());
                 !text.is_empty()
             }
+
             JSXElementChild::JSXExprContainer(e) => match e.expr {
                 JSXExpr::JSXEmptyExpr(_) => false,
                 JSXExpr::Expr(_) => true,
@@ -1377,7 +1463,9 @@ fn count_children(children: &[JSXElementChild]) -> usize {
 
 fn transform_jsx_attr_str(v: &str) -> String {
     let single_quote = false;
+
     let mut buf = String::with_capacity(v.len());
+
     let mut iter = v.chars().peekable();
 
     while let Some(c) = iter.next() {

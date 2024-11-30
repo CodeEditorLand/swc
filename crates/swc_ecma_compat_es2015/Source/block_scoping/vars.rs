@@ -63,6 +63,7 @@ impl BlockScopedVars {
         n.visit_mut_children_with(self);
 
         let empty_vars = Default::default();
+
         let parent = ParentScope {
             parent: None,
             vars: &empty_vars,
@@ -73,6 +74,7 @@ impl BlockScopedVars {
         // dbg!(&self.scope);
 
         self.scope.rename(parent, &mut rename_map, true);
+
         self.scope.rename(parent, &mut rename_map, false);
 
         // dbg!(&rename_map);
@@ -87,6 +89,7 @@ impl BlockScopedVars {
         };
 
         let mut v = BlockScopedVars { scope, ..*self };
+
         op(&mut v);
 
         if kind == ScopeKind::Block {
@@ -175,6 +178,7 @@ impl Scope {
                 symbols.push(id.0.clone());
             }
         }
+
         self.usages.clear();
 
         let parent = ParentScope {
@@ -192,6 +196,7 @@ impl Scope {
             if !symbols.contains(&id.0) {
                 continue;
             }
+
             if rename_map.contains_key(id) {
                 continue;
             }
@@ -239,14 +244,18 @@ impl VisitMut for BlockScopedVars {
     fn visit_mut_arrow_expr(&mut self, n: &mut ArrowExpr) {
         self.with_scope(ScopeKind::Fn, |v| {
             let old = v.is_param;
+
             v.is_param = true;
+
             n.params.visit_mut_with(v);
+
             v.is_param = old;
 
             match &mut *n.body {
                 BlockStmtOrExpr::BlockStmt(b) => {
                     b.visit_mut_children_with(v);
                 }
+
                 BlockStmtOrExpr::Expr(b) => {
                     b.visit_mut_with(v);
                 }
@@ -280,14 +289,17 @@ impl VisitMut for BlockScopedVars {
 
     fn visit_mut_catch_clause(&mut self, n: &mut CatchClause) {
         let old_is_param = self.is_param;
+
         self.is_param = true;
 
         let old_var_decl_kind = self.var_decl_kind;
+
         self.var_decl_kind = None;
 
         n.visit_mut_children_with(self);
 
         self.var_decl_kind = old_var_decl_kind;
+
         self.is_param = old_is_param;
     }
 
@@ -303,6 +315,7 @@ impl VisitMut for BlockScopedVars {
 
     fn visit_mut_expr(&mut self, n: &mut Expr) {
         let old_var_decl_kind = self.var_decl_kind;
+
         self.var_decl_kind = None;
 
         n.visit_mut_children_with(self);
@@ -329,11 +342,14 @@ impl VisitMut for BlockScopedVars {
             {
                 self.with_scope(ScopeKind::Block, |v| {
                     n.left.visit_mut_with(v);
+
                     n.body.visit_mut_with(v);
                 });
             }
+
             _ => {
                 n.left.visit_mut_with(self);
+
                 n.body.visit_mut_with(self);
             }
         }
@@ -354,11 +370,14 @@ impl VisitMut for BlockScopedVars {
             {
                 self.with_scope(ScopeKind::Block, |v| {
                     n.left.visit_mut_with(v);
+
                     n.body.visit_mut_with(v);
                 });
             }
+
             _ => {
                 n.left.visit_mut_with(self);
+
                 n.body.visit_mut_with(self);
             }
         }
@@ -377,15 +396,20 @@ impl VisitMut for BlockScopedVars {
             {
                 self.with_scope(ScopeKind::Block, |v| {
                     n.init.visit_mut_with(v);
+
                     n.update.visit_mut_with(v);
+
                     n.test.visit_mut_with(v);
 
                     n.body.visit_mut_with(v);
                 });
             }
+
             _ => {
                 n.init.visit_mut_with(self);
+
                 n.update.visit_mut_with(self);
+
                 n.test.visit_mut_with(self);
 
                 n.body.visit_mut_with(self);
@@ -411,14 +435,17 @@ impl VisitMut for BlockScopedVars {
 
     fn visit_mut_param(&mut self, n: &mut Param) {
         let old_is_param = self.is_param;
+
         self.is_param = true;
 
         let old_var_decl_kind = self.var_decl_kind;
+
         self.var_decl_kind = None;
 
         n.visit_mut_children_with(self);
 
         self.var_decl_kind = old_var_decl_kind;
+
         self.is_param = old_is_param;
     }
 
@@ -436,6 +463,7 @@ impl VisitMut for BlockScopedVars {
 
     fn visit_mut_var_decl(&mut self, n: &mut VarDecl) {
         let old_var_decl_kind = self.var_decl_kind;
+
         self.var_decl_kind = Some(n.kind);
 
         n.visit_mut_children_with(self);

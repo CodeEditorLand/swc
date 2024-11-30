@@ -74,10 +74,12 @@ impl<I: Tokens> Parser<I> {
         );
         #[cfg(not(feature = "typescript"))]
         let in_declare = false;
+
         let ctx = Context {
             in_declare,
             ..input.ctx()
         };
+
         input.set_ctx(ctx);
 
         Parser {
@@ -101,6 +103,7 @@ impl<I: Tokens> Parser<I> {
             module: false,
             ..self.ctx()
         };
+
         self.set_ctx(ctx);
 
         let start = cur_pos!(self);
@@ -129,6 +132,7 @@ impl<I: Tokens> Parser<I> {
         self.set_ctx(ctx);
 
         let start = cur_pos!(self);
+
         let shebang = self.parse_shebang()?;
 
         self.parse_block_body(true, true, None).map(|body| Module {
@@ -145,17 +149,21 @@ impl<I: Tokens> Parser<I> {
     /// not be reported even if the method returns [Module].
     pub fn parse_program(&mut self) -> PResult<Program> {
         let start = cur_pos!(self);
+
         let shebang = self.parse_shebang()?;
+
         let ctx = Context {
             can_be_module: true,
             ..self.ctx()
         };
 
         let body: Vec<ModuleItem> = self.with_ctx(ctx).parse_block_body(true, true, None)?;
+
         let has_module_item = self.state.found_module_item
             || body
                 .iter()
                 .any(|item| matches!(item, ModuleItem::ModuleDecl(..)));
+
         if has_module_item && !self.ctx().module {
             let ctx = Context {
                 module: true,
@@ -181,6 +189,7 @@ impl<I: Tokens> Parser<I> {
                     ModuleItem::Stmt(stmt) => stmt,
                 })
                 .collect();
+
             Program::Script(Script {
                 span: span!(self, start),
                 body,
@@ -200,6 +209,7 @@ impl<I: Tokens> Parser<I> {
         self.set_ctx(ctx);
 
         let start = cur_pos!(self);
+
         let shebang = self.parse_shebang()?;
 
         self.parse_block_body(true, true, None).map(|body| Module {
@@ -240,10 +250,12 @@ impl<I: Tokens> Parser<I> {
 
         if matches!(self.input.cur(), Some(Token::Error(..))) {
             let err = self.input.bump();
+
             match err {
                 Token::Error(err) => {
                     self.input_ref().add_error(err);
                 }
+
                 _ => unreachable!(),
             }
         }
@@ -256,7 +268,9 @@ impl<I: Tokens> Parser<I> {
         if self.ctx().ignore_error {
             return;
         }
+
         let error = Error::new(span, error);
+
         self.input_ref().add_module_mode_error(error);
     }
 }
@@ -268,12 +282,16 @@ where
 {
     crate::with_test_sess(s, |handler, input| {
         let lexer = Lexer::new(syntax, EsVersion::Es2019, input, None);
+
         let mut p = Parser::new_from(lexer);
+
         let ret = f(&mut p);
+
         let mut error = false;
 
         for err in p.take_errors() {
             error = true;
+
             err.into_diagnostic(handler).emit();
         }
 
@@ -295,7 +313,9 @@ where
 {
     crate::with_test_sess(s, |handler, input| {
         let lexer = Lexer::new(syntax, EsVersion::Es2019, input, Some(&c));
+
         let mut p = Parser::new_from(lexer);
+
         let ret = f(&mut p);
 
         for err in p.take_errors() {
@@ -317,6 +337,7 @@ where
     let _ = crate::with_test_sess(s, |handler, input| {
         b.iter(|| {
             let lexer = Lexer::new(syntax, Default::default(), input.clone(), None);
+
             let _ =
                 f(&mut Parser::new_from(lexer)).map_err(|err| err.into_diagnostic(handler).emit());
         });

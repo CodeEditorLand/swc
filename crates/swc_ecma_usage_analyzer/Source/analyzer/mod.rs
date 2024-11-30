@@ -39,8 +39,11 @@ where
         },
         used_recursively: AHashMap::default(),
     };
+
     n.visit_with(&mut v);
+
     let top_scope = v.scope;
+
     v.data.top_scope().merge(top_scope.clone(), false);
 
     v.data.scope(SyntaxContext::empty()).merge(top_scope, false);
@@ -102,6 +105,7 @@ where
         }
 
         self.scope.merge(child.scope, true);
+
         self.data.merge(kind, child.data);
 
         ret
@@ -145,9 +149,12 @@ where
         if let Some(recr) = self.used_recursively.get(&i) {
             if let RecursiveUsage::Var { can_ignore: false } = recr {
                 self.data.report_usage(self.ctx, i.clone());
+
                 self.data.var_or_default(i.clone()).mark_used_above_decl()
             }
+
             self.data.var_or_default(i.clone()).mark_used_recursively();
+
             return;
         }
 
@@ -167,6 +174,7 @@ where
                     self.data
                         .report_assign(self.ctx, i.to_id(), is_read_modify, Value::Unknown)
                 }
+
                 _ => self.mark_mutation_if_member(e.as_member()),
             }
         }
@@ -198,13 +206,17 @@ where
 
     fn visit_in_cond<T: VisitWith<Self>>(&mut self, t: &T) {
         let cnt = self.data.get_initialized_cnt();
+
         t.visit_with(self);
+
         self.data.truncate_initialized_cnt(cnt)
     }
 
     fn visit_children_in_cond<T: VisitWith<Self>>(&mut self, t: &T) {
         let cnt = self.data.get_initialized_cnt();
+
         t.visit_children_with(self);
+
         self.data.truncate_initialized_cnt(cnt)
     }
 
@@ -228,6 +240,7 @@ where
             is_id_ref: true,
             ..self.ctx
         };
+
         n.visit_children_with(&mut *self.with_ctx(ctx));
     }
 
@@ -240,6 +253,7 @@ where
                     inline_prevented: true,
                     ..child.ctx
                 };
+
                 n.params.visit_with(&mut *child.with_ctx(ctx));
             }
 
@@ -247,6 +261,7 @@ where
                 BlockStmtOrExpr::BlockStmt(body) => {
                     body.visit_with(child);
                 }
+
                 BlockStmtOrExpr::Expr(body) => {
                     body.visit_with(child);
                 }
@@ -257,6 +272,7 @@ where
     #[cfg_attr(feature = "tracing-spans", tracing::instrument(skip_all))]
     fn visit_assign_expr(&mut self, n: &AssignExpr) {
         let is_op_assign = n.op != op!("=");
+
         n.left.visit_with(self);
 
         let ctx = Ctx {
@@ -268,6 +284,7 @@ where
             is_id_ref: matches!(n.op, op!("=") | op!("||=") | op!("&&=") | op!("??=")),
             ..self.ctx
         };
+
         n.right.visit_with(&mut *self.with_ctx(ctx));
 
         match &n.left {
@@ -277,12 +294,14 @@ where
                         .report_assign(self.ctx, id, is_op_assign, n.right.get_type())
                 }
             }
+
             AssignTarget::Simple(e) => {
                 self.report_assign_expr_if_ident(
                     e.as_ident().map(Ident::from).as_ref(),
                     is_op_assign,
                     n.right.get_type(),
                 );
+
                 self.mark_mutation_if_member(e.as_member())
             }
         };
@@ -318,6 +337,7 @@ where
                 var_decl_kind_of_pat: None,
                 ..self.ctx
             };
+
             p.right.visit_with(&mut *self.with_ctx(ctx))
         }
     }
@@ -328,6 +348,7 @@ where
             in_await_arg: true,
             ..self.ctx
         };
+
         n.visit_children_with(&mut *self.with_ctx(ctx));
     }
 
@@ -337,17 +358,21 @@ where
                 is_id_ref: true,
                 ..self.ctx
             };
+
             e.left.visit_with(&mut *self.with_ctx(ctx));
+
             let ctx = Ctx {
                 in_cond: true,
                 is_id_ref: true,
                 ..self.ctx
             };
+
             self.with_ctx(ctx).visit_in_cond(&e.right);
         } else {
             if e.op == op!("in") {
                 for_each_id_ref_in_expr(&e.right, &mut |obj| {
                     let var = self.data.var_or_default(obj.to_id());
+
                     var.mark_used_as_ref();
 
                     match &*e.left {
@@ -366,6 +391,7 @@ where
                 is_id_ref: false,
                 ..self.ctx
             };
+
             e.visit_children_with(&mut *self.with_ctx(ctx));
         }
     }
@@ -395,6 +421,7 @@ where
                 inline_prevented,
                 ..self.ctx
             };
+
             n.callee.visit_with(&mut *self.with_ctx(ctx));
         }
 
@@ -450,6 +477,7 @@ where
                 is_id_ref: true,
                 ..self.ctx
             };
+
             n.args.visit_with(&mut *self.with_ctx(ctx));
 
             let call_may_mutate = match &n.callee {
@@ -477,11 +505,13 @@ where
                 Expr::Ident(Ident { sym, .. }) if *sym == *"eval" => {
                     self.scope.mark_eval_called();
                 }
+
                 Expr::Member(m) if !m.obj.is_ident() => {
                     for_each_id_ref_in_expr(&m.obj, &mut |id| {
                         self.data.var_or_default(id.to_id()).mark_used_as_ref()
                     })
                 }
+
                 _ => {}
             }
         }
@@ -495,6 +525,7 @@ where
                 in_catch_param: true,
                 ..self.ctx
             };
+
             n.param.visit_with(&mut *self.with_ctx(ctx));
         }
 
@@ -503,6 +534,7 @@ where
                 in_cond: true,
                 ..self.ctx
             };
+
             self.with_ctx(ctx).visit_in_cond(&n.body);
         }
     }
@@ -516,6 +548,7 @@ where
                 inline_prevented: true,
                 ..self.ctx
             };
+
             n.super_class.visit_with(&mut *self.with_ctx(ctx));
         }
 
@@ -549,6 +582,7 @@ where
                     in_pat_of_param: true,
                     ..a.ctx
                 };
+
                 n.function.params.visit_with(&mut *a.with_ctx(ctx));
             }
 
@@ -585,7 +619,9 @@ where
                 in_cond: true,
                 ..self.ctx
             };
+
             self.with_ctx(ctx).visit_in_cond(&n.cons);
+
             self.with_ctx(ctx).visit_in_cond(&n.alt);
         }
     }
@@ -598,6 +634,7 @@ where
                     in_pat_of_param: true,
                     ..child.ctx
                 };
+
                 n.params.visit_with(&mut *child.with_ctx(ctx));
             }
 
@@ -617,11 +654,13 @@ where
                     self.data.var_or_default(i.to_id()).prevent_inline();
                 }
             }
+
             DefaultDecl::Fn(f) => {
                 if let Some(i) = &f.ident {
                     self.data.var_or_default(i.to_id()).prevent_inline();
                 }
             }
+
             _ => {}
         }
     }
@@ -632,6 +671,7 @@ where
             executed_multiple_time: true,
             ..self.ctx
         }));
+
         n.test.visit_with(&mut *self.with_ctx(Ctx {
             executed_multiple_time: true,
             ..self.ctx
@@ -646,9 +686,11 @@ where
             Decl::Class(c) => {
                 self.data.var_or_default(c.ident.to_id()).prevent_inline();
             }
+
             Decl::Fn(f) => {
                 self.data.var_or_default(f.ident.to_id()).prevent_inline();
             }
+
             Decl::Var(v) => {
                 let ids = find_pat_ids(v);
 
@@ -656,6 +698,7 @@ where
                     self.data.var_or_default(id).mark_as_exported();
                 }
             }
+
             _ => {}
         }
     }
@@ -674,10 +717,14 @@ where
         match &n.orig {
             ModuleExportName::Ident(orig) => {
                 self.report_usage(orig);
+
                 let v = self.data.var_or_default(orig.to_id());
+
                 v.prevent_inline();
+
                 v.mark_used_as_ref();
             }
+
             ModuleExportName::Str(..) => {}
         };
     }
@@ -729,6 +776,7 @@ where
             in_decl_with_no_side_effect_for_member_access: true,
             ..self.ctx
         };
+
         self.with_ctx(ctx)
             .declare_decl(&n.ident, Some(Value::Known(Type::Obj)), None, true);
 
@@ -737,9 +785,12 @@ where
         }
 
         let id = n.ident.to_id();
+
         self.used_recursively
             .insert(id.clone(), RecursiveUsage::FnOrClass);
+
         n.visit_children_with(self);
+
         self.used_recursively.remove(&id);
 
         {
@@ -780,6 +831,7 @@ where
                     self.data.var_or_default(n_id.to_id()).add_infects_to(id);
                 }
             }
+
             self.used_recursively.remove(&n_id.to_id());
         } else {
             n.visit_children_with(self);
@@ -798,6 +850,7 @@ where
                 in_cond: true,
                 ..child.ctx
             };
+
             n.left.visit_with(&mut *child.with_ctx(head_ctx));
 
             n.right.visit_with(child);
@@ -828,6 +881,7 @@ where
                 in_cond: true,
                 ..child.ctx
             };
+
             n.left.visit_with(&mut *child.with_ctx(head_ctx));
 
             if let ForHead::Pat(pat) = &n.left {
@@ -839,6 +893,7 @@ where
                 in_cond: true,
                 ..child.ctx
             };
+
             child.with_ctx(ctx).visit_in_cond(&n.body);
         });
     }
@@ -854,7 +909,9 @@ where
         };
 
         self.with_ctx(ctx).visit_in_cond(&n.test);
+
         self.with_ctx(ctx).visit_in_cond(&n.update);
+
         self.with_ctx(ctx).visit_in_cond(&n.body);
     }
 
@@ -891,9 +948,11 @@ where
             in_cond: true,
             ..self.ctx
         };
+
         n.test.visit_with(self);
 
         self.with_ctx(ctx).visit_in_cond(&n.cons);
+
         self.with_ctx(ctx).visit_in_cond(&n.alt);
     }
 
@@ -934,6 +993,7 @@ where
                 is_id_ref: false,
                 ..self.ctx
             };
+
             e.obj.visit_with(&mut *self.with_ctx(ctx));
         }
 
@@ -943,6 +1003,7 @@ where
 
         for_each_id_ref_in_expr(&e.obj, &mut |obj| {
             let v = self.data.var_or_default(obj.to_id());
+
             v.mark_has_property_access();
 
             if let MemberProp::Computed(prop) = &e.prop {
@@ -950,6 +1011,7 @@ where
                     Expr::Lit(Lit::Str(s)) if s.value.parse::<f64>().is_err() => {
                         v.add_accessed_property(s.value.clone());
                     }
+
                     _ => {
                         v.mark_indexed_with_dynamic_key();
                     }
@@ -973,6 +1035,7 @@ where
                     in_pat_of_param: true,
                     ..a.ctx
                 };
+
                 n.function.params.visit_with(&mut *a.with_ctx(ctx));
             }
 
@@ -985,6 +1048,7 @@ where
             is_top_level: true,
             ..self.ctx
         };
+
         n.visit_children_with(&mut *self.with_ctx(ctx))
     }
 
@@ -992,6 +1056,7 @@ where
         if n.src.is_some() {
             return;
         }
+
         n.visit_children_with(self);
     }
 
@@ -999,10 +1064,12 @@ where
     fn visit_new_expr(&mut self, n: &NewExpr) {
         {
             n.callee.visit_with(self);
+
             let ctx = Ctx {
                 is_id_ref: true,
                 ..self.ctx
             };
+
             n.args.visit_with(&mut *self.with_ctx(ctx));
 
             if call_may_mutate(&n.callee, &self.expr_ctx) {
@@ -1023,6 +1090,7 @@ where
             in_pat_of_param: false,
             ..self.ctx
         };
+
         n.decorators.visit_with(&mut *self.with_ctx(ctx));
 
         let ctx = Ctx {
@@ -1031,6 +1099,7 @@ where
             is_id_ref: true,
             ..self.ctx
         };
+
         n.pat.visit_with(&mut *self.with_ctx(ctx));
     }
 
@@ -1040,11 +1109,13 @@ where
             Pat::Ident(i) => {
                 i.visit_with(self);
             }
+
             _ => {
                 let ctx = Ctx {
                     in_decl_with_no_side_effect_for_member_access: false,
                     ..self.ctx
                 };
+
                 n.visit_children_with(&mut *self.with_ctx(ctx));
             }
         }
@@ -1061,6 +1132,7 @@ where
                     in_pat_of_param: true,
                     ..a.ctx
                 };
+
                 n.function.params.visit_with(&mut *a.with_ctx(ctx));
             }
 
@@ -1084,6 +1156,7 @@ where
             is_id_ref: true,
             ..self.ctx
         };
+
         n.visit_children_with(&mut *self.with_ctx(ctx));
 
         if let Prop::Shorthand(i) = n {
@@ -1096,6 +1169,7 @@ where
             is_top_level: true,
             ..self.ctx
         };
+
         n.visit_children_with(&mut *self.with_ctx(ctx))
     }
 
@@ -1108,6 +1182,7 @@ where
                     in_pat_of_param: true,
                     ..a.ctx
                 };
+
                 n.param.visit_with(&mut *a.with_ctx(ctx));
             }
 
@@ -1133,6 +1208,7 @@ where
             is_id_ref: true,
             ..self.ctx
         };
+
         n.visit_children_with(&mut *self.with_ctx(ctx));
     }
 
@@ -1159,6 +1235,7 @@ where
                 is_id_ref: false,
                 ..self.ctx
             };
+
             c.visit_with(&mut *self.with_ctx(ctx));
         }
     }
@@ -1183,12 +1260,15 @@ where
                 in_cond: true,
                 ..self.ctx
             };
+
             if fallthrough {
                 self.with_ctx(ctx).visit_in_cond(&case.test);
+
                 self.with_ctx(ctx).visit_in_cond(&case.cons);
             } else {
                 self.with_ctx(ctx).visit_in_cond(case);
             }
+
             fallthrough = !case.cons.iter().rev().any(|s| s.terminates())
         }
     }
@@ -1240,6 +1320,7 @@ where
         if n.op == op!("delete") {
             self.mark_mutation_if_member(n.arg.as_member());
         }
+
         n.visit_children_with(self);
     }
 
@@ -1248,6 +1329,7 @@ where
         n.visit_children_with(self);
 
         self.report_assign_expr_if_ident(n.arg.as_ident(), true, Value::Known(Type::Num));
+
         self.mark_mutation_if_member(n.arg.as_member());
     }
 
@@ -1258,6 +1340,7 @@ where
             in_await_arg: false,
             ..self.ctx
         };
+
         n.visit_children_with(&mut *self.with_ctx(ctx));
 
         for decl in &n.decls {
@@ -1295,6 +1378,7 @@ where
                     .unwrap_or(false),
                 ..self.ctx
             };
+
             e.name.visit_with(&mut *self.with_ctx(ctx));
         }
 
@@ -1315,14 +1399,18 @@ where
                 } = e
                 {
                     let id = id.to_id();
+
                     self.used_recursively.insert(
                         id.clone(),
                         RecursiveUsage::Var {
                             can_ignore: !init.may_have_side_effects(&self.expr_ctx),
                         },
                     );
+
                     e.init.visit_with(&mut *self.with_ctx(ctx));
+
                     self.used_recursively.remove(&id);
+
                     return;
                 }
             }
@@ -1337,6 +1425,7 @@ where
             executed_multiple_time: true,
             ..self.ctx
         }));
+
         let ctx = Ctx {
             executed_multiple_time: true,
             in_cond: true,
@@ -1349,6 +1438,7 @@ where
     #[cfg_attr(feature = "tracing-spans", tracing::instrument(skip_all))]
     fn visit_with_stmt(&mut self, n: &WithStmt) {
         self.scope.mark_with_stmt();
+
         n.visit_children_with(self);
     }
 }
@@ -1360,10 +1450,13 @@ fn for_each_id_ref_in_expr(e: &Expr, op: &mut impl FnMut(&Ident)) {
         Expr::Ident(i) => op(i),
         Expr::Cond(c) => {
             for_each_id_ref_in_expr(&c.cons, op);
+
             for_each_id_ref_in_expr(&c.alt, op);
         }
+
         Expr::Bin(b @ BinExpr { op: bin_op, .. }) if bin_op.may_short_circuit() => {
             for_each_id_ref_in_expr(&b.left, op);
+
             for_each_id_ref_in_expr(&b.right, op);
         }
 
@@ -1390,31 +1483,39 @@ fn for_each_id_ref_in_expr(e: &Expr, op: &mut impl FnMut(&Ident)) {
                 PropOrSpread::Spread(p) => {
                     for_each_id_ref_in_expr(&p.expr, op);
                 }
+
                 PropOrSpread::Prop(p) => match &**p {
                     Prop::Shorthand(p) => {
                         op(p);
                     }
+
                     Prop::KeyValue(p) => {
                         for_each_id_ref_in_prop_name(&p.key, op);
+
                         for_each_id_ref_in_expr(&p.value, op);
                     }
+
                     Prop::Assign(p) => {
                         for_each_id_ref_in_expr(&p.value, op);
                     }
+
                     Prop::Getter(p) => {
                         for_each_id_ref_in_prop_name(&p.key, op);
                     }
+
                     Prop::Setter(p) => {
                         for_each_id_ref_in_prop_name(&p.key, op);
 
                         for_each_id_ref_in_pat(&p.param, op);
                     }
+
                     Prop::Method(p) => {
                         for_each_id_ref_in_fn(&p.function, op);
                     }
                 },
             });
         }
+
         _ => {}
     }
 }
@@ -1423,10 +1524,12 @@ fn for_each_id_ref_in_class(c: &Class, op: &mut impl FnMut(&Ident)) {
     c.body.iter().for_each(|m| match m {
         ClassMember::Constructor(m) => {
             for_each_id_ref_in_prop_name(&m.key, op);
+
             m.params.iter().for_each(|p| match p {
                 ParamOrTsParamProp::TsParamProp(..) => {
                     unreachable!()
                 }
+
                 ParamOrTsParamProp::Param(p) => {
                     for_each_id_ref_in_pat(&p.pat, op);
                 }
@@ -1435,6 +1538,7 @@ fn for_each_id_ref_in_class(c: &Class, op: &mut impl FnMut(&Ident)) {
 
         ClassMember::Method(m) => {
             for_each_id_ref_in_prop_name(&m.key, op);
+
             for_each_id_ref_in_fn(&m.function, op);
         }
 
@@ -1444,6 +1548,7 @@ fn for_each_id_ref_in_class(c: &Class, op: &mut impl FnMut(&Ident)) {
 
         ClassMember::ClassProp(m) => {
             for_each_id_ref_in_prop_name(&m.key, op);
+
             if let Some(value) = &m.value {
                 for_each_id_ref_in_expr(value, op);
             }
@@ -1481,20 +1586,25 @@ fn for_each_id_ref_in_pat(p: &Pat, op: &mut impl FnMut(&Ident)) {
         Pat::Ident(..) => {
             // IdentifierBinding is not IdentifierReference
         }
+
         Pat::Array(p) => {
             p.elems.iter().flatten().for_each(|e| {
                 for_each_id_ref_in_pat(e, op);
             });
         }
+
         Pat::Rest(p) => {
             for_each_id_ref_in_pat(&p.arg, op);
         }
+
         Pat::Object(p) => {
             p.props.iter().for_each(|p| match p {
                 ObjectPatProp::KeyValue(p) => {
                     for_each_id_ref_in_prop_name(&p.key, op);
+
                     for_each_id_ref_in_pat(&p.value, op);
                 }
+
                 ObjectPatProp::Assign(p) => {
                     // We skip key because it's IdentifierBinding
 
@@ -1502,16 +1612,21 @@ fn for_each_id_ref_in_pat(p: &Pat, op: &mut impl FnMut(&Ident)) {
                         for_each_id_ref_in_expr(value, op);
                     }
                 }
+
                 ObjectPatProp::Rest(p) => {
                     for_each_id_ref_in_pat(&p.arg, op);
                 }
             });
         }
+
         Pat::Assign(p) => {
             for_each_id_ref_in_pat(&p.left, op);
+
             for_each_id_ref_in_expr(&p.right, op);
         }
+
         Pat::Invalid(..) => {}
+
         Pat::Expr(p) => {
             for_each_id_ref_in_expr(p, op);
         }
@@ -1589,6 +1704,7 @@ fn call_may_mutate(expr: &Expr, expr_ctx: &ExprCtx) -> bool {
             Expr::Member(MemberExpr { obj, .. }) => {
                 !matches!(&**obj, Expr::Ident(i) if is_global_fn_wont_mutate(i, expr_ctx.unresolved_ctxt))
             }
+
             _ => true,
         }
     }

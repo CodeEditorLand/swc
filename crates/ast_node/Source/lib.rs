@@ -81,6 +81,7 @@ pub fn ast_serde(
 
     // we should use call_site
     let mut item = TokenStream::new();
+
     match input.data {
         Data::Enum(..) => {
             if !args.is_empty() {
@@ -93,6 +94,7 @@ pub fn ast_serde(
                 #input
             ));
         }
+
         _ => {
             let args: Option<ast_node_macro::Args> = if args.is_empty() {
                 None
@@ -111,11 +113,13 @@ pub fn ast_serde(
                         None
                     }
                 }
+
                 _ => None,
             };
 
             let serde_rename = args.as_ref().map(|args| {
                 let name = &args.ty;
+
                 quote!(#[serde(rename = #name)])
             });
 
@@ -138,6 +142,7 @@ impl VisitMut for AddAttr {
     fn visit_field_mut(&mut self, f: &mut Field) {
         f.attrs
             .push(parse_quote!(#[cfg_attr(feature = "__rkyv", omit_bounds)]));
+
         f.attrs
             .push(parse_quote!(#[cfg_attr(feature = "__rkyv", archive_attr(omit_bounds))]));
     }
@@ -158,20 +163,25 @@ pub fn ast_node(
 
     // we should use call_site
     let mut item = TokenStream::new();
+
     match input.data {
         Data::Enum(..) => {
             struct EnumArgs {
                 clone: bool,
             }
+
             impl parse::Parse for EnumArgs {
                 fn parse(i: parse::ParseStream<'_>) -> syn::Result<Self> {
                     let name: Ident = i.parse()?;
+
                     if name != "no_clone" {
                         return Err(i.error("unknown attribute"));
                     }
+
                     Ok(EnumArgs { clone: false })
                 }
             }
+
             let args = if args.is_empty() {
                 EnumArgs { clone: true }
             } else {
@@ -219,6 +229,7 @@ pub fn ast_node(
                 #input
             ));
         }
+
         _ => {
             let args: Option<ast_node_macro::Args> = if args.is_empty() {
                 None
@@ -240,6 +251,7 @@ pub fn ast_node(
                         None
                     }
                 }
+
                 _ => None,
             };
 

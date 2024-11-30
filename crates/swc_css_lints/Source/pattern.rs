@@ -12,6 +12,7 @@ impl NamePattern {
         S: AsRef<str>,
     {
         let name = name.as_ref();
+
         match self {
             Self::Str(s) => s == name,
             Self::Regex(regex) => regex.is_match(name),

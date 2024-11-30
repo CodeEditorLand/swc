@@ -248,10 +248,12 @@ where
         let orig_slug = module_specifier.split('/').last();
 
         let target = self.resolver.resolve(base, module_specifier);
+
         let mut target = match target {
             Ok(v) => v,
             Err(err) => {
                 warn!("import rewriter: failed to resolve: {}", err);
+
                 return Ok(module_specifier.into());
             }
         };
@@ -269,6 +271,7 @@ where
             filename: target,
             slug,
         } = target;
+
         let slug = slug.as_deref().or(orig_slug);
 
         info!("Resolved as {target:?} with slug = {slug:?}");
@@ -283,6 +286,7 @@ where
                 )
             }
         };
+
         let mut base = match base {
             FileName::Real(v) => Cow::Borrowed(
                 v.parent()
@@ -308,6 +312,7 @@ where
 
         if base.is_absolute() != target.is_absolute() {
             base = Cow::Owned(absolute_path(self.config.base_dir.as_deref(), &base)?);
+
             target = absolute_path(self.config.base_dir.as_deref(), &target)?;
         }
 
@@ -332,9 +337,13 @@ where
             for component in rel_path.components() {
                 match component {
                     Component::Prefix(_) => {}
+
                     Component::RootDir => {}
+
                     Component::CurDir => {}
+
                     Component::ParentDir => {}
+
                     Component::Normal(c) => {
                         if c == "node_modules" {
                             return Ok(module_specifier.into());
@@ -345,6 +354,7 @@ where
         }
 
         let s = rel_path.to_string_lossy();
+
         let s = if s.starts_with('.') || s.starts_with('/') || rel_path.is_absolute() {
             s
         } else {
@@ -363,6 +373,7 @@ where
         self.try_resolve_import(base, module_specifier)
             .or_else(|err| {
                 warn!("Failed to resolve import: {}", err);
+
                 Ok(module_specifier.into())
             })
     }

@@ -29,6 +29,7 @@ impl Optimizer<'_> {
         }) = &mut *s.cons
         {
             self.changed = true;
+
             report_change!("if_return: Merging nested if statements");
 
             s.test = BinExpr {
@@ -38,6 +39,7 @@ impl Optimizer<'_> {
                 right: test.take(),
             }
             .into();
+
             s.cons = cons.take();
         }
     }
@@ -73,6 +75,7 @@ impl Optimizer<'_> {
 
                 debug_assert_valid(&*s);
             }
+
             Stmt::If(s) => {
                 self.merge_nested_if_returns(&mut s.cons, can_work);
 
@@ -84,6 +87,7 @@ impl Optimizer<'_> {
                     debug_assert_valid(&*alt);
                 }
             }
+
             _ => {}
         }
     }
@@ -133,13 +137,17 @@ impl Optimizer<'_> {
                     Some(v) => !self.can_merge_stmt_as_if_return(v, stmts.len() - 1 == idx),
                     None => true,
                 });
+
         let skip = idx_of_not_mergable.map(|v| v + 1).unwrap_or(0);
+
         trace_op!("if_return: Skip = {}", skip);
+
         let mut last_idx = stmts.len() - 1;
 
         {
             loop {
                 let s = stmts.get(last_idx);
+
                 let s = match s {
                     Some(s) => s,
                     _ => break,
@@ -150,7 +158,9 @@ impl Optimizer<'_> {
                         if last_idx == 0 {
                             break;
                         }
+
                         last_idx -= 1;
+
                         continue;
                     }
                 }
@@ -161,17 +171,20 @@ impl Optimizer<'_> {
 
         if last_idx <= skip {
             log_abort!("if_return: [x] Aborting because of skip");
+
             return;
         }
 
         {
             let stmts = &stmts[skip..=last_idx];
+
             let return_count: usize = stmts.iter().map(count_leaping_returns).sum();
 
             // There's no return statement so merging requires injecting unnecessary `void
             // 0`
             if return_count == 0 {
                 log_abort!("if_return: [x] Aborting because we failed to find return");
+
                 return;
             }
 
@@ -200,6 +213,7 @@ impl Optimizer<'_> {
                         log_abort!(
                             "if_return: [x] Aborting because last stmt is a not return stmt"
                         );
+
                         return;
                     }
 
@@ -210,11 +224,13 @@ impl Optimizer<'_> {
                         Some(Stmt::Return(..)),
                     ) => match &**cons {
                         Stmt::Return(ReturnStmt { arg: Some(..), .. }) => {}
+
                         _ => {
                             log_abort!(
                                 "if_return: [x] Aborting because stmt before last is an if stmt \
                                  and cons of it is not a return stmt"
                             );
+
                             return;
                         }
                     },
@@ -226,6 +242,7 @@ impl Optimizer<'_> {
                         && s2.iter().any(|s| matches!(s, Stmt::Return(..))) =>
                     {
                         log_abort!("if_return: [x] Aborting because early return is observed");
+
                         return;
                     }
 
@@ -236,6 +253,7 @@ impl Optimizer<'_> {
 
         {
             let stmts = &stmts[..=last_idx];
+
             let start = stmts
                 .iter()
                 .enumerate()
@@ -254,6 +272,7 @@ impl Optimizer<'_> {
                     {
                         false
                     }
+
                     Some(s) => self.can_merge_stmt_as_if_return(s, true),
                     _ => false,
                 })
@@ -272,6 +291,7 @@ impl Optimizer<'_> {
                         Some(s) => self.can_merge_stmt_as_if_return(s, stmts.len() - 1 == idx),
                         _ => false,
                     });
+
             if !can_merge {
                 return;
             }
@@ -282,6 +302,7 @@ impl Optimizer<'_> {
         self.changed = true;
 
         let mut cur: Option<Box<Expr>> = None;
+
         let mut new = Vec::with_capacity(stmts.len());
 
         let len = stmts.len();
@@ -290,33 +311,44 @@ impl Optimizer<'_> {
             if let Some(not_mergable) = idx_of_not_mergable {
                 if idx < not_mergable {
                     new.push(stmt);
+
                     continue;
                 }
             }
+
             if idx > last_idx {
                 new.push(stmt);
+
                 continue;
             }
 
             let stmt = if !self.can_merge_stmt_as_if_return(&stmt, len - 1 == idx) {
                 debug_assert_eq!(cur, None);
+
                 new.push(stmt);
+
                 continue;
             } else {
                 stmt
             };
+
             let is_nonconditional_return = matches!(stmt, Stmt::Return(..));
+
             let new_expr = self.merge_if_returns_to(stmt, Vec::new());
+
             match new_expr {
                 Expr::Seq(v) => match &mut cur {
                     Some(cur) => match &mut **cur {
                         Expr::Cond(cur) => {
                             let seq = get_rightmost_alt_of_cond(cur).force_seq();
+
                             seq.exprs.extend(v.exprs);
                         }
+
                         Expr::Seq(cur) => {
                             cur.exprs.extend(v.exprs);
                         }
+
                         _ => {
                             unreachable!(
                                 "if_return: cur must be one of None, Expr::Seq or Expr::Cond(with \
@@ -333,7 +365,9 @@ impl Optimizer<'_> {
 
                             let (span, exprs) = {
                                 let prev_seq = alt.force_seq();
+
                                 prev_seq.exprs.push(v.test);
+
                                 let exprs = prev_seq.exprs.take();
 
                                 (prev_seq.span, exprs)
@@ -347,8 +381,10 @@ impl Optimizer<'_> {
                             }
                             .into();
                         }
+
                         Expr::Seq(prev_seq) => {
                             prev_seq.exprs.push(v.test);
+
                             let exprs = prev_seq.exprs.take();
 
                             *cur = CondExpr {
@@ -365,6 +401,7 @@ impl Optimizer<'_> {
                             }
                             .into();
                         }
+
                         _ => {
                             unreachable!(
                                 "if_return: cur must be one of None, Expr::Seq or Expr::Cond(with \
@@ -413,6 +450,7 @@ impl Optimizer<'_> {
                         trace_op!("if_return: Ignoring return value");
                     }
                 }
+
                 _ => {
                     new.push(
                         ReturnStmt {
@@ -436,6 +474,7 @@ impl Optimizer<'_> {
         match stmt {
             Stmt::Block(s) => {
                 assert_eq!(s.stmts.len(), 1);
+
                 self.merge_if_returns_to(s.stmts.into_iter().next().unwrap(), exprs)
             }
 
@@ -447,6 +486,7 @@ impl Optimizer<'_> {
                 ..
             }) => {
                 let cons = Box::new(self.merge_if_returns_to(*cons, Vec::new()));
+
                 let alt = match alt {
                     Some(alt) => Box::new(self.merge_if_returns_to(*alt, Vec::new())),
                     None => Expr::undefined(DUMMY_SP),
@@ -466,6 +506,7 @@ impl Optimizer<'_> {
                 }
                 .into()
             }
+
             Stmt::Expr(stmt) => {
                 exprs.push(
                     UnaryExpr {
@@ -475,21 +516,26 @@ impl Optimizer<'_> {
                     }
                     .into(),
                 );
+
                 SeqExpr {
                     span: DUMMY_SP,
                     exprs,
                 }
                 .into()
             }
+
             Stmt::Return(stmt) => {
                 let span = stmt.span;
+
                 exprs.push(stmt.arg.unwrap_or_else(|| Expr::undefined(span)));
+
                 SeqExpr {
                     span: DUMMY_SP,
                     exprs,
                 }
                 .into()
             }
+
             _ => unreachable!(),
         }
     }
@@ -505,6 +551,7 @@ impl Optimizer<'_> {
             Stmt::Block(s) => {
                 s.stmts.len() == 1 && self.can_merge_stmt_as_if_return(&s.stmts[0], is_last)
             }
+
             Stmt::If(stmt) => {
                 matches!(&*stmt.cons, Stmt::Return(..))
                     && matches!(
@@ -512,6 +559,7 @@ impl Optimizer<'_> {
                         None | Some(Stmt::Return(..) | Stmt::Expr(..))
                     )
             }
+
             _ => false,
         }
     }
@@ -529,7 +577,9 @@ where
     N: VisitWith<ReturnFinder>,
 {
     let mut v = ReturnFinder::default();
+
     n.visit_with(&mut v);
+
     v.count
 }
 
@@ -543,6 +593,7 @@ impl Visit for ReturnFinder {
 
     fn visit_return_stmt(&mut self, n: &ReturnStmt) {
         n.visit_children_with(self);
+
         self.count += 1;
     }
 
@@ -561,6 +612,7 @@ fn always_terminates_with_return_arg(s: &Stmt) -> bool {
                     .map(always_terminates_with_return_arg)
                     .unwrap_or(false)
         }
+
         Stmt::Block(s) => s.stmts.iter().any(always_terminates_with_return_arg),
 
         _ => false,
@@ -585,16 +637,22 @@ fn can_merge_as_if_return(s: &Stmt) -> bool {
             Stmt::If(IfStmt { cons, alt, .. }) => {
                 Some(cost(cons)? + alt.as_deref().and_then(cost).unwrap_or(0))
             }
+
             Stmt::Block(s) => {
                 let mut sum = 0;
+
                 let mut found = false;
+
                 for s in s.stmts.iter().rev() {
                     let c = cost(s);
+
                     if let Some(c) = c {
                         found = true;
+
                         sum += c;
                     }
                 }
+
                 if found {
                     Some(sum)
                 } else {

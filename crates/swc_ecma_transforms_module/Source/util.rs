@@ -141,6 +141,7 @@ impl Default for Lazy {
 
 pub(super) fn local_name_for_src(src: &JsWord) -> JsWord {
     let src = src.split('/').last().unwrap();
+
     let src = src
         .strip_suffix(".js")
         .or_else(|| src.strip_suffix(".mjs"))
@@ -271,7 +272,9 @@ macro_rules! caniuse {
 /// ```
 pub(crate) fn esm_export() -> Function {
     let target = private_ident!("target");
+
     let all = private_ident!("all");
+
     let name = private_ident!("name");
 
     let getter = KeyValueProp {
@@ -344,6 +347,7 @@ pub(crate) fn emit_export_stmts(exports: Ident, mut prop_list: Vec<ExportKV>) ->
                 .map(prop_function)
                 .map(From::from)
                 .collect();
+
             let obj_lit = ObjectLit {
                 span: DUMMY_SP,
                 props,

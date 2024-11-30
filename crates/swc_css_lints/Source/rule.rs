@@ -40,6 +40,7 @@ where
                     let emitter = Capturing::default();
                     {
                         let handler = Handler::with_emitter(true, false, Box::new(emitter.clone()));
+
                         HANDLER.set(&handler, || {
                             rule.lint_stylesheet(stylesheet);
                         });

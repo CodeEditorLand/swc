@@ -30,6 +30,7 @@ impl Optimizer<'_> {
                         }
 
                         self.changed = true;
+
                         report_change!("arguments: Optimizing computed access to arguments");
                         *prop = MemberProp::Ident(IdentName {
                             span: s.span,
@@ -51,6 +52,7 @@ impl Optimizer<'_> {
                         }
 
                         self.changed = true;
+
                         report_change!("arguments: Optimizing computed access to arguments");
                         *prop = SuperProp::Ident(IdentName {
                             span: s.span,
@@ -88,10 +90,12 @@ impl Optimizer<'_> {
         {
             // If a function has a variable named `arguments`, we abort.
             let data: Vec<Id> = find_pat_ids(&f.body);
+
             if data.iter().any(|id| {
                 if id.0 == "arguments" {
                     return true;
                 }
+
                 false
             }) {
                 return;
@@ -107,6 +111,7 @@ impl Optimizer<'_> {
 
         // We visit body two time, to use simpler logic in `inject_params_if_required`
         f.body.visit_mut_children_with(&mut v);
+
         f.body.visit_mut_children_with(&mut v);
 
         self.changed |= v.changed;
@@ -125,11 +130,15 @@ impl ArgReplacer<'_> {
         if idx < self.params.len() || self.keep_fargs {
             return;
         }
+
         let new_args = idx + 1 - self.params.len();
 
         self.changed = true;
+
         report_change!("arguments: Injecting {} parameters", new_args);
+
         let mut start = self.params.len();
+
         self.params.extend(
             repeat_with(|| {
                 let p = Param {
@@ -137,7 +146,9 @@ impl ArgReplacer<'_> {
                     decorators: Default::default(),
                     pat: private_ident!(format!("argument_{}", start)).into(),
                 };
+
                 start += 1;
+
                 p
             })
             .take(new_args),
@@ -177,6 +188,7 @@ impl VisitMut for ArgReplacer<'_> {
                     match &*c.expr {
                         Expr::Lit(Lit::Str(Str { value, .. })) => {
                             let idx = value.parse::<usize>();
+
                             let idx = match idx {
                                 Ok(v) => v,
                                 _ => return,
@@ -187,6 +199,7 @@ impl VisitMut for ArgReplacer<'_> {
                             if let Some(param) = self.params.get(idx) {
                                 if let Pat::Ident(i) = &param.pat {
                                     self.changed = true;
+
                                     report_change!(
                                         "arguments: Replacing access to arguments to normal \
                                          reference"
@@ -195,6 +208,7 @@ impl VisitMut for ArgReplacer<'_> {
                                 }
                             }
                         }
+
                         Expr::Lit(Lit::Num(Number { value, .. })) => {
                             if value.fract() != 0.0 {
                                 // We ignores non-integer values.
@@ -212,14 +226,17 @@ impl VisitMut for ArgReplacer<'_> {
                                         "arguments: Replacing access to arguments to normal \
                                          reference"
                                     );
+
                                     self.changed = true;
                                     *n = i.id.clone().into();
                                 }
                             }
                         }
+
                         _ => {}
                     }
                 }
+
                 _ => (),
             }
         }

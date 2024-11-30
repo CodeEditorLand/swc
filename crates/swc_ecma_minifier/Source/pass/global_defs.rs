@@ -39,10 +39,15 @@ impl VisitMut for GlobalDefs {
 
     fn visit_mut_assign_expr(&mut self, n: &mut AssignExpr) {
         let old = self.in_lhs_of_assign;
+
         self.in_lhs_of_assign = true;
+
         n.left.visit_mut_with(self);
+
         self.in_lhs_of_assign = false;
+
         n.right.visit_mut_with(self);
+
         self.in_lhs_of_assign = old;
     }
 
@@ -57,6 +62,7 @@ impl VisitMut for GlobalDefs {
                     return;
                 }
             }
+
             Expr::Member(MemberExpr { obj, .. }) => {
                 if let Expr::Ident(i) = &**obj {
                     if i.ctxt != self.unresolved_ctxt && i.ctxt != self.top_level_ctxt {
@@ -64,6 +70,7 @@ impl VisitMut for GlobalDefs {
                     }
                 }
             }
+
             _ => {}
         }
 
@@ -73,6 +80,7 @@ impl VisitMut for GlobalDefs {
             .find(|(pred, _)| Ident::within_ignored_ctxt(|| should_replace(pred, n)))
         {
             *n = *new.clone();
+
             return;
         }
 
@@ -111,6 +119,7 @@ fn should_replace(pred: &Expr, node: &Expr) -> bool {
 
             Expr::OptChain(OptChainExpr { base, .. }) => {
                 let base = base.as_member()?;
+
                 Some((&base.obj, &base.prop))
             }
 
@@ -134,6 +143,7 @@ fn should_replace(pred: &Expr, node: &Expr) -> bool {
 
             return should_replace(pred_obj, node_obj);
         }
+
         _ => {}
     }
 

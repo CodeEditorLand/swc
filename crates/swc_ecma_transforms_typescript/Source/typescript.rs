@@ -59,6 +59,7 @@ impl VisitMut for TypeScript {
 
         if let Some(span) = was_module {
             let module = n.as_mut_module().unwrap();
+
             Self::restore_esm_ctx(module, span);
         }
     }
@@ -214,9 +215,11 @@ where
             );
 
             let pragma_id = id_for_jsx(&pragma).unwrap();
+
             let pragma_frag_id = id_for_jsx(&pragma_frag).unwrap();
 
             self.id_usage.insert(pragma_id);
+
             self.id_usage.insert(pragma_frag_id);
         }
 

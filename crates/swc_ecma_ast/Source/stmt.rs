@@ -114,6 +114,7 @@ macro_rules! stmt_from {
     ($($varant_ty:ty),*) => {
         $(
             bridge_from!(Box<crate::Stmt>, crate::Stmt, $varant_ty);
+
             bridge_from!(crate::ModuleItem, crate::Stmt, $varant_ty);
         )*
     };
@@ -148,6 +149,7 @@ impl Stmt {
                 Expr::Lit(Lit::Str(Str { ref raw, .. })) => {
                     matches!(raw, Some(value) if value == "\"use strict\"" || value == "'use strict'")
                 }
+
                 _ => false,
             },
             _ => false,
@@ -173,6 +175,7 @@ impl Stmt {
 impl Clone for Stmt {
     fn clone(&self) -> Self {
         use Stmt::*;
+
         match self {
             Block(s) => Block(s.clone()),
             Empty(s) => Empty(s.clone()),

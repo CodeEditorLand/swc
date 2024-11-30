@@ -106,7 +106,9 @@ impl Classes {
         T: StmtLike + ModuleItemLike + VisitMutWith<Self> + Take,
     {
         let mut buf = Vec::with_capacity(stmts.len());
+
         let mut first = true;
+
         let old = self.in_strict;
 
         for stmt in stmts.iter_mut() {
@@ -122,7 +124,9 @@ impl Classes {
                                     ident.unwrap_or_else(|| quote_ident!("_default").into());
 
                                 let mut decl = self.fold_class_as_var_decl(ident.clone(), class);
+
                                 decl.visit_mut_children_with(self);
+
                                 buf.push(T::from(decl.into()));
 
                                 buf.push(
@@ -149,6 +153,7 @@ impl Classes {
                                     },
                                 );
                             }
+
                             ModuleDecl::ExportDecl(ExportDecl {
                                 span,
                                 decl:
@@ -160,7 +165,9 @@ impl Classes {
                                 ..
                             }) => {
                                 let mut decl = self.fold_class_as_var_decl(ident, class);
+
                                 decl.visit_mut_children_with(self);
+
                                 buf.push(
                                     match T::try_from_module_decl(
                                         ExportDecl {
@@ -174,8 +181,10 @@ impl Classes {
                                     },
                                 );
                             }
+
                             _ => buf.push({
                                 decl.visit_mut_children_with(self);
+
                                 match T::try_from_module_decl(decl) {
                                     Ok(t) => t,
                                     Err(..) => unreachable!(),
@@ -183,6 +192,7 @@ impl Classes {
                             }),
                         };
                     }
+
                     Err(..) => unreachable!(),
                 },
                 Ok(mut stmt) => {
@@ -191,9 +201,11 @@ impl Classes {
                     }
 
                     stmt.visit_mut_children_with(self);
+
                     buf.push(T::from(stmt));
                 }
             }
+
             first = false;
         }
 
@@ -229,10 +241,12 @@ impl VisitMut for Classes {
         match n {
             Expr::Class(e) => {
                 let mut class = self.fold_class(e.ident.take(), e.class.take());
+
                 if let Expr::Call(call) = &mut class {
                     self.add_pure_comments(&mut call.span.lo)
                 }
                 *n = class;
+
                 n.visit_mut_children_with(self)
             }
 
@@ -284,17 +298,20 @@ impl VisitMut for Classes {
     ///     "foo": class {},
     ///     ["x"]: class {}
     /// }
+
     fn visit_mut_key_value_prop(&mut self, n: &mut KeyValueProp) {
         if let Expr::Class(c @ ClassExpr { ident: None, .. }) = &mut *n.value {
             match &n.key {
                 PropName::Ident(ident) => {
                     c.ident = Some(Ident::from(ident.clone()).into_private());
                 }
+
                 PropName::Str(Str { value, span, .. }) => {
                     if is_valid_prop_ident(value) {
                         c.ident = Some(private_ident!(*span, value.clone()));
                     }
                 }
+
                 PropName::Computed(ComputedPropName { expr, .. }) => {
                     if let Expr::Lit(Lit::Str(Str { value, span, .. })) = &**expr {
                         if is_valid_prop_ident(value) {
@@ -302,6 +319,7 @@ impl VisitMut for Classes {
                         }
                     }
                 }
+
                 _ => {}
             }
         }
@@ -336,9 +354,11 @@ impl Classes {
 
     fn fold_class_as_var_decl(&mut self, ident: Ident, class: Box<Class>) -> VarDecl {
         let span = class.span;
+
         let mut rhs = self.fold_class(Some(ident.clone()), class);
 
         let mut new_name = ident.clone();
+
         new_name.ctxt = new_name.ctxt.apply_mark(Mark::new());
 
         replace_ident(&mut rhs, ident.to_id(), &new_name);
@@ -350,7 +370,9 @@ impl Classes {
                 lo: span.lo + BytePos(5),
                 ..span
             };
+
             self.add_pure_comments(&mut span.lo);
+
             call.span = span;
         }
 
@@ -388,10 +410,13 @@ impl Classes {
             .super_class
             .as_ref()
             .map(|e| alias_if_required(e, "_superClass").0);
+
         let has_super = super_ident.is_some();
+
         let (mut params, mut args, super_ident) = if let Some(ref super_ident) = super_ident {
             // Param should have a separate syntax context from arg.
             let super_param = private_ident!(super_ident.sym.clone());
+
             let params = vec![Param {
                 span: DUMMY_SP,
                 decorators: Default::default(),
@@ -399,10 +424,12 @@ impl Classes {
             }];
 
             let super_class = class.super_class.clone().unwrap();
+
             let is_super_native = match *super_class {
                 Expr::Ident(Ident { ref sym, .. }) => is_native(sym),
                 _ => false,
             };
+
             if is_super_native {
                 (
                     params,
@@ -423,7 +450,9 @@ impl Classes {
         };
 
         let mut stmts = self.class_to_stmts(class_name, super_ident, class);
+
         params.extend(self.params.take());
+
         args.extend(self.args.take());
 
         let cnt_of_non_directive = stmts
@@ -433,6 +462,7 @@ impl Classes {
                 _ => true,
             })
             .count();
+
         if !has_super && cnt_of_non_directive == 1 {
             //    class Foo {}
             //
@@ -453,6 +483,7 @@ impl Classes {
             //    }();
 
             let stmt = stmts.pop().unwrap();
+
             match stmt {
                 Stmt::Decl(Decl::Fn(FnDecl {
                     ident,
@@ -462,13 +493,16 @@ impl Classes {
                     if let Some(use_strict) = stmts.pop() {
                         prepend_stmt(&mut function.body.as_mut().unwrap().stmts, use_strict);
                     }
+
                     function.span = span;
+
                     return FnExpr {
                         ident: Some(ident),
                         function,
                     }
                     .into();
                 }
+
                 _ => unreachable!(),
             }
         }
@@ -505,10 +539,13 @@ impl Classes {
         class: Box<Class>,
     ) -> Vec<Stmt> {
         let class_name = class_name.unwrap_or_else(|| quote_ident!("_class").into());
+
         let mut stmts = Vec::new();
 
         let mut methods = Vec::new();
+
         let mut constructor = None;
+
         for member in class.body {
             match member {
                 ClassMember::Constructor(c) => constructor = Some(c),
@@ -520,6 +557,7 @@ impl Classes {
                 | ClassMember::TsIndexSignature(..)
                 | ClassMember::StaticBlock(..)
                 | ClassMember::AutoAccessor(..) => {}
+
                 ClassMember::Empty(..) => {}
             }
         }
@@ -528,11 +566,15 @@ impl Classes {
             // inject helper methods
 
             let mut class_name_sym = class_name.clone();
+
             class_name_sym.span = DUMMY_SP;
+
             class_name_sym.ctxt = class_name.ctxt;
 
             let mut super_class_name_sym = super_class_ident.clone();
+
             super_class_name_sym.span = DUMMY_SP;
+
             super_class_name_sym.ctxt = super_class_ident.ctxt;
 
             stmts.push(
@@ -584,6 +626,7 @@ impl Classes {
                     Stmt::Expr(ExprStmt { expr, .. }) => {
                         !matches!(&**expr, Expr::Lit(Lit::Str(..)))
                     }
+
                     _ => true,
                 })
                 .count()
@@ -593,7 +636,9 @@ impl Classes {
         }
 
         let mut class_name_sym = class_name.clone();
+
         class_name_sym.span = DUMMY_SP;
+
         class_name_sym.ctxt = class_name.ctxt;
 
         // `return Foo`
@@ -619,6 +664,7 @@ impl Classes {
         }
 
         /// { key: "prop" }
+
         fn mk_key_prop(key: PropName) -> Box<Prop> {
             Box::new(Prop::KeyValue(KeyValueProp {
                 key: PropName::Ident(quote_ident!(Default::default(), key.span(), "key").into()),
@@ -665,6 +711,7 @@ impl Classes {
             if props.is_empty() {
                 return quote_expr!(DUMMY_SP, null).as_arg();
             }
+
             ArrayLit {
                 span: DUMMY_SP,
                 elems: props
@@ -676,6 +723,7 @@ impl Classes {
                             ($field:expr, $kind:expr, $s:literal) => {{
                                 if let Some(value) = $field {
                                     let value = escape_keywords(value);
+
                                     props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(
                                         KeyValueProp {
                                             key: PropName::Ident(quote_ident!($s)),
@@ -687,7 +735,9 @@ impl Classes {
                         }
 
                         add!(data.get, MethodKind::Getter, "get");
+
                         add!(data.set, MethodKind::Setter, "set");
+
                         add!(data.method, MethodKind::Method, "value");
 
                         ObjectLit {
@@ -703,13 +753,16 @@ impl Classes {
         }
 
         /// _create_class(Foo, [{}], [{}]);
+
         fn mk_create_class_call(
             class_name: Ident,
             methods: ExprOrSpread,
             static_methods: Option<ExprOrSpread>,
         ) -> Stmt {
             let mut class_name_sym = class_name.clone();
+
             class_name_sym.span = DUMMY_SP;
+
             class_name_sym.ctxt = class_name.ctxt;
 
             CallExpr {
@@ -730,17 +783,22 @@ impl Classes {
 
         for mut m in methods {
             let key = HashKey::from(&m.key);
+
             let key_is_pure = is_pure_prop_name(&m.key);
             // class is always strict, however computed key is not part of class
             let key_contain_this = !self.in_strict && contains_this_expr(&m.key);
+
             let key_prop = Box::new(m.key.clone());
+
             let computed = matches!(m.key, PropName::Computed(..));
+
             let prop_name = prop_name_to_expr(m.key);
 
             let key_prop = if should_extract && !key_is_pure || key_contain_this {
                 let ident = private_ident!("_prop");
 
                 self.params.push(ident.clone().into());
+
                 self.args.push(prop_name.clone().into());
 
                 Box::new(PropName::Computed(ComputedPropName {
@@ -770,6 +828,7 @@ impl Classes {
                 super_class: super_class_ident,
                 in_pat: false,
             };
+
             m.function.visit_mut_with(&mut folder);
 
             if let Some(mark) = folder.this_alias_mark {
@@ -803,6 +862,7 @@ impl Classes {
                                 SyntaxContext::empty().apply_mark(Mark::new()),
                             ))
                         }
+
                         _ => None,
                     }
                 } else {
@@ -818,19 +878,26 @@ impl Classes {
                 set: None,
                 method: None,
             });
+
             match m.kind {
                 // https://github.com/swc-project/swc/issues/5029
                 MethodKind::Getter => {
                     data.method = None;
+
                     data.get = Some(value)
                 }
+
                 MethodKind::Setter => {
                     data.method = None;
+
                     data.set = Some(value)
                 }
+
                 MethodKind::Method => {
                     data.get = None;
+
                     data.set = None;
+
                     data.method = Some(value)
                 }
             }
@@ -840,6 +907,7 @@ impl Classes {
 
         if self.config.set_class_methods {
             let proto = private_ident!("_proto");
+
             props.retain(|_, v| {
                 if let Some(method) = v.method.take() {
                     if res.is_empty() {
@@ -864,8 +932,11 @@ impl Classes {
                             .into(),
                         );
                     }
+
                     let span = method.span();
+
                     let prop = *v.key_prop.clone();
+
                     res.push(
                         ExprStmt {
                             span,
@@ -893,7 +964,9 @@ impl Classes {
             static_props.retain(|_, v| {
                 if let Some(method) = v.method.take() {
                     let span = method.span();
+
                     let prop = *v.key_prop.clone();
+
                     res.push(
                         ExprStmt {
                             span,
@@ -940,7 +1013,9 @@ impl Classes {
 #[tracing::instrument(level = "info", skip_all)]
 fn inject_class_call_check(c: &mut Vec<Stmt>, name: Ident) {
     let mut class_name_sym = name.clone();
+
     class_name_sym.span = DUMMY_SP;
+
     class_name_sym.ctxt = name.ctxt;
 
     let class_call_check = CallExpr {
@@ -994,7 +1069,9 @@ fn is_always_initialized(body: &[Stmt]) -> bool {
     };
 
     let mut v = SuperFinder { found: false };
+
     let body = &body[..pos];
+
     v.visit_stmts(body);
 
     !v.found

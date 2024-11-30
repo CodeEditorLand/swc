@@ -34,6 +34,7 @@ fn parse(c:&swc::Compiler, src:&str) -> (Arc<SourceFile>, Program) {
 	let handler = Handler::with_emitter_writer(Box::new(stderr()), Some(c.cm.clone()));
 
 	let comments = c.comments().clone();
+
 	let module = c
 		.parse_js(
 			fm.clone(),
@@ -51,11 +52,14 @@ fn parse(c:&swc::Compiler, src:&str) -> (Arc<SourceFile>, Program) {
 fn babelify_only(b:&mut Bencher) {
 	GLOBALS.set(&Default::default(), || {
 		let c = mk();
+
 		let (fm, module) = parse(&c, SOURCE);
+
 		let handler = Handler::with_emitter_writer(Box::new(stderr()), Some(c.cm.clone()));
 
 		let module = c.run_transform(&handler, false, || {
 			let unresolved_mark = Mark::new();
+
 			let top_level_mark = Mark::new();
 
 			module
@@ -66,9 +70,11 @@ fn babelify_only(b:&mut Bencher) {
 
 		b.iter(|| {
 			let program = module.clone();
+
 			let ctx = Context { fm:fm.clone(), cm:c.cm.clone(), comments:c.comments().clone() };
 
 			let babel_ast = program.babelify(&ctx);
+
 			black_box(babel_ast)
 		});
 	})
@@ -80,9 +86,11 @@ fn parse_and_babelify(b:&mut Bencher, _name:&str, src:&str) {
 
 		b.iter(|| {
 			let (fm, program) = parse(&c, src);
+
 			let ctx = Context { fm, cm:c.cm.clone(), comments:c.comments().clone() };
 
 			let babel_ast = program.babelify(&ctx);
+
 			black_box(babel_ast);
 		});
 	})
@@ -149,6 +157,7 @@ fn parse(c: &swc::Compiler, src: &str) -> (Arc<SourceFile>, Program) {
     let handler = Handler::with_emitter_writer(Box::new(stderr()), Some(c.cm.clone()));
 
     let comments = c.comments().clone();
+
     let module = c
         .parse_js(
             fm.clone(),
@@ -166,11 +175,14 @@ fn parse(c: &swc::Compiler, src: &str) -> (Arc<SourceFile>, Program) {
 fn babelify_only(b: &mut Bencher) {
     GLOBALS.set(&Default::default(), || {
         let c = mk();
+
         let (fm, module) = parse(&c, SOURCE);
+
         let handler = Handler::with_emitter_writer(Box::new(stderr()), Some(c.cm.clone()));
 
         let module = c.run_transform(&handler, false, || {
             let unresolved_mark = Mark::new();
+
             let top_level_mark = Mark::new();
 
             module
@@ -181,6 +193,7 @@ fn babelify_only(b: &mut Bencher) {
 
         b.iter(|| {
             let program = module.clone();
+
             let ctx = Context {
                 fm: fm.clone(),
                 cm: c.cm.clone(),
@@ -188,6 +201,7 @@ fn babelify_only(b: &mut Bencher) {
             };
 
             let babel_ast = program.babelify(&ctx);
+
             black_box(babel_ast)
         });
     })
@@ -199,6 +213,7 @@ fn parse_and_babelify(b: &mut Bencher, _name: &str, src: &str) {
 
         b.iter(|| {
             let (fm, program) = parse(&c, src);
+
             let ctx = Context {
                 fm,
                 cm: c.cm.clone(),
@@ -206,6 +221,7 @@ fn parse_and_babelify(b: &mut Bencher, _name: &str, src: &str) {
             };
 
             let babel_ast = program.babelify(&ctx);
+
             black_box(babel_ast);
         });
     })

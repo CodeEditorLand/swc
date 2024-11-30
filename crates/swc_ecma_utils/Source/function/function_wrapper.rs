@@ -51,6 +51,7 @@ impl<T> FunctionWrapper<T> {
     /// ```
     fn build_anonymous_expression_wrapper(&mut self) -> Expr {
         let name_ident = self.binding_ident.take();
+
         let ref_ident = private_ident!("_ref");
 
         let ref_decl: Decl = VarDecl {
@@ -259,7 +260,9 @@ impl<T> FunctionWrapper<T> {
 impl From<FnExpr> for FunctionWrapper<Expr> {
     fn from(mut fn_expr: FnExpr) -> Self {
         let function_ident = fn_expr.ident.take();
+
         let params = Self::get_params(fn_expr.function.params.iter());
+
         Self {
             binding_ident: None,
             function_ident,
@@ -352,7 +355,9 @@ impl Into<Expr> for FunctionWrapper<Expr> {
 impl From<FnDecl> for FunctionWrapper<FnDecl> {
     fn from(mut fn_decl: FnDecl) -> Self {
         let function_ident = Some(fn_decl.ident.take());
+
         let params = Self::get_params(fn_decl.function.params.iter());
+
         Self {
             binding_ident: None,
             function_ident,

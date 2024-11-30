@@ -37,6 +37,7 @@ impl Tester<'_> {
 
         match out {
             Ok(()) => {}
+
             Err(stderr) => panic!("Stderr:\n{}", stderr),
         }
     }
@@ -56,6 +57,7 @@ impl Tester<'_> {
             .new_source_file(FileName::Real(file_name.into()).into(), src.into());
 
         let mut p = Parser::new(syntax, StringInput::from(&*fm), Some(&self.comments));
+
         let res = op(&mut p).map_err(|e| e.into_diagnostic(self.handler).emit());
 
         for e in p.take_errors() {
@@ -79,6 +81,7 @@ impl Tester<'_> {
 
     pub fn parse_stmt(&mut self, file_name: &str, src: &str) -> Result<Stmt, ()> {
         let mut stmts = self.parse_stmts(file_name, src)?;
+
         assert!(stmts.len() == 1);
 
         Ok(stmts.pop().unwrap())
@@ -97,6 +100,7 @@ impl Tester<'_> {
 
         let module = {
             let mut p = Parser::new(syntax, StringInput::from(&*fm), Some(&self.comments));
+
             let res = p
                 .parse_module()
                 .map_err(|e| e.into_diagnostic(self.handler).emit());
@@ -129,10 +133,12 @@ impl Tester<'_> {
             };
 
             // println!("Emitting: {:?}", module);
+
             emitter.emit_program(program).unwrap();
         }
 
         let s = String::from_utf8_lossy(&buf);
+
         s.to_string()
     }
 }
@@ -164,13 +170,16 @@ pub(crate) fn test_transform<F, P>(
         println!("----- Actual -----");
 
         let tr = tr(tester);
+
         let actual = tester.apply_transform(tr, "input.js", syntax, input)?;
 
         match ::std::env::var("PRINT_HYGIENE") {
             Ok(ref s) if s == "1" => {
                 let hygiene_src = tester.print(&actual.clone().fold_with(&mut HygieneVisualizer));
+
                 println!("----- Hygiene -----\n{}", hygiene_src);
             }
+
             _ => {}
         }
 
@@ -191,12 +200,16 @@ pub(crate) fn test_transform<F, P>(
             }
             // Diff it
             println!(">>>>> Code <<<<<\n{}", actual_src);
+
             assert_eq!(actual, expected, "different ast was detected");
+
             return Err(());
         }
 
         println!(">>>>> Orig <<<<<\n{}", input);
+
         println!(">>>>> Code <<<<<\n{}", actual_src);
+
         if actual_src != expected_src {
             panic!(
                 r#"assertion failed: `(left == right)`

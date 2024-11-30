@@ -19,6 +19,7 @@ impl<T> ExprRefExt for T where T: ExprExt {}
 /// bump.
 pub trait AsOptExpr {
     fn as_expr(&self) -> Option<&Expr>;
+
     fn as_expr_mut(&mut self) -> Option<&mut Expr>;
 }
 

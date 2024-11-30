@@ -31,11 +31,13 @@ pub fn mark_is_descendant_of_proxy(
     allocated_ptr: u32,
 ) {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let self_mark = Mark::from_u32(self_mark);
+
     let ancestor = Mark::from_u32(ancestor);
 
     let return_value = self_mark.is_descendant_of(ancestor);
@@ -45,6 +47,7 @@ pub fn mark_is_descendant_of_proxy(
         0,
         return_value as u32,
     ));
+
     let serialized_bytes =
         PluginSerializedBytes::try_serialize(&context).expect("Should be serializable");
 
@@ -64,17 +67,20 @@ pub fn mark_least_ancestor_proxy(
     allocated_ptr: u32,
 ) {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
 
     let a = Mark::from_u32(a);
+
     let b = Mark::from_u32(b);
 
     let return_value = Mark::least_ancestor(a, b).as_u32();
 
     let context =
         VersionedSerializable::new(MutableMarkContext(a.as_u32(), b.as_u32(), return_value));
+
     let serialized_bytes =
         PluginSerializedBytes::try_serialize(&context).expect("Should be serializable");
 
@@ -100,6 +106,7 @@ pub fn syntax_context_remove_mark_proxy(
     allocated_ptr: u32,
 ) {
     let memory = env.data().memory.clone();
+
     let memory = memory
         .as_ref()
         .expect("Memory instance should be available, check initialization");
@@ -113,6 +120,7 @@ pub fn syntax_context_remove_mark_proxy(
         0,
         return_value.as_u32(),
     ));
+
     let serialized_bytes =
         PluginSerializedBytes::try_serialize(&context).expect("Should be serializable");
 

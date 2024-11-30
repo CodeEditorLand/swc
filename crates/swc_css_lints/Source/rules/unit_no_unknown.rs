@@ -25,6 +25,7 @@ pub fn unit_no_unknown(
         .into_iter()
         .map(NamePattern::try_from)
         .collect::<Result<_, _>>()?;
+
     Ok(visitor_rule(
         ctx.reaction(),
         UnitNoUnknown { ctx, ignored_units },
@@ -43,6 +44,7 @@ impl Visit for UnitNoUnknown {
 
         if self.ignored_units.iter().all(|item| !item.is_match(unit)) {
             let message = format!("Unexpected unknown unit \"{}\".", unit);
+
             self.ctx.report(&unknown_dimension.unit, message);
         }
 
@@ -57,6 +59,7 @@ impl Visit for UnitNoUnknown {
             } {
                 if self.ignored_units.iter().all(|item| !item.is_match(unit)) {
                     let message = format!("Unexpected unknown unit \"{}\".", unit);
+
                     self.ctx.report(token_and_span, message);
                 }
             }

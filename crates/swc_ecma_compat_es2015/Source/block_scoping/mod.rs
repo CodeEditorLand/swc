@@ -88,6 +88,7 @@ impl BlockScoping {
         T: VisitMutWith<Self>,
     {
         let remove = !matches!(kind, ScopeKind::Loop { .. });
+
         self.scope.push(kind);
 
         node.visit_mut_with(self);
@@ -112,6 +113,7 @@ impl BlockScoping {
             {
                 if lexical_var.contains(&i) {
                     used.push(i);
+
                     return;
                 }
             }
@@ -141,7 +143,9 @@ impl BlockScoping {
 
             let mut env_hoister =
                 FnEnvHoister::new(SyntaxContext::empty().apply_mark(self.unresolved_mark));
+
             body_stmt.visit_mut_with(&mut env_hoister);
+
             let mut inits: Vec<Box<Expr>> = Vec::new();
 
             for mut var in env_hoister.to_decl() {
@@ -186,6 +190,7 @@ impl BlockScoping {
 
             if !flow_helper.mutated.is_empty() {
                 let no_modification = flow_helper.mutated.is_empty();
+
                 let mut v = MutationHandler {
                     map: &mut flow_helper.mutated,
                     in_function: false,
@@ -278,6 +283,7 @@ impl BlockScoping {
 
                 let mut stmts = vec![
                     // var _ret = _loop(i);
+
                     VarDecl {
                         span: DUMMY_SP,
                         kind: VarDeclKind::Var,
@@ -294,6 +300,7 @@ impl BlockScoping {
 
                 if flow_helper.has_return {
                     // if (_type_of(_ret) === "object") return _ret.v;
+
                     stmts.push(
                         IfStmt {
                             span: DUMMY_SP,
@@ -382,6 +389,7 @@ impl BlockScoping {
                     }
                     .into(),
                 );
+
                 return;
             }
 
@@ -414,6 +422,7 @@ impl BlockScoping {
                 }
                 .into(),
             );
+
             true
         } else {
             false
@@ -425,6 +434,7 @@ impl BlockScoping {
             let stmt = body
                 .as_mut_block()
                 .and_then(|block| (block.stmts.len() == 1).then(|| block.stmts[0].take()));
+
             if let Some(stmt) = stmt {
                 *body = Box::new(stmt)
             }
@@ -438,19 +448,25 @@ impl VisitMut for BlockScoping {
 
     fn visit_mut_arrow_expr(&mut self, n: &mut ArrowExpr) {
         n.params.visit_mut_with(self);
+
         self.visit_mut_with_scope(ScopeKind::Fn, &mut n.body);
     }
 
     fn visit_mut_block_stmt(&mut self, n: &mut BlockStmt) {
         let vars = take(&mut self.vars);
+
         n.visit_mut_children_with(self);
+
         debug_assert_eq!(self.vars, Vec::new());
+
         self.vars = vars;
     }
 
     fn visit_mut_constructor(&mut self, f: &mut Constructor) {
         f.key.visit_mut_with(self);
+
         f.params.visit_mut_with(self);
+
         self.visit_mut_with_scope(ScopeKind::Fn, &mut f.body);
     }
 
@@ -458,16 +474,19 @@ impl VisitMut for BlockScoping {
         self.visit_mut_with_scope(ScopeKind::new_loop(), &mut node.body);
 
         node.test.visit_mut_with(self);
+
         self.handle_capture_of_vars(&mut node.body);
     }
 
     fn visit_mut_for_in_stmt(&mut self, node: &mut ForInStmt) {
         let blockifyed = self.blockify_for_stmt_body(&mut node.body);
+
         let lexical_var = if let ForHead::VarDecl(decl) = &node.left {
             find_lexical_vars(decl)
         } else {
             Vec::new()
         };
+
         let args = lexical_var.clone();
 
         self.visit_mut_with_scope(ScopeKind::Block, &mut node.left);
@@ -482,12 +501,15 @@ impl VisitMut for BlockScoping {
         };
 
         self.visit_mut_with_scope(kind, &mut node.body);
+
         self.handle_capture_of_vars(&mut node.body);
+
         self.undo_blockify_for_stmt_body(&mut node.body, blockifyed);
     }
 
     fn visit_mut_for_of_stmt(&mut self, node: &mut ForOfStmt) {
         let blockifyed = self.blockify_for_stmt_body(&mut node.body);
+
         let vars = if let ForHead::VarDecl(decl) = &node.left {
             find_lexical_vars(decl)
         } else {
@@ -508,12 +530,15 @@ impl VisitMut for BlockScoping {
         };
 
         self.visit_mut_with_scope(kind, &mut node.body);
+
         self.handle_capture_of_vars(&mut node.body);
+
         self.undo_blockify_for_stmt_body(&mut node.body, blockifyed);
     }
 
     fn visit_mut_for_stmt(&mut self, node: &mut ForStmt) {
         let blockifyed = self.blockify_for_stmt_body(&mut node.body);
+
         let lexical_var = if let Some(VarDeclOrExpr::VarDecl(decl)) = &node.init {
             find_lexical_vars(decl)
         } else {
@@ -521,9 +546,11 @@ impl VisitMut for BlockScoping {
         };
 
         node.init.visit_mut_with(self);
+
         let args = lexical_var.clone();
 
         node.test.visit_mut_with(self);
+
         node.update.visit_mut_with(self);
 
         let kind = ScopeKind::Loop {
@@ -532,24 +559,31 @@ impl VisitMut for BlockScoping {
             used: Vec::new(),
             mutated: Default::default(),
         };
+
         self.visit_mut_with_scope(kind, &mut node.body);
+
         self.handle_capture_of_vars(&mut node.body);
+
         self.undo_blockify_for_stmt_body(&mut node.body, blockifyed);
     }
 
     fn visit_mut_function(&mut self, f: &mut Function) {
         f.params.visit_mut_with(self);
+
         f.decorators.visit_mut_with(self);
+
         self.visit_mut_with_scope(ScopeKind::Fn, &mut f.body);
     }
 
     fn visit_mut_getter_prop(&mut self, f: &mut GetterProp) {
         f.key.visit_mut_with(self);
+
         self.visit_mut_with_scope(ScopeKind::Fn, &mut f.body);
     }
 
     fn visit_mut_ident(&mut self, node: &mut Ident) {
         let id = node.to_id();
+
         self.mark_as_used(id);
     }
 
@@ -559,7 +593,9 @@ impl VisitMut for BlockScoping {
 
     fn visit_mut_setter_prop(&mut self, f: &mut SetterProp) {
         f.key.visit_mut_with(self);
+
         f.param.visit_mut_with(self);
+
         self.visit_mut_with_scope(ScopeKind::Fn, &mut f.body);
     }
 
@@ -577,7 +613,9 @@ impl VisitMut for BlockScoping {
 
     fn visit_mut_var_decl(&mut self, var: &mut VarDecl) {
         let old = self.var_decl_kind;
+
         self.var_decl_kind = var.kind;
+
         if let Some(ScopeKind::Loop { lexical_var, .. }) = self.scope.last_mut() {
             lexical_var.extend(find_lexical_vars(var));
         }
@@ -605,6 +643,7 @@ impl VisitMut for BlockScoping {
         self.visit_mut_with_scope(ScopeKind::new_loop(), &mut node.body);
 
         node.test.visit_mut_with(self);
+
         self.handle_capture_of_vars(&mut node.body);
     }
 }
@@ -696,6 +735,7 @@ impl VisitMut for FlowHelper<'_> {
                     self.check(i.to_id());
                 }
             }
+
             AssignTarget::Pat(p) => {
                 let ids: Vec<Id> = find_pat_ids(p);
 
@@ -717,32 +757,44 @@ impl VisitMut for FlowHelper<'_> {
     /// https://github.com/swc-project/swc/pull/2916
     fn visit_mut_do_while_stmt(&mut self, s: &mut DoWhileStmt) {
         let old = self.in_nested_loop;
+
         self.in_nested_loop = true;
+
         s.visit_mut_children_with(self);
+
         self.in_nested_loop = old;
     }
 
     /// https://github.com/swc-project/swc/pull/2916
     fn visit_mut_for_in_stmt(&mut self, s: &mut ForInStmt) {
         let old = self.in_nested_loop;
+
         self.in_nested_loop = true;
+
         s.visit_mut_children_with(self);
+
         self.in_nested_loop = old;
     }
 
     /// https://github.com/swc-project/swc/pull/2916
     fn visit_mut_for_of_stmt(&mut self, s: &mut ForOfStmt) {
         let old = self.in_nested_loop;
+
         self.in_nested_loop = true;
+
         s.visit_mut_children_with(self);
+
         self.in_nested_loop = old;
     }
 
     /// https://github.com/swc-project/swc/pull/2916
     fn visit_mut_for_stmt(&mut self, s: &mut ForStmt) {
         let old = self.in_nested_loop;
+
         self.in_nested_loop = true;
+
         s.visit_mut_children_with(self);
+
         self.in_nested_loop = old;
     }
 
@@ -769,10 +821,13 @@ impl VisitMut for FlowHelper<'_> {
                 if self.in_nested_loop && !self.has_outer_label(label) {
                     return;
                 }
+
                 let value = if let Some(label) = label {
                     let value: JsWord = format!("continue|{}", label.sym).into();
+
                     self.label
                         .insert(value.clone(), Label::Continue(label.clone()));
+
                     value
                 } else {
                     "continue".into()
@@ -791,14 +846,18 @@ impl VisitMut for FlowHelper<'_> {
                 }
                 .into();
             }
+
             Stmt::Break(BreakStmt { label, .. }) => {
                 if (self.in_switch_case || self.in_nested_loop) && !self.has_outer_label(label) {
                     return;
                 }
+
                 let value = if let Some(label) = label {
                     let value: JsWord = format!("break|{}", label.sym).into();
+
                     self.label
                         .insert(value.clone(), Label::Break(label.clone()));
+
                     value
                 } else {
                     self.has_break = true;
@@ -817,8 +876,10 @@ impl VisitMut for FlowHelper<'_> {
                 }
                 .into();
             }
+
             Stmt::Return(s) => {
                 self.has_return = true;
+
                 s.visit_mut_with(self);
 
                 *node = ReturnStmt {
@@ -844,12 +905,14 @@ impl VisitMut for FlowHelper<'_> {
                 }
                 .into();
             }
+
             _ => node.visit_mut_children_with(self),
         }
     }
 
     fn visit_mut_switch_case(&mut self, n: &mut SwitchCase) {
         let old = self.in_switch_case;
+
         self.in_switch_case = true;
 
         n.visit_mut_children_with(self);
@@ -861,14 +924,18 @@ impl VisitMut for FlowHelper<'_> {
         if let Expr::Ident(ref i) = *n.arg {
             self.check(i.to_id())
         }
+
         n.visit_mut_children_with(self);
     }
 
     /// https://github.com/swc-project/swc/pull/2916
     fn visit_mut_while_stmt(&mut self, s: &mut WhileStmt) {
         let old = self.in_nested_loop;
+
         self.in_nested_loop = true;
+
         s.visit_mut_children_with(self);
+
         self.in_nested_loop = old;
     }
 
@@ -903,6 +970,7 @@ impl MutationHandler<'_> {
                 .into(),
             );
         }
+
         exprs.push(orig.unwrap_or_else(|| Expr::undefined(DUMMY_SP)));
 
         SeqExpr {
@@ -921,6 +989,7 @@ impl VisitMut for MutationHandler<'_> {
 
     fn visit_mut_arrow_expr(&mut self, n: &mut ArrowExpr) {
         let old = self.in_function;
+
         self.in_function = true;
 
         n.visit_mut_children_with(self);
@@ -930,6 +999,7 @@ impl VisitMut for MutationHandler<'_> {
 
     fn visit_mut_function(&mut self, n: &mut Function) {
         let old = self.in_function;
+
         self.in_function = true;
 
         n.visit_mut_children_with(self);
@@ -945,6 +1015,7 @@ impl VisitMut for MutationHandler<'_> {
 
     fn visit_mut_return_stmt(&mut self, n: &mut ReturnStmt) {
         n.visit_mut_children_with(self);
+
         if self.in_function || self.map.is_empty() {
             return;
         }

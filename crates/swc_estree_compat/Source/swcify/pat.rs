@@ -125,6 +125,7 @@ impl Swcify for ObjectPatternProp {
                             value: Box::new(v.swcify(ctx)),
                         })
                     }
+
                     swc_estree_ast::ObjectPropVal::Expr(v) => {
                         ObjectPatProp::Assign(AssignPatProp {
                             span: ctx.span(&prop.base),
@@ -164,6 +165,7 @@ impl Swcify for swc_estree_ast::Param {
                     pat: pat.into(),
                 }
             }
+
             swc_estree_ast::Param::Pat(v) => {
                 let pat = v.swcify(ctx);
 
@@ -173,6 +175,7 @@ impl Swcify for swc_estree_ast::Param {
                     pat,
                 }
             }
+
             swc_estree_ast::Param::Rest(v) => swc_ecma_ast::Param {
                 span: ctx.span(&v.base),
                 decorators: v.decorators.swcify(ctx).unwrap_or_default(),

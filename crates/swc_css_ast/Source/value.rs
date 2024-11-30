@@ -359,8 +359,11 @@ impl Hash for Number {
     fn hash<H: Hasher>(&self, state: &mut H) {
         fn integer_decode(val: f64) -> (u64, i16, i8) {
             let bits: u64 = unsafe { mem::transmute(val) };
+
             let sign: i8 = if bits >> 63 == 0 { 1 } else { -1 };
+
             let mut exponent: i16 = ((bits >> 52) & 0x7ff) as i16;
+
             let mantissa = if exponent == 0 {
                 (bits & 0xfffffffffffff) << 1
             } else {
@@ -372,6 +375,7 @@ impl Hash for Number {
         }
 
         self.span.hash(state);
+
         integer_decode(self.value).hash(state);
     }
 }

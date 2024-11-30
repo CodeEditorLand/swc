@@ -152,66 +152,87 @@ impl Swcify for BinaryExprOp {
             BinaryExprOp::Addition => {
                 op!(bin, "+")
             }
+
             BinaryExprOp::Subtraction => {
                 op!(bin, "-")
             }
+
             BinaryExprOp::Division => {
                 op!("/")
             }
+
             BinaryExprOp::Remainder => {
                 op!("%")
             }
+
             BinaryExprOp::Multiplication => {
                 op!("*")
             }
+
             BinaryExprOp::Exponentiation => {
                 op!("**")
             }
+
             BinaryExprOp::And => {
                 op!("&")
             }
+
             BinaryExprOp::Or => {
                 op!("|")
             }
+
             BinaryExprOp::RightShift => {
                 op!(">>")
             }
+
             BinaryExprOp::UnsignedRightShift => {
                 op!(">>>")
             }
+
             BinaryExprOp::LeftShift => {
                 op!("<<")
             }
+
             BinaryExprOp::Xor => {
                 op!("^")
             }
+
             BinaryExprOp::Equal => {
                 op!("==")
             }
+
             BinaryExprOp::StrictEqual => {
                 op!("===")
             }
+
             BinaryExprOp::NotEqual => {
                 op!("!=")
             }
+
             BinaryExprOp::StrictNotEqual => {
                 op!("!==")
             }
+
             BinaryExprOp::In => {
                 op!("in")
             }
+
             BinaryExprOp::Instanceof => {
                 op!("instanceof")
             }
+
             BinaryExprOp::GreaterThan => {
                 op!(">")
             }
+
             BinaryExprOp::LessThan => {
                 op!("<")
             }
+
             BinaryExprOp::GreaterThanOrEqual => {
                 op!(">=")
             }
+
             BinaryExprOp::LessThanOrEqual => {
                 op!("<=")
             }
@@ -227,6 +248,7 @@ impl Swcify for BabelCallee {
             BabelCallee::V8Id(_) => {
                 unreachable!("what is v8 id?")
             }
+
             BabelCallee::Expr(e) => match *e {
                 Expression::Super(s) => Callee::Super(s.swcify(ctx)),
                 Expression::Import(s) => Callee::Import(s.swcify(ctx)),
@@ -335,9 +357,11 @@ impl Swcify for LogicalExprOp {
             LogicalExprOp::Or => {
                 op!("||")
             }
+
             LogicalExprOp::And => {
                 op!("&&")
             }
+
             LogicalExprOp::Nullish => {
                 op!("??")
             }
@@ -370,11 +394,13 @@ impl Swcify for MemberExpression {
                     (MemberExprProp::Id(i), false) => SuperProp::Ident(i.swcify(ctx).into()),
                     (MemberExprProp::Expr(e), true) => {
                         let expr = e.swcify(ctx);
+
                         SuperProp::Computed(ComputedPropName {
                             span: expr.span(),
                             expr,
                         })
                     }
+
                     _ => unreachable!(),
                 },
             }
@@ -389,11 +415,13 @@ impl Swcify for MemberExpression {
                     }
                     (MemberExprProp::Expr(e), true) => {
                         let expr = e.swcify(ctx);
+
                         MemberProp::Computed(ComputedPropName {
                             span: expr.span(),
                             expr,
                         })
                     }
+
                     _ => unreachable!(),
                 },
             }
@@ -412,6 +440,7 @@ impl Swcify for NewExpression {
                 BabelCallee::V8Id(..) => {
                     unreachable!()
                 }
+
                 BabelCallee::Expr(e) => e.swcify(ctx),
             },
             args: Some(
@@ -496,6 +525,7 @@ impl Swcify for ObjectKey {
             ObjectKey::Numeric(v) => PropName::Num(v.swcify(ctx)),
             ObjectKey::Expr(v) => {
                 let expr = v.swcify(ctx);
+
                 PropName::Computed(ComputedPropName {
                     span: expr.span(),
                     expr,
@@ -576,24 +606,31 @@ impl Swcify for UnaryExprOp {
             UnaryExprOp::Void => {
                 op!("void")
             }
+
             UnaryExprOp::Throw => {
                 panic!("swc does not support throw expressions")
             }
+
             UnaryExprOp::Delete => {
                 op!("delete")
             }
+
             UnaryExprOp::LogicalNot => {
                 op!("!")
             }
+
             UnaryExprOp::Plus => {
                 op!(unary, "+")
             }
+
             UnaryExprOp::Negation => {
                 op!(unary, "-")
             }
+
             UnaryExprOp::BitwiseNot => {
                 op!("~")
             }
+
             UnaryExprOp::Typeof => {
                 op!("typeof")
             }
@@ -611,6 +648,7 @@ impl Swcify for UpdateExpression {
                 UpdateExprOp::Increment => {
                     op!("++")
                 }
+
                 UpdateExprOp::Decrement => {
                     op!("--")
                 }
@@ -675,7 +713,9 @@ impl Swcify for MetaProperty {
 
     fn swcify(self, ctx: &Context) -> Self::Output {
         let meta: Ident = self.meta.swcify(ctx).into();
+
         let prop: Ident = self.property.swcify(ctx).into();
+
         match (&*meta.sym, &*prop.sym) {
             ("new", "target") => MetaPropExpr {
                 kind: MetaPropKind::NewTarget,
@@ -777,11 +817,13 @@ impl Swcify for OptionalMemberExpression {
                     }
                     (OptionalMemberExprProp::Expr(e), true) => {
                         let expr = e.swcify(ctx);
+
                         MemberProp::Computed(ComputedPropName {
                             span: expr.span(),
                             expr,
                         })
                     }
+
                     _ => unreachable!(),
                 },
             })),
@@ -861,9 +903,11 @@ impl Swcify for swc_estree_ast::JSXElementName {
             swc_estree_ast::JSXElementName::Id(v) => {
                 swc_ecma_ast::JSXElementName::Ident(v.swcify(ctx))
             }
+
             swc_estree_ast::JSXElementName::Expr(v) => {
                 swc_ecma_ast::JSXElementName::JSXMemberExpr(v.swcify(ctx))
             }
+
             swc_estree_ast::JSXElementName::Name(v) => {
                 swc_ecma_ast::JSXElementName::JSXNamespacedName(v.swcify(ctx))
             }
@@ -927,6 +971,7 @@ impl Swcify for swc_estree_ast::JSXAttrName {
             swc_estree_ast::JSXAttrName::Id(v) => {
                 swc_ecma_ast::JSXAttrName::Ident(v.swcify(ctx).into())
             }
+
             swc_estree_ast::JSXAttrName::Name(v) => {
                 swc_ecma_ast::JSXAttrName::JSXNamespacedName(v.swcify(ctx))
             }
@@ -998,15 +1043,19 @@ impl Swcify for swc_estree_ast::JSXElementChild {
             swc_estree_ast::JSXElementChild::Text(v) => {
                 swc_ecma_ast::JSXElementChild::JSXText(v.swcify(ctx))
             }
+
             swc_estree_ast::JSXElementChild::Expr(v) => {
                 swc_ecma_ast::JSXElementChild::from(v.swcify(ctx))
             }
+
             swc_estree_ast::JSXElementChild::Spread(v) => {
                 swc_ecma_ast::JSXElementChild::from(v.swcify(ctx))
             }
+
             swc_estree_ast::JSXElementChild::Element(v) => {
                 swc_ecma_ast::JSXElementChild::from(Box::new(v.swcify(ctx)))
             }
+
             swc_estree_ast::JSXElementChild::Fragment(v) => {
                 swc_ecma_ast::JSXElementChild::from(v.swcify(ctx))
             }

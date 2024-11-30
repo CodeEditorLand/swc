@@ -20,6 +20,7 @@ impl VisitMut for IdentReplacer<'_> {
 
         if n.value.eq_ignore_ascii_case(self.from) {
             n.value = self.to.into();
+
             n.raw = None;
         }
     }
@@ -44,12 +45,16 @@ impl VisitMut for FunctionNameReplacer<'_> {
         match &mut n.name {
             FunctionName::Ident(name) if name.value.eq_ignore_ascii_case(self.from) => {
                 name.value = self.to.into();
+
                 name.raw = None;
             }
+
             FunctionName::DashedIdent(name) if name.value.eq_ignore_ascii_case(self.from) => {
                 name.value = self.to.into();
+
                 name.raw = None;
             }
+
             _ => {}
         }
     }
@@ -73,6 +78,7 @@ impl VisitMut for PseudoClassSelectorNameReplacer<'_> {
 
         if &*n.name.value == self.from {
             n.name.value = self.to.into();
+
             n.name.raw = None;
         }
     }
@@ -96,6 +102,7 @@ impl VisitMut for PseudoElementSelectorNameReplacer<'_> {
 
         if &*n.name.value == self.from {
             n.name.value = self.to.into();
+
             n.name.raw = None;
         }
     }
@@ -131,6 +138,7 @@ impl VisitMut for PseudoElementOnPseudoClassReplacer<'_> {
                     children: None,
                 })
             }
+
             _ => {}
         }
     }
@@ -273,7 +281,9 @@ fn hex_escape(ascii_byte: u8, _minify: bool) -> String {
 
     if ascii_byte > 0x0f {
         let high = (ascii_byte >> 4) as usize;
+
         let low = (ascii_byte & 0x0f) as usize;
+
         unsafe { str::from_utf8_unchecked(&[b'\\', HEX_DIGITS[high], HEX_DIGITS[low], b' ']) }
             .to_string()
     } else {
@@ -305,23 +315,30 @@ pub fn hsl_to_rgb(hsl: [f64; 3]) -> [f64; 3] {
     let [h, s, l] = hsl;
 
     let r;
+
     let g;
+
     let b;
 
     if s == 0.0 {
         r = l;
+
         g = l;
+
         b = l;
     } else {
         let f = |n: f64| -> f64 {
             let k = (n + h / 30.0) % 12.0;
+
             let a = s * f64::min(l, 1.0 - l);
 
             l - a * f64::min(k - 3.0, 9.0 - k).clamp(-1.0, 1.0)
         };
 
         r = f(0.0);
+
         g = f(8.0);
+
         b = f(4.0);
     }
 
@@ -370,16 +387,23 @@ pub fn hex_to_rgba(hex: &str) -> (u8, u8, u8, f64) {
     match hex.len() {
         8 => {
             let r = from_hex(hex[0]) * 16 + from_hex(hex[1]);
+
             let g = from_hex(hex[2]) * 16 + from_hex(hex[3]);
+
             let b = from_hex(hex[4]) * 16 + from_hex(hex[5]);
+
             let a = (from_hex(hex[6]) * 16 + from_hex(hex[7])) as f64 / 255.0;
 
             (r, g, b, a)
         }
+
         4 => {
             let r = from_hex(hex[0]) * 17;
+
             let g = from_hex(hex[1]) * 17;
+
             let b = from_hex(hex[2]) * 17;
+
             let a = (from_hex(hex[3]) * 17) as f64 / 255.0;
 
             (r, g, b, a)

@@ -15,6 +15,7 @@ impl From<&PropName> for HashKey {
             PropName::Ident(IdentName { sym: value, .. }) | PropName::Str(Str { value, .. }) => {
                 HashKey::Str(value.clone())
             }
+
             PropName::Num(Number { value, .. }) => HashKey::Str(value.to_string().into()),
             PropName::BigInt(BigInt { value, .. }) => HashKey::Str(value.to_string().into()),
             PropName::Computed(expr) => HashKey::Computed(expr.span()),

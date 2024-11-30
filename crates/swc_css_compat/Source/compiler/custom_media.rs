@@ -36,6 +36,7 @@ impl CustomMediaHandler {
 
                 true
             }
+
             _ => true,
         });
     }
@@ -46,6 +47,7 @@ impl CustomMediaHandler {
         // type exists.
         if let Some((modifier, media_type)) = self.modifier_and_media_type.take() {
             n.modifier = modifier;
+
             n.media_type = media_type;
 
             if let Some(condition) = &mut n.condition {
@@ -55,6 +57,7 @@ impl CustomMediaHandler {
                             n.condition = None;
                         }
                     }
+
                     MediaConditionType::All(condition) => {
                         if condition.conditions.is_empty() {
                             n.condition = None;
@@ -83,6 +86,7 @@ impl CustomMediaHandler {
                         }
                     }
                 }
+
                 MediaConditionAllType::And(media_and) => {
                     if let Some(new_media_in_parens) =
                         self.process_media_in_parens(&media_and.condition)
@@ -94,6 +98,7 @@ impl CustomMediaHandler {
                         }
                     }
                 }
+
                 MediaConditionAllType::Or(media_or) => {
                     if let Some(new_media_in_parens) =
                         self.process_media_in_parens(&media_or.condition)
@@ -105,6 +110,7 @@ impl CustomMediaHandler {
                         }
                     }
                 }
+
                 MediaConditionAllType::MediaInParens(media_in_parens) => {
                     if let Some(new_media_in_parens) = self.process_media_in_parens(media_in_parens)
                     {
@@ -138,9 +144,11 @@ impl CustomMediaHandler {
                             MediaConditionAllType::And(media_and) => {
                                 Some(MediaConditionAllType::MediaInParens(media_and.condition))
                             }
+
                             MediaConditionAllType::Or(media_and) => {
                                 Some(MediaConditionAllType::MediaInParens(media_and.condition))
                             }
+
                             _ => Some(value),
                         }
                     } else {
@@ -170,6 +178,7 @@ impl CustomMediaHandler {
                         }
                     }
                 }
+
                 MediaConditionWithoutOrType::And(media_and) => {
                     if let Some(new_media_in_parens) =
                         self.process_media_in_parens(&media_and.condition)
@@ -181,6 +190,7 @@ impl CustomMediaHandler {
                         }
                     }
                 }
+
                 MediaConditionWithoutOrType::MediaInParens(media_in_parens) => {
                     if let Some(new_media_in_parens) = self.process_media_in_parens(media_in_parens)
                     {
@@ -243,6 +253,7 @@ impl CustomMediaHandler {
                             "Boolean logic in @custom-media at-rules is not supported by swc"
                         );
                     }
+
                     CustomMediaQueryMediaType::MediaQueryList(media_query_list) => {
                         &media_query_list.queries
                     }
@@ -304,6 +315,7 @@ impl CustomMediaHandler {
                                         }));
                                 }
                             }
+
                             MediaConditionType::WithoutOr(media_condition) => {
                                 let mut media_condition = self
                                     .media_condition_without_or_to_media_condition(media_condition);
@@ -317,6 +329,7 @@ impl CustomMediaHandler {
                                             Some(MediaConditionAllType::MediaInParens(inner)) => {
                                                 inner
                                             }
+
                                             _ => {
                                                 unreachable!();
                                             }
@@ -378,6 +391,7 @@ impl CustomMediaHandler {
                 MediaConditionWithoutOrType::MediaInParens(n) => {
                     MediaConditionAllType::MediaInParens(n.clone())
                 }
+
                 MediaConditionWithoutOrType::And(n) => MediaConditionAllType::And(n.clone()),
                 MediaConditionWithoutOrType::Not(n) => MediaConditionAllType::Not(n.clone()),
             };

@@ -15,6 +15,7 @@ where
 {
     fn parse(&mut self) -> PResult<SelectorList> {
         let child: ComplexSelector = self.parse()?;
+
         let mut children = vec![child];
 
         loop {
@@ -37,6 +38,7 @@ where
                 unreachable!();
             }
         };
+
         let last_pos = match children.last() {
             Some(last) => last.span_hi(),
             _ => {
@@ -68,6 +70,7 @@ where
                         parser.input.reset(&state);
 
                         let span = parser.input.cur_span();
+
                         let mut children = Vec::new();
 
                         while !is_one_of!(parser, EOF, ",", ")") {
@@ -88,6 +91,7 @@ where
             };
 
         let child = parse_forgiving_complex_selector(self)?;
+
         let mut children = vec![child];
 
         loop {
@@ -108,6 +112,7 @@ where
                 unreachable!();
             }
         };
+
         let last_pos = match children.last() {
             Some(last) => last.span_hi(),
             _ => {
@@ -128,6 +133,7 @@ where
 {
     fn parse(&mut self) -> PResult<CompoundSelectorList> {
         let child: CompoundSelector = self.parse()?;
+
         let mut children = vec![child];
 
         loop {
@@ -150,6 +156,7 @@ where
                 unreachable!();
             }
         };
+
         let last_pos = match children.last() {
             Some(last) => last.span_hi(),
             _ => {
@@ -170,6 +177,7 @@ where
 {
     fn parse(&mut self) -> PResult<RelativeSelectorList> {
         let child: RelativeSelector = self.parse()?;
+
         let mut children = vec![child];
 
         loop {
@@ -192,6 +200,7 @@ where
                 unreachable!();
             }
         };
+
         let last_pos = match children.last() {
             Some(last) => last.span_hi(),
             _ => {
@@ -223,6 +232,7 @@ where
                         parser.input.reset(&state);
 
                         let span = parser.input.cur_span();
+
                         let mut children = Vec::new();
 
                         while !is_one_of!(parser, EOF, ",", ")") {
@@ -243,6 +253,7 @@ where
             };
 
         let child = parse_forgiving_relative_selector(self)?;
+
         let mut children = vec![child];
 
         loop {
@@ -263,6 +274,7 @@ where
                 unreachable!();
             }
         };
+
         let last_pos = match children.last() {
             Some(last) => last.span_hi(),
             _ => {
@@ -283,6 +295,7 @@ where
 {
     fn parse(&mut self) -> PResult<ComplexSelector> {
         let child = ComplexSelectorChildren::CompoundSelector(self.parse()?);
+
         let mut children = vec![child];
 
         loop {
@@ -316,6 +329,7 @@ where
                 unreachable!();
             }
         };
+
         let last_pos = match children.last() {
             Some(ComplexSelectorChildren::CompoundSelector(child)) => child.span.hi,
             _ => {
@@ -382,10 +396,12 @@ where
         }
 
         let selector: ComplexSelector = self.parse()?;
+
         let start_pos = match combinator {
             Some(Combinator { span, .. }) => span.lo,
             _ => selector.span.lo,
         };
+
         let last_pos = selector.span.hi;
 
         Ok(RelativeSelector {
@@ -402,6 +418,7 @@ where
 {
     fn parse(&mut self) -> PResult<CompoundSelector> {
         let start_span = self.input.cur_span();
+
         let start_pos = start_span.lo;
 
         let mut nesting_selector = None;
@@ -420,6 +437,7 @@ where
         } else {
             None
         };
+
         let mut subclass_selectors = Vec::new();
 
         loop {
@@ -482,6 +500,7 @@ where
 {
     fn parse(&mut self) -> PResult<TypeSelector> {
         let span = self.input.cur_span();
+
         let mut prefix = None;
 
         if is!(self, Ident) && peeked_is!(self, "|")
@@ -504,6 +523,7 @@ where
                     },
                 }));
             }
+
             tok!("*") => {
                 bump!(self);
 
@@ -512,6 +532,7 @@ where
                     prefix,
                 }));
             }
+
             _ => {
                 return Err(Error::new(
                     span,
@@ -540,6 +561,7 @@ where
                     name,
                 }));
             }
+
             Token::Delim { value, .. } if *value == '*' => {
                 bump!(self);
 
@@ -547,6 +569,7 @@ where
                     span: span!(self, span.lo),
                 }));
             }
+
             _ => {}
         }
 
@@ -565,7 +588,9 @@ where
 {
     fn parse(&mut self) -> PResult<WqName> {
         let span = self.input.cur_span();
+
         let state = self.input.state();
+
         let mut prefix = None;
 
         if is!(self, Ident) && peeked_is!(self, "|")
@@ -623,6 +648,7 @@ where
 {
     fn parse(&mut self) -> PResult<IdSelector> {
         let span = self.input.cur_span();
+
         let text = match bump!(self) {
             Token::Hash {
                 is_id, value, raw, ..
@@ -640,6 +666,7 @@ where
                     raw: Some(raw),
                 }
             }
+
             _ => {
                 unreachable!()
             }
@@ -682,7 +709,9 @@ where
         self.input.skip_ws();
 
         let mut matcher = None;
+
         let mut value = None;
+
         let mut modifier = None;
 
         let name = if let Ok(wq_name) = self.parse() {
@@ -736,6 +765,7 @@ where
         match cur!(self) {
             tok!("~") => {
                 bump!(self);
+
                 expect!(self, "=");
 
                 Ok(AttributeSelectorMatcher {
@@ -743,8 +773,10 @@ where
                     value: AttributeSelectorMatcherValue::Tilde,
                 })
             }
+
             tok!("|") => {
                 bump!(self);
+
                 expect!(self, "=");
 
                 Ok(AttributeSelectorMatcher {
@@ -752,8 +784,10 @@ where
                     value: AttributeSelectorMatcherValue::Bar,
                 })
             }
+
             tok!("^") => {
                 bump!(self);
+
                 expect!(self, "=");
 
                 Ok(AttributeSelectorMatcher {
@@ -761,8 +795,10 @@ where
                     value: AttributeSelectorMatcherValue::Caret,
                 })
             }
+
             tok!("$") => {
                 bump!(self);
+
                 expect!(self, "=");
 
                 Ok(AttributeSelectorMatcher {
@@ -770,8 +806,10 @@ where
                     value: AttributeSelectorMatcherValue::Dollar,
                 })
             }
+
             tok!("*") => {
                 bump!(self);
+
                 expect!(self, "=");
 
                 Ok(AttributeSelectorMatcher {
@@ -779,6 +817,7 @@ where
                     value: AttributeSelectorMatcherValue::Asterisk,
                 })
             }
+
             tok!("=") => {
                 bump!(self);
 
@@ -787,6 +826,7 @@ where
                     value: AttributeSelectorMatcherValue::Equals,
                 })
             }
+
             _ => return Err(Error::new(span, ErrorKind::InvalidAttrSelectorMatcher)),
         }
     }
@@ -803,11 +843,13 @@ where
 
                 Ok(AttributeSelectorValue::Ident(ident))
             }
+
             tok!("string") => {
                 let string = self.parse()?;
 
                 Ok(AttributeSelectorValue::Str(string))
             }
+
             _ => {
                 let span = self.input.cur_span();
 
@@ -833,6 +875,7 @@ where
                     value,
                 })
             }
+
             _ => return Err(Error::new(span, ErrorKind::InvalidAttrSelectorModifier)),
         }
     }
@@ -849,12 +892,16 @@ where
 
         if is!(self, Function) {
             let fn_span = self.input.cur_span();
+
             let name = bump!(self);
+
             let names: (Atom, _) = match name {
                 Token::Function { value, raw } => (value.to_ascii_lowercase(), raw),
                 _ => unreachable!(),
             };
+
             let state = self.input.state();
+
             let mut parse_pseudo_class_children =
                 || -> PResult<Vec<PseudoClassSelectorChildren>> {
                     let mut children = Vec::new();
@@ -867,6 +914,7 @@ where
                                 in_global_or_local_selector: true,
                                 ..self.ctx
                             };
+
                             let selector_list = self.with_ctx(ctx).parse_as::<ComplexSelector>()?;
 
                             self.input.skip_ws();
@@ -927,9 +975,11 @@ where
                                     tok!("ident") => {
                                         PseudoClassSelectorChildren::Ident(self.parse()?)
                                     }
+
                                     tok!("string") => {
                                         PseudoClassSelectorChildren::Str(self.parse()?)
                                     }
+
                                     _ => {
                                         return Err(Error::new(
                                             span,
@@ -1013,6 +1063,7 @@ where
                                 compound_selector,
                             ));
                         }
+
                         _ => {
                             return Err(Error::new(span, ErrorKind::Ignore));
                         }
@@ -1020,6 +1071,7 @@ where
 
                     Ok(children)
                 };
+
             let children = match parse_pseudo_class_children() {
                 Ok(children) => children,
                 Err(err) => {
@@ -1030,6 +1082,7 @@ where
                     self.input.reset(&state);
 
                     let any_value = self.parse_any_value()?;
+
                     let any_value: Vec<PseudoClassSelectorChildren> = any_value
                         .into_iter()
                         .map(PseudoClassSelectorChildren::PreservedToken)
@@ -1077,17 +1130,21 @@ where
         let span = self.input.cur_span();
 
         expect!(self, ":");
+
         expect!(self, ":");
 
         if is!(self, Function) {
             let fn_span = self.input.cur_span();
+
             let name = bump!(self);
+
             let names: (Atom, _) = match name {
                 Token::Function { value, raw } => (value.to_ascii_lowercase(), raw),
                 _ => unreachable!(),
             };
 
             let state = self.input.state();
+
             let mut parse_pseudo_element_children =
                 || -> PResult<Vec<PseudoElementSelectorChildren>> {
                     let mut children = Vec::new();
@@ -1135,6 +1192,7 @@ where
 
                             self.input.skip_ws();
                         }
+
                         _ => {
                             return Err(Error::new(span, ErrorKind::Ignore));
                         }
@@ -1142,6 +1200,7 @@ where
 
                     Ok(children)
                 };
+
             let children = match parse_pseudo_element_children() {
                 Ok(children) => children,
                 Err(err) => {
@@ -1152,6 +1211,7 @@ where
                     self.input.reset(&state);
 
                     let any_value = self.parse_any_value()?;
+
                     let any_value: Vec<PseudoElementSelectorChildren> = any_value
                         .into_iter()
                         .map(PseudoElementSelectorChildren::PreservedToken)
@@ -1198,6 +1258,7 @@ where
         match cur!(self) {
             //  odd | even
             Token::Ident { value, .. }
+
                 if matches_eq_ignore_ascii_case!(value, "odd", "even") =>
                 {
                     let ident: Ident = self.parse()?;
@@ -1247,10 +1308,13 @@ where
 
                     if let Some(Token::Ident { .. }) = peeked {
                         bump!(self);
+
                         has_plus_sign = true;
                     }
                 }
+
                 let a;
+
                 let a_raw;
 
                 let n_value;
@@ -1265,6 +1329,7 @@ where
                         };
 
                         let has_minus_sign = ident_value.starts_with('-');
+
                         let n_char = if has_minus_sign { ident_value.chars().nth(1) } else { ident_value.chars().next() };
 
                         if n_char != Some('n') && n_char != Some('N') {
@@ -1275,10 +1340,12 @@ where
                         }
 
                         a = Some(if has_minus_sign { -1 } else {1 });
+
                         a_raw = Some(self.input.atom(if has_plus_sign { "+" } else if has_minus_sign { "-" } else { "" }));
 
                         n_value = if has_minus_sign { ident_value[1..].to_string() } else { ident_value.to_string() };
                     }
+
                     tok!("dimension") => {
                         let dimension = match bump!(self) {
                             Token::Dimension(dimension) => {
@@ -1286,6 +1353,7 @@ where
 
                              (value, raw_value, unit)
                             }
+
                             _ => {
                                 unreachable!();
                             }
@@ -1301,9 +1369,12 @@ where
                         }
 
                         a = Some(dimension.0 as i32);
+
                         a_raw = Some(dimension.1);
+
                         n_value =  (*dimension.2).to_string();
                     }
+
                     _ => {
                         return Err(Error::new(span, ErrorKind::InvalidAnPlusBMicrosyntax));
                     }
@@ -1312,6 +1383,7 @@ where
                 self.input.skip_ws();
 
                 let mut b = None;
+
                 let mut b_raw = None;
 
                 let dash_after_n = n_value.chars().nth(1);
@@ -1329,6 +1401,7 @@ where
                         };
 
                         b = Some(number.0 as i32);
+
                         b_raw = Some(number.1);
                     }
                     // -n- <signless-integer>
@@ -1347,7 +1420,9 @@ where
                         let mut b_raw_str = String::new();
 
                         b_raw_str.push_str("- ");
+
                         b_raw_str.push_str(&number.1);
+
                         b_raw = Some(self.input.atom(b_raw_str));
                     }
                     // '+'? n ['+' | '-'] <signless-integer>
@@ -1375,9 +1450,13 @@ where
                         let mut b_raw_str = String::new();
 
                         b_raw_str.push(' ');
+
                         b_raw_str.push(b_sign_raw);
+
                         b_raw_str.push(' ');
+
                         b_raw_str.push_str(&number.1);
+
                         b_raw = Some(self.input.atom(b_raw_str));
                     }
                     // '+'? <ndashdigit-ident>
@@ -1385,6 +1464,7 @@ where
                     // <ndashdigit-dimension>
                     _ if dash_after_n == Some('-') => {
                         let b_from_ident = &n_value[2..];
+
                         let parsed: i32 = lexical::parse(b_from_ident).unwrap_or_else(|err| {
                             unreachable!(
                                 "failed to parse `{}` using lexical: {:?}",
@@ -1397,6 +1477,7 @@ where
                         let mut b_raw_str = String::new();
 
                         b_raw_str.push('-');
+
                         b_raw_str.push_str(b_from_ident);
 
                         b_raw = Some(self.input.atom(b_raw_str));
@@ -1404,6 +1485,7 @@ where
                     // '+'? n
                     // -n
                     _ if dash_after_n.is_none() => {}
+
                     _ => {
                         return Err(Error::new(span, ErrorKind::InvalidAnPlusBMicrosyntax));
                     }
@@ -1417,6 +1499,7 @@ where
                     b_raw,
                 }))
             }
+
             _ => {
                 return Err(Error::new(span, ErrorKind::InvalidAnPlusBMicrosyntax));
             }

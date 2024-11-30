@@ -63,6 +63,7 @@ pub fn decorators(c: Config) -> impl Pass {
         if c.emit_metadata {
             unimplemented!("emitting decorator metadata while using new proposal")
         }
+
         Either::Right(fold_pass(Decorators {
             is_in_strict: false,
             vars: Default::default(),
@@ -123,6 +124,7 @@ impl Fold for Decorators {
                 }
                 .into()
             }
+
             _ => decl,
         }
     }
@@ -141,6 +143,7 @@ impl Fold for Decorators {
                     class,
                 )
             }
+
             _ => expr,
         }
     }
@@ -165,6 +168,7 @@ impl Fold for Decorators {
                 }
                 .into()
             }
+
             _ => decl,
         }
     }
@@ -175,19 +179,24 @@ impl Fold for Decorators {
         }
 
         let old_strict = self.is_in_strict;
+
         self.is_in_strict = true;
 
         let mut buf = Vec::with_capacity(items.len() + 4);
+
         items.into_iter().for_each(|item| {
             if !contains_decorator(&item) {
                 buf.push(item);
+
                 return;
             }
 
             macro_rules! handle_class {
                 ($cls:expr, $ident:expr) => {{
                     let class = $cls;
+
                     let ident = $ident;
+
                     let decorate_call = Box::new(self.fold_class_inner(ident.clone(), class));
 
                     buf.push(
@@ -207,6 +216,7 @@ impl Fold for Decorators {
                     );
 
                     // export { Foo as default }
+
                     buf.push(ModuleItem::ModuleDecl(ModuleDecl::ExportNamed(
                         NamedExport {
                             span: DUMMY_SP,
@@ -248,6 +258,7 @@ impl Fold for Decorators {
 
                     _ => {
                         let item: ModuleItem = ExportDefaultExpr { span, expr }.into();
+
                         buf.push(item.fold_with(self));
                     }
                 },
@@ -281,11 +292,14 @@ impl Decorators {
     #[allow(clippy::boxed_local)]
     fn fold_class_inner(&mut self, ident: Ident, mut class: Box<Class>) -> Expr {
         let initialize = private_ident!("_initialize");
+
         let super_class_ident = class
             .super_class
             .as_ref()
             .map(|expr| alias_ident_for(expr, "_super"));
+
         let super_class_expr = class.super_class;
+
         class.super_class = super_class_ident.clone().map(|i| i.into());
 
         let constructor = {
@@ -311,10 +325,12 @@ impl Decorators {
                         ClassMember::Constructor(c) => c,
                         _ => unreachable!(),
                     };
+
                     inject_after_super(&mut c, vec![initialize_call]);
 
                     ClassMember::Constructor(c)
                 }
+
                 None => {
                     let mut c =
                         default_constructor_with_span(super_class_ident.is_some(), class.span);
@@ -333,7 +349,9 @@ impl Decorators {
         macro_rules! fold_method {
             ($method:expr, $fn_name:expr, $key_prop_value:expr) => {{
                 let fn_name = $fn_name;
+
                 let mut method = $method;
+
                 let mut folder = SuperFieldAccessFolder {
                     class_name: &ident,
                     constructor_this_mark: None,
@@ -355,6 +373,7 @@ impl Decorators {
                 //   value: function () {
                 //     return 2;
                 //   }
+
                 Some(
                     ObjectLit {
                         span: DUMMY_SP,
@@ -441,25 +460,31 @@ impl Decorators {
                             PropName::Str(ref s) => Some(IdentName::new(s.value.clone(), s.span)),
                             _ => None,
                         };
+
                         let key_prop_value = Box::new(prop_name_to_expr_value(method.key.clone()));
 
                         fold_method!(method, fn_name, key_prop_value)
                     }
+
                     ClassMember::PrivateMethod(method) => {
                         let fn_name = Ident::new_no_ctxt(
                             format!("_{}", method.key.name).into(),
                             method.key.span,
                         );
+
                         let key_prop_value = Lit::Str(Str {
                             span: method.key.span,
                             raw: None,
                             value: method.key.name.clone(),
                         })
                         .into();
+
                         fold_method!(method, Some(fn_name), key_prop_value)
                     }
+
                     ClassMember::ClassProp(prop) => {
                         let prop_span = prop.span();
+
                         let key_prop_value = match prop.key {
                             PropName::Ident(i) => Lit::Str(Str {
                                 span: i.span,
@@ -549,6 +574,7 @@ impl Decorators {
                             .as_arg(),
                         )
                     }
+
                     _ => unimplemented!("ClassMember::{:?}", member,),
                 }
             })
@@ -559,6 +585,7 @@ impl Decorators {
             class.decorators,
             iter::once({
                 // function(_initialize) {}
+
                 Function {
                     span: DUMMY_SP,
 
@@ -579,6 +606,7 @@ impl Decorators {
                         span: DUMMY_SP,
                         stmts: if !self.is_in_strict {
                             // 'use strict';
+
                             Some(Lit::Str(quote_str!("use strict")).into_stmt())
                         } else {
                             None
@@ -676,6 +704,8 @@ where
     N: VisitWith<DecoratorFinder>,
 {
     let mut v = DecoratorFinder { found: false };
+
     node.visit_with(&mut v);
+
     v.found
 }

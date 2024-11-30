@@ -67,6 +67,7 @@ impl Visit for NoDuplicateAtImportRules {
 
                         value.clone()
                     });
+
                     let pair = (href.clone(), media);
 
                     if imports.contains(&pair) {
@@ -76,6 +77,7 @@ impl Visit for NoDuplicateAtImportRules {
                     }
 
                     imports.insert(pair);
+
                     imports
                 });
             }

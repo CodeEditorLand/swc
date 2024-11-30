@@ -70,6 +70,7 @@ where
             IndentType::Tab => "\t",
             IndentType::Space => " ",
         };
+
         let linefeed = match config.linefeed {
             LineFeed::LF => "\n",
             LineFeed::CRLF => "\r\n",
@@ -103,6 +104,7 @@ where
 
     fn raw_write(&mut self, data: &str) -> Result {
         self.w.write_str(data)?;
+
         self.col += data.chars().count();
 
         Ok(())
@@ -112,6 +114,7 @@ where
         if !data.is_empty() {
             if self.line_start {
                 self.write_indent_string()?;
+
                 self.line_start = false;
 
                 if let Some(pending) = self.pending_srcmap.take() {
@@ -171,8 +174,11 @@ where
 
         if !self.line_start {
             self.raw_write(self.linefeed)?;
+
             self.line += 1;
+
             self.col = 0;
+
             self.line_start = true;
 
             if let Some(pending) = pending {
@@ -237,7 +243,9 @@ where
 
 fn compute_line_starts(s: &str) -> Vec<usize> {
     let mut res = Vec::new();
+
     let mut line_start = 0;
+
     let mut chars = s.char_indices().peekable();
 
     while let Some((pos, c)) = chars.next() {
@@ -250,6 +258,7 @@ fn compute_line_starts(s: &str) -> Vec<usize> {
 
             '\n' => {
                 res.push(line_start);
+
                 line_start = pos + 1;
             }
 
@@ -259,5 +268,6 @@ fn compute_line_starts(s: &str) -> Vec<usize> {
 
     // Last line.
     res.push(line_start);
+
     res
 }

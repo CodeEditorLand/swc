@@ -12,6 +12,7 @@ fn bench_document(b:&mut Bencher, src:&'static str) {
 		b.iter(|| {
 			let _ = black_box({
 				let lexer = Lexer::new(StringInput::from(&*fm));
+
 				let mut parser = Parser::new(lexer, Default::default());
 
 				parser.parse_document()
@@ -29,6 +30,7 @@ fn bench_document_fragment(b:&mut Bencher, src:&'static str) {
 		b.iter(|| {
 			let _ = black_box({
 				let lexer = Lexer::new(StringInput::from(&*fm));
+
 				let mut parser = Parser::new(lexer, Default::default());
 
 				parser.parse_document_fragment(
@@ -101,6 +103,7 @@ fn bench_document(b: &mut Bencher, src: &'static str) {
         b.iter(|| {
             let _ = black_box({
                 let lexer = Lexer::new(StringInput::from(&*fm));
+
                 let mut parser = Parser::new(lexer, Default::default());
 
                 parser.parse_document()
@@ -118,6 +121,7 @@ fn bench_document_fragment(b: &mut Bencher, src: &'static str) {
         b.iter(|| {
             let _ = black_box({
                 let lexer = Lexer::new(StringInput::from(&*fm));
+
                 let mut parser = Parser::new(lexer, Default::default());
 
                 parser.parse_document_fragment(

@@ -26,14 +26,19 @@ where
 
 pub fn gzipped_size(code: &str) -> usize {
     let mut e = ZlibEncoder::new(Vec::new(), Compression::new(9));
+
     e.write_all(code.as_bytes()).unwrap();
+
     let compressed_bytes = e.finish().unwrap();
+
     compressed_bytes.len()
 }
 
 pub fn make_pretty(f: &Path) -> Result<()> {
     let mut c = Command::new("npx");
+
     c.stderr(Stdio::inherit());
+
     c.arg("js-beautify").arg("--replace").arg(f);
 
     let output = c.output().context("failed to run prettier")?;
@@ -47,10 +52,13 @@ pub fn make_pretty(f: &Path) -> Result<()> {
 
 pub fn parse_js(fm: Arc<SourceFile>) -> Result<ModuleRecord> {
     let unresolved_mark = Mark::new();
+
     let top_level_mark = Mark::new();
 
     let mut errors = Vec::new();
+
     let comments = SingleThreadedComments::default();
+
     let res = parse_file_as_module(
         &fm,
         Syntax::Es(Default::default()),
@@ -84,6 +92,7 @@ pub fn print_js(cm: Arc<SourceMap>, m: &Module, minify: bool) -> Result<String> 
 
     {
         let mut wr = Box::new(JsWriter::new(cm.clone(), "\n", &mut buf, None)) as Box<dyn WriteJs>;
+
         if minify {
             wr = Box::new(omit_trailing_semi(wr));
         }
@@ -113,11 +122,15 @@ pub fn all_js_files(path: &Path) -> Result<Vec<PathBuf>> {
     wrap_task(|| {
         if path.is_dir() {
             let mut files = Vec::new();
+
             for entry in path.read_dir().context("failed to read dir")? {
                 let entry = entry.context("read_dir returned an error")?;
+
                 let path = entry.path();
+
                 files.extend(all_js_files(&path)?);
             }
+
             Ok(files)
         } else if path.extension() == Some("js".as_ref()) {
             Ok(vec![path.to_path_buf()])

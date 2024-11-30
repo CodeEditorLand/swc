@@ -45,6 +45,7 @@ pub fn compat_serializer() -> Arc<Serializer> {
         let s = Serializer::new()
             .serialize_maps_as_objects(true)
             .serialize_missing_as_null(true);
+
         Arc::new(s)
     });
 
@@ -328,14 +329,17 @@ macro_rules! build_transform_sync {
                 swc_core::plugin_runner::cache::init_plugin_module_cache_once();
 
                 let entries = Object::entries(&plugin_bytes_resolver_object);
+
                 for entry in entries.iter() {
                     let entry: Array = entry
                         .try_into()
                         .expect("Resolver object missing either key or value");
+
                     let name: String = entry
                         .get(0)
                         .as_string()
                         .expect("Resolver key should be a string");
+
                     let buffer = entry.get(1);
 
                     //https://github.com/rustwasm/wasm-bindgen/issues/2017#issue-573013044

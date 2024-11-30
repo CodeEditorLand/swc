@@ -39,6 +39,7 @@ impl DuplicateExports {
                 // Next span.
                 *prev.get_mut() = id.span;
             }
+
             Entry::Vacant(e) => {
                 e.insert(id.span);
             }
@@ -83,6 +84,7 @@ impl Visit for DuplicateExports {
     fn visit_ts_module_decl(&mut self, d: &TsModuleDecl) {
         if !d.declare {
             let old = mem::take(self);
+
             d.visit_children_with(self);
             *self = old;
         }
@@ -123,10 +125,12 @@ impl Visit for DuplicateExports {
             Some(ModuleExportName::Str(..)) => return,
             _ => None,
         };
+
         let orig = match &s.orig {
             ModuleExportName::Ident(ident) => ident,
             ModuleExportName::Str(..) => return,
         };
+
         self.add(exported.as_ref().unwrap_or(&orig));
     }
 

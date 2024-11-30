@@ -48,6 +48,7 @@ impl<'a, W: Write> JsWriter<'a, W> {
 
     pub fn preamble(&mut self, s: &str) -> Result {
         self.raw_write(s)?;
+
         self.update_pos(s);
 
         Ok(())
@@ -63,6 +64,7 @@ impl<'a, W: Write> JsWriter<'a, W> {
         for _ in 0..self.indent {
             self.raw_write(self.indent_str)?;
         }
+
         if self.srcmap.is_some() {
             self.line_pos += self.indent_str.len() * self.indent;
         }
@@ -82,6 +84,7 @@ impl<'a, W: Write> JsWriter<'a, W> {
         if !data.is_empty() {
             if self.line_start {
                 self.write_indent_string()?;
+
                 self.line_start = false;
 
                 if let Some(pending) = self.pending_srcmap.take() {
@@ -94,6 +97,7 @@ impl<'a, W: Write> JsWriter<'a, W> {
             }
 
             self.raw_write(data)?;
+
             self.update_pos(data);
 
             if let Some(span) = span {
@@ -108,9 +112,11 @@ impl<'a, W: Write> JsWriter<'a, W> {
     fn update_pos(&mut self, s: &str) {
         if self.srcmap.is_some() {
             let line_start_of_s = compute_line_starts(s);
+
             self.line_count += line_start_of_s.line_count;
 
             let chars = s[line_start_of_s.byte_pos..].encode_utf16().count();
+
             if line_start_of_s.line_count > 0 {
                 self.line_pos = chars;
             } else {
@@ -145,60 +151,72 @@ impl<W: Write> WriteJs for JsWriter<'_, W> {
     #[inline]
     fn increase_indent(&mut self) -> Result {
         self.indent += 1;
+
         Ok(())
     }
 
     #[inline]
     fn decrease_indent(&mut self) -> Result {
         self.indent -= 1;
+
         Ok(())
     }
 
     #[inline]
     fn write_semi(&mut self, span: Option<Span>) -> Result {
         self.write(span, ";")?;
+
         Ok(())
     }
 
     #[inline]
     fn write_space(&mut self) -> Result {
         self.write(None, " ")?;
+
         Ok(())
     }
 
     #[inline]
     fn write_keyword(&mut self, span: Option<Span>, s: &'static str) -> Result {
         self.write(span, s)?;
+
         Ok(())
     }
 
     #[inline]
     fn write_operator(&mut self, span: Option<Span>, s: &str) -> Result {
         self.write(span, s)?;
+
         Ok(())
     }
 
     #[inline]
     fn write_param(&mut self, s: &str) -> Result {
         self.write(None, s)?;
+
         Ok(())
     }
 
     #[inline]
     fn write_property(&mut self, s: &str) -> Result {
         self.write(None, s)?;
+
         Ok(())
     }
 
     #[inline]
     fn write_line(&mut self) -> Result {
         let pending = self.pending_srcmap.take();
+
         if !self.line_start {
             self.raw_write(self.new_line)?;
+
             if self.srcmap.is_some() {
                 self.line_count += 1;
+
                 self.line_pos = 0;
             }
+
             self.line_start = true;
 
             if let Some(pending) = pending {
@@ -213,7 +231,9 @@ impl<W: Write> WriteJs for JsWriter<'_, W> {
     fn write_lit(&mut self, span: Span, s: &str) -> Result {
         if !s.is_empty() {
             self.srcmap(span.lo());
+
             self.write(None, s)?;
+
             self.srcmap(span.hi());
         }
 
@@ -223,6 +243,7 @@ impl<W: Write> WriteJs for JsWriter<'_, W> {
     #[inline]
     fn write_comment(&mut self, s: &str) -> Result {
         self.write(None, s)?;
+
         Ok(())
     }
 
@@ -230,7 +251,9 @@ impl<W: Write> WriteJs for JsWriter<'_, W> {
     fn write_str_lit(&mut self, span: Span, s: &str) -> Result {
         if !s.is_empty() {
             self.srcmap(span.lo());
+
             self.write(None, s)?;
+
             self.srcmap(span.hi());
         }
 
@@ -240,18 +263,21 @@ impl<W: Write> WriteJs for JsWriter<'_, W> {
     #[inline]
     fn write_str(&mut self, s: &str) -> Result {
         self.write(None, s)?;
+
         Ok(())
     }
 
     #[inline]
     fn write_symbol(&mut self, span: Span, s: &str) -> Result {
         self.write(Some(span), s)?;
+
         Ok(())
     }
 
     #[inline]
     fn write_punct(&mut self, span: Option<Span>, s: &'static str) -> Result {
         self.write(span, s)?;
+
         Ok(())
     }
 
@@ -269,6 +295,7 @@ impl<W: Write> WriteJs for JsWriter<'_, W> {
                 self.srcmap(pos);
             }
         }
+
         Ok(())
     }
 
@@ -290,6 +317,7 @@ struct LineStart {
 }
 fn compute_line_starts(s: &str) -> LineStart {
     let mut count = 0;
+
     let mut line_start = 0;
 
     let mut chars = s.as_bytes().iter().enumerate().peekable();
@@ -298,8 +326,10 @@ fn compute_line_starts(s: &str) -> LineStart {
         match c {
             b'\r' => {
                 count += 1;
+
                 if let Some(&(_, b'\n')) = chars.peek() {
                     let _ = chars.next();
+
                     line_start = pos + 2
                 } else {
                     line_start = pos + 1
@@ -308,6 +338,7 @@ fn compute_line_starts(s: &str) -> LineStart {
 
             b'\n' => {
                 count += 1;
+
                 line_start = pos + 1;
             }
 
@@ -328,18 +359,27 @@ mod test {
     use swc_common::SourceMap;
 
     use super::JsWriter;
+
     use crate::text_writer::WriteJs;
 
     #[test]
     fn changes_indent_str() {
         let source_map = Arc::new(SourceMap::default());
+
         let mut output = Vec::new();
+
         let mut writer = JsWriter::new(source_map, "\n", &mut output, None);
+
         writer.set_indent_str("\t");
+
         writer.increase_indent().unwrap();
+
         writer.write_indent_string().unwrap();
+
         writer.increase_indent().unwrap();
+
         writer.write_indent_string().unwrap();
+
         assert_eq!(output, "\t\t\t".as_bytes());
     }
 }

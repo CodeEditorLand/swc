@@ -27,10 +27,12 @@ pub struct PrintTask {
 #[napi]
 impl Task for PrintTask {
     type JsValue = TransformOutput;
+
     type Output = TransformOutput;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
         let program: Program = deserialize_json(&self.program_json)?;
+
         let options: Options = deserialize_json(&self.options)?;
 
         GLOBALS.set(&Default::default(), || {
@@ -69,6 +71,7 @@ pub fn print(
     crate::util::init_default_trace_subscriber();
 
     let c = get_compiler();
+
     let options = String::from_utf8_lossy(&options).to_string();
 
     Ok(AsyncTask::with_optional_signal(

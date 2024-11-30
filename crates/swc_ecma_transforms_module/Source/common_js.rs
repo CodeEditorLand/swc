@@ -68,6 +68,7 @@ impl VisitMut for Cjs {
         );
 
         // "use strict";
+
         if self.config.strict_mode && !stmts.has_use_strict() {
             stmts.push(use_strict().into());
         }
@@ -94,6 +95,7 @@ impl VisitMut for Cjs {
         });
 
         let mut strip = ModuleDeclStrip::new(self.const_var_kind);
+
         n.body.visit_mut_with(&mut strip);
 
         let ModuleDeclStrip {
@@ -201,6 +203,7 @@ impl VisitMut for Cjs {
                     is_lit_path,
                 );
             }
+
             Expr::Member(MemberExpr { span, obj, prop })
                 if prop.is_ident_with("url")
                     && !self.config.preserve_import_meta
@@ -217,6 +220,7 @@ impl VisitMut for Cjs {
                 );
                 *n = cjs_import_meta_url(*span, require, self.unresolved_mark);
             }
+
             _ => n.visit_mut_children_with(self),
         }
     }
@@ -232,7 +236,9 @@ impl Cjs {
         is_export_assign: bool,
     ) -> impl Iterator<Item = Stmt> {
         let import_interop = self.config.import_interop();
+
         let export_interop_annotation = self.config.export_interop_annotation();
+
         let is_node = import_interop.is_node();
 
         let mut stmts = Vec::with_capacity(link.len());
@@ -274,11 +280,13 @@ impl Cjs {
                 }
 
                 // require("mod");
+
                 let import_expr =
                     self.resolver
                         .make_require_call(self.unresolved_mark, src, src_span.0);
 
                 // _export_star(require("mod"), exports);
+
                 let import_expr = if link_flag.export_star() {
                     helper_expr!(export_star).as_call(
                         DUMMY_SP,
@@ -289,6 +297,7 @@ impl Cjs {
                 };
 
                 // _introp(require("mod"));
+
                 let import_expr = {
                     match import_interop {
                         ImportInterop::Swc if link_flag.interop() => if link_flag.namespace() {
@@ -301,6 +310,7 @@ impl Cjs {
                             helper_expr!(interop_require_wildcard)
                                 .as_call(PURE_SP, vec![import_expr.as_arg(), true.as_arg()])
                         }
+
                         _ => import_expr,
                     }
                 };
@@ -327,6 +337,7 @@ impl Cjs {
             export_obj_prop_list.sort_by_cached_key(|(key, ..)| key.clone());
 
             let mut features = self.available_features;
+
             let exports = self.exports();
 
             if export_interop_annotation {
@@ -371,6 +382,7 @@ impl Cjs {
                     module_ref,
                     ..
                 } = *v;
+
                 let Str {
                     span: src_span,
                     value: src,
@@ -398,12 +410,14 @@ impl Cjs {
                 } else {
                     // const foo = require("mod")
                     let mut var_decl = require.into_var_decl(self.const_var_kind, id.into());
+
                     var_decl.span = span;
 
                     var_decl.into()
                 }
                 .into()
             }
+
             _ => module_decl.into(),
         }
     }
@@ -427,13 +441,17 @@ impl Cjs {
                 let expr: Expr = 0.into();
 
                 let (key, export_item) = &export_id_list[0];
+
                 let prop = prop_name(key, Default::default()).into();
+
                 let export_binding = MemberExpr {
                     obj: Box::new(self.exports().into()),
                     span: export_item.export_name_span().0,
                     prop,
                 };
+
                 let expr = expr.make_assign_to(op!("="), export_binding.into());
+
                 let expr = BinExpr {
                     span: DUMMY_SP,
                     op: op!("&&"),
@@ -443,6 +461,7 @@ impl Cjs {
 
                 Some(expr.into_stmt())
             }
+
             _ => {
                 let props = export_id_list
                     .iter()
@@ -553,6 +572,7 @@ pub(crate) fn cjs_dynamic_import(
             ImportInterop::Swc => {
                 helper_expr!(interop_require_wildcard).as_call(PURE_SP, vec![require.as_arg()])
             }
+
             ImportInterop::Node => helper_expr!(interop_require_wildcard)
                 .as_call(PURE_SP, vec![require.as_arg(), true.as_arg()]),
         }
@@ -594,14 +614,18 @@ fn cjs_import_meta_url(span: Span, require: Ident, unresolved_mark: Mark) -> Exp
 /// ```
 pub fn lazy_require(expr: Expr, mod_ident: Ident, var_kind: VarDeclKind) -> FnDecl {
     let data = private_ident!("data");
+
     let data_decl = expr.into_var_decl(var_kind, data.clone().into());
+
     let data_stmt = data_decl.into();
+
     let overwrite_stmt = data
         .clone()
         .into_lazy_fn(Default::default())
         .into_fn_expr(None)
         .make_assign_to(op!("="), mod_ident.clone().into())
         .into_stmt();
+
     let return_stmt = data.into_return_stmt().into();
 
     FnDecl {

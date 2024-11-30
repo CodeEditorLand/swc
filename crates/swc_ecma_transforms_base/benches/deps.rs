@@ -12,6 +12,7 @@ fn module_clone(b:&mut Bencher) {
 		let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
 		let mut errors = Vec::new();
+
 		let module = parse_file_as_module(
 			&fm,
 			Syntax::Typescript(Default::default()),
@@ -29,6 +30,7 @@ fn module_clone(b:&mut Bencher) {
 		}
 
 		b.iter(|| black_box(module.clone()));
+
 		Ok(())
 	});
 }
@@ -38,6 +40,7 @@ fn fold_empty(b:&mut Bencher) {
 		let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
 		let mut errors = Vec::new();
+
 		let module = parse_file_as_module(
 			&fm,
 			Syntax::Typescript(Default::default()),
@@ -57,6 +60,7 @@ fn fold_empty(b:&mut Bencher) {
 		let mut folder = noop();
 
 		b.iter(|| black_box(module.clone().fold_with(&mut folder)));
+
 		Ok(())
 	});
 static SOURCE: &str = include_str!("assets/AjaxObservable.ts");
@@ -66,6 +70,7 @@ fn module_clone(b: &mut Bencher) {
         let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
         let mut errors = Vec::new();
+
         let module = parse_file_as_module(
             &fm,
             Syntax::Typescript(Default::default()),
@@ -83,6 +88,7 @@ fn module_clone(b: &mut Bencher) {
         }
 
         b.iter(|| black_box(module.clone()));
+
         Ok(())
     });
 }
@@ -92,6 +98,7 @@ fn fold_empty(b: &mut Bencher) {
         let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
         let mut errors = Vec::new();
+
         let module = parse_file_as_module(
             &fm,
             Syntax::Typescript(Default::default()),
@@ -111,6 +118,7 @@ fn fold_empty(b: &mut Bencher) {
         let mut folder = noop_pass();
 
         b.iter(|| black_box(Program::Module(module.clone()).apply(&mut folder)));
+
         Ok(())
     });
 }
@@ -122,6 +130,7 @@ fn fold_noop_impl_all(b:&mut Bencher) {
 		let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
 		let mut errors = Vec::new();
+
 		let module = parse_file_as_module(
 			&fm,
 			Syntax::Typescript(Default::default()),
@@ -139,6 +148,7 @@ fn fold_noop_impl_all(b:&mut Bencher) {
 		let mut folder = noop();
 
 		b.iter(|| black_box(module.clone().fold_with(&mut folder)));
+
 		Ok(())
 	});
 fn fold_noop_impl_all(b: &mut Bencher) {
@@ -146,6 +156,7 @@ fn fold_noop_impl_all(b: &mut Bencher) {
         let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
         let mut errors = Vec::new();
+
         let module = parse_file_as_module(
             &fm,
             Syntax::Typescript(Default::default()),
@@ -163,6 +174,7 @@ fn fold_noop_impl_all(b: &mut Bencher) {
         let mut folder = noop_pass();
 
         b.iter(|| black_box(Program::Module(module.clone()).apply(&mut folder)));
+
         Ok(())
     });
 }
@@ -172,7 +184,9 @@ fn fold_noop_impl_all(b: &mut Bencher) {
 fn fold_noop_impl_vec(b:&mut Bencher) {
 	let _ = ::testing::run_test(false, |cm, handler| {
 		let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
+
 		let mut errors = Vec::new();
+
 		let module = parse_file_as_module(
 			&fm,
 			Syntax::Typescript(Default::default()),
@@ -192,6 +206,7 @@ fn fold_noop_impl_vec(b:&mut Bencher) {
 		let mut folder = noop();
 
 		b.iter(|| black_box(module.clone().fold_with(&mut folder)));
+
 		Ok(())
 	});
 }
@@ -211,6 +226,7 @@ fn boxing_boxed_clone(b:&mut Bencher) {
 		let expr = Box::new(mk_expr());
 
 		b.iter(|| black_box(expr.clone()));
+
 		Ok(())
 	});
 }
@@ -220,6 +236,7 @@ fn boxing_unboxed_clone(b:&mut Bencher) {
 		let expr = mk_expr();
 
 		b.iter(|| black_box(expr.clone()));
+
 		Ok(())
 	});
 }
@@ -227,9 +244,11 @@ fn boxing_unboxed_clone(b:&mut Bencher) {
 fn boxing_boxed(b:&mut Bencher) {
 	let _ = ::testing::run_test(false, |_, _| {
 		let mut folder = noop();
+
 		let expr = Box::new(mk_expr());
 
 		b.iter(|| black_box(expr.clone().fold_with(&mut folder)));
+
 		Ok(())
 	});
 }
@@ -237,9 +256,11 @@ fn boxing_boxed(b:&mut Bencher) {
 fn boxing_unboxed(b:&mut Bencher) {
 	let _ = ::testing::run_test(false, |_, _| {
 		let mut folder = noop();
+
 		let expr = mk_expr();
 
 		b.iter(|| black_box(expr.clone().fold_with(&mut folder)));
+
 		Ok(())
 	});
 }
@@ -261,40 +282,56 @@ fn visit_contains_this(b:&mut Bencher) {
 		}
 
 		let mut visitor = Visitor { found:false };
+
 		body.visit_with(&mut visitor);
+
 		visitor.found
 	}
 
 	let _ = ::testing::run_test(false, |cm, _| {
 		let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
+
 		let lexer = Lexer::new(
 			Syntax::Typescript(Default::default()),
 			Default::default(),
 			StringInput::from(&*fm),
 			None,
 		);
+
 		let mut parser = Parser::new_from(lexer);
+
 		let module = parser.parse_module().map_err(|_| ()).unwrap();
 
 		b.iter(|| black_box(contains_this_expr(&module)));
+
 		Ok(())
 	});
 }
 
 fn bench_cases(c:&mut Criterion) {
 	c.bench_function("es/visitor/base-perf/module_clone", module_clone);
+
 	c.bench_function("es/visitor/base-perf/fold_empty", fold_empty);
+
 	c.bench_function("es/visitor/base-perf/fold_noop_impl_all", fold_noop_impl_all);
+
 	c.bench_function("es/visitor/base-perf/fold_noop_impl_vec", fold_noop_impl_vec);
+
 	c.bench_function("es/visitor/base-perf/boxing_boxed_clone", boxing_boxed_clone);
+
 	c.bench_function("es/visitor/base-perf/boxing_unboxed_clone", boxing_unboxed_clone);
+
 	c.bench_function("es/visitor/base-perf/boxing_boxed", boxing_boxed);
+
 	c.bench_function("es/visitor/base-perf/boxing_unboxed", boxing_unboxed);
+
 	c.bench_function("es/visitor/base-perf/visit_contains_this", visit_contains_this);
 fn fold_noop_impl_vec(b: &mut Bencher) {
     let _ = ::testing::run_test(false, |cm, handler| {
         let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
+
         let mut errors = Vec::new();
+
         let module = parse_file_as_module(
             &fm,
             Syntax::Typescript(Default::default()),
@@ -314,6 +351,7 @@ fn fold_noop_impl_vec(b: &mut Bencher) {
         let mut folder = noop_pass();
 
         b.iter(|| black_box(Program::Module(module.clone()).apply(&mut folder)));
+
         Ok(())
     });
 }
@@ -333,6 +371,7 @@ fn boxing_boxed_clone(b: &mut Bencher) {
         let expr = Box::new(mk_expr());
 
         b.iter(|| black_box(expr.clone()));
+
         Ok(())
     });
 }
@@ -342,6 +381,7 @@ fn boxing_unboxed_clone(b: &mut Bencher) {
         let expr = mk_expr();
 
         b.iter(|| black_box(expr.clone()));
+
         Ok(())
     });
 }
@@ -349,9 +389,11 @@ fn boxing_unboxed_clone(b: &mut Bencher) {
 fn boxing_boxed(b: &mut Bencher) {
     let _ = ::testing::run_test(false, |_, _| {
         let mut folder = noop_fold();
+
         let expr = Box::new(mk_expr());
 
         b.iter(|| black_box(expr.clone().fold_with(&mut folder)));
+
         Ok(())
     });
 }
@@ -359,9 +401,11 @@ fn boxing_boxed(b: &mut Bencher) {
 fn boxing_unboxed(b: &mut Bencher) {
     let _ = ::testing::run_test(false, |_, _| {
         let mut folder = noop_fold();
+
         let expr = mk_expr();
 
         b.iter(|| black_box(expr.clone().fold_with(&mut folder)));
+
         Ok(())
     });
 }
@@ -385,47 +429,61 @@ fn visit_contains_this(b: &mut Bencher) {
         }
 
         let mut visitor = Visitor { found: false };
+
         body.visit_with(&mut visitor);
+
         visitor.found
     }
 
     let _ = ::testing::run_test(false, |cm, _| {
         let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
+
         let lexer = Lexer::new(
             Syntax::Typescript(Default::default()),
             Default::default(),
             StringInput::from(&*fm),
             None,
         );
+
         let mut parser = Parser::new_from(lexer);
+
         let module = parser.parse_module().map_err(|_| ()).unwrap();
 
         b.iter(|| black_box(contains_this_expr(&module)));
+
         Ok(())
     });
 }
 
 fn bench_cases(c: &mut Criterion) {
     c.bench_function("es/visitor/base-perf/module_clone", module_clone);
+
     c.bench_function("es/visitor/base-perf/fold_empty", fold_empty);
+
     c.bench_function(
         "es/visitor/base-perf/fold_noop_impl_all",
         fold_noop_impl_all,
     );
+
     c.bench_function(
         "es/visitor/base-perf/fold_noop_impl_vec",
         fold_noop_impl_vec,
     );
+
     c.bench_function(
         "es/visitor/base-perf/boxing_boxed_clone",
         boxing_boxed_clone,
     );
+
     c.bench_function(
         "es/visitor/base-perf/boxing_unboxed_clone",
         boxing_unboxed_clone,
     );
+
     c.bench_function("es/visitor/base-perf/boxing_boxed", boxing_boxed);
+
     c.bench_function("es/visitor/base-perf/boxing_unboxed", boxing_unboxed);
+
     c.bench_function(
         "es/visitor/base-perf/visit_contains_this",
         visit_contains_this,
@@ -437,6 +495,8 @@ criterion_main!(benches);
 
 fn noop_fold() -> impl Fold {
     struct Noop;
+
     impl Fold for Noop {}
+
     Noop
 }

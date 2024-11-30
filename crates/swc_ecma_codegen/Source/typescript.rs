@@ -22,7 +22,9 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         emit!(n.elem_type);
+
         punct!("[");
+
         punct!("]");
     }
 
@@ -33,7 +35,9 @@ where
         emit!(n.expr);
 
         space!();
+
         keyword!("as");
+
         space!();
 
         emit!(n.type_ann);
@@ -46,7 +50,9 @@ where
         emit!(n.expr);
 
         space!();
+
         keyword!("satisfies");
+
         space!();
 
         emit!(n.type_ann);
@@ -59,12 +65,16 @@ where
         emit!(n.type_params);
 
         punct!("(");
+
         self.emit_list(n.span, Some(&n.params), ListFormat::Parameters)?;
+
         punct!(")");
 
         if let Some(type_ann) = &n.type_ann {
             space!();
+
             punct!(":");
+
             space!();
 
             emit!(type_ann);
@@ -76,22 +86,29 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         emit!(n.check_type);
+
         space!();
 
         keyword!("extends");
+
         space!();
 
         emit!(n.extends_type);
+
         space!();
+
         punct!("?");
 
         space!();
+
         emit!(n.true_type);
+
         space!();
 
         punct!(":");
 
         space!();
+
         emit!(n.false_type);
     }
 
@@ -100,18 +117,24 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         keyword!("new");
+
         if let Some(type_params) = &n.type_params {
             space!();
+
             emit!(type_params);
         }
 
         punct!("(");
+
         self.emit_list(n.span, Some(&n.params), ListFormat::Parameters)?;
+
         punct!(")");
 
         if let Some(type_ann) = &n.type_ann {
             punct!(":");
+
             space!();
+
             emit!(type_ann);
         }
     }
@@ -122,21 +145,28 @@ where
 
         if n.is_abstract {
             keyword!("abstract");
+
             space!();
         }
 
         keyword!("new");
+
         if let Some(type_params) = &n.type_params {
             space!();
+
             emit!(type_params);
         }
 
         punct!("(");
+
         self.emit_list(n.span, Some(&n.params), ListFormat::Parameters)?;
+
         punct!(")");
 
         formatting_space!();
+
         punct!("=>");
+
         formatting_space!();
 
         emit!(n.type_ann)
@@ -150,6 +180,7 @@ where
             TsEntityName::TsQualifiedName(n) => {
                 emit!(n);
             }
+
             TsEntityName::Ident(n) => emit!(n),
         }
     }
@@ -160,18 +191,22 @@ where
 
         if n.declare {
             keyword!("declare");
+
             space!();
         }
 
         if n.is_const {
             keyword!("const");
+
             space!();
         }
 
         keyword!("enum");
+
         space!();
 
         emit!(n.id);
+
         formatting_space!();
 
         punct!("{");
@@ -189,8 +224,11 @@ where
 
         if let Some(init) = &n.init {
             formatting_space!();
+
             punct!("=");
+
             formatting_space!();
+
             emit!(init);
         }
     }
@@ -208,9 +246,13 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         keyword!("export");
+
         formatting_space!();
+
         punct!("=");
+
         formatting_space!();
+
         emit!(n.expr);
     }
 
@@ -228,8 +270,11 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         keyword!("require");
+
         punct!("(");
+
         emit!(n.expr);
+
         punct!(")");
     }
 
@@ -260,11 +305,15 @@ where
         emit!(n.type_params);
 
         punct!("(");
+
         self.emit_list(n.span, Some(&n.params), ListFormat::Parameters)?;
+
         punct!(")");
 
         formatting_space!();
+
         punct!("=>");
+
         formatting_space!();
 
         emit!(n.type_ann);
@@ -276,14 +325,17 @@ where
 
         if n.is_export {
             keyword!("export");
+
             space!();
         }
 
         keyword!("import");
+
         space!();
 
         if n.is_type_only {
             keyword!("type");
+
             space!();
         }
 
@@ -292,9 +344,11 @@ where
         formatting_space!();
 
         punct!("=");
+
         formatting_space!();
 
         emit!(n.module_ref);
+
         formatting_semi!();
     }
 
@@ -304,16 +358,21 @@ where
 
         if n.readonly {
             keyword!("readonly");
+
             formatting_space!();
         }
 
         punct!("[");
+
         self.emit_list(n.span, Some(&n.params), ListFormat::Parameters)?;
+
         punct!("]");
 
         if let Some(type_ann) = &n.type_ann {
             punct!(":");
+
             formatting_space!();
+
             emit!(type_ann);
         }
     }
@@ -325,7 +384,9 @@ where
         emit!(n.obj_type);
 
         punct!("[");
+
         emit!(n.index_type);
+
         punct!("]");
     }
 
@@ -334,7 +395,9 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         keyword!("infer");
+
         space!();
+
         emit!(n.type_param);
     }
 
@@ -355,10 +418,12 @@ where
 
         if n.declare {
             keyword!("declare");
+
             space!();
         }
 
         keyword!("interface");
+
         space!();
 
         emit!(n.id);
@@ -438,7 +503,9 @@ where
                 emit!(node.quasis[i / 2]);
             } else {
                 punct!("${");
+
                 emit!(node.types[i / 2]);
+
                 punct!("}");
             }
         }
@@ -458,24 +525,34 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         punct!("{");
+
         self.wr.write_line()?;
+
         self.wr.increase_indent()?;
 
         match n.readonly {
             None => {}
+
             Some(tpm) => match tpm {
                 TruePlusMinus::True => {
                     keyword!("readonly");
+
                     space!();
                 }
+
                 TruePlusMinus::Plus => {
                     punct!("+");
+
                     keyword!("readonly");
+
                     space!();
                 }
+
                 TruePlusMinus::Minus => {
                     punct!("-");
+
                     keyword!("readonly");
+
                     space!();
                 }
             },
@@ -487,22 +564,31 @@ where
 
         if let Some(constraints) = &n.type_param.constraint {
             space!();
+
             keyword!("in");
+
             space!();
+
             emit!(constraints);
         }
 
         if let Some(default) = &n.type_param.default {
             formatting_space!();
+
             punct!("=");
+
             formatting_space!();
+
             emit!(default);
         }
 
         if let Some(name_type) = &n.name_type {
             space!();
+
             keyword!("as");
+
             space!();
+
             emit!(name_type);
         }
 
@@ -510,16 +596,21 @@ where
 
         match n.optional {
             None => {}
+
             Some(tpm) => match tpm {
                 TruePlusMinus::True => {
                     punct!("?");
                 }
+
                 TruePlusMinus::Plus => {
                     punct!("+");
+
                     punct!("?");
                 }
+
                 TruePlusMinus::Minus => {
                     punct!("-");
+
                     punct!("?");
                 }
             },
@@ -527,14 +618,18 @@ where
 
         if let Some(type_ann) = &n.type_ann {
             punct!(":");
+
             space!();
+
             emit!(type_ann);
         }
 
         formatting_semi!();
 
         self.wr.write_line()?;
+
         self.wr.decrease_indent()?;
+
         punct!("}");
     }
 
@@ -544,7 +639,9 @@ where
 
         if n.computed {
             punct!("[");
+
             emit!(n.key);
+
             punct!("]");
         } else {
             emit!(n.key)
@@ -559,12 +656,16 @@ where
         }
 
         punct!("(");
+
         self.emit_list(n.span, Some(&n.params), ListFormat::Parameters)?;
+
         punct!(")");
 
         if let Some(ref type_ann) = n.type_ann {
             punct!(":");
+
             formatting_space!();
+
             emit!(type_ann);
         }
     }
@@ -572,6 +673,7 @@ where
     #[emitter]
     fn emit_ts_module_block(&mut self, n: &TsModuleBlock) -> Result {
         self.emit_list(n.span, Some(&n.body), ListFormat::SourceFileStatements)?;
+
         self.emit_leading_comments_of_span(n.span(), false)?;
     }
 
@@ -581,6 +683,7 @@ where
 
         if n.declare {
             keyword!("declare");
+
             space!();
         }
 
@@ -593,17 +696,23 @@ where
                 TsModuleName::Ident(_) => keyword!("namespace"),
                 TsModuleName::Str(_) => keyword!("module"),
             }
+
             space!();
+
             emit!(n.id);
         }
 
         if let Some(mut body) = n.body.as_ref() {
             while let TsNamespaceBody::TsNamespaceDecl(decl) = body {
                 punct!(".");
+
                 emit!(decl.id);
+
                 body = &*decl.body;
             }
+
             formatting_space!();
+
             emit!(body);
         }
     }
@@ -631,12 +740,16 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         punct!("{");
+
         self.wr.increase_indent()?;
+
         match n {
             TsNamespaceBody::TsModuleBlock(n) => emit!(n),
             TsNamespaceBody::TsNamespaceDecl(n) => emit!(n),
         }
+
         self.wr.decrease_indent()?;
+
         punct!("}");
     }
 
@@ -646,12 +759,16 @@ where
 
         if n.declare {
             keyword!("declare");
+
             space!();
         }
 
         keyword!("namespace");
+
         space!();
+
         emit!(n.id);
+
         formatting_space!();
 
         emit!(n.body);
@@ -662,9 +779,13 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         keyword!("export");
+
         space!();
+
         punct!("=");
+
         space!();
+
         emit!(n.id);
     }
 
@@ -673,6 +794,7 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         emit!(n.expr);
+
         punct!("!")
     }
 
@@ -681,6 +803,7 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         emit!(n.type_ann);
+
         punct!("?");
     }
 
@@ -694,11 +817,13 @@ where
 
         if n.is_override {
             keyword!("override");
+
             space!();
         }
 
         if n.readonly {
             keyword!("readonly");
+
             space!();
         }
 
@@ -720,7 +845,9 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         punct!("(");
+
         emit!(n.type_ann);
+
         punct!(")");
     }
 
@@ -730,12 +857,15 @@ where
 
         if n.readonly {
             keyword!("readonly");
+
             space!();
         }
 
         if n.computed {
             punct!("[");
+
             emit!(n.key);
+
             punct!("]");
         } else {
             emit!(n.key);
@@ -751,7 +881,9 @@ where
 
         if let Some(type_ann) = &n.type_ann {
             punct!(":");
+
             formatting_space!();
+
             emit!(type_ann);
         }
     }
@@ -761,7 +893,9 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         emit!(n.left);
+
         punct!(".");
+
         emit!(n.right);
     }
 
@@ -770,6 +904,7 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         punct!("...");
+
         emit!(n.type_ann);
     }
 
@@ -795,7 +930,9 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         punct!("[");
+
         self.emit_list(n.span, Some(&n.elem_types), ListFormat::TupleTypeElements)?;
+
         punct!("]");
     }
 
@@ -805,7 +942,9 @@ where
 
         if let Some(label) = &n.label {
             emit!(label);
+
             punct!(":");
+
             formatting_space!();
         }
 
@@ -843,12 +982,16 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         keyword!("import");
+
         punct!("(");
+
         emit!(n.arg);
+
         punct!(")");
 
         if let Some(n) = &n.qualifier {
             punct!(".");
+
             emit!(n);
         }
 
@@ -861,6 +1004,7 @@ where
 
         if n.declare {
             keyword!("declare");
+
             space!();
         }
 
@@ -869,9 +1013,11 @@ where
         space!();
 
         emit!(n.id);
+
         if let Some(type_params) = &n.type_params {
             emit!(type_params);
         }
+
         formatting_space!();
 
         punct!("=");
@@ -895,8 +1041,11 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         punct!("<");
+
         emit!(n.type_ann);
+
         punct!(">");
+
         emit!(n.expr);
     }
 
@@ -907,8 +1056,11 @@ where
         emit!(n.expr);
 
         space!();
+
         keyword!("as");
+
         space!();
+
         keyword!("const");
     }
 
@@ -923,31 +1075,38 @@ where
             TsTypeElement::TsGetterSignature(n) => {
                 emit!(n)
             }
+
             TsTypeElement::TsSetterSignature(n) => {
                 emit!(n)
             }
         }
+
         formatting_semi!();
     }
 
     #[emitter]
     fn emit_ts_getter_signature(&mut self, n: &TsGetterSignature) -> Result {
         keyword!("get");
+
         space!();
 
         if n.computed {
             punct!("[");
+
             emit!(n.key);
+
             punct!("]");
         } else {
             emit!(n.key)
         }
 
         punct!("(");
+
         punct!(")");
 
         if let Some(ty) = &n.type_ann {
             punct!(":");
+
             formatting_space!();
 
             emit!(ty.type_ann);
@@ -957,18 +1116,23 @@ where
     #[emitter]
     fn emit_ts_setter_signature(&mut self, n: &TsSetterSignature) -> Result {
         keyword!("set");
+
         space!();
 
         if n.computed {
             punct!("[");
+
             emit!(n.key);
+
             punct!("]");
         } else {
             emit!(n.key)
         }
 
         punct!("(");
+
         emit!(n.param);
+
         punct!(")");
     }
 
@@ -977,11 +1141,13 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         punct!("{");
+
         self.emit_list(
             n.span,
             Some(&n.members),
             ListFormat::MultiLineTypeLiteralMembers,
         )?;
+
         punct!("}");
     }
 
@@ -994,7 +1160,9 @@ where
             TsTypeOperatorOp::Unique => keyword!("unique"),
             TsTypeOperatorOp::ReadOnly => keyword!("readonly"),
         }
+
         space!();
+
         emit!(n.type_ann);
     }
 
@@ -1004,16 +1172,19 @@ where
 
         if n.is_const {
             keyword!("const");
+
             space!();
         }
 
         if n.is_in {
             keyword!("in");
+
             space!();
         }
 
         if n.is_out {
             keyword!("out");
+
             space!();
         }
 
@@ -1021,15 +1192,21 @@ where
 
         if let Some(constraints) = &n.constraint {
             space!();
+
             keyword!("extends");
+
             space!();
+
             emit!(constraints);
         }
 
         if let Some(default) = &n.default {
             formatting_space!();
+
             punct!("=");
+
             formatting_space!();
+
             emit!(default);
         }
     }
@@ -1050,6 +1227,7 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         punct!("<");
+
         self.emit_list(n.span, Some(&n.params), ListFormat::TypeParameters)?;
 
         punct!(">");
@@ -1061,6 +1239,7 @@ where
 
         if n.asserts {
             keyword!("asserts");
+
             space!();
         }
 
@@ -1068,8 +1247,11 @@ where
 
         if let Some(type_ann) = &n.type_ann {
             space!();
+
             keyword!("is");
+
             space!();
+
             emit!(type_ann);
         }
     }
@@ -1079,8 +1261,11 @@ where
         self.emit_leading_comments_of_span(n.span(), false)?;
 
         keyword!("typeof");
+
         space!();
+
         emit!(n.expr_name);
+
         emit!(n.type_args);
     }
 
@@ -1100,7 +1285,9 @@ where
 
         if let Some(n) = &n.type_params {
             punct!("<");
+
             self.emit_list(n.span, Some(&n.params), ListFormat::TypeArguments)?;
+
             punct!(">");
         }
     }

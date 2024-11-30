@@ -119,6 +119,7 @@ where
         );
 
         // "use strict";
+
         if self.config.strict_mode && !stmts.has_use_strict() {
             stmts.push(use_strict());
         }
@@ -130,6 +131,7 @@ where
         let import_interop = self.config.import_interop();
 
         let mut strip = ModuleDeclStrip::new(self.const_var_kind);
+
         n.body.visit_mut_with(&mut strip);
 
         let ModuleDeclStrip {
@@ -178,15 +180,18 @@ where
         // ====================
 
         let mut elems = vec![Some(quote_str!("require").as_arg())];
+
         let mut params = vec![self.require.clone().into()];
 
         if let Some(exports) = self.exports.take() {
             elems.push(Some(quote_str!("exports").as_arg()));
+
             params.push(exports.into())
         }
 
         if let Some(module) = self.module.clone() {
             elems.push(Some(quote_str!("module").as_arg()));
+
             params.push(module.into())
         }
 
@@ -203,13 +208,16 @@ where
                 };
 
                 elems.push(Some(quote_str!(src_span.0, src_path).as_arg()));
+
                 params.push(ident.into());
             });
 
         let mut amd_call_args = Vec::with_capacity(3);
+
         if let Some(module_id) = self.module_id.clone() {
             amd_call_args.push(quote_str!(module_id).as_arg());
         }
+
         amd_call_args.push(
             ArrayLit {
                 span: DUMMY_SP,
@@ -272,6 +280,7 @@ where
                 });
 
                 let mut require = self.require.clone();
+
                 require.span = *import_span;
 
                 *n = amd_dynamic_import(
@@ -282,6 +291,7 @@ where
                     self.support_arrow,
                 );
             }
+
             Expr::Member(MemberExpr { span, obj, prop })
                 if prop.is_ident_with("url")
                     && !self.config.preserve_import_meta
@@ -293,8 +303,10 @@ where
                 obj.visit_mut_with(self);
 
                 *n = amd_import_meta_url(*span, self.module());
+
                 self.found_import_meta = true;
             }
+
             _ => n.visit_mut_children_with(self),
         }
     }
@@ -326,10 +338,13 @@ where
                 }
 
                 let need_re_export = link_flag.export_star();
+
                 let need_interop = link_flag.interop();
+
                 let need_new_var = link_flag.need_raw_import();
 
                 let mod_ident = private_ident!(local_name_for_src(&src));
+
                 let new_var_ident = if need_new_var {
                     private_ident!(local_name_for_src(&src))
                 } else {
@@ -348,6 +363,7 @@ where
                 );
 
                 // _export_star(mod, exports);
+
                 let mut import_expr: Expr = if need_re_export {
                     helper_expr!(export_star).as_call(
                         DUMMY_SP,
@@ -358,6 +374,7 @@ where
                 };
 
                 // _introp(mod);
+
                 if need_interop {
                     import_expr = match import_interop {
                         ImportInterop::Swc if link_flag.interop() => if link_flag.namespace() {
@@ -370,12 +387,14 @@ where
                             helper_expr!(interop_require_wildcard)
                                 .as_call(PURE_SP, vec![import_expr.as_arg(), true.as_arg()])
                         }
+
                         _ => import_expr,
                     }
                 };
 
                 // mod = _introp(mod);
                 // var mod1 = _introp(mod);
+
                 if need_new_var {
                     let stmt: Stmt = import_expr
                         .into_var_decl(self.const_var_kind, new_var_ident.into())
@@ -386,6 +405,7 @@ where
                     let stmt = import_expr
                         .make_assign_to(op!("="), mod_ident.into())
                         .into_stmt();
+
                     stmts.push(stmt);
                 } else if need_re_export {
                     stmts.push(import_expr.into_stmt());
@@ -434,6 +454,7 @@ where
                     if cmt.kind != CommentKind::Line {
                         return None;
                     }
+
                     amd_module_re
                         .captures(&cmt.text)
                         .and_then(|cap| cap.get(1).or_else(|| cap.get(2)))
@@ -452,7 +473,9 @@ pub(crate) fn amd_dynamic_import(
     support_arrow: bool,
 ) -> Expr {
     let resolve = private_ident!("resolve");
+
     let reject = private_ident!("reject");
+
     let arg = args[..1].iter().cloned().map(Option::Some).collect();
 
     let module = private_ident!("m");
@@ -462,6 +485,7 @@ pub(crate) fn amd_dynamic_import(
         ImportInterop::Swc => {
             helper_expr!(interop_require_wildcard).as_call(PURE_SP, vec![module.clone().as_arg()])
         }
+
         ImportInterop::Node => helper_expr!(interop_require_wildcard)
             .as_call(PURE_SP, vec![module.clone().as_arg(), true.as_arg()]),
     };

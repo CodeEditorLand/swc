@@ -15,11 +15,14 @@ struct ColorNoInvalidHex {
 impl Visit for ColorNoInvalidHex {
     fn visit_hex_color(&mut self, hex_color: &HexColor) {
         let HexColor { value, .. } = hex_color;
+
         let length = value.len();
+
         if (length == 3 || length == 4 || length == 6 || length == 8)
             && value.chars().all(|c| c.is_ascii_hexdigit())
         {
             hex_color.visit_children_with(self);
+
             return;
         }
 

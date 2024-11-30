@@ -48,9 +48,11 @@ impl VisitMut for ConstPropagation<'_> {
             ModuleExportName::Ident(ident) => ident.to_id(),
             ModuleExportName::Str(..) => return,
         };
+
         if let Some(expr) = self.scope.find_var(&id) {
             if let Expr::Ident(v) = &**expr {
                 let orig = n.orig.clone();
+
                 n.orig = ModuleExportName::Ident(v.clone());
 
                 if n.exported.is_none() {
@@ -66,9 +68,11 @@ impl VisitMut for ConstPropagation<'_> {
                         n.exported = None;
                     }
                 }
+
                 ModuleExportName::Str(..) => {}
             },
             Some(ModuleExportName::Str(..)) => {}
+
             None => {}
         }
     }
@@ -77,6 +81,7 @@ impl VisitMut for ConstPropagation<'_> {
         if let Expr::Ident(i) = e {
             if let Some(expr) = self.scope.find_var(&i.to_id()) {
                 *e = *expr.clone();
+
                 return;
             }
         }
@@ -92,7 +97,9 @@ impl VisitMut for ConstPropagation<'_> {
     /// scoping variables.
     fn visit_mut_function(&mut self, n: &mut Function) {
         let scope = Scope::new(&self.scope);
+
         let mut v = ConstPropagation { scope };
+
         n.visit_mut_children_with(&mut v);
     }
 
@@ -135,6 +142,7 @@ impl VisitMut for ConstPropagation<'_> {
                                     self.scope.vars.insert(name.to_id(), init.clone().into());
                                 }
                             }
+
                             _ => {}
                         }
                     }

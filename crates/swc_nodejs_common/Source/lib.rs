@@ -21,6 +21,7 @@ where
     B: AsRef<[u8]>,
 {
     let mut deserializer = serde_json::Deserializer::from_slice(buffer.as_ref());
+
     deserializer.disable_recursion_limit();
 
     let v = T::deserialize(&mut deserializer)
@@ -41,6 +42,7 @@ where
     T: DeserializeOwned,
 {
     let mut deserializer = serde_json::Deserializer::from_str(json);
+
     deserializer.disable_recursion_limit();
 
     T::deserialize(&mut deserializer)

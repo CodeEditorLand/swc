@@ -16,11 +16,13 @@ where
 
 pub fn repository_root() -> Result<PathBuf> {
     let dir = env::var("CARGO_MANIFEST_DIR").context("failed to get manifest dir")?;
+
     Ok(Path::new(&*dir).parent().unwrap().to_path_buf())
 }
 
 pub fn run_cmd(cmd: &mut Command) -> Result<()> {
     eprintln!("Running {:?}", *cmd);
+
     cmd.stdin(Stdio::inherit());
 
     let status = cmd.status()?;
@@ -83,7 +85,9 @@ pub fn get_commit_for_core_version(version: &str, last: bool) -> Result<String> 
 
         for line in iter {
             let commit = line.split(':').next().unwrap().to_string();
+
             let commit_version = get_version_of_swc_core_of_commit(&commit)?;
+
             if Some(version) == commit_version.as_deref() {
                 eprintln!("\tFound commit for swc_core@v{}: https://github.com/swc-project/swc/commits/{}", version, commit);
 

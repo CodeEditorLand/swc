@@ -57,8 +57,11 @@ fn run_test_with_config<F, V>(
 fn test_mark_for() {
     ::testing::run_test(false, |_, _| {
         let mark1 = Mark::fresh(Mark::root());
+
         let mark2 = Mark::fresh(mark1);
+
         let mark3 = Mark::fresh(mark2);
+
         let mark4 = Mark::fresh(mark3);
 
         let folder1 = Resolver::new(
@@ -69,6 +72,7 @@ fn test_mark_for() {
                 top_level_mark: mark1,
             },
         );
+
         let mut folder2 = Resolver::new(
             Scope::new(ScopeKind::Block, mark2, Some(&folder1.current)),
             InnerConfig {
@@ -77,6 +81,7 @@ fn test_mark_for() {
                 top_level_mark: mark2,
             },
         );
+
         folder2
             .current
             .declared_symbols
@@ -90,10 +95,12 @@ fn test_mark_for() {
                 top_level_mark: mark3,
             },
         );
+
         folder3
             .current
             .declared_symbols
             .insert("bar".into(), DeclKind::Var);
+
         assert_eq!(folder3.mark_for_ref(&"bar".into()), Some(mark3));
 
         let mut folder4 = Resolver::new(
@@ -104,13 +111,16 @@ fn test_mark_for() {
                 top_level_mark: mark4,
             },
         );
+
         folder4
             .current
             .declared_symbols
             .insert("foo".into(), DeclKind::Var);
 
         assert_eq!(folder4.mark_for_ref(&"foo".into()), Some(mark4));
+
         assert_eq!(folder4.mark_for_ref(&"bar".into()), Some(mark3));
+
         Ok(())
     })
     .unwrap();
@@ -123,11 +133,13 @@ fn issue_1279_1() {
         || resolver(Mark::new(), Mark::new(), false),
         "class Foo {
             static f = 1;
+
             static g = Foo.f;
         }",
         "
         let Foo = class Foo {
             static f = 1;
+
             static g = Foo.f;
         };
         ",
@@ -145,10 +157,13 @@ fn issue_1279_2() {
         || resolver(Mark::new(), Mark::new(), false),
         "class Foo {
             static f = 1;
+
             static g = Foo.f;
+
             method() {
                 class Foo {
                     static nested = 1;
+
                     static nested2 = Foo.nested;
                 }
             }
@@ -156,10 +171,13 @@ fn issue_1279_2() {
         "
         let Foo = class Foo {
             static f = 1;
+
             static g = Foo.f;
+
             method() {
                 let Foo = class Foo {
                     static nested = 1;
+
                     static nested2 = Foo.nested;
                 };
             }

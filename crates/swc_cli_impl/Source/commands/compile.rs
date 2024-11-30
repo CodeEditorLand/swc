@@ -178,6 +178,7 @@ fn resolve_output_file_path(
     file_extension: PathBuf,
 ) -> anyhow::Result<PathBuf> {
     let default = PathBuf::from(".");
+
     let base = file_path.parent().unwrap_or(&default).display().to_string();
 
     let dist_absolute_path = out_dir.absolutize()?;
@@ -200,6 +201,7 @@ fn resolve_output_file_path(
     // It is unclear how to calculate output path when either input or output is not
     // relative to cwd (2,4 and b,d) and it is UB for now.
     let base = RelativePath::new(&*base);
+
     let output_path = base.to_logical_path(dist_absolute_path).join(
         // Custom output file extension is not supported yet
         file_path
@@ -219,6 +221,7 @@ fn emit_output(
 ) -> anyhow::Result<()> {
     if let Some(out_dir) = out_dir {
         let output_file_path = resolve_output_file_path(out_dir, file_path, file_extension)?;
+
         let output_dir = output_file_path
             .parent()
             .expect("Parent should be available");
@@ -231,6 +234,7 @@ fn emit_output(
             let source_map_path = output_file_path.with_extension("js.map");
 
             output.code.push_str("\n//# sourceMappingURL=");
+
             output
                 .code
                 .push_str(&source_map_path.file_name().unwrap().to_string_lossy());
@@ -246,6 +250,7 @@ fn emit_output(
 
             if let Some(dts_code) = extra.remove("__swc_isolated_declarations__") {
                 let dts_file_path = output_file_path.with_extension("d.ts");
+
                 fs::write(dts_file_path, dts_code.as_str().unwrap())?;
             }
         }
@@ -258,16 +263,19 @@ fn emit_output(
 
         println!("{}\n{}\n{}", file_path.display(), output.code, source_map,);
     };
+
     Ok(())
 }
 
 fn collect_stdin_input() -> Option<String> {
     let stdin = io::stdin();
+
     if stdin.is_terminal() {
         return None;
     }
 
     let mut buffer = String::new();
+
     let result = stdin.lock().read_to_string(&mut buffer);
 
     if result.is_ok() && !buffer.is_empty() {
@@ -306,11 +314,13 @@ impl CompileOptions {
                         // if the path starts with . or .., then turn it into an absolute path using
                         // the current working directory as the base
                         let path = Path::new(&p.0);
+
                         PluginConfig(
                             match path.components().next() {
                                 Some(Component::CurDir) | Some(Component::ParentDir) => {
                                     path.absolutize().unwrap().display().to_string()
                                 }
+
                                 _ => p.0,
                             },
                             p.1,
@@ -339,6 +349,7 @@ impl CompileOptions {
 
             self.source_file_name
                 .clone_into(&mut options.source_file_name);
+
             self.source_root.clone_into(&mut options.source_root);
         }
 
@@ -371,6 +382,7 @@ impl CompileOptions {
                             .cm
                             .load_file(file_path)
                             .context(format!("Failed to open file {}", file_path.display()));
+
                         fm.map(|fm| InputContext {
                             options,
                             fm,
@@ -384,6 +396,7 @@ impl CompileOptions {
         }
 
         let stdin_input = collect_stdin_input();
+
         if stdin_input.is_some() && !self.files.is_empty() {
             anyhow::bail!("Cannot specify inputs from stdin and files at the same time");
         }
@@ -451,9 +464,13 @@ impl CompileOptions {
                     .parent()
                     .expect("Parent should be available"),
             )?;
+
             let mut buf = File::create(single_out_file)?;
+
             let mut buf_srcmap = None;
+
             let mut buf_dts = None;
+
             let mut source_map_path = None;
 
             // write all transformed files to single output buf
@@ -463,6 +480,7 @@ impl CompileOptions {
                         let map_out_file = if let Some(source_map_target) = &self.source_map_target
                         {
                             source_map_path = Some(source_map_target.clone());
+
                             source_map_target.into()
                         } else {
                             let map_out_file = single_out_file.with_extension(format!(
@@ -483,8 +501,10 @@ impl CompileOptions {
                                     .to_string_lossy()
                                     .to_string(),
                             );
+
                             map_out_file
                         };
+
                         buf_srcmap = Some(File::create(map_out_file)?);
                     }
 
@@ -502,10 +522,12 @@ impl CompileOptions {
                     if let Some(dts_code) = extra.remove("__swc_isolated_declarations__") {
                         if buf_dts.is_none() {
                             let dts_file_path = single_out_file.with_extension("d.ts");
+
                             buf_dts = Some(File::create(dts_file_path)?);
                         }
 
                         let dts_code = dts_code.as_str().expect("dts code should be string");
+
                         buf_dts
                             .as_ref()
                             .expect("dts buffer should be available")
@@ -519,6 +541,7 @@ impl CompileOptions {
 
             if let Some(source_map_path) = source_map_path {
                 buf.write_all(b"\n//# sourceMappingURL=")?;
+
                 buf.write_all(source_map_path.as_bytes())?;
             }
 
@@ -539,6 +562,7 @@ impl CompileOptions {
                         Ok(output) => {
                             emit_output(output, &self.out_dir, &file_path, file_extension)
                         }
+
                         Err(e) => Err(e),
                     }
                 },
@@ -560,6 +584,7 @@ impl super::CommandRunner for CompileOptions {
 
         if let Some(guard) = guard {
             guard.flush();
+
             drop(guard);
         }
 

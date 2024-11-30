@@ -6,6 +6,7 @@ use crate::jsx;
 
 fn tr(t: &mut Tester) -> impl Pass {
     let unresolved_mark = Mark::new();
+
     let top_level_mark = Mark::new();
 
     (
@@ -34,8 +35,10 @@ test!(
     r#"
     function Hello() {
         function handleClick() {}
+
         return <h1 onClick={handleClick}>Hi</h1>;
     }
+
     function Bar() {
         return <Hello />;
     }
@@ -55,15 +58,21 @@ test!(
       function handleClick() {}
       return <h1 onClick={handleClick}>Hi</h1>;
     }
+
     export default function Bar() {
       return <Hello />;
     }
+
     function Baz() {
       return <h1>OK</h1>;
     }
+
     const NotAComp = 'hi';
+
     export { Baz, NotAComp };
+
     export function sum() {}
+
     export const Bad = 42;
 "#
 );
@@ -81,7 +90,9 @@ test!(
       function handleClick() {}
       return <h1 onClick={handleClick}>Hi</h1>;
     };
+
     export let Bar = (props) => <Hello />;
+
     export default () => {
       // This one should be ignored.
       // You should name your components.
@@ -103,6 +114,7 @@ test!(
     function Hello() {
       return <h1>Hi</h1>;
     }
+
     Hello = connect(Hello);
 "#
 );
@@ -135,11 +147,15 @@ test!(
       function handleClick() {}
       return <h1 onClick={handleClick}>Hi</h1>;
     };
+
     const Bar = function Baz() {
       return <Hello />;
     };
+
     function sum() {}
+
     let Baz = 10;
+
     var Qux;
 "#
 );
@@ -157,10 +173,13 @@ test!(
       const handleClick = () => {};
       return <h1 onClick={handleClick}>Hi</h1>;
     }
+
     const Bar = () => {
       return <Hello />;
     };
+
     var Baz = () => <div />;
+
     var sum = () => {};
 "#
 );
@@ -179,13 +198,16 @@ test!(
     let connect = () => {
       function Comp() {
         const handleClick = () => {};
+
         return <h1 onClick={handleClick}>Hi</h1>;
       }
       return Comp;
     };
+
     function withRouter() {
       return function Child() {
         const handleClick = () => {};
+
         return <h1 onClick={handleClick}>Hi</h1>;
       }
     };
@@ -207,9 +229,11 @@ test!(
     const B = (function Foo() {
       return <h1>Hi</h1>;
     })();
+
     let C = () => () => {
       return <h1>Hi</h1>;
     };
+
     let D = bar && (() => {
       return <h1>Hi</h1>;
     });
@@ -239,9 +263,11 @@ test!(
     const A = forwardRef(function() {
       return <h1>Foo</h1>;
     });
+
     export const B = memo(React.forwardRef(() => {
       return <h1>Foo</h1>;
     }));
+
     export default React.memo(forwardRef((props, ref) => {
       return <h1>Foo</h1>;
     }));
@@ -307,7 +333,9 @@ test!(
     const throttledAlert = throttle(function() {
       alert('Hi');
     });
+
     const TooComplex = (function() { return hello })(() => {});
+
     if (cond) {
       const Foo = thing(() => {});
     }
@@ -324,21 +352,29 @@ test!(
     register_identifiers_used_in_jsx,
     r#"
     import A from './A';
+
     import Store from './Store';
+
     Store.subscribe();
+
     const Header = styled.div`color: red`
     const StyledFactory1 = styled('div')`color: hotpink`
     const StyledFactory2 = styled('div')({ color: 'hotpink' })
     const StyledFactory3 = styled(A)({ color: 'hotpink' })
     const FunnyFactory = funny.factory``;
+
     let Alias1 = A;
+
     let Alias2 = A.Foo;
+
     const Dict = {};
+
     function Foo() {
       return (
         <div><A /><B /><StyledFactory1 /><StyledFactory2 /><StyledFactory3 /><Alias1 /><Alias2 /><Header /><Dict.X /></div>
       );
     }
+
     const B = hoc(A);
     // This is currently registered as a false positive:
     const NotAComponent = wow(A);
@@ -360,16 +396,23 @@ test!(
     register_identifiers_used_in_create_element,
     r#"
     import A from './A';
+
     import Store from './Store';
+
     Store.subscribe();
+
     const Header = styled.div`color: red`
     const StyledFactory1 = styled('div')`color: hotpink`
     const StyledFactory2 = styled('div')({ color: 'hotpink' })
     const StyledFactory3 = styled(A)({ color: 'hotpink' })
     const FunnyFactory = funny.factory``;
+
     let Alias1 = A;
+
     let Alias2 = A.Foo;
+
     const Dict = {};
+
     function Foo() {
       return [
         React.createElement(A),
@@ -383,7 +426,9 @@ test!(
         React.createElement(Dict.X),
       ];
     }
+
     React.createContext(Store);
+
     const B = hoc(A);
     // This is currently registered as a false positive:
     const NotAComponent = wow(A);
@@ -420,8 +465,11 @@ test!(
     function Foo() {
       return <h1>Hi</h1>;
     }
+
     export default hoc(Foo);
+
     export const A = hoc(Foo);
+
     const B = hoc(Foo);
 "#
 );
@@ -457,6 +505,7 @@ test!(
       React.useEffect(() => {});
       return <h1>{foo}</h1>;
     }
+
     function Bar() {
       const [foo, setFoo] = useState(0);
       React.useEffect(() => {});
@@ -483,18 +532,23 @@ test!(
       React.useEffect(() => {});
       return <h1 ref={ref}>{foo}</h1>;
     }));
+
     export const B = React.memo(React.forwardRef(function(props, ref) {
       const [foo, setFoo] = useState(0);
       React.useEffect(() => {});
       return <h1 ref={ref}>{foo}</h1>;
     }));
+
     function hoc() {
       return function Inner() {
         const [foo, setFoo] = useState(0);
+
         React.useEffect(() => {});
+
         return <h1 ref={ref}>{foo}</h1>;
       };
     }
+
     export let C = hoc();
 "#
 );
@@ -526,10 +580,15 @@ test!(
     register_implicit_arrow_returns,
     r#"
     export default () => useContext(X);
+
     export const Foo = () => useContext(X);
+
     module.exports = () => useContext(X);
+
     const Bar = () => useContext(X);
+
     const Baz = memo(() => useContext(X));
+
     const Qux = () => (0, useContext(X));
 "#
 );
@@ -548,9 +607,11 @@ test!(
       useFancyEffect();
       return foo;
     }
+
     const useFancyEffect = () => {
       React.useEffect(() => {});
     };
+
     export default function App() {
       const bar = useFancyState();
       return <h1>{bar}</h1>;
@@ -566,6 +627,7 @@ test!(
     }),
     |t| {
         let unresolved_mark = Mark::new();
+
         let top_level_mark = Mark::new();
 
         (
@@ -592,6 +654,7 @@ test!(
     include_hook_signature_in_commonjs,
     r#"
     import {useFancyState} from './hooks';
+
     import useFoo from './foo'
     export default function App() {
       const bar = useFancyState();
@@ -611,10 +674,13 @@ test!(
     gen_valid_hook_signatures_for_exotic_hooks,
     r#"
     import FancyHook from 'fancy';
+
     export default function App() {
       function useFancyState() {
         const [foo, setFoo] = React.useState(0);
+
         useFancyEffect();
+
         return foo;
       }
       const bar = useFancyState();
@@ -636,10 +702,15 @@ test!(
     dont_consider_require_as_hoc,
     r#"
     const A = require('A');
+
     const B = foo ? require('X') : require('Y');
+
     const C = requireCond(gk, 'C');
+
     const D = import('D');
+
     import E = require('E');
+
     export default function App() {
       return (
         <div>
@@ -668,6 +739,7 @@ test!(
       React.useEffect(() => {});
       return <h1>{foo}</h1>;
     }
+
     function Bar() {
       const [foo, setFoo] = useState(0);
       React.useEffect(() => {
@@ -703,6 +775,7 @@ test!(
     }),
     |t| {
         let unresolved_mark = Mark::new();
+
         let top_level_mark = Mark::new();
 
         (
@@ -783,6 +856,7 @@ test!(
     r#"
 const a = (a) => {
     const useE = useEffect;
+
     return function useFoo() {
       useE(() => console.log(a), []);
       return useState(123);

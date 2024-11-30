@@ -61,19 +61,24 @@ mod rkyv_impl {
         T: Archive,
     {
         type Archived = Archived<Option<T>>;
+
         type Resolver = Resolver<Option<T>>;
 
         unsafe fn resolve(&self, pos: usize, resolver: Self::Resolver, out: *mut Self::Archived) {
             match resolver {
                 None => {
                     let out = out.cast::<ArchivedOptionVariantNone>();
+
                     ptr::addr_of_mut!((*out).0).write(ArchivedOptionTag::None);
                 }
+
                 Some(resolver) => {
                     let out = out.cast::<ArchivedOptionVariantSome<T::Archived>>();
+
                     ptr::addr_of_mut!((*out).0).write(ArchivedOptionTag::Some);
 
                     let v = self.0.get();
+
                     let value = if let Some(value) = v.as_ref() {
                         value
                     } else {
@@ -81,6 +86,7 @@ mod rkyv_impl {
                     };
 
                     let (fp, fo) = out_field!(out.1);
+
                     value.resolve(pos + fp, resolver, fo);
                 }
             }
@@ -106,8 +112,10 @@ mod rkyv_impl {
             match self {
                 ArchivedOption::Some(value) => {
                     let v = value.deserialize(deserializer)?;
+
                     Ok(CacheCell::from(v))
                 }
+
                 ArchivedOption::None => Ok(CacheCell::new()),
             }
         }

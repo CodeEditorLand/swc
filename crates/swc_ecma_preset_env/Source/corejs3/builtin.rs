@@ -6,6 +6,7 @@ fn dynamic_concat(a: &[&'static str], b: &[&'static str]) -> &'static [&'static 
     let mut res = Vec::with_capacity(a.len() + b.len());
 
     res.extend_from_slice(a);
+
     res.extend_from_slice(b);
 
     res.leak()
@@ -15,15 +16,18 @@ const fn concat2<const N: usize>(a: &[&'static str], b: &[&'static str]) -> [&'s
     assert!(N == a.len() + b.len());
 
     let mut res = [""; N];
+
     let mut idx = 0;
 
     while idx < a.len() {
         res[idx] = a[idx];
+
         idx += 1;
     }
 
     while idx < a.len() + b.len() {
         res[idx] = b[idx - a.len()];
+
         idx += 1;
     }
 
@@ -32,7 +36,9 @@ const fn concat2<const N: usize>(a: &[&'static str], b: &[&'static str]) -> [&'s
 
 fn typed(names: &'static [&'static str]) -> CoreJSPolyfillDescriptor {
     let mut global = Vec::with_capacity(names.len() + TYPED_ARRAY_DEPENDENCIES.len());
+
     global.extend_from_slice(names);
+
     global.extend_from_slice(TYPED_ARRAY_DEPENDENCIES);
 
     descriptor(None, global.leak(), Some(names[0]), &[])
@@ -252,6 +258,7 @@ fn uint8_typed_array_static_methods() -> ObjectMap<CoreJSPolyfillDescriptor> {
             ["esnext.uint8-array.from-hex", TYPED_ARRAY_DEPENDENCIES,]
         ),
     }));
+
     map
 }
 

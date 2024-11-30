@@ -41,7 +41,9 @@ impl<'a> Iterator for Iter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let cur = self.cur.take()?;
+
         self.cur = cur.prev;
+
         Some(cur)
     }
 }

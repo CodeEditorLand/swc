@@ -31,6 +31,7 @@ where
     ) -> Result<Vec<Bundle>, Error> {
         self.run(|| {
             let mut new = Vec::with_capacity(bundles.len());
+
             let mut renamed = AHashMap::default();
 
             for mut bundle in bundles {
@@ -75,15 +76,21 @@ where
 
                         new.push(bundle);
                     }
+
                     BundleKind::Lib { name } => {
                         let hash = calc_hash(self.cm.clone(), &bundle.module)?;
+
                         let mut new_name = PathBuf::from(name);
+
                         let key = new_name.clone();
+
                         let file_name = new_name
                             .file_name()
                             .map(|path| -> PathBuf {
                                 let path = Path::new(path);
+
                                 let ext = path.extension();
+
                                 if let Some(ext) = ext {
                                     return format!(
                                         "{}-{}.{}",
@@ -93,11 +100,14 @@ where
                                     )
                                     .into();
                                 }
+
                                 format!("{}-{}", path.file_stem().unwrap().to_string_lossy(), hash,)
                                     .into()
                             })
                             .expect("javascript file should have name");
+
                         new_name.pop();
+
                         new_name = new_name.join(file_name.clone());
 
                         renamed.insert(key, new_name.to_string_lossy().to_string());
@@ -109,6 +119,7 @@ where
                             ..bundle
                         })
                     }
+
                     _ => new.push(bundle),
                 }
             }
@@ -122,6 +133,7 @@ where
                     FileName::Real(ref v) => v.clone(),
                     _ => {
                         tracing::error!("Cannot rename: not a real file");
+
                         return bundle;
                     }
                 };
@@ -133,6 +145,7 @@ where
                         base: &path,
                         renamed: &renamed,
                     };
+
                     bundle.module.fold_with(&mut v)
                 };
 
@@ -179,8 +192,10 @@ where
                                         ident.clone(),
                                     ))));
                                 }
+
                                 Decl::Var(decl) => {
                                     let ids: Vec<Ident> = find_pat_ids(decl);
+
                                     props.extend(
                                         ids.into_iter()
                                             .map(Prop::Shorthand)
@@ -188,6 +203,7 @@ where
                                             .map(PropOrSpread::Prop),
                                     );
                                 }
+
                                 _ => unreachable!(),
                             }
 
@@ -204,6 +220,7 @@ where
                                     ExportSpecifier::Namespace(..) => {
                                         // unreachable
                                     }
+
                                     ExportSpecifier::Default(s) => {
                                         props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(
                                             KeyValueProp {
@@ -215,6 +232,7 @@ where
                                             },
                                         ))));
                                     }
+
                                     ExportSpecifier::Named(s) => match s.exported {
                                         Some(ModuleExportName::Ident(exported)) => {
                                             let orig = match s.orig {
@@ -223,6 +241,7 @@ where
                                                     "module string names unimplemented"
                                                 ),
                                             };
+
                                             props.push(PropOrSpread::Prop(Box::new(
                                                 Prop::KeyValue(KeyValueProp {
                                                     key: PropName::Ident(exported.into()),
@@ -230,9 +249,11 @@ where
                                                 }),
                                             )));
                                         }
+
                                         Some(ModuleExportName::Str(..)) => {
                                             unimplemented!("module string names unimplemented")
                                         }
+
                                         None => {
                                             let orig = match s.orig {
                                                 ModuleExportName::Ident(ident) => ident,
@@ -240,6 +261,7 @@ where
                                                     "module string names unimplemented"
                                                 ),
                                             };
+
                                             props.push(PropOrSpread::Prop(Box::new(
                                                 Prop::Shorthand(orig),
                                             )));
@@ -254,6 +276,7 @@ where
                         ModuleDecl::ExportDefaultDecl(export) => match export.decl {
                             DefaultDecl::Class(expr) => {
                                 let ident = expr.ident;
+
                                 let ident =
                                     ident.unwrap_or_else(|| private_ident!("_default_decl"));
 
@@ -276,8 +299,10 @@ where
                                     .into(),
                                 )
                             }
+
                             DefaultDecl::Fn(expr) => {
                                 let ident = expr.ident;
+
                                 let ident =
                                     ident.unwrap_or_else(|| private_ident!("_default_decl"));
 
@@ -300,19 +325,23 @@ where
                                     .into(),
                                 )
                             }
+
                             DefaultDecl::TsInterfaceDecl(_) => None,
                         },
                         ModuleDecl::ExportDefaultExpr(export) => {
                             let default_var = private_ident!("default");
+
                             props.push(PropOrSpread::Prop(Box::new(Prop::Shorthand(
                                 default_var.clone(),
                             ))));
+
                             let var = VarDeclarator {
                                 span: DUMMY_SP,
                                 name: default_var.into(),
                                 init: Some(export.expr),
                                 definite: false,
                             };
+
                             Some(
                                 VarDecl {
                                     span: DUMMY_SP,
@@ -331,6 +360,7 @@ where
                 .collect(),
             ..Default::default()
         };
+
         body.stmts.push(
             ReturnStmt {
                 span: DUMMY_SP,
@@ -417,9 +447,13 @@ where
                 .unwrap_or(self.base)
                 .as_os_str()
                 .to_string_lossy();
+
             let base = RelativePath::new(&*base);
+
             let v = base.relative(v);
+
             let value = v.as_str();
+
             return ImportDecl {
                 src: Box::new(Str {
                     value: if value.starts_with('.') {

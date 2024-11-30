@@ -93,7 +93,9 @@ impl UnspecializedInput for Input<'_> {}
 
 impl<'a> InputIter for Input<'a> {
     type Item = char;
+
     type Iter = CharIndices<'a>;
+
     type IterElem = Chars<'a>;
 
     fn iter_indices(&self) -> Self::Iter {

@@ -14,6 +14,7 @@ impl Pure<'_> {
             Callee::Super(_) | Callee::Import(_) => return,
             Callee::Expr(callee) => match &**callee {
                 Expr::Ident(Ident { sym, .. }) if &**sym == "Symbol" => {}
+
                 _ => return,
             },
         }

@@ -55,6 +55,7 @@ where
         let resolved = self.inner.resolve(base, src)?;
         {
             let mut lock = self.cache.lock();
+
             lock.put((base.clone(), src.to_string()), resolved.clone());
         }
 

@@ -85,12 +85,14 @@ impl Visit for ThisVisitor {
     /// Don't recurse into fn
     fn visit_method_prop(&mut self, n: &MethodProp) {
         n.key.visit_with(self);
+
         n.function.visit_with(self);
     }
 
     /// Don't recurse into fn
     fn visit_setter_prop(&mut self, n: &SetterProp) {
         n.key.visit_with(self);
+
         n.param.visit_with(self);
     }
 
@@ -110,7 +112,9 @@ where
     N: VisitWith<ThisVisitor>,
 {
     let mut visitor = ThisVisitor { found: false };
+
     body.visit_with(&mut visitor);
+
     visitor.found
 }
 
@@ -122,7 +126,9 @@ where
         found: false,
         ident,
     };
+
     body.visit_with(&mut visitor);
+
     visitor.found
 }
 
@@ -141,6 +147,7 @@ impl Visit for IdentRefFinder<'_> {
             Expr::Ident(ref i) if i.sym == self.ident.0 && i.ctxt == self.ident.1 => {
                 self.found = true;
             }
+
             _ => {}
         }
     }
@@ -152,7 +159,9 @@ where
     N: VisitWith<ArgumentsFinder>,
 {
     let mut visitor = ArgumentsFinder { found: false };
+
     body.visit_with(&mut visitor);
+
     visitor.found
 }
 
@@ -267,6 +276,7 @@ pub trait ModuleItemLike: StmtLike {
     fn try_into_module_decl(self) -> Result<ModuleDecl, Self> {
         Err(self)
     }
+
     fn try_from_module_decl(decl: ModuleDecl) -> Result<Self, ModuleDecl> {
         Err(decl)
     }
@@ -274,7 +284,9 @@ pub trait ModuleItemLike: StmtLike {
 
 pub trait StmtLike: Sized + 'static + Send + Sync + From<Stmt> {
     fn try_into_stmt(self) -> Result<Stmt, Self>;
+
     fn as_stmt(&self) -> Option<&Stmt>;
+
     fn as_stmt_mut(&mut self) -> Option<&mut Stmt>;
 }
 
@@ -343,6 +355,7 @@ where
     S: StmtLike,
 {
     fn prepend_stmt(&mut self, insert_with: S);
+
     fn prepend_stmts<I>(&mut self, insert_with: I)
     where
         I: IntoIterator<Item = S>;
@@ -429,7 +442,9 @@ impl<T> IsEmpty for Vec<T> {
 /// Extracts hoisted variables
 pub fn extract_var_ids<T: VisitWith<Hoister>>(node: &T) -> Vec<Ident> {
     let mut v = Hoister { vars: Vec::new() };
+
     node.visit_with(&mut v);
+
     v.vars
 }
 
@@ -441,6 +456,7 @@ pub trait StmtExt {
 
     fn extract_var_ids_as_var(&self) -> Option<VarDecl> {
         let ids = self.extract_var_ids();
+
         if ids.is_empty() {
             return None;
         }
@@ -479,6 +495,7 @@ pub trait StmtExt {
                         .as_ref()
                         .map_or(false, |stmt| stmt.may_have_side_effects(ctx))
             }
+
             Stmt::Switch(switch_stmt) => {
                 switch_stmt.discriminant.may_have_side_effects(ctx)
                     || switch_stmt.cases.iter().any(|case| {
@@ -488,6 +505,7 @@ pub trait StmtExt {
                             || case.cons.iter().any(|con| con.may_have_side_effects(ctx))
                     })
             }
+
             Stmt::Try(try_stmt) => {
                 try_stmt
                     .block
@@ -508,6 +526,7 @@ pub trait StmtExt {
                             .any(|stmt| stmt.may_have_side_effects(ctx))
                     })
             }
+
             Stmt::Decl(decl) => match decl {
                 Decl::Class(class_decl) => class_has_side_effect(ctx, &class_decl.class),
                 Decl::Fn(_) => !ctx.in_strict,
@@ -741,9 +760,11 @@ pub trait ExprExt {
     ///for expressions with side-effects.
     fn cast_to_bool(&self, ctx: &ExprCtx) -> (Purity, BoolValue) {
         let expr = self.as_expr();
+
         if expr.is_global_ref_to(ctx, "undefined") {
             return (Pure, Known(false));
         }
+
         if expr.is_nan() {
             return (Pure, Known(false));
         }
@@ -757,6 +778,7 @@ pub trait ExprExt {
                 ..
             }) => {
                 let (_, v) = right.cast_to_bool(ctx);
+
                 return (MayBeImpure, v);
             }
 
@@ -766,6 +788,7 @@ pub trait ExprExt {
                 ..
             }) => {
                 let v = arg.as_pure_number(ctx);
+
                 match v {
                     Known(n) => Known(!matches!(n.classify(), FpCategory::Nan | FpCategory::Zero)),
                     Unknown => return (MayBeImpure, Unknown),
@@ -778,8 +801,10 @@ pub trait ExprExt {
                 ..
             }) => {
                 let (p, v) = arg.cast_to_bool(ctx);
+
                 return (p, !v);
             }
+
             Expr::Seq(SeqExpr { exprs, .. }) => exprs.last().unwrap().cast_to_bool(ctx).1,
 
             Expr::Bin(BinExpr {
@@ -789,6 +814,7 @@ pub trait ExprExt {
                 ..
             }) => {
                 let (lp, ln) = left.cast_to_number(ctx);
+
                 let (rp, rn) = right.cast_to_number(ctx);
 
                 return (
@@ -801,6 +827,7 @@ pub trait ExprExt {
                                 Known(true)
                             }
                         }
+
                         _ => Unknown,
                     },
                 );
@@ -813,6 +840,7 @@ pub trait ExprExt {
                 ..
             }) => {
                 let lv = left.as_pure_number(ctx);
+
                 let rv = right.as_pure_number(ctx);
 
                 match (lv, rv) {
@@ -825,10 +853,12 @@ pub trait ExprExt {
                         if rv == 0.0 {
                             return (Pure, Known(true));
                         }
+
                         let v = lv / rv;
 
                         return (Pure, Known(v != 0.0));
                     }
+
                     _ => Unknown,
                 }
             }
@@ -852,6 +882,7 @@ pub trait ExprExt {
                 // TODO: Ignore purity if value cannot be reached.
 
                 let (lp, lv) = left.cast_to_bool(ctx);
+
                 let (rp, rv) = right.cast_to_bool(ctx);
 
                 let v = if *op == op!("&") {
@@ -874,11 +905,13 @@ pub trait ExprExt {
                 ..
             }) => {
                 let (lp, lv) = left.cast_to_bool(ctx);
+
                 if let Known(true) = lv {
                     return (lp, lv);
                 }
 
                 let (rp, rv) = right.cast_to_bool(ctx);
+
                 if let Known(true) = rv {
                     return (lp + rp, rv);
                 }
@@ -893,11 +926,13 @@ pub trait ExprExt {
                 ..
             }) => {
                 let (lp, lv) = left.cast_to_bool(ctx);
+
                 if let Known(false) = lv {
                     return (lp, lv);
                 }
 
                 let (rp, rv) = right.cast_to_bool(ctx);
+
                 if let Known(false) = rv {
                     return (lp + rp, rv);
                 }
@@ -915,6 +950,7 @@ pub trait ExprExt {
                     Expr::Lit(Lit::Str(s)) if !s.value.is_empty() => {
                         return (MayBeImpure, Known(true))
                     }
+
                     _ => {}
                 }
 
@@ -922,6 +958,7 @@ pub trait ExprExt {
                     Expr::Lit(Lit::Str(s)) if !s.value.is_empty() => {
                         return (MayBeImpure, Known(true))
                     }
+
                     _ => {}
                 }
 
@@ -943,6 +980,7 @@ pub trait ExprExt {
                         Lit::Num(Number { value: n, .. }) => {
                             !matches!(n.classify(), FpCategory::Nan | FpCategory::Zero)
                         }
+
                         Lit::BigInt(ref v) => v
                             .value
                             .to_string()
@@ -969,6 +1007,7 @@ pub trait ExprExt {
 
     fn cast_to_number(&self, ctx: &ExprCtx) -> (Purity, Value<f64>) {
         let expr = self.as_expr();
+
         let v = match expr {
             Expr::Lit(l) => match l {
                 Lit::Bool(Bool { value: true, .. }) => 1.0,
@@ -984,6 +1023,7 @@ pub trait ExprExt {
 
                 return (Pure, num_from_str(&s));
             }
+
             Expr::Ident(Ident { sym, ctxt, .. }) => match &**sym {
                 "undefined" | "NaN" if *ctxt == ctx.unresolved_ctxt => f64::NAN,
                 "Infinity" if *ctxt == ctx.unresolved_ctxt => f64::INFINITY,
@@ -1009,6 +1049,7 @@ pub trait ExprExt {
                         1.0
                     }
                 }
+
                 _ => return (MayBeImpure, Unknown),
             },
             Expr::Unary(UnaryExpr {
@@ -1055,6 +1096,7 @@ pub trait ExprExt {
     /// Note: This method returns [Known] only if it's pure.
     fn as_pure_number(&self, ctx: &ExprCtx) -> Value<f64> {
         let (purity, v) = self.cast_to_number(ctx);
+
         if !purity.is_pure() {
             return Unknown;
         }
@@ -1065,6 +1107,7 @@ pub trait ExprExt {
     /// Returns Known only if it's pure.
     fn as_pure_string(&self, ctx: &ExprCtx) -> Value<Cow<'_, str>> {
         let expr = self.as_expr();
+
         match *expr {
             Expr::Lit(ref l) => match *l {
                 Lit::Str(Str { ref value, .. }) => Known(Cow::Borrowed(value)),
@@ -1075,6 +1118,7 @@ pub trait ExprExt {
 
                     Known(Cow::Owned(n.value.to_js_string()))
                 }
+
                 Lit::Bool(Bool { value: true, .. }) => Known(Cow::Borrowed("true")),
                 Lit::Bool(Bool { value: false, .. }) => Known(Cow::Borrowed("false")),
                 Lit::Null(..) => Known(Cow::Borrowed("null")),
@@ -1087,10 +1131,12 @@ pub trait ExprExt {
                 // converted. unimplemented!("TplLit.
                 // as_string()")
             }
+
             Expr::Ident(Ident { ref sym, ctxt, .. }) => match &**sym {
                 "undefined" | "Infinity" | "NaN" if ctxt == ctx.unresolved_ctxt => {
                     Known(Cow::Borrowed(&**sym))
                 }
+
                 _ => Unknown,
             },
             Expr::Unary(UnaryExpr {
@@ -1108,17 +1154,21 @@ pub trait ExprExt {
                         "true"
                     }
                 }
+
                 Unknown => return Value::Unknown,
             })),
             Expr::Array(ArrayLit { ref elems, .. }) => {
                 let mut buf = String::new();
+
                 let len = elems.len();
                 // null, undefined is "" in array literal.
                 for (idx, elem) in elems.iter().enumerate() {
                     let last = idx == len - 1;
+
                     let e = match *elem {
                         Some(ref elem) => {
                             let ExprOrSpread { ref expr, .. } = *elem;
+
                             match &**expr {
                                 Expr::Lit(Lit::Null(..)) => Cow::Borrowed(""),
                                 Expr::Unary(UnaryExpr {
@@ -1129,29 +1179,36 @@ pub trait ExprExt {
                                     if arg.may_have_side_effects(ctx) {
                                         return Value::Unknown;
                                     }
+
                                     Cow::Borrowed("")
                                 }
+
                                 Expr::Ident(Ident { sym: undefined, .. })
                                     if &**undefined == "undefined" =>
                                 {
                                     Cow::Borrowed("")
                                 }
+
                                 _ => match expr.as_pure_string(ctx) {
                                     Known(v) => v,
                                     Unknown => return Value::Unknown,
                                 },
                             }
                         }
+
                         None => Cow::Borrowed(""),
                     };
+
                     buf.push_str(&e);
 
                     if !last {
                         buf.push(',');
                     }
                 }
+
                 Known(buf.into())
             }
+
             _ => Unknown,
         }
     }
@@ -1177,6 +1234,7 @@ pub trait ExprExt {
                 Expr::Ident(Ident { sym: arguments, .. }) if &**arguments == "arguments" => {
                     Known(Type::Num)
                 }
+
                 _ => Unknown,
             },
 
@@ -1210,11 +1268,13 @@ pub trait ExprExt {
                 ..
             }) => {
                 let rt = right.get_type();
+
                 if rt == Known(StringType) {
                     return Known(StringType);
                 }
 
                 let lt = left.get_type();
+
                 if lt == Known(StringType) {
                     return Known(StringType);
                 }
@@ -1246,6 +1306,7 @@ pub trait ExprExt {
                 if right.get_type() == Known(StringType) {
                     return Known(StringType);
                 }
+
                 Unknown
             }
 
@@ -1444,6 +1505,7 @@ pub trait ExprExt {
                 if obj.may_have_side_effects(ctx) {
                     return true;
                 }
+
                 match &**obj {
                     Expr::Class(c) => {
                         let is_static_accessor = |member: &ClassMember| {
@@ -1458,10 +1520,12 @@ pub trait ExprExt {
                                 false
                             }
                         };
+
                         if c.class.body.iter().any(is_static_accessor) {
                             return true;
                         }
                     }
+
                     Expr::Object(obj) => {
                         let can_have_side_effect = |prop: &PropOrSpread| match prop {
                             PropOrSpread::Spread(_) => true,
@@ -1481,10 +1545,12 @@ pub trait ExprExt {
                                 _ => false,
                             },
                         };
+
                         if obj.props.iter().any(can_have_side_effect) {
                             return true;
                         }
                     }
+
                     _ => {}
                 };
 
@@ -1522,6 +1588,7 @@ pub trait ExprExt {
             }) if callee.is_pure_callee(ctx) => {
                 args.iter().any(|arg| arg.expr.may_have_side_effects(ctx))
             }
+
             Expr::OptChain(OptChainExpr { base, .. })
                 if matches!(&**base, OptChainBase::Call(..))
                     && OptChainBase::as_call(base)
@@ -1559,6 +1626,7 @@ pub trait ExprExt {
 
                         k || value.may_have_side_effects(ctx)
                     }
+
                     Prop::Getter(GetterProp { key, .. })
                     | Prop::Setter(SetterProp { key, .. })
                     | Prop::Method(MethodProp { key, .. }) => match key {
@@ -1620,6 +1688,7 @@ pub fn class_has_side_effect(expr_ctx: &ExprCtx, c: &Class) -> bool {
                     }
                 }
             }
+
             ClassMember::PrivateProp(p) => {
                 if let Some(v) = &p.value {
                     if v.may_have_side_effects(expr_ctx) {
@@ -1627,6 +1696,7 @@ pub fn class_has_side_effect(expr_ctx: &ExprCtx, c: &Class) -> bool {
                     }
                 }
             }
+
             ClassMember::StaticBlock(s) => {
                 if s.body
                     .stmts
@@ -1636,6 +1706,7 @@ pub fn class_has_side_effect(expr_ctx: &ExprCtx, c: &Class) -> bool {
                     return true;
                 }
             }
+
             _ => {}
         }
     }
@@ -1647,6 +1718,7 @@ fn and(lt: Value<Type>, rt: Value<Type>) -> Value<Type> {
     if lt == rt {
         return lt;
     }
+
     Unknown
 }
 
@@ -1679,18 +1751,21 @@ pub fn num_from_str(s: &str) -> Value<f64> {
                     Err(_) => Known(f64::NAN),
                 }
             }
+
             b"0o" | b"0O" => {
                 return match u64::from_str_radix(&s[2..], 8) {
                     Ok(n) => Known(n as f64),
                     Err(_) => Known(f64::NAN),
                 };
             }
+
             b"0b" | b"0B" => {
                 return match u64::from_str_radix(&s[2..], 2) {
                     Ok(n) => Known(n as f64),
                     Err(_) => Known(f64::NAN),
                 };
             }
+
             _ => {}
         }
     }
@@ -1752,6 +1827,7 @@ impl Add for Purity {
 /// Cast to javascript's int32
 pub fn to_int32(d: f64) -> i32 {
     let id = d as i32;
+
     if id as f64 == d {
         // This covers -0.0 as well
         return id;
@@ -1764,6 +1840,7 @@ pub fn to_int32(d: f64) -> i32 {
     let d = if d >= 0.0 { d.floor() } else { d.ceil() };
 
     const TWO32: f64 = 4_294_967_296.0;
+
     let d = d % TWO32;
     // (double)(long)d == d should hold here
 
@@ -1794,7 +1871,9 @@ pub fn to_int32(d: f64) -> i32 {
 
 pub fn has_rest_pat<T: VisitWith<RestPatVisitor>>(node: &T) -> bool {
     let mut v = RestPatVisitor { found: false };
+
     node.visit_with(&mut v);
+
     v.found
 }
 
@@ -1815,6 +1894,7 @@ where
     T: VisitWith<LiteralVisitor>,
 {
     let (v, _) = calc_literal_cost(node, true);
+
     v
 }
 
@@ -1828,6 +1908,7 @@ where
         cost: 0,
         allow_non_json_value,
     };
+
     e.visit_with(&mut v);
 
     (v.is_lit, v.cost)
@@ -1943,6 +2024,7 @@ impl Visit for LiteralVisitor {
             Prop::KeyValue(..) => {
                 self.cost += 1;
             }
+
             _ => self.is_lit = false,
         }
     }
@@ -1961,6 +2043,7 @@ impl Visit for LiteralVisitor {
                 // TODO: Count digits
                 self.cost += 5;
             }
+
             PropName::BigInt(_) => self.is_lit = false,
             PropName::Computed(..) => self.is_lit = false,
         }
@@ -2021,6 +2104,7 @@ pub fn is_simple_pure_member_expr(m: &MemberExpr, pure_getters: bool) -> bool {
         MemberProp::Ident(..) | MemberProp::PrivateName(..) => {
             is_simple_pure_expr(&m.obj, pure_getters)
         }
+
         MemberProp::Computed(c) => {
             is_simple_pure_expr(&c.expr, pure_getters) && is_simple_pure_expr(&m.obj, pure_getters)
         }
@@ -2105,6 +2189,7 @@ fn sym_for_expr(expr: &Expr) -> Option<String> {
 /// Used to determine super_class_ident
 pub fn alias_ident_for(expr: &Expr, default: &str) -> Ident {
     let ctxt = SyntaxContext::empty().apply_mark(Mark::fresh(Mark::root()));
+
     let span = expr.span();
 
     let mut sym = sym_for_expr(expr).unwrap_or_else(|| default.to_string());
@@ -2116,6 +2201,7 @@ pub fn alias_ident_for(expr: &Expr, default: &str) -> Ident {
     if !sym.starts_with('_') {
         sym = format!("_{}", sym)
     }
+
     quote_ident!(ctxt, span, sym)
 }
 
@@ -2168,6 +2254,7 @@ pub fn alias_ident_for_simple_assign_tatget(expr: &SimpleAssignTarget, default: 
     if !sym.starts_with('_') {
         sym = format!("_{}", sym)
     }
+
     quote_ident!(ctxt, span, sym)
 }
 
@@ -2235,6 +2322,7 @@ pub fn default_constructor(has_super: bool) -> Constructor {
 /// Use value of [`Class::span`].
 pub fn default_constructor_with_span(has_super: bool, super_call_span: Span) -> Constructor {
     trace!(has_super = has_super, "Creating a default constructor");
+
     let super_call_span = super_call_span.with_hi(super_call_span.lo);
 
     Constructor {
@@ -2356,9 +2444,11 @@ pub trait IsDirective {
             _ => false,
         }
     }
+
     fn directive_continue(&self) -> bool {
         self.as_ref().map_or(false, Stmt::can_precede_directive)
     }
+
     fn is_use_strict(&self) -> bool {
         self.as_ref().map_or(false, Stmt::is_use_strict)
     }
@@ -2395,6 +2485,7 @@ where
     T: VisitWith<DestructuringFinder<I>>,
 {
     let mut v = DestructuringFinder { found: Vec::new() };
+
     node.visit_with(&mut v);
 
     v.found
@@ -2434,6 +2525,7 @@ where
     F: for<'a> FnMut(&'a BindingIdent),
 {
     let mut v = BindingIdentifierVisitor { op };
+
     node.visit_with(&mut v);
 }
 
@@ -2468,6 +2560,7 @@ where
     T: VisitMutWith<DropSpan>,
 {
     t.visit_mut_with(&mut DropSpan {});
+
     t
 }
 
@@ -2512,7 +2605,9 @@ impl<'a> IdentUsageFinder<'a> {
             ident,
             found: false,
         };
+
         node.visit_with(&mut v);
+
         v.found
     }
 }
@@ -2526,6 +2621,7 @@ impl ExprCtx {
     {
         let mut exprs = exprs.into_iter().fold(Vec::new(), |mut v, e| {
             self.extract_side_effects_to(&mut v, *e);
+
             v
         });
 
@@ -2576,6 +2672,7 @@ impl ExprCtx {
 
                 to.push(e.into())
             }
+
             Expr::Member(_) | Expr::SuperProp(_) => to.push(Box::new(expr)),
 
             // We are at here because we could not determine value of test.
@@ -2595,6 +2692,7 @@ impl ExprCtx {
                 if arg.is_ident() {
                     return;
                 }
+
                 self.extract_side_effects_to(to, *arg)
             }
 
@@ -2603,10 +2701,13 @@ impl ExprCtx {
             Expr::Bin(BinExpr { op, .. }) if op.may_short_circuit() => {
                 to.push(Box::new(expr));
             }
+
             Expr::Bin(BinExpr { left, right, .. }) => {
                 self.extract_side_effects_to(to, *left);
+
                 self.extract_side_effects_to(to, *right);
             }
+
             Expr::Seq(SeqExpr { exprs, .. }) => exprs
                 .into_iter()
                 .for_each(|e| self.extract_side_effects_to(to, *e)),
@@ -2618,6 +2719,7 @@ impl ExprCtx {
             }) => {
                 //
                 let mut has_spread = false;
+
                 props.retain(|node| match node {
                     PropOrSpread::Prop(node) => match &**node {
                         Prop::Shorthand(..) => false,
@@ -2630,6 +2732,7 @@ impl ExprCtx {
 
                             value.may_have_side_effects(self)
                         }
+
                         Prop::Getter(GetterProp { key, .. })
                         | Prop::Setter(SetterProp { key, .. })
                         | Prop::Method(MethodProp { key, .. }) => {
@@ -2639,12 +2742,14 @@ impl ExprCtx {
                                 false
                             }
                         }
+
                         Prop::Assign(..) => {
                             unreachable!("assign property in object literal is not a valid syntax")
                         }
                     },
                     PropOrSpread::Spread(SpreadElement { .. }) => {
                         has_spread = true;
+
                         true
                     }
                 });
@@ -2655,6 +2760,7 @@ impl ExprCtx {
                     props.into_iter().for_each(|prop| match prop {
                         PropOrSpread::Prop(node) => match *node {
                             Prop::Shorthand(..) => {}
+
                             Prop::KeyValue(KeyValueProp { key, value }) => {
                                 if let PropName::Computed(e) = key {
                                     self.extract_side_effects_to(to, *e.expr);
@@ -2662,6 +2768,7 @@ impl ExprCtx {
 
                                 self.extract_side_effects_to(to, *value)
                             }
+
                             Prop::Getter(GetterProp { key, .. })
                             | Prop::Setter(SetterProp { key, .. })
                             | Prop::Method(MethodProp { key, .. }) => {
@@ -2669,6 +2776,7 @@ impl ExprCtx {
                                     self.extract_side_effects_to(to, *e.expr)
                                 }
                             }
+
                             Prop::Assign(..) => {
                                 unreachable!(
                                     "assign property in object literal is not a valid syntax"
@@ -2695,11 +2803,13 @@ impl ExprCtx {
                     .into_iter()
                     .for_each(|e| self.extract_side_effects_to(to, *e));
             }
+
             Expr::Tpl(Tpl { exprs, .. }) => {
                 exprs
                     .into_iter()
                     .for_each(|e| self.extract_side_effects_to(to, *e));
             }
+
             Expr::Class(ClassExpr { .. }) => unimplemented!("add_effects for class expression"),
 
             Expr::JSXMember(..)
@@ -2716,6 +2826,7 @@ impl ExprCtx {
             | Expr::TsSatisfies(TsSatisfiesExpr { expr, .. }) => {
                 self.extract_side_effects_to(to, *expr)
             }
+
             Expr::OptChain(..) => to.push(Box::new(expr)),
 
             Expr::Invalid(..) => unreachable!(),
@@ -2764,7 +2875,9 @@ impl VisitMut for IdentReplacer<'_> {
         match node {
             Prop::Shorthand(i) => {
                 let cloned = i.clone();
+
                 i.visit_mut_with(self);
+
                 if i.sym != cloned.sym || i.ctxt != cloned.ctxt {
                     *node = Prop::KeyValue(KeyValueProp {
                         key: PropName::Ident(IdentName::new(cloned.sym, cloned.span)),
@@ -2772,6 +2885,7 @@ impl VisitMut for IdentReplacer<'_> {
                     });
                 }
             }
+
             _ => {
                 node.visit_mut_children_with(self);
             }
@@ -2820,10 +2934,12 @@ where
 
         for p in &n.params {
             self.is_pat_decl = true;
+
             p.visit_with(self);
         }
 
         n.body.visit_with(self);
+
         self.is_pat_decl = old;
     }
 
@@ -2843,8 +2959,11 @@ where
 
     fn visit_expr(&mut self, node: &Expr) {
         let old = self.is_pat_decl;
+
         self.is_pat_decl = false;
+
         node.visit_children_with(self);
+
         self.is_pat_decl = old;
     }
 
@@ -2855,14 +2974,17 @@ where
             }) => {
                 self.add(ident);
             }
+
             DefaultDecl::Fn(FnExpr {
                 ident: Some(ident),
                 function: f,
             }) if f.body.is_some() => {
                 self.add(ident);
             }
+
             _ => {}
         }
+
         e.visit_children_with(self);
     }
 
@@ -2886,8 +3008,11 @@ where
 
     fn visit_param(&mut self, node: &Param) {
         let old = self.is_pat_decl;
+
         self.is_pat_decl = true;
+
         node.visit_children_with(self);
+
         self.is_pat_decl = old;
     }
 
@@ -2903,11 +3028,15 @@ where
 
     fn visit_var_declarator(&mut self, node: &VarDeclarator) {
         let old = self.is_pat_decl;
+
         self.is_pat_decl = true;
+
         node.name.visit_with(self);
 
         self.is_pat_decl = false;
+
         node.init.visit_with(self);
+
         self.is_pat_decl = old;
     }
 }
@@ -2923,7 +3052,9 @@ where
         bindings: Default::default(),
         is_pat_decl: false,
     };
+
     n.visit_with(&mut v);
+
     v.bindings
 }
 
@@ -2939,7 +3070,9 @@ where
         bindings: Default::default(),
         is_pat_decl: false,
     };
+
     n.visit_with(&mut v);
+
     v.bindings
 }
 
@@ -3001,6 +3134,7 @@ impl Visit for TopLevelAwait {
     fn visit_for_of_stmt(&mut self, for_of_stmt: &ForOfStmt) {
         if for_of_stmt.is_await {
             self.found = true;
+
             return;
         }
 
@@ -3063,6 +3197,7 @@ impl VisitMut for IdentRenamer<'_> {
     fn visit_mut_export_named_specifier(&mut self, node: &mut ExportNamedSpecifier) {
         if node.exported.is_some() {
             node.orig.visit_mut_children_with(self);
+
             return;
         }
 
@@ -3072,9 +3207,11 @@ impl VisitMut for IdentRenamer<'_> {
                     node.exported = Some(ModuleExportName::Ident(orig.clone()));
 
                     orig.sym = new.0.clone();
+
                     orig.ctxt = new.1;
                 }
             }
+
             ModuleExportName::Str(_) => {}
         }
     }
@@ -3082,6 +3219,7 @@ impl VisitMut for IdentRenamer<'_> {
     fn visit_mut_ident(&mut self, node: &mut Ident) {
         if let Some(new) = self.map.get(&node.to_id()) {
             node.sym = new.0.clone();
+
             node.ctxt = new.1;
         }
     }
@@ -3092,6 +3230,7 @@ impl VisitMut for IdentRenamer<'_> {
                 p.value.visit_mut_with(self);
 
                 let orig = p.key.clone();
+
                 p.key.visit_mut_with(self);
 
                 if orig.to_id() == p.key.to_id() {
@@ -3110,6 +3249,7 @@ impl VisitMut for IdentRenamer<'_> {
                             .into(),
                         });
                     }
+
                     None => {
                         *i = ObjectPatProp::KeyValue(KeyValuePatProp {
                             key: PropName::Ident(orig.clone().into()),
@@ -3129,7 +3269,9 @@ impl VisitMut for IdentRenamer<'_> {
         match node {
             Prop::Shorthand(i) => {
                 let cloned = i.clone();
+
                 i.visit_mut_with(self);
+
                 if i.sym != cloned.sym || i.ctxt != cloned.ctxt {
                     *node = Prop::KeyValue(KeyValueProp {
                         key: PropName::Ident(IdentName::new(cloned.sym, cloned.span)),
@@ -3137,6 +3279,7 @@ impl VisitMut for IdentRenamer<'_> {
                     });
                 }
             }
+
             _ => {
                 node.visit_mut_children_with(self);
             }
@@ -3148,6 +3291,7 @@ pub trait QueryRef {
     fn query_ref(&self, _ident: &Ident) -> Option<Box<Expr>> {
         None
     }
+
     fn query_lhs(&self, _ident: &Ident) -> Option<Box<Expr>> {
         None
     }
@@ -3239,6 +3383,7 @@ where
                     .take()
                     .map(|default_value| {
                         let left = expr.clone().try_into().unwrap();
+
                         Box::new(default_value.make_assign_to(op!("="), left))
                     })
                     .unwrap_or(expr);
@@ -3267,6 +3412,7 @@ where
     /// ```
     fn visit_mut_prop(&mut self, n: &mut Prop) {
         n.visit_mut_children_with(self);
+
         self.exit_prop(n);
     }
 
@@ -3281,16 +3427,19 @@ where
 
     fn visit_mut_pat(&mut self, n: &mut Pat) {
         n.visit_mut_children_with(self);
+
         self.exit_pat(n);
     }
 
     fn visit_mut_expr(&mut self, n: &mut Expr) {
         n.visit_mut_children_with(self);
+
         self.exit_expr(n);
     }
 
     fn visit_mut_simple_assign_target(&mut self, n: &mut SimpleAssignTarget) {
         n.visit_mut_children_with(self);
+
         self.exit_simple_assign_target(n);
     }
 
@@ -3342,6 +3491,7 @@ where
 #[cfg(test)]
 mod test {
     use swc_common::{input::StringInput, BytePos};
+
     use swc_ecma_parser::{Parser, Syntax};
 
     use super::*;
@@ -3352,20 +3502,26 @@ mod test {
             "const { a, b = 1, inner: { c }, ...d } = {};",
             &["a", "b", "c", "d"],
         );
+
         run_collect_decls("const [ a, b = 1, [c], ...d ] = [];", &["a", "b", "c", "d"]);
     }
 
     #[test]
     fn test_collect_export_default_expr() {
         run_collect_decls("export default function foo(){}", &["foo"]);
+
         run_collect_decls("export default class Foo{}", &["Foo"]);
     }
 
     fn run_collect_decls(text: &str, expected_names: &[&str]) {
         let module = parse_module(text);
+
         let decls: AHashSet<Id> = collect_decls(&module);
+
         let mut names = decls.iter().map(|d| d.0.to_string()).collect::<Vec<_>>();
+
         names.sort();
+
         assert_eq!(names, expected_names);
     }
 
@@ -3375,29 +3531,37 @@ mod test {
             "var { a, b = 1, inner: { c }, ...d } = {};",
             &["a", "b", "c", "d"],
         );
+
         run_extract_var_ids("var [ a, b = 1, [c], ...d ] = [];", &["a", "b", "c", "d"]);
     }
 
     fn run_extract_var_ids(text: &str, expected_names: &[&str]) {
         let module = parse_module(text);
+
         let decls = extract_var_ids(&module);
+
         let mut names = decls.iter().map(|d| d.sym.to_string()).collect::<Vec<_>>();
+
         names.sort();
+
         assert_eq!(names, expected_names);
     }
 
     fn parse_module(text: &str) -> Module {
         let syntax = Syntax::Es(Default::default());
+
         let mut p = Parser::new(
             syntax,
             StringInput::new(text, BytePos(0), BytePos(text.len() as u32)),
             None,
         );
+
         p.parse_module().unwrap()
     }
 
     fn has_top_level_await(text: &str) -> bool {
         let module = parse_module(text);
+
         contains_top_level_await(&module)
     }
 
@@ -3414,6 +3578,7 @@ mod test {
     #[test]
     fn top_level_export_await() {
         assert!(has_top_level_await("export const foo = await 1;"));
+
         assert!(has_top_level_await("export default await 1;"));
     }
 }

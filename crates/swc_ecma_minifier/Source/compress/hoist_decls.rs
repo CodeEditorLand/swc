@@ -49,7 +49,9 @@ impl Hoister<'_> {
         Vec<T>: for<'aa> VisitMutWith<Hoister<'aa>> + VisitWith<UsageAnalyzer<ProgramData>>,
     {
         stmts.visit_mut_children_with(self);
+
         let len = stmts.len();
+
         let should_hoist = !is_sorted_by(
             stmts.iter().map(|stmt| match stmt.as_stmt() {
                 Some(stmt) => match stmt {
@@ -69,6 +71,7 @@ impl Hoister<'_> {
                             3
                         }
                     }
+
                     _ => 3,
                 },
                 None => 3,
@@ -100,14 +103,19 @@ impl Hoister<'_> {
         if !should_hoist {
             return;
         }
+
         self.changed = true;
 
         let mut var_decls = Vec::new();
+
         let mut fn_decls = Vec::with_capacity(stmts.len());
+
         let mut new_stmts = Vec::with_capacity(stmts.len());
+
         let mut done = AHashSet::default();
 
         let mut found_non_var_decl = false;
+
         for stmt in stmts.take() {
             match stmt.try_into_stmt() {
                 Ok(stmt) => {
@@ -128,6 +136,7 @@ impl Hoister<'_> {
                             ) && found_non_var_decl =>
                         {
                             let mut exprs = Vec::new();
+
                             for decl in var.decls {
                                 let ids: Vec<Ident> = find_pat_ids(&decl.name);
 
@@ -172,6 +181,7 @@ impl Hoister<'_> {
                             if exprs.is_empty() {
                                 continue;
                             }
+
                             new_stmts.push(T::from(
                                 ExprStmt {
                                     span: var.span,
@@ -230,6 +240,7 @@ impl Hoister<'_> {
 
                                         done.insert(name.to_id())
                                     }
+
                                     _ => true,
                                 };
 
@@ -251,11 +262,14 @@ impl Hoister<'_> {
                                     .into(),
                                 ));
                             }
+
                             found_non_var_decl = true;
+
                             new_stmts.push(T::from(stmt))
                         }
                     }
                 }
+
                 Err(stmt) => new_stmts.push(stmt),
             }
         }
@@ -270,6 +284,7 @@ impl Hoister<'_> {
             }
             .into(),
         ));
+
         fn_decls.extend(new_stmts);
 
         drop_invalid_stmts(&mut fn_decls);

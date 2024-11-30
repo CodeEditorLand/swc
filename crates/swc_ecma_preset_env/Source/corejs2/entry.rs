@@ -17,6 +17,7 @@ pub struct Entry {
 impl Entry {
     pub fn new(target: Versions, regenerator: bool) -> Self {
         let is_any_target = target.is_any_target();
+
         let is_web_target = target.into_iter().any(|(k, v)| {
             if k == "node" {
                 return false;
@@ -30,9 +31,12 @@ impl Entry {
             target,
             imports: Default::default(),
         };
+
         if is_any_target || is_web_target {
             v.imports.insert("web.timers");
+
             v.imports.insert("web.immediate");
+
             v.imports.insert("web.dom.iterable");
         }
 
@@ -72,6 +76,7 @@ impl VisitMut for Entry {
 
         if remove {
             i.src.value = js_word!("");
+
             i.src.span = DUMMY_SP;
         }
     }
@@ -79,6 +84,7 @@ impl VisitMut for Entry {
     fn visit_mut_module_items(&mut self, items: &mut Vec<ModuleItem>) {
         items.retain_mut(|item| {
             item.visit_mut_children_with(self);
+
             if let ModuleItem::Stmt(Stmt::Expr(ExprStmt { expr, .. })) = &item {
                 if let Expr::Call(CallExpr {
                     callee: Callee::Expr(callee),
@@ -105,6 +111,7 @@ impl VisitMut for Entry {
                     }
                 }
             }
+
             true
         })
     }

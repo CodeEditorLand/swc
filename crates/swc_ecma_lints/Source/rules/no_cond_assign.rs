@@ -35,9 +35,11 @@ impl NoCondAssign {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, MESSAGE).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, MESSAGE).emit();
             }
+
             _ => {}
         });
     }
@@ -52,6 +54,7 @@ impl NoCondAssign {
 impl Visit for NoCondAssign {
     fn visit_if_stmt(&mut self, if_stmt: &IfStmt) {
         let prev_inside_test_clause = self.inside_test_clause;
+
         self.inside_test_clause = true;
 
         if_stmt.test.visit_with(self);
@@ -59,11 +62,13 @@ impl Visit for NoCondAssign {
         self.inside_test_clause = prev_inside_test_clause;
 
         if_stmt.cons.visit_with(self);
+
         if_stmt.alt.visit_with(self);
     }
 
     fn visit_cond_expr(&mut self, cond_expr: &CondExpr) {
         let prev_inside_test_clause = self.inside_test_clause;
+
         self.inside_test_clause = true;
 
         cond_expr.test.visit_with(self);
@@ -71,6 +76,7 @@ impl Visit for NoCondAssign {
         self.inside_test_clause = prev_inside_test_clause;
 
         cond_expr.cons.visit_with(self);
+
         cond_expr.alt.visit_with(self);
     }
 
@@ -78,6 +84,7 @@ impl Visit for NoCondAssign {
         for_stmt.init.visit_with(self);
 
         let prev_inside_test_clause = self.inside_test_clause;
+
         self.inside_test_clause = true;
 
         for_stmt.test.visit_with(self);
@@ -85,11 +92,13 @@ impl Visit for NoCondAssign {
         self.inside_test_clause = prev_inside_test_clause;
 
         for_stmt.update.visit_with(self);
+
         for_stmt.body.visit_with(self);
     }
 
     fn visit_while_stmt(&mut self, while_stmt: &WhileStmt) {
         let prev_inside_test_clause = self.inside_test_clause;
+
         self.inside_test_clause = true;
 
         while_stmt.test.visit_with(self);
@@ -103,6 +112,7 @@ impl Visit for NoCondAssign {
         do_while_stmt.body.visit_with(self);
 
         let prev_inside_test_clause = self.inside_test_clause;
+
         self.inside_test_clause = true;
 
         do_while_stmt.test.visit_with(self);
@@ -112,6 +122,7 @@ impl Visit for NoCondAssign {
 
     fn visit_arrow_expr(&mut self, arrow_expr: &ArrowExpr) {
         let prev_inside_test_clause = self.inside_test_clause;
+
         self.inside_test_clause = false;
 
         arrow_expr.visit_children_with(self);
@@ -121,6 +132,7 @@ impl Visit for NoCondAssign {
 
     fn visit_function(&mut self, function: &Function) {
         let prev_inside_test_clause = self.inside_test_clause;
+
         self.inside_test_clause = false;
 
         function.visit_children_with(self);

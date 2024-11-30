@@ -201,9 +201,11 @@ impl Babelify for TsTypeElement {
             TsTypeElement::TsCallSignatureDecl(t) => {
                 TSTypeElement::CallSignatureDecl(t.babelify(ctx))
             }
+
             TsTypeElement::TsConstructSignatureDecl(t) => {
                 TSTypeElement::ConstructSignatureDecl(t.babelify(ctx))
             }
+
             TsTypeElement::TsPropertySignature(t) => TSTypeElement::PropSignature(t.babelify(ctx)),
             TsTypeElement::TsMethodSignature(t) => TSTypeElement::MethodSignature(t.babelify(ctx)),
             TsTypeElement::TsIndexSignature(t) => TSTypeElement::IndexSignature(t.babelify(ctx)),
@@ -372,6 +374,7 @@ impl Babelify for TsFnOrConstructorType {
             TsFnOrConstructorType::TsFnType(t) => {
                 TsFnOrConstructorTypeOutput::Func(t.babelify(ctx))
             }
+
             TsFnOrConstructorType::TsConstructorType(t) => {
                 TsFnOrConstructorTypeOutput::Constructor(t.babelify(ctx))
             }
@@ -433,6 +436,7 @@ impl Babelify for TsKeywordType {
                     base: ctx.base(self.span),
                 })
             }
+
             TsKeywordTypeKind::TsNullKeyword => TsKeywordTypeOutput::Null(TSNullKeyword {
                 base: ctx.base(self.span),
             }),
@@ -647,6 +651,7 @@ impl Babelify for TsUnionOrIntersectionType {
             TsUnionOrIntersectionType::TsUnionType(u) => {
                 TsUnionOrIntersectionTypeOutput::Union(u.babelify(ctx))
             }
+
             TsUnionOrIntersectionType::TsIntersectionType(i) => {
                 TsUnionOrIntersectionTypeOutput::Intersection(i.babelify(ctx))
             }
@@ -849,6 +854,7 @@ impl Babelify for TsExprWithTypeArgs {
                 _ => unreachable!(),
             }
         }
+
         TSExpressionWithTypeArguments {
             base: ctx.base(self.span),
             expression: babelify_expr(*self.expr, ctx),

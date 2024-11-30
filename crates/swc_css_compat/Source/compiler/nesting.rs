@@ -26,6 +26,7 @@ impl Compiler {
                                 ForgivingComplexSelector::ComplexSelector(sel) => {
                                     selectors.push(sel.clone());
                                 }
+
                                 ForgivingComplexSelector::ListOfComponentValues(_) => {
                                     // Abort
                                     return;
@@ -65,6 +66,7 @@ impl Compiler {
                                     span: Default::default(),
                                     children: Default::default(),
                                 };
+
                                 for compound in &complex.children {
                                     match compound {
                                         ComplexSelectorChildren::CompoundSelector(compound) => {
@@ -75,16 +77,20 @@ impl Compiler {
                                                 compound,
                                             );
                                         }
+
                                         ComplexSelectorChildren::Combinator(_) => {
                                             new.children.push(compound.clone());
                                         }
                                     }
                                 }
+
                                 new_selectors.push(new);
                             }
+
                             continue 'complex;
                         }
                     }
+
                     ComplexSelectorChildren::Combinator(_) => {}
                 }
             }
@@ -156,6 +162,7 @@ impl Compiler {
                         ComplexSelectorChildren::CompoundSelector(s) => {
                             s.nesting_selector.is_some()
                         }
+
                         _ => false,
                     });
 
@@ -163,6 +170,7 @@ impl Compiler {
                     complex_selector
                         .children
                         .extend(base_complex.children.clone());
+
                     complex_selector
                         .children
                         .push(ComplexSelectorChildren::Combinator(combinator.clone()))
@@ -170,6 +178,7 @@ impl Compiler {
                     complex_selector
                         .children
                         .extend(base_complex.children.clone());
+
                     complex_selector
                         .children
                         .push(ComplexSelectorChildren::Combinator(Combinator {
@@ -188,6 +197,7 @@ impl Compiler {
                                 compound,
                             );
                         }
+
                         ComplexSelectorChildren::Combinator(combinator) => {
                             complex_selector
                                 .children
@@ -222,6 +232,7 @@ impl Compiler {
 
     pub(crate) fn extract_nested_rules(&mut self, rule: &mut QualifiedRule) -> Vec<Rule> {
         let mut nested_rules = Vec::new();
+
         let mut block_values = Vec::new();
 
         for value in rule.block.value.take() {
@@ -233,6 +244,7 @@ impl Compiler {
 
                     continue;
                 }
+
                 ComponentValue::AtRule(ref at_rule) => {
                     if let Some(
                         AtRulePrelude::MediaPrelude(..)
@@ -243,6 +255,7 @@ impl Compiler {
                     {
                         if let Some(block) = &at_rule.block {
                             let mut decls_of_media = Vec::new();
+
                             let mut nested_of_media = Vec::new();
 
                             for n in &block.value {
@@ -292,6 +305,7 @@ impl Compiler {
                         }
                     }
                 }
+
                 _ => {}
             }
 

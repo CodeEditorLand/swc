@@ -44,6 +44,7 @@ impl VisitMut for PostcompressOptimizer<'_> {
                 // Don't change constness of exported variables.
                 decl.visit_mut_children_with(self);
             }
+
             _ => {
                 export.decl.visit_mut_with(self);
             }
@@ -70,6 +71,7 @@ impl VisitMut for PostcompressOptimizer<'_> {
                         .into()
                     }
                 }
+
                 Expr::Class(c) => {
                     if c.ident.is_some() {
                         if self.options.top_level() {
@@ -87,6 +89,7 @@ impl VisitMut for PostcompressOptimizer<'_> {
                         .into()
                     }
                 }
+
                 _ => (),
             }
         }
@@ -101,6 +104,7 @@ impl VisitMut for PostcompressOptimizer<'_> {
                 .any(|s| matches!(s, ModuleItem::ModuleDecl(..))),
             *crate::LIGHT_TASK_PARALLELS
         );
+
         self.ctx.is_top_level = true;
 
         self.maybe_par(*crate::LIGHT_TASK_PARALLELS, nodes, |v, n| {

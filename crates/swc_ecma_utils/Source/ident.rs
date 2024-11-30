@@ -4,7 +4,9 @@ use swc_ecma_ast::{BindingIdent, Id, Ident};
 
 pub trait IdentLike: Sized + Send + Sync + 'static {
     fn from_ident(i: &Ident) -> Self;
+
     fn to_id(&self) -> Id;
+
     fn into_id(self) -> Id;
 }
 

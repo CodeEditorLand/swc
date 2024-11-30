@@ -67,6 +67,7 @@ where
     Parser<Lexer<'b, StringInput<'a>>>: Parse<T>,
 {
     let lexer = Lexer::new(input, comments, config);
+
     let mut parser = Parser::new(lexer, config);
 
     let res = parser.parse();
@@ -89,6 +90,7 @@ where
     Parser<Input<'a>>: Parse<T>,
 {
     let lexer = Input::new(input);
+
     let mut parser = Parser::new(lexer, config);
 
     let res = parser.parse();

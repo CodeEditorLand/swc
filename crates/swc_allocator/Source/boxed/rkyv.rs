@@ -10,6 +10,7 @@ use super::Box;
 
 impl<T: ArchiveUnsized + ?Sized> Archive for Box<T> {
     type Archived = ArchivedBox<T::Archived>;
+
     type Resolver = BoxResolver<T::MetadataResolver>;
 
     #[inline]
@@ -37,8 +38,11 @@ where
             let data_address = self
                 .get()
                 .deserialize_unsized(deserializer, |layout| alloc::alloc(layout))?;
+
             let metadata = self.get().deserialize_metadata(deserializer)?;
+
             let ptr = ptr_meta::from_raw_parts_mut(data_address, metadata);
+
             Ok(Box::from_raw(ptr))
         }
     }

@@ -27,6 +27,7 @@ enum CalcNode {
 
 fn get_precision(n: f64) -> u32 {
     let n_as_str = n.to_string();
+
     n_as_str
         .find('.')
         .map_or(0, |sep| (n_as_str.len() - sep) as u32 - 1)
@@ -36,28 +37,35 @@ fn get_precision(n: f64) -> u32 {
 // https://www.w3.org/TR/css-values-4/#parse-a-calculation
 fn collect_calc_sum_into_calc_node(calc_sum: &CalcSum) -> CalcNode {
     let mut is_negated = false;
+
     let mut operands: Vec<CalcNode> = Vec::new();
+
     for node in &calc_sum.expressions {
         match &node {
             CalcProductOrOperator::Product(calc_product) => {
                 let mut node = collect_calc_product_into_calc_node(calc_product);
+
                 if is_negated {
                     node = CalcNode::OperatorNode(Box::new(CalcOperatorNode::Negate(node)));
                 }
+
                 operands.push(node);
             }
+
             CalcProductOrOperator::Operator(CalcOperator {
                 value: CalcOperatorType::Sub,
                 ..
             }) => {
                 is_negated = true;
             }
+
             CalcProductOrOperator::Operator(CalcOperator {
                 value: CalcOperatorType::Add,
                 ..
             }) => {
                 is_negated = false;
             }
+
             _ => {}
         }
     }
@@ -71,28 +79,35 @@ fn collect_calc_sum_into_calc_node(calc_sum: &CalcSum) -> CalcNode {
 
 fn collect_calc_product_into_calc_node(calc_product: &CalcProduct) -> CalcNode {
     let mut is_inverted = false;
+
     let mut operands: Vec<CalcNode> = Vec::new();
+
     for node in &calc_product.expressions {
         match &node {
             CalcValueOrOperator::Value(calc_value) => {
                 let mut node = collect_calc_value_into_calc_node(calc_value);
+
                 if is_inverted {
                     node = CalcNode::OperatorNode(Box::new(CalcOperatorNode::Invert(node)));
                 }
+
                 operands.push(node);
             }
+
             CalcValueOrOperator::Operator(CalcOperator {
                 value: CalcOperatorType::Div,
                 ..
             }) => {
                 is_inverted = true;
             }
+
             CalcValueOrOperator::Operator(CalcOperator {
                 value: CalcOperatorType::Mul,
                 ..
             }) => {
                 is_inverted = false;
             }
+
             _ => {}
         }
     }
@@ -118,6 +133,7 @@ fn collect_calc_value_into_calc_node(calc_value: &CalcValue) -> CalcNode {
                 _ => CalcNode::Function(f.clone()),
             }
         }
+
         CalcValue::Function(f) => CalcNode::Function(f.clone()),
         CalcValue::Sum(calc_sum) => collect_calc_sum_into_calc_node(calc_sum),
     }
@@ -146,9 +162,11 @@ fn simplify_calc_operator_node(calc_operator_node: &CalcOperatorNode) -> CalcNod
         CalcOperatorNode::Invert(inverted_calc_node) => {
             simplify_calc_operator_node_invert(inverted_calc_node)
         }
+
         CalcOperatorNode::Negate(negated_calc_node) => {
             simplify_calc_operator_node_negate(negated_calc_node)
         }
+
         CalcOperatorNode::Product(nodes) => simplify_calc_operator_node_product(nodes),
         CalcOperatorNode::Sum(nodes) => simplify_calc_operator_node_sum(nodes),
     }
@@ -159,6 +177,7 @@ fn simplify_calc_operator_node(calc_operator_node: &CalcOperatorNode) -> CalcNod
 // TODO currently we transform "x / 2" => "x * .5"... we should avoid it
 fn simplify_calc_operator_node_invert(calc_node: &CalcNode) -> CalcNode {
     let calc_node = simplify_calc_node(calc_node);
+
     match &calc_node {
         CalcNode::Number(n) => {
             // If root’s child is a number (not a percentage or dimension) return the
@@ -173,6 +192,7 @@ fn simplify_calc_operator_node_invert(calc_node: &CalcNode) -> CalcNode {
                 CalcNode::OperatorNode(Box::new(CalcOperatorNode::Invert(calc_node.clone())))
             }
         }
+
         CalcNode::OperatorNode(op) => {
             match &**op {
                 // If root’s child is an Invert node, return the child’s child.
@@ -189,9 +209,11 @@ fn simplify_calc_operator_node_invert(calc_node: &CalcNode) -> CalcNode {
                         )))
                     }
                 }
+
                 _ => CalcNode::OperatorNode(Box::new(CalcOperatorNode::Invert(calc_node.clone()))),
             }
         }
+
         _ => CalcNode::OperatorNode(Box::new(CalcOperatorNode::Invert(calc_node.clone()))),
     }
 }
@@ -210,13 +232,18 @@ fn simplify_calc_operator_node_product(nodes: &[CalcNode]) -> CalcNode {
     // For each of root’s children that are Product nodes, replace them with their
     // children.
     let mut idx = 0;
+
     while idx < nodes.len() {
         nodes[idx] = simplify_calc_node(&nodes[idx]);
+
         if let Some(children) = get_children_if_node_is_product_operator(&nodes[idx]) {
             nodes.remove(idx);
+
             let mut i = idx;
+
             for nested_node in children {
                 nodes.insert(i, nested_node);
+
                 i += 1;
             }
         } else {
@@ -228,24 +255,31 @@ fn simplify_calc_operator_node_product(nodes: &[CalcNode]) -> CalcNode {
     // dimensions), remove them and replace them with a single number containing
     // the product of the removed nodes.
     let mut number: Option<usize> = None;
+
     let mut idx = 0;
+
     while idx < nodes.len() {
         match &nodes[idx] {
             CalcNode::Number(_) => {
                 if let Some(prev_idx) = number {
                     let previous_value = get_value(&nodes[prev_idx]);
+
                     let value = get_value(&nodes[idx]);
+
                     if let Some(result) = try_to_multiply_values(previous_value, value) {
                         set_value(&mut nodes[prev_idx], result);
+
                         nodes.remove(idx);
                     } else {
                         idx += 1;
                     }
                 } else {
                     number = Some(idx);
+
                     idx += 1;
                 }
             }
+
             _ => {
                 idx += 1;
             }
@@ -268,6 +302,7 @@ fn simplify_calc_operator_node_product(nodes: &[CalcNode]) -> CalcNode {
                     }
                 }
             }
+
             _ => {}
         }
     }
@@ -295,13 +330,18 @@ fn simplify_calc_operator_node_sum(nodes: &[CalcNode]) -> CalcNode {
     // For each of root’s children that are Sum nodes, replace them with their
     // children.
     let mut idx = 0;
+
     while idx < nodes.len() {
         nodes[idx] = simplify_calc_node(&nodes[idx]);
+
         if let Some(children) = get_children_if_node_is_sum_operator(&nodes[idx]) {
             nodes.remove(idx);
+
             let mut i = idx;
+
             for nested_node in children {
                 nodes.insert(i, nested_node);
+
                 i += 1;
             }
         } else {
@@ -314,9 +354,13 @@ fn simplify_calc_operator_node_sum(nodes: &[CalcNode]) -> CalcNode {
     // containing the sum of the removed nodes, and with the same unit. (E.g.
     // combine numbers, combine percentages, combine px values, etc.)
     let mut number: Option<usize> = None;
+
     let mut percentage: Option<usize> = None;
+
     let mut dimensions: AHashMap<String, usize> = AHashMap::default();
+
     let mut idx = 0;
+
     while idx < nodes.len() {
         match &nodes[idx] {
             CalcNode::Number(_) => {
@@ -328,11 +372,14 @@ fn simplify_calc_operator_node_sum(nodes: &[CalcNode]) -> CalcNode {
                     }
                 } else {
                     number = Some(idx);
+
                     idx += 1;
                 }
             }
+
             CalcNode::Dimension(d) => {
                 let unit = get_dimension_unit_lowercase(d);
+
                 match &dimensions.get(&*unit) {
                     Some(prev_idx) => {
                         if try_to_sum_nodes(&mut nodes, **prev_idx, idx) {
@@ -341,12 +388,15 @@ fn simplify_calc_operator_node_sum(nodes: &[CalcNode]) -> CalcNode {
                             idx += 1;
                         }
                     }
+
                     None => {
                         dimensions.insert(unit.to_string(), idx);
+
                         idx += 1;
                     }
                 }
             }
+
             CalcNode::Percentage(_) => {
                 if let Some(prev_idx) = percentage {
                     if try_to_sum_nodes(&mut nodes, prev_idx, idx) {
@@ -356,9 +406,11 @@ fn simplify_calc_operator_node_sum(nodes: &[CalcNode]) -> CalcNode {
                     }
                 } else {
                     percentage = Some(idx);
+
                     idx += 1;
                 }
             }
+
             _ => {
                 idx += 1;
             }
@@ -400,17 +452,23 @@ fn get_children_if_node_is_product_operator(calc_node: &CalcNode) -> Option<Vec<
 // Recursive impl. of https://www.w3.org/TR/css-values-4/#calc-simplification - Step 6
 fn try_to_switch_sign_of_nodes(nodes: &[CalcNode]) -> Option<CalcNode> {
     let mut nodes = nodes.to_vec();
+
     let mut idx = 0;
+
     while idx < nodes.len() {
         let calc_node = &nodes[idx];
+
         nodes[idx] = match calc_node {
             // If root’s child is a numeric value, return an equivalent numeric value, but with the
             // value negated (0 - value).
             CalcNode::Number(_) | CalcNode::Dimension(_) | CalcNode::Percentage(_) => {
                 let mut negated_node = calc_node.clone();
+
                 set_value(&mut negated_node, -get_value(calc_node));
+
                 negated_node
             }
+
             CalcNode::OperatorNode(op) => {
                 match &**op {
                     // If root’s child is a Negate node, return the child’s child.
@@ -420,14 +478,17 @@ fn try_to_switch_sign_of_nodes(nodes: &[CalcNode]) -> Option<CalcNode> {
                         // continuing the simplification process
                         try_to_switch_sign_of_nodes(nodes)?
                     }
+
                     _ => return None,
                 }
             }
+
             _ => {
                 // Just wrap the constant (or function)
                 CalcNode::OperatorNode(Box::new(CalcOperatorNode::Negate(calc_node.clone())))
             }
         };
+
         idx += 1;
     }
 
@@ -445,8 +506,11 @@ fn try_to_reduce_node_with_dimensions(
     nodes: &mut Vec<CalcNode>,
 ) {
     try_to_reduce_node_with_absolute_lengths(dimensions, nodes);
+
     try_to_reduce_node_with_durations(dimensions, nodes);
+
     try_to_reduce_node_with_frequencies(dimensions, nodes);
+
     try_to_reduce_node_with_resolutions(dimensions, nodes);
 }
 
@@ -457,63 +521,84 @@ fn try_to_reduce_node_with_absolute_lengths(
 ) {
     if let (Some(idx_cm), Some(idx_mm)) = (dimensions.get("cm"), dimensions.get("mm")) {
         let value_cm = get_value(&nodes[*idx_cm]);
+
         let value_mm = get_value(&nodes[*idx_mm]);
+
         if let Some(result) = try_to_sum_values(value_cm, value_mm, Some(10.0)) {
             set_value(&mut nodes[*idx_mm], result);
+
             nodes.remove(*idx_cm);
         }
     }
 
     if let (Some(idx_mm), Some(idx_q)) = (dimensions.get("mm"), dimensions.get("q")) {
         let value_mm = get_value(&nodes[*idx_mm]);
+
         let value_q = get_value(&nodes[*idx_q]);
+
         if let Some(result) = try_to_sum_values(value_mm, value_q, Some(4.0)) {
             set_value(&mut nodes[*idx_q], result);
+
             nodes.remove(*idx_mm);
         }
     }
 
     if let (Some(idx_cm), Some(idx_q)) = (dimensions.get("cm"), dimensions.get("q")) {
         let value_cm = get_value(&nodes[*idx_cm]);
+
         let value_q = get_value(&nodes[*idx_q]);
+
         if let Some(result) = try_to_sum_values(value_cm, value_q, Some(40.0)) {
             set_value(&mut nodes[*idx_q], result);
+
             nodes.remove(*idx_cm);
         }
     }
 
     if let (Some(idx_in), Some(idx_px)) = (dimensions.get("in"), dimensions.get("px")) {
         let value_in = get_value(&nodes[*idx_in]);
+
         let value_px = get_value(&nodes[*idx_px]);
+
         if let Some(result) = try_to_sum_values(value_in, value_px, Some(96.0)) {
             set_value(&mut nodes[*idx_px], result);
+
             nodes.remove(*idx_in);
         }
     }
 
     if let (Some(idx_in), Some(idx_pc)) = (dimensions.get("in"), dimensions.get("pc")) {
         let value_in = get_value(&nodes[*idx_in]);
+
         let value_pc = get_value(&nodes[*idx_pc]);
+
         if let Some(result) = try_to_sum_values(value_in, value_pc, Some(6.0)) {
             set_value(&mut nodes[*idx_pc], result);
+
             nodes.remove(*idx_in);
         }
     }
 
     if let (Some(idx_pc), Some(idx_pt)) = (dimensions.get("pc"), dimensions.get("pt")) {
         let value_pc = get_value(&nodes[*idx_pc]);
+
         let value_pt = get_value(&nodes[*idx_pt]);
+
         if let Some(result) = try_to_sum_values(value_pc, value_pt, Some(12.0)) {
             set_value(&mut nodes[*idx_pt], result);
+
             nodes.remove(*idx_pc);
         }
     }
 
     if let (Some(idx_pc), Some(idx_px)) = (dimensions.get("pc"), dimensions.get("px")) {
         let value_pc = get_value(&nodes[*idx_pc]);
+
         let value_px = get_value(&nodes[*idx_px]);
+
         if let Some(result) = try_to_sum_values(value_pc, value_px, Some(16.0)) {
             set_value(&mut nodes[*idx_px], result);
+
             nodes.remove(*idx_pc);
         }
     }
@@ -526,10 +611,14 @@ fn try_to_reduce_node_with_durations(
 ) {
     if let (Some(idx_ms), Some(idx_s)) = (dimensions.get("ms"), dimensions.get("s")) {
         let value_ms = get_value(&nodes[*idx_ms]);
+
         let value_s = get_value(&nodes[*idx_s]);
+
         if let Some(result) = try_to_sum_values(value_s, value_ms, Some(1000.0)) {
             set_value(&mut nodes[*idx_ms], result);
+
             nodes.remove(*idx_s);
+
             dimensions.remove("s");
         }
     }
@@ -542,10 +631,14 @@ fn try_to_reduce_node_with_frequencies(
 ) {
     if let (Some(idx_hz), Some(idx_khz)) = (dimensions.get("hz"), dimensions.get("khz")) {
         let value_hz = get_value(&nodes[*idx_hz]);
+
         let value_khz = get_value(&nodes[*idx_khz]);
+
         if let Some(result) = try_to_sum_values(value_khz, value_hz, Some(1000.0)) {
             set_value(&mut nodes[*idx_hz], result);
+
             nodes.remove(*idx_khz);
+
             dimensions.remove("khz");
         }
     }
@@ -560,10 +653,14 @@ fn try_to_reduce_node_with_resolutions(
         // "x" is an alias for "dppx"
         (Some(idx_dppx), Some(idx_x)) => {
             let value_dppx = get_value(&nodes[*idx_dppx]);
+
             let value_x = get_value(&nodes[*idx_x]);
+
             if let Some(result) = try_to_sum_values(value_x, value_dppx, None) {
                 set_value(&mut nodes[*idx_x], result);
+
                 nodes.remove(*idx_dppx);
+
                 dimensions.remove("dppx");
             }
         }
@@ -571,29 +668,40 @@ fn try_to_reduce_node_with_resolutions(
             // rename "dppx" into "x"
             if let CalcNode::Dimension(Dimension::Resolution(r)) = &mut nodes[*idx_dppx] {
                 r.unit.value = "x".into();
+
                 dimensions.insert("x".into(), *idx_dppx);
+
                 dimensions.remove("dppx");
             }
         }
+
         _ => {}
     }
 
     if let (Some(idx_x), Some(idx_dpi)) = (dimensions.get("x"), dimensions.get("dpi")) {
         let value_x = get_value(&nodes[*idx_x]);
+
         let value_dpi = get_value(&nodes[*idx_dpi]);
+
         if let Some(result) = try_to_sum_values(value_x, value_dpi, Some(96.0)) {
             set_value(&mut nodes[*idx_dpi], result);
+
             nodes.remove(*idx_x);
+
             dimensions.remove("x");
         }
     }
 
     if let (Some(idx_dpcm), Some(idx_dpi)) = (dimensions.get("dpcm"), dimensions.get("dpi")) {
         let value_dpcm = get_value(&nodes[*idx_dpcm]);
+
         let value_dpi = get_value(&nodes[*idx_dpi]);
+
         if let Some(result) = try_to_sum_values(value_dpcm, value_dpi, Some(2.54)) {
             set_value(&mut nodes[*idx_dpi], result);
+
             nodes.remove(*idx_dpcm);
+
             dimensions.remove("dpcm");
         }
     }
@@ -609,14 +717,18 @@ fn try_to_multiply_all_numeric_sum_children_by_value(
         match calc_node {
             CalcNode::Number(_) | CalcNode::Dimension(_) | CalcNode::Percentage(_) => {
                 let node_value = get_value(calc_node);
+
                 if let Some(result) = try_to_multiply_values(node_value, value) {
                     let mut node = calc_node.clone();
+
                     set_value(&mut node, result);
+
                     operands.push(node);
                 } else {
                     return None;
                 }
             }
+
             _ => return None,
         }
     }
@@ -659,7 +771,9 @@ fn try_to_multiply_all_numeric_and_invert_nodes(children: &[CalcNode]) -> Vec<Ca
     let mut nodes = children.to_vec();
 
     let mut numeric: Option<usize> = None;
+
     let mut idx = 0;
+
     while idx < nodes.len() {
         match numeric {
             None => {
@@ -667,18 +781,24 @@ fn try_to_multiply_all_numeric_and_invert_nodes(children: &[CalcNode]) -> Vec<Ca
                     CalcNode::Number(_) | CalcNode::Dimension(_) | CalcNode::Percentage(_) => {
                         numeric = Some(idx);
                     }
+
                     CalcNode::OperatorNode(op) => {
                         if let CalcOperatorNode::Invert(CalcNode::Number(_)) = &**op {
                             numeric = Some(idx);
                         }
                     }
+
                     _ => {}
                 };
+
                 idx += 1;
             }
+
             Some(prev_idx) => {
                 let prev_numeric_node = &nodes[prev_idx];
+
                 let cur_numeric_node = &nodes[idx];
+
                 match (prev_numeric_node, cur_numeric_node) {
                     // x * y => z
                     // x * y% => z%
@@ -689,10 +809,14 @@ fn try_to_multiply_all_numeric_and_invert_nodes(children: &[CalcNode]) -> Vec<Ca
                     | (CalcNode::Number(_), other_node @ CalcNode::Dimension(_))
                     | (other_node @ CalcNode::Dimension(_), CalcNode::Number(_)) => {
                         let prev_value = get_value(prev_numeric_node);
+
                         let value = get_value(cur_numeric_node);
+
                         if let Some(result) = try_to_multiply_values(prev_value, value) {
                             nodes[prev_idx] = other_node.clone();
+
                             set_value(&mut nodes[prev_idx], result);
+
                             nodes.remove(idx);
                         } else {
                             idx += 1;
@@ -708,13 +832,18 @@ fn try_to_multiply_all_numeric_and_invert_nodes(children: &[CalcNode]) -> Vec<Ca
                             ) = &**op
                             {
                                 let prev_value = get_value(prev_numeric_node);
+
                                 let value = get_value(cur_numeric_node);
+
                                 if let Some(result) = try_to_multiply_values(prev_value, value) {
                                     let mut result_node = prev_numeric_node.clone();
+
                                     set_value(&mut result_node, result);
+
                                     nodes[prev_idx] = CalcNode::OperatorNode(Box::new(
                                         CalcOperatorNode::Invert(result_node),
                                     ));
+
                                     nodes.remove(idx);
                                 } else {
                                     idx += 1;
@@ -738,10 +867,14 @@ fn try_to_multiply_all_numeric_and_invert_nodes(children: &[CalcNode]) -> Vec<Ca
                         if let CalcOperatorNode::Invert(inverted_node @ CalcNode::Number(_)) = &**op
                         {
                             let numerator = get_value(numeric_node);
+
                             let denominator = get_value(inverted_node);
+
                             if let Some(result) = try_to_divide_values(numerator, denominator) {
                                 nodes[prev_idx] = numeric_node.clone();
+
                                 set_value(&mut nodes[prev_idx], result);
+
                                 nodes.remove(idx);
                             } else {
                                 idx += 1;
@@ -771,7 +904,9 @@ fn try_to_multiply_values(v1: f64, v2: f64) -> Option<f64> {
     let result = v1 * v2;
 
     let precision1 = get_precision(v1);
+
     let precision2 = get_precision(v2);
+
     let result_precision = get_precision(result);
 
     if result_precision <= (precision1 + precision2) {
@@ -783,9 +918,12 @@ fn try_to_multiply_values(v1: f64, v2: f64) -> Option<f64> {
 
 fn try_to_sum_nodes(nodes: &mut [CalcNode], prev_idx: usize, idx: usize) -> bool {
     let previous_value = get_value(&nodes[prev_idx]);
+
     let value = get_value(&nodes[idx]);
+
     if let Some(result) = try_to_sum_values(previous_value, value, None) {
         set_value(&mut nodes[prev_idx], result);
+
         true
     } else {
         false
@@ -800,7 +938,9 @@ fn try_to_sum_values(n1: f64, n2: f64, ratio: Option<f64>) -> Option<f64> {
     };
 
     let precision1 = get_precision(n1);
+
     let precision2 = get_precision(n2) + ratio.map_or(0, get_precision);
+
     let result_precision = get_precision(result);
 
     if result_precision <= precision1.max(precision2) {
@@ -812,6 +952,7 @@ fn try_to_sum_values(n1: f64, n2: f64, ratio: Option<f64>) -> Option<f64> {
 
 fn try_to_divide_values(numerator: f64, denominator: f64) -> Option<f64> {
     let result = numerator / denominator;
+
     let result_precision = get_precision(result);
 
     if result_precision <= f64::DIGITS {
@@ -851,54 +992,68 @@ fn serialize_calculation_node_into_calc_sum(calc_node: &CalcNode) -> CalcSum {
                     match calc_node {
                         CalcNode::Number(_) | CalcNode::Dimension(_) | CalcNode::Percentage(_) => {
                             let value = get_value(calc_node);
+
                             if value.is_sign_negative() {
                                 // Instead of serializing "x + -10", we want to have "x - 10"
                                 let mut node = calc_node.clone();
+
                                 set_value(&mut node, -value);
+
                                 expr.push(CalcProductOrOperator::Operator(CalcOperator {
                                     value: CalcOperatorType::Sub,
                                     span: Span::dummy_with_cmt(),
                                 }));
+
                                 expr.push(serialize_calc_node_into_calc_product(&node));
                             } else {
                                 expr.push(CalcProductOrOperator::Operator(CalcOperator {
                                     value: CalcOperatorType::Add,
                                     span: Span::dummy_with_cmt(),
                                 }));
+
                                 expr.push(serialize_calc_node_into_calc_product(calc_node));
                             }
                         }
+
                         CalcNode::Constant(_) | CalcNode::Function(_) => {
                             expr.push(CalcProductOrOperator::Operator(CalcOperator {
                                 value: CalcOperatorType::Add,
                                 span: Span::dummy_with_cmt(),
                             }));
+
                             expr.push(serialize_calc_node_into_calc_product(calc_node));
                         }
+
                         CalcNode::OperatorNode(op) => match &**op {
                             CalcOperatorNode::Product(_) => {
                                 expr.push(CalcProductOrOperator::Operator(CalcOperator {
                                     value: CalcOperatorType::Add,
                                     span: Span::dummy_with_cmt(),
                                 }));
+
                                 expr.push(serialize_calc_node_into_calc_product(calc_node));
                             }
+
                             CalcOperatorNode::Negate(calc_node) => {
                                 expr.push(CalcProductOrOperator::Operator(CalcOperator {
                                     value: CalcOperatorType::Sub,
                                     span: Span::dummy_with_cmt(),
                                 }));
+
                                 expr.push(serialize_calc_node_into_calc_product(calc_node));
                             }
+
                             _ => unreachable!("Cannot transform sum children into CalcProduct"),
                         },
                     }
                 }
+
                 CalcSum {
                     expressions: expr,
                     span: Span::dummy_with_cmt(),
                 }
             }
+
             _ => CalcSum {
                 expressions: vec![serialize_calc_node_into_calc_product(calc_node)],
                 span: Span::dummy_with_cmt(),
@@ -974,38 +1129,46 @@ fn serialize_calc_node_into_calc_product(calc_node: &CalcNode) -> CalcProductOrO
                                 value: CalcOperatorType::Mul,
                                 span: Span::dummy_with_cmt(),
                             }));
+
                             expr.push(CalcValueOrOperator::Value(
                                 serialize_calc_node_into_calc_value(calc_node),
                             ));
                         }
+
                         CalcNode::OperatorNode(op) => match &**op {
                             CalcOperatorNode::Invert(calc_node) => {
                                 expr.push(CalcValueOrOperator::Operator(CalcOperator {
                                     value: CalcOperatorType::Div,
                                     span: Span::dummy_with_cmt(),
                                 }));
+
                                 expr.push(CalcValueOrOperator::Value(
                                     serialize_calc_node_into_calc_value(calc_node),
                                 ));
                             }
+
                             CalcOperatorNode::Product(_) | CalcOperatorNode::Sum(_) => {
                                 expr.push(CalcValueOrOperator::Operator(CalcOperator {
                                     value: CalcOperatorType::Mul,
                                     span: Span::dummy_with_cmt(),
                                 }));
+
                                 expr.push(CalcValueOrOperator::Value(
                                     serialize_calc_node_into_calc_value(calc_node),
                                 ));
                             }
+
                             _ => unreachable!("Cannot transform product children into CalcProduct"),
                         },
                     }
                 }
+
                 CalcProductOrOperator::Product(CalcProduct {
                     expressions: expr,
                     span: Span::dummy_with_cmt(),
                 })
             }
+
             CalcOperatorNode::Sum(_) => CalcProductOrOperator::Product(CalcProduct {
                 expressions: vec![CalcValueOrOperator::Value(
                     serialize_calc_node_into_calc_value(calc_node),
@@ -1027,6 +1190,7 @@ fn serialize_calc_node_into_calc_value(calc_node: &CalcNode) -> CalcValue {
             CalcOperatorNode::Sum(_) => {
                 CalcValue::Sum(serialize_calculation_node_into_calc_sum(calc_node))
             }
+
             CalcOperatorNode::Product(_) => CalcValue::Sum(CalcSum {
                 expressions: vec![serialize_calc_node_into_calc_product(calc_node)],
                 span: Span::dummy_with_cmt(),
@@ -1052,6 +1216,7 @@ fn sort_calculations_children(nodes: &[CalcNode]) -> Vec<CalcNode> {
         })
         .cloned()
         .collect();
+
     ret.append(&mut numbers);
 
     // If nodes contains a percentage, remove it from nodes and append it to ret.
@@ -1063,6 +1228,7 @@ fn sort_calculations_children(nodes: &[CalcNode]) -> Vec<CalcNode> {
         })
         .cloned()
         .collect();
+
     ret.append(&mut percentages);
 
     // If nodes contains any dimensions, remove them from nodes, sort them by their
@@ -1075,14 +1241,19 @@ fn sort_calculations_children(nodes: &[CalcNode]) -> Vec<CalcNode> {
         })
         .cloned()
         .collect();
+
     dimensions.sort_by(|a, b| match (a, b) {
         (CalcNode::Dimension(d1), CalcNode::Dimension(d2)) => {
             let u1 = get_dimension_unit_lowercase(d1);
+
             let u2 = get_dimension_unit_lowercase(d2);
+
             u1.cmp(&u2)
         }
+
         _ => unreachable!("The vector should only contain dimensions"),
     });
+
     ret.append(&mut dimensions);
 
     // If nodes still contains any items, append them to ret in the same order.
@@ -1094,6 +1265,7 @@ fn sort_calculations_children(nodes: &[CalcNode]) -> Vec<CalcNode> {
         })
         .cloned()
         .collect();
+
     ret.append(&mut any_items);
 
     // Impl. note: not in spec, for a better compression, we need to be sure the
@@ -1102,6 +1274,7 @@ fn sort_calculations_children(nodes: &[CalcNode]) -> Vec<CalcNode> {
     if let Some(idx) = ret.iter().position(is_positive_value) {
         // Move the first positive value at the beginning
         let positive_value = ret.remove(idx);
+
         ret.insert(0, positive_value);
     }
 
@@ -1125,6 +1298,7 @@ fn is_positive_value(calc_node: &CalcNode) -> bool {
         CalcNode::Number(_) | CalcNode::Percentage(_) | CalcNode::Dimension(_) => {
             get_value(calc_node).is_sign_positive()
         }
+
         _ => false,
     }
 }
@@ -1167,6 +1341,7 @@ impl Compressor {
         let simplified_calc_tree = simplify_calc_node(&root_calc_node);
 
         let simplified_calc_sum = serialize_calculation_node_into_calc_sum(&simplified_calc_tree);
+
         calc_sum.expressions = simplified_calc_sum.expressions;
     }
 
@@ -1197,12 +1372,15 @@ impl Compressor {
                                     }
                                 }
                             }
+
                             _ => {}
                         }
                     }
+
                     _ => {}
                 }
             }
+
             _ => {}
         }
     }

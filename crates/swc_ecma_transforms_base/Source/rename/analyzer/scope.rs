@@ -170,6 +170,7 @@ impl Scope {
                     }
 
                     reverse.push_entry(sym.clone(), id.clone());
+
                     to.insert(id, sym);
 
                     break;
@@ -234,6 +235,7 @@ impl Scope {
                     use std::collections::HashMap;
 
                     let mut new_map = HashMap::default();
+
                     child.rename_in_mangle_mode(
                         renamer,
                         &mut new_map,
@@ -243,6 +245,7 @@ impl Scope {
                         preserved_symbols,
                         parallel,
                     );
+
                     new_map
                 })
                 .collect::<Vec<_>>();
@@ -250,6 +253,7 @@ impl Scope {
             for (k, v) in iter.into_iter().flatten() {
                 to.entry(k).or_insert(v);
             }
+
             return;
         }
 
@@ -304,6 +308,7 @@ impl Scope {
                     }
 
                     reverse.push_entry(sym.clone(), id.clone());
+
                     to.insert(id.clone(), sym);
                     // self.data.decls.remove(&id);
                     // self.data.usages.remove(&id);
@@ -316,6 +321,7 @@ impl Scope {
 
     pub fn rename_cost(&self) -> usize {
         let children = &self.children;
+
         self.data.queue.len() + children.iter().map(|v| v.rename_cost()).sum::<usize>()
     }
 }

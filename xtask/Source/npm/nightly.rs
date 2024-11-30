@@ -19,10 +19,12 @@ impl NightlyCmd {
             let date = Utc::now().format("%Y%m%d").to_string();
 
             let root_pkg_json = repository_root()?.join("./packages/core/package.json");
+
             let content = serde_json::from_reader::<_, serde_json::Value>(
                 std::fs::File::open(root_pkg_json)
                     .context("failed to open ./packages/core/package.json")?,
             )?;
+
             let prev_version = Version::parse(content["version"].as_str().unwrap())?;
 
             let version = find_first_nightly(&prev_version, &date)?;
@@ -30,6 +32,7 @@ impl NightlyCmd {
             println!("Publishing nightly version {}", version);
 
             set_version(&version).context("failed to set version")?;
+
             bump_swc_cli().context("failed to bump swc-cli")?;
 
             // ./scripts/publish.sh $version

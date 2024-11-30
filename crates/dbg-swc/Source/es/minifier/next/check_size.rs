@@ -68,6 +68,7 @@ impl CheckSizeCommand {
 
             files.retain(|f| f.swc > f.terser);
         }
+
         files.sort_by_key(|f| Reverse(f.swc as i32 - f.terser as i32));
 
         for file in &files {
@@ -109,6 +110,7 @@ impl CheckSizeCommand {
 
         if let Some(selection) = selection {
             let swc_path = self.workspace.join("swc.output.js");
+
             let terser_path = self.workspace.join("terser.output.js");
 
             let swc = get_minified(cm.clone(), &files[selection].path, true, false)?;
@@ -127,9 +129,13 @@ impl CheckSizeCommand {
 
             {
                 let mut c = Command::new("code");
+
                 c.arg("--diff");
+
                 c.arg(swc_path);
+
                 c.arg(terser_path);
+
                 c.output().context("failed to run vscode")?;
             }
         }
@@ -163,8 +169,10 @@ impl CheckSizeCommand {
                 .into_par_iter()
                 .map(|file| {
                     let file_path = self.workspace.join("inputs").join(file.name);
+
                     create_dir_all(file_path.parent().unwrap())
                         .context("failed to create a directory")?;
+
                     fs::write(&file_path, file.source).context("failed to write file")?;
 
                     Ok(file_path)
@@ -183,9 +191,13 @@ impl CheckSizeCommand {
             let _ = remove_dir_all(app_dir.join(".next"));
 
             let mut c = Command::new("npm");
+
             c.current_dir(app_dir);
+
             c.env("FORCE_COLOR", "3");
+
             c.env("NEXT_DEBUG_MINIFY", "1");
+
             c.arg("run").arg("build");
 
             c.stderr(Stdio::inherit());
@@ -217,6 +229,7 @@ impl CheckSizeCommand {
                 get_terser_output(js_file, true, true).context("failed to get terser output")?;
 
             let swc_full = get_minified(cm.clone(), js_file, true, true)?;
+
             let swc_full = print_js(cm.clone(), &swc_full.module, true)?;
 
             Ok(CompareResult {
@@ -249,11 +262,13 @@ where
         let mut c = Command::new("node");
 
         c.arg("-e");
+
         c.arg(
             r#"
             function looseJsonParse(obj) {
                 return Function('"use strict";return (' + obj + ")")();
             }
+
             console.log(JSON.stringify(looseJsonParse(process.argv[1])));
             "#,
         );

@@ -72,15 +72,18 @@ impl Yoda {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, &message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, &message).emit();
             }
+
             _ => {}
         });
     }
 
     fn is_yoda_style(&self, bin_expr: &BinExpr) -> bool {
         let left_expr = bin_expr.left.as_ref();
+
         match left_expr {
             Expr::Lit(_) => true,
             Expr::Unary(UnaryExpr { op, arg, .. }) => {
@@ -90,6 +93,7 @@ impl Yoda {
 
                 false
             }
+
             Expr::Tpl(Tpl { exprs, .. }) => exprs.is_empty(),
             _ => false,
         }
@@ -99,6 +103,7 @@ impl Yoda {
         if self.only_equality {
             match bin_expr.op {
                 op!("===") | op!("==") => {}
+
                 _ => {
                     return;
                 }
@@ -133,6 +138,7 @@ impl Visit for Yoda {
             (true, YodaConfigMode::Never) | (false, YodaConfigMode::Always) => {
                 self.check(bin_expr);
             }
+
             _ => {}
         }
 

@@ -25,7 +25,9 @@ impl Pure<'_> {
                         "drop_useless_ident_ref_in_seq: Dropping `{}` as it's useless",
                         left.id
                     );
+
                     self.changed = true;
+
                     seq.exprs.pop();
                 }
             }
@@ -46,6 +48,7 @@ impl Pure<'_> {
             }
 
             self.changed = true;
+
             report_change!("sequences: Lifting sequence in a binary expression");
 
             let left_last = left.exprs.pop().unwrap();
@@ -92,10 +95,13 @@ impl Pure<'_> {
             //
             if test.exprs.len() >= 2 {
                 let mut new_seq = Vec::new();
+
                 new_seq.extend(test.exprs.drain(..test.exprs.len() - 1));
 
                 self.changed = true;
+
                 report_change!("sequences: Lifting sequences in a assignment with cond expr");
+
                 let new_cond = CondExpr {
                     span: cond.span,
                     test: test.exprs.pop().unwrap(),
@@ -153,6 +159,7 @@ impl Pure<'_> {
             ) = (&mut *a, &mut *b)
             {
                 let var_name = a_assign.left.as_ident();
+
                 let var_name = match var_name {
                     Some(v) => v,
                     None => continue,
@@ -189,14 +196,18 @@ impl Pure<'_> {
                             ..Default::default()
                         }
                         .into();
+
                         b.take();
+
                         self.changed = true;
+
                         report_change!(
                             "sequences: Reducing `(a = foo, a.call())` to `((a = foo).call())`"
                         );
 
                         *a = new;
                     }
+
                     _ => (),
                 };
             }

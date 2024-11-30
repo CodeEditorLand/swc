@@ -23,22 +23,28 @@ impl Compressor {
                                         Some(ComponentValue::Function(function)) => {
                                             *n = SizeFeatureValue::Function(*function);
                                         }
+
                                         Some(ComponentValue::Dimension(dimension)) => {
                                             *n = SizeFeatureValue::Dimension(*dimension);
                                         }
+
                                         Some(ComponentValue::Number(number)) => {
                                             *n = SizeFeatureValue::Number(*number);
                                         }
+
                                         _ => {}
                                     }
                                 }
                             }
+
                             _ => {}
                         }
                     }
+
                     _ => {}
                 }
             }
+
             _ => {}
         }
     }

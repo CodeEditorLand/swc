@@ -121,7 +121,9 @@ impl Data {
     fn node(&mut self, id: &Id) -> u32 {
         self.graph_ix.get_index_of(id).unwrap_or_else(|| {
             let ix = self.graph_ix.len();
+
             self.graph_ix.insert_full(id.clone());
+
             ix
         }) as _
     }
@@ -129,6 +131,7 @@ impl Data {
     /// Add an edge to dependency graph
     fn add_dep_edge(&mut self, from: Id, to: Id, assign: bool) {
         let from = self.node(&from);
+
         let to = self.node(&to);
 
         match self.graph.edge_weight_mut(from, to) {
@@ -139,6 +142,7 @@ impl Data {
                     info.usage += 1;
                 }
             }
+
             None => {
                 self.graph.add_edge(
                     from,
@@ -184,6 +188,7 @@ impl Data {
                     }
 
                     let id = self.graph_ix.get_index(j as _);
+
                     let id = match id {
                         Some(id) => id,
                         None => continue,
@@ -191,7 +196,9 @@ impl Data {
 
                     if let Some(w) = self.graph.edge_weight(i, j) {
                         let e = self.used_names.entry(id.clone()).or_default();
+
                         e.usage -= w.usage;
+
                         e.assign -= w.assign;
                     }
                 }
@@ -320,6 +327,7 @@ impl Analyzer<'_> {
                 return;
             }
         }
+
         if let Some(f) = &self.cur_class_id {
             if id == *f {
                 return;
@@ -329,6 +337,7 @@ impl Analyzer<'_> {
         if self.scope.is_ast_path_empty() {
             // Add references from top level items into graph
             let idx = self.data.node(&id);
+
             self.data.entries.insert(idx);
         } else {
             let mut scope = Some(&self.scope);
@@ -377,8 +386,11 @@ impl Visit for Analyzer<'_> {
     fn visit_class_decl(&mut self, n: &ClassDecl) {
         self.with_ast_path(vec![n.ident.to_id()], |v| {
             let old = v.cur_class_id.take();
+
             v.cur_class_id = Some(n.ident.to_id());
+
             n.visit_children_with(v);
+
             v.cur_class_id = old;
 
             if !n.class.decorators.is_empty() {
@@ -414,6 +426,7 @@ impl Visit for Analyzer<'_> {
                 .collect(),
             _ => Vec::new(),
         };
+
         for ident in name {
             self.add(ident, false);
         }
@@ -425,6 +438,7 @@ impl Visit for Analyzer<'_> {
         let old_in_var_decl = self.in_var_decl;
 
         self.in_var_decl = false;
+
         e.visit_children_with(self);
 
         if let Expr::Ident(i) = e {
@@ -439,15 +453,19 @@ impl Visit for Analyzer<'_> {
             op!("=") => {
                 if let Some(i) = n.left.as_ident() {
                     self.add(i.to_id(), true);
+
                     n.right.visit_with(self);
                 } else {
                     n.visit_children_with(self);
                 }
             }
+
             _ => {
                 if let Some(i) = n.left.as_ident() {
                     self.add(i.to_id(), false);
+
                     self.add(i.to_id(), true);
+
                     n.right.visit_with(self);
                 } else {
                     n.visit_children_with(self);
@@ -499,8 +517,11 @@ impl Visit for Analyzer<'_> {
     fn visit_fn_decl(&mut self, n: &FnDecl) {
         self.with_ast_path(vec![n.ident.to_id()], |v| {
             let old = v.cur_fn_id.take();
+
             v.cur_fn_id = Some(n.ident.to_id());
+
             n.visit_children_with(v);
+
             v.cur_fn_id = old;
 
             if !n.function.decorators.is_empty() {
@@ -541,9 +562,11 @@ impl Visit for Analyzer<'_> {
         let old = self.in_var_decl;
 
         self.in_var_decl = true;
+
         n.name.visit_with(self);
 
         self.in_var_decl = false;
+
         n.init.visit_with(self);
 
         self.in_var_decl = old;
@@ -557,7 +580,9 @@ impl Repeated for TreeShaker {
 
     fn reset(&mut self) {
         self.pass += 1;
+
         self.changed = false;
+
         self.data = Default::default();
     }
 }
@@ -598,8 +623,10 @@ impl TreeShaker {
             Some(Stmt::Empty(..)) => false,
             Some(Stmt::Block(s)) if s.is_empty() => {
                 debug!("Dropping an empty block statement");
+
                 false
             }
+
             _ => true,
         });
     }
@@ -637,6 +664,7 @@ impl TreeShaker {
 
             // Abort if the variable is declared on top level scope.
             let ix = self.data.graph_ix.get_index_of(&name);
+
             if let Some(ix) = ix {
                 if self.data.entries.contains(&(ix as u32)) {
                     return false;
@@ -670,6 +698,7 @@ impl VisitMut for TreeShaker {
                 && !n.right.may_have_side_effects(&self.expr_ctx)
             {
                 self.changed = true;
+
                 debug!("Dropping an assignment to `{}` because it's not used", id);
 
                 n.left.take();
@@ -679,8 +708,11 @@ impl VisitMut for TreeShaker {
 
     fn visit_mut_block_stmt(&mut self, n: &mut BlockStmt) {
         let old_in_block_stmt = self.in_block_stmt;
+
         self.in_block_stmt = true;
+
         n.visit_mut_children_with(self);
+
         self.in_block_stmt = old_in_block_stmt;
     }
 
@@ -691,11 +723,13 @@ impl VisitMut for TreeShaker {
             Decl::Fn(f) => {
                 if self.can_drop_binding(f.ident.to_id(), true) {
                     debug!("Dropping function `{}` as it's not used", f.ident);
+
                     self.changed = true;
 
                     n.take();
                 }
             }
+
             Decl::Class(c) => {
                 if self.can_drop_binding(c.ident.to_id(), false)
                     && c.class.body.iter().all(|m| match m {
@@ -707,6 +741,7 @@ impl VisitMut for TreeShaker {
                                     .as_deref()
                                     .map_or(false, |e| e.may_have_side_effects(&self.expr_ctx))
                         }
+
                         ClassMember::AutoAccessor(m) => {
                             !matches!(m.key, Key::Public(PropName::Computed(..)))
                                 && !m
@@ -729,11 +764,13 @@ impl VisitMut for TreeShaker {
                     })
                 {
                     debug!("Dropping class `{}` as it's not used", c.ident);
+
                     self.changed = true;
 
                     n.take();
                 }
             }
+
             _ => {}
         }
     }
@@ -745,6 +782,7 @@ impl VisitMut for TreeShaker {
                     decl.init.visit_mut_with(self);
                 }
             }
+
             _ => {
                 // Bypass visit_mut_decl
                 n.decl.visit_mut_children_with(self);
@@ -794,14 +832,17 @@ impl VisitMut for TreeShaker {
                                         },
                                     }) {
                                         self.changed = true;
+
                                         debug!("Dropping a wrapped esm");
                                         *n = *arg.take();
+
                                         return;
                                     }
                                 }
                             }
                         }
                     }
+
                     _ => (),
                 }
             }
@@ -832,6 +873,7 @@ impl VisitMut for TreeShaker {
     fn visit_mut_for_head(&mut self, n: &mut ForHead) {
         match n {
             ForHead::VarDecl(..) | ForHead::UsingDecl(..) => {}
+
             ForHead::Pat(v) => {
                 v.visit_mut_with(self);
             }
@@ -840,8 +882,11 @@ impl VisitMut for TreeShaker {
 
     fn visit_mut_function(&mut self, n: &mut Function) {
         let old_in_fn = self.in_fn;
+
         self.in_fn = true;
+
         n.visit_mut_children_with(self);
+
         self.in_fn = old_in_fn;
     }
 
@@ -858,7 +903,9 @@ impl VisitMut for TreeShaker {
                     "Dropping import specifier `{}` because it's not used",
                     local
                 );
+
                 self.changed = true;
+
                 return false;
             }
 
@@ -886,9 +933,12 @@ impl VisitMut for TreeShaker {
                 cur_class_id: Default::default(),
                 cur_fn_id: Default::default(),
             };
+
             m.visit_with(&mut analyzer);
         }
+
         data.subtract_cycles();
+
         self.data = Arc::new(data);
 
         HELPERS.set(&Helpers::new(true), || {
@@ -908,14 +958,17 @@ impl VisitMut for TreeShaker {
                     && i.specifiers.is_empty()
                 {
                     debug!("Dropping an import because it's not used");
+
                     self.changed = true;
                     *n = EmptyStmt { span: DUMMY_SP }.into();
                 }
             }
+
             _ => {
                 n.visit_mut_children_with(self);
             }
         }
+
         debug_assert_valid(n);
     }
 
@@ -949,9 +1002,12 @@ impl VisitMut for TreeShaker {
                 cur_class_id: Default::default(),
                 cur_fn_id: Default::default(),
             };
+
             m.visit_with(&mut analyzer);
         }
+
         data.subtract_cycles();
+
         self.data = Arc::new(data);
 
         HELPERS.set(&Helpers::new(true), || {
@@ -965,6 +1021,7 @@ impl VisitMut for TreeShaker {
         if let Stmt::Decl(Decl::Var(v)) = s {
             if v.decls.is_empty() {
                 s.take();
+
                 return;
             }
         }
@@ -973,6 +1030,7 @@ impl VisitMut for TreeShaker {
 
         if let Stmt::Decl(Decl::Var(v)) = s {
             let span = v.span;
+
             let cnt = v.decls.len();
 
             // If all name is droppable, do so.
@@ -993,10 +1051,12 @@ impl VisitMut for TreeShaker {
                     count = cnt,
                     "Dropping names of variables as they are not used",
                 );
+
                 self.changed = true;
 
                 if exprs.is_empty() {
                     *s = EmptyStmt { span: DUMMY_SP }.into();
+
                     return;
                 } else {
                     *s = ExprStmt {
@@ -1025,6 +1085,7 @@ impl VisitMut for TreeShaker {
         if matches!(n.op, op!("delete")) {
             return;
         }
+
         n.visit_mut_children_with(self);
     }
 
@@ -1037,14 +1098,18 @@ impl VisitMut for TreeShaker {
 
     fn visit_mut_var_decl(&mut self, n: &mut VarDecl) {
         let old_var_decl_kind = self.var_decl_kind;
+
         self.var_decl_kind = Some(n.kind);
+
         n.visit_mut_children_with(self);
+
         self.var_decl_kind = old_var_decl_kind;
     }
 
     fn visit_mut_var_decl_or_expr(&mut self, n: &mut VarDeclOrExpr) {
         match n {
             VarDeclOrExpr::VarDecl(..) => {}
+
             VarDeclOrExpr::Expr(v) => {
                 v.visit_mut_with(self);
             }
@@ -1065,7 +1130,9 @@ impl VisitMut for TreeShaker {
                 && self.can_drop_binding(i.to_id(), self.var_decl_kind == Some(VarDeclKind::Var))
             {
                 self.changed = true;
+
                 debug!("Dropping {} because it's not used", i);
+
                 v.name.take();
             }
         }
@@ -1094,6 +1161,7 @@ impl Scope<'_> {
         if !self.ast_path.is_empty() {
             return false;
         }
+
         match &self.parent {
             Some(p) => p.is_ast_path_empty(),
             None => true,

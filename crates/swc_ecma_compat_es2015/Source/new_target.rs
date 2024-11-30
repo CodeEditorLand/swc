@@ -66,6 +66,7 @@ impl VisitMut for NewTarget {
                     .make_member(quote_ident!("constructor"))
                     .into()
             };
+
             match &self.ctx {
                 Ctx::Constructor => *e = this_ctor(*span),
                 Ctx::Method => *e = *Expr::undefined(DUMMY_SP),
@@ -123,16 +124,19 @@ impl VisitMut for NewTarget {
 
     fn visit_mut_method_prop(&mut self, m: &mut MethodProp) {
         m.key.visit_mut_with(self);
+
         self.visit_mut_method(&mut m.function)
     }
 
     fn visit_mut_getter_prop(&mut self, m: &mut GetterProp) {
         m.key.visit_mut_with(self);
+
         self.visit_mut_method(&mut m.body)
     }
 
     fn visit_mut_setter_prop(&mut self, m: &mut SetterProp) {
         m.key.visit_mut_with(self);
+
         self.visit_mut_method(&mut m.body)
     }
 }

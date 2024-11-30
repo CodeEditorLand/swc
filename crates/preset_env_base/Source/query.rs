@@ -88,6 +88,7 @@ impl Query {
                     query(&[s])
                 }
             }
+
             Query::Multiple(ref s) => query(s),
         }
         .context("failed to execute query")?;
@@ -119,11 +120,13 @@ pub fn targets_to_versions(v: Option<Targets>) -> Result<Versions, Error> {
             if map.is_empty() {
                 if let Some(mut q) = q {
                     q.node = node;
+
                     return Ok(q);
                 }
             }
 
             let mut result = Versions::default();
+
             for (k, v) in map.iter() {
                 match v {
                     QueryOrVersion::Query(q) => {
@@ -133,6 +136,7 @@ pub fn targets_to_versions(v: Option<Targets>) -> Result<Versions, Error> {
                             result.insert(k, v);
                         }
                     }
+
                     QueryOrVersion::Version(v) => {
                         result.insert(k, Some(*v));
                     }
@@ -141,6 +145,7 @@ pub fn targets_to_versions(v: Option<Targets>) -> Result<Versions, Error> {
 
             unimplemented!("Targets: {:?}", map)
         }
+
         _ => unimplemented!("Option<Targets>: {:?}", v),
     }
 }
@@ -152,6 +157,7 @@ mod tests {
     #[test]
     fn test_empty() {
         let res = Query::Single("".into()).exec().unwrap();
+
         assert!(
             !res.is_any_target(),
             "empty query should return non-empty result"

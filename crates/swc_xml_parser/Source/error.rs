@@ -50,12 +50,15 @@ impl Error {
             ErrorKind::InvalidCharacterSequenceAfterDoctypeName => {
                 "Invalid character sequence after doctype name".into()
             }
+
             ErrorKind::InvalidFirstCharacterOfTagName => {
                 "Invalid first character of tag name".into()
             }
+
             ErrorKind::InvalidCharacterOfProcessingInstruction => {
                 "Invalid character of processing instruction".into()
             }
+
             ErrorKind::InvalidCharacterInTag => "Invalid character in tag".into(),
             ErrorKind::InvalidEntityCharacter => "Invalid entity character".into(),
             ErrorKind::MissingDoctypeName => "Missing doctype name".into(),
@@ -63,31 +66,40 @@ impl Error {
             ErrorKind::MissingQuoteBeforeDoctypePublicIdentifier => {
                 "Missing quote before doctype public identifier".into()
             }
+
             ErrorKind::MissingQuoteBeforeDoctypeSystemIdentifier => {
                 "Missing quote before doctype system identifier".into()
             }
+
             ErrorKind::MissingSemicolonAfterCharacterReference => {
                 "Missing semicolon after character reference".into()
             }
+
             ErrorKind::MissingWhitespaceAfterDoctypePublicKeyword => {
                 "Missing whitespace after doctype public keyword".into()
             }
+
             ErrorKind::MissingWhitespaceAfterDoctypeSystemKeyword => {
                 "Missing whitespace after doctype system keyword".into()
             }
+
             ErrorKind::MissingWhitespaceBeforeDoctypeName => {
                 "Missing whitespace before doctype name".into()
             }
+
             ErrorKind::MissingWhitespaceBetweenDoctypePublicAndSystemIdentifiers => {
                 "Missing whitespace between doctype public and system identifiers".into()
             }
+
             ErrorKind::MissingEndTagName => "Missing end tag name".into(),
             ErrorKind::MissingQuoteBeforeAttributeValue => {
                 "Missing quote before attribute value".into()
             }
+
             ErrorKind::MissingEqualAfterAttributeName => {
                 "Missing equal after attribute name".into()
             }
+
             ErrorKind::MissingSpaceBetweenAttributes => "Missing space between attributes".into(),
             ErrorKind::NestedComment => "Nested comment".into(),
             ErrorKind::DoubleHyphenWithInComment => "Double hyper within comment".into(),
@@ -97,14 +109,17 @@ impl Error {
             ErrorKind::UnexpectedCharacterAfterDoctypeSystemIdentifier => {
                 "Unexpected character after doctype system identifier".into()
             }
+
             ErrorKind::UnexpectedColonBeforeAttributeName => {
                 "Unexpected colon before attribute name".into()
             }
+
             ErrorKind::UnexpectedSolidusInTag => "Unexpected solidus in tag".into(),
             ErrorKind::NoTargetNameInProcessingInstruction => "No target name".into(),
             ErrorKind::MissingWhitespaceBeforeQuestionInProcessingInstruction => {
                 "Missing whitespace before '?'".into()
             }
+
             ErrorKind::UnescapedCharacterInAttributeValue(c) => {
                 format!("Unescaped \"{}\" not allowed in attribute values", c).into()
             }

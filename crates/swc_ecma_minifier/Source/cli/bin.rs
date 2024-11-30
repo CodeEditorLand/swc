@@ -21,6 +21,7 @@ fn parse_js(cm: &Lrc<SourceMap>, filename: String) -> Result<Module, ParseError>
         SourceFileInput::from(&*fm),
         None,
     );
+
     let mut parser = Parser::new_from(lexer);
 
     parser.parse_module()
@@ -35,6 +36,7 @@ fn print_js(cm: Lrc<SourceMap>, module: &Module) {
         comments: None,
         wr: Box::new(JsWriter::new(cm.clone(), "\n", &stdout, None)),
     };
+
     emitter.emit_module(module).unwrap();
 
     print!("\n");
@@ -45,6 +47,7 @@ fn run_cli(filename: String) -> Result<(), ParseError> {
         let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
 
         let top_level_mark = Mark::fresh(Mark::root());
+
         let program = parse_js(&cm, filename)?.fold_with(&mut resolver_with_mark(top_level_mark));
 
         let output = optimize(

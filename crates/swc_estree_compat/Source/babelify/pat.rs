@@ -241,6 +241,7 @@ impl Babelify for AssignPatProp {
 
     fn babelify(self, ctx: &Context) -> Self::Output {
         let is_shorthand = self.value.is_none();
+
         ObjectProperty {
             base: ctx.base(self.span),
             key: ObjectKey::Id(self.key.clone().babelify(ctx)),

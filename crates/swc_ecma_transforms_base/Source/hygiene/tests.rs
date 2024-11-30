@@ -85,6 +85,7 @@ where
         let mut module = Program::Module(op(tester)?);
 
         let hygiene_src = tester.print(&module.clone().fold_with(&mut HygieneVisualizer));
+
         println!("----- Hygiene -----\n{}", hygiene_src);
 
         hygiene_with_config(config()).process(&mut module);
@@ -97,11 +98,13 @@ where
                     p.parse_module()
                 })
                 .map(Program::Module)?;
+
             tester.print(&expected)
         };
 
         if actual != expected {
             println!("----- Actual -----\n{}", actual);
+
             println!("----- Diff -----");
 
             assert_eq!(DebugUsingDisplay(&actual), DebugUsingDisplay(&expected));
@@ -116,6 +119,7 @@ fn simple() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(vec![
@@ -132,7 +136,9 @@ fn simple() {
         },
         "
         var foo = 1;
+
         var foo1 = 2;
+
         use(foo);
         ",
     );
@@ -143,6 +149,7 @@ fn block_scoping_with_usage() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             let stmts = vec![
@@ -156,14 +163,17 @@ fn block_scoping_with_usage() {
                     .parse_stmt("actual3.js", "use(foo)")?
                     .fold_with(&mut marker(&[("foo", mark1)])),
             ];
+
             Ok(stmts)
         },
         "
         var foo = 1;
         {
             let foo = 2;
+
             use(foo);
         }
+
         use(foo);",
     );
 }
@@ -173,6 +183,7 @@ fn block_scoping_no_usage() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(mark1);
 
             let stmts = vec![
@@ -183,6 +194,7 @@ fn block_scoping_no_usage() {
                     .parse_stmt("actual2.js", "{ let foo }")?
                     .fold_with(&mut marker(&[("foo", mark2)])),
             ];
+
             Ok(stmts)
         },
         "
@@ -199,6 +211,7 @@ fn fn_binding_ident() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(vec![
@@ -214,7 +227,9 @@ fn fn_binding_ident() {
             ])
         },
         "var foo = function baz(){};
+
             var bar = function baz(){};
+
             use(baz);",
     );
 }
@@ -224,7 +239,9 @@ fn fn_binding_ident_in_call() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(mark1);
+
             let mark3 = Mark::fresh(mark1);
 
             Ok(vec![
@@ -243,8 +260,11 @@ fn fn_binding_ident_in_call() {
             ])
         },
         "var foo = use(function baz(){});
+
             var bar1 = use(function baz(){});
+
             var bar2 = use(function baz(){});
+
             use(baz);",
     );
 }
@@ -254,6 +274,7 @@ fn member_expr() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(mark1);
 
             Ok(vec![
@@ -266,6 +287,7 @@ fn member_expr() {
             ])
         },
         "let a;
+
             foo.a = init",
     );
 }
@@ -275,6 +297,7 @@ fn const_then_fn_param() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(mark1);
 
             Ok(vec![
@@ -287,6 +310,7 @@ fn const_then_fn_param() {
             ])
         },
         "const a = 1;
+
             function foo(a) {
                 use(a);
             }",
@@ -298,7 +322,9 @@ fn for_loop() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(mark1);
+
             let mark3 = Mark::fresh(mark1);
 
             Ok(vec![
@@ -315,7 +341,9 @@ fn for_loop() {
         },
         "
             for(var a=1;;) {}
+
             for(var a1 of foo) {}
+
             for(var a2 = 3;;) {}
             ",
     );
@@ -326,7 +354,9 @@ fn try_for_loop() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(mark1);
+
             let mark3 = Mark::fresh(mark1);
 
             Ok(vec![
@@ -346,7 +376,9 @@ fn try_for_loop() {
                 for(var a=1;;) {}
             } finally {
             }
+
             for(var a1 of foo) {}
+
             for(var a2 = 3;;) {}
             ",
     );
@@ -357,6 +389,7 @@ fn shorthand() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(mark1);
 
             Ok(vec![
@@ -368,6 +401,7 @@ fn shorthand() {
                         "actual2.js",
                         "function foo() {
                                 let a = 2;
+
                                 use({ a })
                             }",
                     )?
@@ -376,8 +410,10 @@ fn shorthand() {
         },
         "
             let a = 1;
+
             function foo() {
                 let a = 2;
+
                 use({ a })
             }
             ",
@@ -401,6 +437,7 @@ fn same_mark() {
         },
         "
             var a = 1;
+
             var a = 1;
             ",
     );
@@ -445,6 +482,7 @@ fn mark_root() {
 var foo = 'bar';
 function Foo() {
     var foo1 = 'foo';
+
     _define_property(this, 'bar', foo);
 }
             ",
@@ -473,6 +511,7 @@ fn var_class_decl_2() {
                     "
                 var Foo = (function() {
                     function Foo() {}
+
                     return Foo;
                 }())
                 ",
@@ -487,6 +526,7 @@ fn var_class_decl_2() {
             function Foo(){
 
             }
+
             return Foo;
         }())
         ",
@@ -498,6 +538,7 @@ fn fn_args() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(vec![Stmt::Decl(Decl::Fn(FnDecl {
@@ -538,6 +579,7 @@ fn block_in_fn() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(mark1);
 
             Ok(vec![Stmt::Decl(Decl::Fn(FnDecl {
@@ -590,6 +632,7 @@ fn flat_in_fn() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(mark1);
 
             Ok(vec![Stmt::Decl(Decl::Fn(FnDecl {
@@ -620,6 +663,7 @@ fn flat_in_fn() {
         "
         function Foo() {
             var bar;
+
             var bar1;
         }
         ",
@@ -631,6 +675,7 @@ fn params_in_fn() {
     test(
         |_tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(vec![Stmt::Decl(Decl::Fn(FnDecl {
@@ -680,6 +725,7 @@ fn next_fn() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(vec![
@@ -693,6 +739,7 @@ fn next_fn() {
         },
         "
         function foo(param) {}
+
         function bar(param) {}
         ",
     );
@@ -703,8 +750,11 @@ fn for_x() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(mark1);
+
             let mark3 = Mark::fresh(mark1);
+
             let mark4 = Mark::fresh(mark3);
 
             Ok(vec![
@@ -744,6 +794,7 @@ fn for_x() {
         for (var _ref1 of []){
             var { a } = _ref1, b = _object_without_properties(_ref1, ['a']);
         }
+
         async function a() {
             for await (var _ref of []){
                 var { a } = _ref, b = _object_without_properties(_ref, ['a']);
@@ -758,6 +809,7 @@ fn fn_param_same_name() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(vec![tester
@@ -776,6 +828,7 @@ fn fn_param_same_name_in_arg() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(vec![tester
@@ -794,6 +847,7 @@ fn nested_fn_param_with_same_name() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(vec![tester
@@ -803,6 +857,7 @@ fn nested_fn_param_with_same_name() {
                     function _three() {
                         _three = _async_to_generator(function*(a, param, c, param) {
                         });
+
                         return _three.apply(this, arguments);
                     }
                     ",
@@ -816,6 +871,7 @@ fn nested_fn_param_with_same_name() {
         function _three() {
             _three = _async_to_generator(function*(a, param, c, param1) {
             });
+
             return _three.apply(this, arguments);
         }
         ",
@@ -827,8 +883,11 @@ fn regression_001() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
+
             let mark3 = Mark::fresh(Mark::root());
+
             let mark4 = Mark::fresh(Mark::root());
 
             Ok(vec![tester
@@ -837,10 +896,12 @@ fn regression_001() {
                     "var Foo = function() {
     function Foo() {
         _class_call_check(this, Foo);
+
         foo.set(this, {
              writable: true, value: 0
         });
     }
+
     _create_class(Foo, [{
              key: 'test', value: function test(other) {
                     var old, _obj, old, _obj;
@@ -850,6 +911,7 @@ fn regression_001() {
                      +_class_private_field_get(_obj, foo)) + 1), old;
                 }
         }]);
+
     return Foo;
 }();
                     ",
@@ -862,19 +924,24 @@ fn regression_001() {
         "var Foo = function() {
     function Foo() {
         _class_call_check(this, Foo);
+
         foo.set(this, {
              writable: true, value: 0
         });
     }
+
     _create_class(Foo, [{
              key: 'test', value: function test(other) {
                 var old, _obj, old1, _obj1;
+
                 _class_private_field_set(this, foo, (old = +_class_private_field_get(this, foo)) + \
          1), old;
+
                 _class_private_field_set(_obj = other.obj, foo, (old1 = \
          +_class_private_field_get(_obj1, foo)) + 1), old1;
                 }
         }]);
+
     return Foo;
 }();
         ",
@@ -886,6 +953,7 @@ fn regression_002() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(vec![tester
@@ -923,6 +991,7 @@ fn regression_003() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(tester
@@ -952,17 +1021,20 @@ fn regression_004() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(tester
                 .parse_stmts(
                     "actual1.js",
                     "function foo(...args){}
+
                     function bar(...args){}",
                 )?
                 .fold_with(&mut OnceMarker::new(&[("args", &[mark1, mark2])])))
         },
         "function foo(...args){}
+
         function bar(...args){}",
     );
 }
@@ -972,17 +1044,20 @@ fn regression_005() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(tester
                 .parse_stmts(
                     "actual1.js",
                     "var foo = (...args)=>{}
+
                     var bar = (...args)=>{}",
                 )?
                 .fold_with(&mut OnceMarker::new(&[("args", &[mark1, mark2])])))
         },
         "var foo = (...args)=>{}
+
         var bar = (...args)=>{}",
     );
 }
@@ -992,17 +1067,20 @@ fn module_01() {
     test_module(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(tester
                 .parse_module(
                     "actual1.js",
                     "import foo from 'src1';
+
                     import foo from 'src2';",
                 )?
                 .fold_with(&mut OnceMarker::new(&[("foo", &[mark1, mark2])])))
         },
         "import foo from 'src1';
+
         import foo1 from 'src2';",
         Default::default,
     );
@@ -1013,17 +1091,20 @@ fn module_02() {
     test_module(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(tester
                 .parse_module(
                     "actual1.js",
                     "import {foo} from 'src1';
+
                     import {foo} from 'src2';",
                 )?
                 .fold_with(&mut OnceMarker::new(&[("foo", &[mark1, mark2])])))
         },
         "import {foo} from 'src1';
+
         import {foo as foo1} from 'src2';",
         Default::default,
     );
@@ -1034,19 +1115,24 @@ fn module_03() {
     test_module(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(tester
                 .parse_module(
                     "actual1.js",
                     "var foo = 1;
+
                     var foo = 2;
+
                     export {foo}",
                 )?
                 .fold_with(&mut OnceMarker::new(&[("foo", &[mark1, mark2, mark2])])))
         },
         "var foo = 1;
+
         var foo1 = 2;
+
         export {foo1 as foo}",
         Default::default,
     );
@@ -1079,7 +1165,9 @@ fn issue_281_02() {
     test_module(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
+
             let mark3 = Mark::fresh(Mark::root());
 
             Ok(tester
@@ -1090,6 +1178,7 @@ fn issue_281_02() {
                             try {
                             } catch (e) {
                                 o = null;
+
                                 break e
                             }
                         }
@@ -1105,6 +1194,7 @@ fn issue_281_02() {
                 try {
                 } catch (e1) {
                     o = null;
+
                     break e
                 }
             }
@@ -1123,6 +1213,7 @@ fn issue_295_01() {
                 .parse_module(
                     "actual1.js",
                     "export const bar = {};
+
                     class Foo {
 
                       constructor() {
@@ -1135,6 +1226,7 @@ fn issue_295_01() {
         "
         export const bar = {
         };
+
         class Foo {
             constructor(){
                 bar;
@@ -1150,12 +1242,14 @@ fn issue_295_02() {
     test_module(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(tester
                 .parse_module(
                     "actual1.js",
                     "export const bar = {};
+
                     class Foo {
 
                       constructor() {
@@ -1168,7 +1262,9 @@ fn issue_295_02() {
         "
         const bar1 = {
         };
+
         export { bar1 as bar };
+
         class Foo {
             constructor(){
                 bar;
@@ -1184,17 +1280,20 @@ fn exported_function() {
     test_module(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(tester
                 .parse_module(
                     "actual1.js",
                     "const foo = {};
+
                     export function foo(){}",
                 )?
                 .fold_with(&mut OnceMarker::new(&[("foo", &[mark1, mark2])])))
         },
         "const foo = {};
+
         function foo1(){}
       export { foo1 as foo };",
         Default::default,
@@ -1206,18 +1305,22 @@ fn exported_class_1() {
     test_module(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(tester
                 .parse_module(
                     "actual1.js",
                     "var Foo = {};
+
                     export class Foo {}",
                 )?
                 .fold_with(&mut OnceMarker::new(&[("Foo", &[mark1, mark2])])))
         },
         "var Foo = {};
+
         class Foo1 {}
+
         export { Foo1 as Foo };",
         Default::default,
     );
@@ -1228,6 +1331,7 @@ fn issue_1279() {
     test_module(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(tester
@@ -1236,6 +1340,7 @@ fn issue_1279() {
                     "class Foo {
                         method() {
                             class Foo {}
+
                             new Foo();
                         }
                     }",
@@ -1247,6 +1352,7 @@ fn issue_1279() {
             method() {
                 let Foo1 = class Foo {
                 };
+
                 new Foo();
             }
         };
@@ -1264,6 +1370,7 @@ fn issue_1507() {
     test_module(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             Ok(tester
@@ -1304,6 +1411,7 @@ fn opt_1() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             let stmts = tester
@@ -1323,6 +1431,7 @@ fn opt_1() {
                     "foo",
                     &[mark1, mark2, mark1, mark2, mark1],
                 )]));
+
             Ok(stmts)
         },
         "
@@ -1342,9 +1451,11 @@ fn opt_2() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             let mark3 = Mark::fresh(Mark::root());
+
             let mark4 = Mark::fresh(Mark::root());
 
             let stmts = tester
@@ -1352,9 +1463,11 @@ fn opt_2() {
                     "actual1.js",
                     "
                     var b = 1;
+
                     var b1 = 2;
                     {
                         const b = 3;
+
                         const b1 = 4;
                         {
                             b1 = b + b + b1 + b1
@@ -1366,13 +1479,16 @@ fn opt_2() {
                     ("b", &[mark1, mark2, mark2, mark1]),
                     ("b1", &[mark3, mark4, mark3, mark4, mark3]),
                 ]));
+
             Ok(stmts)
         },
         "
         var b = 1;
+
         var b1 = 2;
         {
             const b2 = 3;
+
             const b11 = 4;
             {
                 b1 = b2 + b + b11 + b1;
@@ -1387,6 +1503,7 @@ fn opt_3() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             let stmts = tester
@@ -1394,6 +1511,7 @@ fn opt_3() {
                     "actual1.js",
                     "
                     var e = 1;
+
                     try {
                         throw 2;
                     } catch (e) {
@@ -1402,10 +1520,12 @@ fn opt_3() {
                     ",
                 )?
                 .fold_with(&mut OnceMarker::new(&[("e", &[mark1, mark2, mark1])]));
+
             Ok(stmts)
         },
         "
         var e = 1;
+
         try {
             throw 2;
         } catch (e1) {
@@ -1420,6 +1540,7 @@ fn opt_4() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             let stmts = tester
@@ -1431,12 +1552,14 @@ fn opt_4() {
                             a()
                         }
                     }
+
                     function a() {
 
                     }
                     ",
                 )?
                 .fold_with(&mut OnceMarker::new(&[("a", &[mark1, mark2, mark2])]));
+
             Ok(stmts)
         },
         "
@@ -1445,6 +1568,7 @@ fn opt_4() {
                 a()
             }
         }
+
         function a() {
 
         }
@@ -1457,6 +1581,7 @@ fn opt_5() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             let stmts = tester
@@ -1468,12 +1593,14 @@ fn opt_5() {
                             a()
                         }
                     }
+
                     function a() {
 
                     }
                     ",
                 )?
                 .fold_with(&mut OnceMarker::new(&[("a", &[mark1, mark2, mark2])]));
+
             Ok(stmts)
         },
         "
@@ -1482,6 +1609,7 @@ fn opt_5() {
                 a()
             }
         }
+
         function a() {
 
         }
@@ -1494,6 +1622,7 @@ fn opt_6() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             let stmts = tester
@@ -1501,12 +1630,14 @@ fn opt_6() {
                     "actual1.js",
                     "
                     var foo = 'bar';
+
                     var Foo = function() {
                         function Foo() {
                             _bar.set(this, {
                                 writable: true,
                                 value: foo
                             });
+
                             var foo = 'foo';
                         }
 
@@ -1514,16 +1645,19 @@ fn opt_6() {
                     ",
                 )?
                 .fold_with(&mut OnceMarker::new(&[("foo", &[mark1, mark1, mark2])]));
+
             Ok(stmts)
         },
         "
         var foo = 'bar';
+
         var Foo = function() {
             function Foo() {
                 _bar.set(this, {
                     writable: true,
                     value: foo
                 });
+
                 var foo1 = 'foo';
             }
 
@@ -1538,6 +1672,7 @@ fn issue_2211_1() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             let stmts = tester
@@ -1545,9 +1680,11 @@ fn issue_2211_1() {
                     "actual1.js",
                     "
                     var _bar = require('./bar');
+
                     const makeX = ()=>{
                         const _bar = ()=>(0, _bar).bar()
                         ;
+
                         return {
                             _bar
                         };
@@ -1558,13 +1695,16 @@ fn issue_2211_1() {
                     "_bar",
                     &[mark1, mark2, mark1, mark2],
                 )]));
+
             Ok(stmts)
         },
         "
         var _bar = require('./bar');
+
         const makeX = ()=>{
             const _bar1 = ()=>(0, _bar).bar()
             ;
+
             return {
                 _bar: _bar1
             };
@@ -1578,6 +1718,7 @@ fn issue_2211_2() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             let stmts = tester
@@ -1585,6 +1726,7 @@ fn issue_2211_2() {
                     "actual1.js",
                     "
                     var _bar = require('./bar');
+
                     const makeX = ()=>{
                         const _bar = () => _bar();
 
@@ -1598,13 +1740,17 @@ fn issue_2211_2() {
                     "_bar",
                     &[mark1, mark2, mark1, mark2],
                 )]));
+
             Ok(stmts)
         },
         "
         var _bar = require('./bar');
+
         const makeX = ()=>{
             const _bar1 = ()=>_bar();
+
             const alfa = ()=>_bar1();
+
             return {
                 alfa
             };
@@ -1618,6 +1764,7 @@ fn issue_2297_1() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             let stmts = tester
@@ -1625,9 +1772,12 @@ fn issue_2297_1() {
                     "actual1.js",
                     "
                     var _bar = require('./Bar');
+
                     var makeX = function(props) {
                         var _bar = props.bar;
+
                         var list = _bar.list;
+
                         return list.map(function() {
                             return _bar.bar;
                         });
@@ -1638,13 +1788,17 @@ fn issue_2297_1() {
                     "_bar",
                     &[mark1, mark2, mark2, mark1],
                 )]));
+
             Ok(stmts)
         },
         "
         var _bar = require('./Bar');
+
         var makeX = function(props) {
             var _bar1 = props.bar;
+
             var list = _bar1.list;
+
             return list.map(function() {
                 return _bar.bar;
             });
@@ -1659,6 +1813,7 @@ fn var_awareness_1() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             let stmts = tester
@@ -1673,6 +1828,7 @@ fn var_awareness_1() {
                     ",
                 )?
                 .fold_with(&mut OnceMarker::new(&[("i", &[mark1, mark2, mark2])]));
+
             Ok(stmts)
         },
         "
@@ -1691,6 +1847,7 @@ fn var_awareness_2() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             let stmts = tester
@@ -1699,18 +1856,21 @@ fn var_awareness_2() {
                     "
                     for (var i of [1, 2, 3]) {
                     }
+
                     for (var i of [4, 5, 6]) {
                         console.log(i)
                     }
                     ",
                 )?
                 .fold_with(&mut OnceMarker::new(&[("i", &[mark1, mark2, mark2])]));
+
             Ok(stmts)
         },
         "
         for (var i of [1, 2, 3]) {
 
         }
+
         for (var i1 of [4, 5, 6]) {
             console.log(i1)
         }
@@ -1724,6 +1884,7 @@ fn issue_2539() {
     test(
         |tester| {
             let mark1 = Mark::fresh(Mark::root());
+
             let mark2 = Mark::fresh(Mark::root());
 
             let stmts = tester
@@ -1741,6 +1902,7 @@ fn issue_2539() {
                     ",
                 )?
                 .fold_with(&mut OnceMarker::new(&[("index", &[mark1, mark2])]));
+
             Ok(stmts)
         },
         "

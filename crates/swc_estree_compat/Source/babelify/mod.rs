@@ -55,11 +55,13 @@ impl Context {
         if span.is_dummy() {
             return None;
         }
+
         if !Flavor::current().emit_loc() {
             return None;
         }
 
         let start = self.line_col(span.lo)?;
+
         let end = self.line_col(span.hi)?;
 
         Some(Loc { start, end })
@@ -70,6 +72,7 @@ impl Context {
             .into_iter()
             .map(|c| {
                 let (start, end) = self.offset(c.span);
+
                 let loc = self.loc(c.span).unwrap_or_else(Loc::dummy);
 
                 let comment = BaseComment {
@@ -82,6 +85,7 @@ impl Context {
                     end: end.unwrap_or_default(),
                     loc,
                 };
+
                 match c.kind {
                     CommentKind::Line => Comment::Line(comment),
                     CommentKind::Block => Comment::Block(comment),
@@ -100,6 +104,7 @@ impl Context {
             .take_leading(span.lo)
             .map(|v| self.convert_comments(v))
             .unwrap_or_default();
+
         let trailing_comments = self
             .comments
             .take_trailing(span.hi)
@@ -175,5 +180,6 @@ where
 
 fn extract_class_body_span(class: &Class, ctx: &Context) -> Span {
     let sp = ctx.cm.span_take_while(class.span, |ch| *ch != '{');
+
     class.span.with_lo(sp.hi())
 }

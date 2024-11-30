@@ -45,6 +45,7 @@ impl VisitMut for ExportNamespaceFrom {
                     let mut origin_specifiers = Vec::new();
 
                     let mut import_specifiers = Vec::new();
+
                     let mut export_specifiers = Vec::new();
 
                     for s in specifiers.into_iter() {
@@ -59,6 +60,7 @@ impl VisitMut for ExportNamespaceFrom {
                                         local: local_bridge.clone(),
                                     },
                                 ));
+
                                 export_specifiers.push(ExportSpecifier::Named(
                                     ExportNamedSpecifier {
                                         span,
@@ -68,6 +70,7 @@ impl VisitMut for ExportNamespaceFrom {
                                     },
                                 ))
                             }
+
                             ExportSpecifier::Default(..) | ExportSpecifier::Named(..) => {
                                 origin_specifiers.push(s);
                             }
@@ -110,6 +113,7 @@ impl VisitMut for ExportNamespaceFrom {
                         );
                     }
                 }
+
                 _ => {
                     stmts.push(item);
                 }

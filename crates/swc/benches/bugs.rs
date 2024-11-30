@@ -25,6 +25,7 @@ fn bench_file(b:&mut Bencher, path:&Path) {
 				c.process_js_file(fm, &handler, &Default::default()).unwrap()
 			})
 		};
+
 		black_box(result);
 	});
 }
@@ -32,6 +33,7 @@ fn bench_file(b:&mut Bencher, path:&Path) {
 fn bugs_1(b:&mut Bencher) { bench_file(b, Path::new("benches/bugs/1/input.tsx")); }
 
 fn bench_bugs(c:&mut Criterion) { c.bench_function("es/full/bugs-1", bugs_1); }
+
     let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
 
     swc::Compiler::new(cm)
@@ -51,6 +53,7 @@ fn bench_file(b: &mut Bencher, path: &Path) {
                     .unwrap()
             })
         };
+
         black_box(result);
     });
 }

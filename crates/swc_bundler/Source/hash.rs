@@ -8,7 +8,9 @@ use swc_ecma_codegen::{text_writer::WriteJs, Emitter};
 
 pub(crate) fn calc_hash(cm: Lrc<SourceMap>, m: &Module) -> Result<String, Error> {
     let crc = Crc::<u64>::new(&CRC_64_ECMA_182);
+
     let digest = crc.digest();
+
     let mut buf = Hasher { digest };
 
     {
@@ -26,6 +28,7 @@ pub(crate) fn calc_hash(cm: Lrc<SourceMap>, m: &Module) -> Result<String, Error>
     //
 
     let result = buf.digest.finalize();
+
     Ok(radix_fmt::radix(result, 36).to_string())
 }
 
@@ -50,66 +53,79 @@ impl WriteJs for &mut Hasher<'_> {
 
     fn write_semi(&mut self, _: Option<Span>) -> io::Result<()> {
         self.w(";");
+
         Ok(())
     }
 
     fn write_space(&mut self) -> io::Result<()> {
         self.w(" ");
+
         Ok(())
     }
 
     fn write_keyword(&mut self, _: Option<Span>, s: &'static str) -> io::Result<()> {
         self.w(s);
+
         Ok(())
     }
 
     fn write_operator(&mut self, _: Option<Span>, s: &str) -> io::Result<()> {
         self.w(s);
+
         Ok(())
     }
 
     fn write_param(&mut self, s: &str) -> io::Result<()> {
         self.w(s);
+
         Ok(())
     }
 
     fn write_property(&mut self, s: &str) -> io::Result<()> {
         self.w(s);
+
         Ok(())
     }
 
     fn write_line(&mut self) -> io::Result<()> {
         self.w("\n");
+
         Ok(())
     }
 
     fn write_lit(&mut self, _: Span, s: &str) -> io::Result<()> {
         self.w(s);
+
         Ok(())
     }
 
     fn write_comment(&mut self, s: &str) -> io::Result<()> {
         self.w(s);
+
         Ok(())
     }
 
     fn write_str_lit(&mut self, _: Span, s: &str) -> io::Result<()> {
         self.w(s);
+
         Ok(())
     }
 
     fn write_str(&mut self, s: &str) -> io::Result<()> {
         self.w(s);
+
         Ok(())
     }
 
     fn write_symbol(&mut self, _: Span, s: &str) -> io::Result<()> {
         self.w(s);
+
         Ok(())
     }
 
     fn write_punct(&mut self, _: Option<Span>, s: &'static str) -> io::Result<()> {
         self.w(s);
+
         Ok(())
     }
 

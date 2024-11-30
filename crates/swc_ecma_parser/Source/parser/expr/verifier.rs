@@ -39,6 +39,7 @@ impl Visit for Verifier {
     fn visit_expr(&mut self, e: &Expr) {
         match *e {
             Expr::Fn(..) | Expr::Arrow(..) => {}
+
             _ => e.visit_children_with(self),
         }
     }

@@ -32,6 +32,7 @@ impl Modules {
 
         #[cfg(not(target_arch = "wasm32"))]
         let start = Instant::now();
+
         let chunks = self.take_chunks(entry_id, module_graph, cycles, cm);
         #[cfg(not(target_arch = "wasm32"))]
         let dur = Instant::now() - start;
@@ -52,6 +53,7 @@ impl Modules {
         // print_hygiene("after sort", cm, &module);
 
         *self = Modules::from(entry_id, module, injected_ctxt);
+
         tracing::debug!("Sorted {:?}", entry_id);
     }
 }

@@ -86,6 +86,7 @@ impl SystemJs {
                 .make_member(quote_ident!("id"))
                 .into();
         }
+
         ident.into()
     }
 
@@ -96,18 +97,23 @@ impl SystemJs {
                     for (k, v) in self.export_map.iter() {
                         if ident.to_id() == *k {
                             let mut expr = assign_expr.into();
+
                             for value in v.iter() {
                                 expr = self.export_call(value.clone(), DUMMY_SP, expr).into();
                             }
+
                             return expr;
                         }
                     }
+
                     assign_expr.into()
                 }
+
                 _ => assign_expr.into(),
             },
             AssignTarget::Pat(pat) => {
                 let mut to: Vec<Id> = Vec::new();
+
                 pat.visit_with(&mut VarCollector { to: &mut to });
 
                 match pat {
@@ -127,16 +133,19 @@ impl SystemJs {
                                             .into(),
                                         );
                                     }
+
                                     break;
                                 }
                             }
                         }
+
                         SeqExpr {
                             span: DUMMY_SP,
                             exprs,
                         }
                         .into()
                     }
+
                     _ => assign_expr.into(),
                 }
             }
@@ -161,9 +170,11 @@ impl SystemJs {
                                 right: 1.0.into(),
                             }
                             .into();
+
                             for value in v.iter() {
                                 expr = self.export_call(value.clone(), DUMMY_SP, expr).into();
                             }
+
                             return SeqExpr {
                                 span: DUMMY_SP,
                                 exprs: vec![Box::new(expr), Box::new(Expr::Update(update_expr))],
@@ -171,8 +182,10 @@ impl SystemJs {
                             .into();
                         }
                     }
+
                     update_expr.into()
                 }
+
                 _ => update_expr.into(),
             }
         } else {
@@ -182,13 +195,17 @@ impl SystemJs {
 
     fn add_export_name(&mut self, key: Id, value: JsWord) {
         let mut find = false;
+
         for (k, v) in self.export_map.iter_mut() {
             if key == *k {
                 v.push(value.clone());
+
                 find = true;
+
                 break;
             }
         }
+
         if !find {
             self.export_map.insert(key, vec![value]);
         }
@@ -210,6 +227,7 @@ impl SystemJs {
                 .into_stmt()],
             _ => {
                 let mut props = Vec::new();
+
                 for (sym, value) in export_names.drain(..).zip(export_values.drain(..)) {
                     props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
                         key: match Ident::verify_symbol(&sym) {
@@ -219,6 +237,7 @@ impl SystemJs {
                         value,
                     }))));
                 }
+
                 vec![CallExpr {
                     span: DUMMY_SP,
                     callee: self.export_ident.clone().as_callee(),
@@ -241,8 +260,11 @@ impl SystemJs {
             );
         } else {
             let export_obj = quote_ident!("exportObj");
+
             let key_ident = quote_ident!("key");
+
             let target = quote_ident!(local_name_for_src(&meta.src));
+
             meta.setter_fn_stmts.push(
                 VarDecl {
                     kind: VarDeclKind::Var,
@@ -259,6 +281,7 @@ impl SystemJs {
                 }
                 .into(),
             );
+
             meta.setter_fn_stmts.push(
                 ForInStmt {
                     span: DUMMY_SP,
@@ -314,6 +337,7 @@ impl SystemJs {
                 }
                 .into(),
             );
+
             for (sym, value) in meta
                 .export_names
                 .drain(..)
@@ -329,6 +353,7 @@ impl SystemJs {
                     .into_stmt(),
                 );
             }
+
             meta.setter_fn_stmts.push(
                 CallExpr {
                     span: DUMMY_SP,
@@ -351,14 +376,20 @@ impl SystemJs {
         {
             Some(index) => {
                 let mut meta = self.module_item_meta_list.remove(index);
+
                 meta.setter_fn_stmts.append(&mut m.setter_fn_stmts);
+
                 meta.export_names.append(&mut m.export_names);
+
                 meta.export_values.append(&mut m.export_values);
+
                 if m.has_export_all {
                     meta.has_export_all = m.has_export_all;
                 }
+
                 self.module_item_meta_list.insert(index, meta);
             }
+
             None => {
                 self.module_item_meta_list.push(m);
             }
@@ -368,8 +399,10 @@ impl SystemJs {
     #[allow(clippy::boxed_local)]
     fn hoist_var_decl(&mut self, var_decl: Box<VarDecl>) -> Option<Expr> {
         let mut exprs = Vec::new();
+
         for var_declarator in var_decl.decls {
             let mut tos: Vec<Id> = Vec::new();
+
             var_declarator.visit_with(&mut VarCollector { to: &mut tos });
 
             for (sym, ctxt) in tos {
@@ -378,12 +411,15 @@ impl SystemJs {
                         if (sym.clone(), ctxt) == *k {
                             for value in v.iter() {
                                 self.export_names.push(value.clone());
+
                                 self.export_values.push(Expr::undefined(DUMMY_SP));
                             }
+
                             break;
                         }
                     }
                 }
+
                 self.declare_var_idents
                     .push(Ident::new(sym, DUMMY_SP, ctxt));
             }
@@ -400,6 +436,7 @@ impl SystemJs {
                 );
             }
         }
+
         match exprs.len() {
             0 => None,
             _ => Some(
@@ -416,7 +453,9 @@ impl SystemJs {
         if let ForHead::VarDecl(mut var_decl) = var_decl_or_pat {
             if var_decl.kind == VarDeclKind::Var {
                 let var_declarator = var_decl.decls.remove(0);
+
                 let mut tos: Vec<Id> = Vec::new();
+
                 var_declarator.visit_with(&mut VarCollector { to: &mut tos });
 
                 for to in tos {
@@ -425,12 +464,15 @@ impl SystemJs {
                             if to == *k {
                                 for value in v.iter() {
                                     self.export_names.push(value.clone());
+
                                     self.export_values.push(Expr::undefined(DUMMY_SP));
                                 }
+
                                 break;
                             }
                         }
                     }
+
                     self.declare_var_idents
                         .push(Ident::new(to.0, DUMMY_SP, to.1));
                 }
@@ -461,6 +503,7 @@ impl SystemJs {
                     decl.into()
                 }
             }
+
             Stmt::For(for_stmt) => {
                 if let Some(init) = for_stmt.init {
                     if let VarDeclOrExpr::VarDecl(var_decl) = init {
@@ -490,6 +533,7 @@ impl SystemJs {
                     for_stmt.into()
                 }
             }
+
             Stmt::ForIn(for_in_stmt) => ForInStmt {
                 left: self.hoist_for_var_decl(for_in_stmt.left),
                 ..for_in_stmt
@@ -542,13 +586,16 @@ impl Fold for SystemJs {
                                 ..assign
                             });
                         }
+
                         _ => assign.right,
                     },
                     ..assign
                 }
                 .fold_with(self);
+
                 self.replace_assign_expr(assign_expr)
             }
+
             Expr::Update(update) => self.replace_update_expr(update),
             Expr::Call(call) => match call.callee {
                 Callee::Import(_) => CallExpr {
@@ -578,19 +625,24 @@ impl Fold for SystemJs {
 
                 await_expr.into()
             }
+
             _ => expr,
         }
     }
 
     fn fold_fn_decl(&mut self, fn_decl: FnDecl) -> FnDecl {
         let is_async = fn_decl.function.is_async;
+
         if is_async {
             self.enter_async_fn += 1;
         }
+
         let fold_fn_expr = fn_decl.fold_children_with(self);
+
         if is_async {
             self.enter_async_fn -= 1;
         }
+
         fold_fn_expr
     }
 
@@ -616,12 +668,16 @@ impl Fold for SystemJs {
     fn fold_module(&mut self, module: Module) -> Module {
         let module = {
             let mut module = module;
+
             if !self.config.allow_top_level_this {
                 top_level_this(&mut module, *Expr::undefined(DUMMY_SP));
             }
+
             module
         };
+
         let mut before_body_stmts: Vec<Stmt> = Vec::new();
+
         let mut execute_stmts = Vec::new();
 
         // collect top level fn decl
@@ -653,7 +709,9 @@ impl Fold for SystemJs {
                             match specifier {
                                 ImportSpecifier::Default(specifier) => {
                                     self.import_idents.push(specifier.local.to_id());
+
                                     self.add_declare_var_idents(&specifier.local);
+
                                     setter_fn_stmts.push(
                                         AssignExpr {
                                             span: specifier.span,
@@ -666,8 +724,10 @@ impl Fold for SystemJs {
                                         .into_stmt(),
                                     );
                                 }
+
                                 ImportSpecifier::Named(specifier) => {
                                     self.add_declare_var_idents(&specifier.local);
+
                                     setter_fn_stmts.push(
                                         AssignExpr {
                                             span: specifier.span,
@@ -690,9 +750,12 @@ impl Fold for SystemJs {
                                         .into_stmt(),
                                     );
                                 }
+
                                 ImportSpecifier::Namespace(specifier) => {
                                     self.import_idents.push(specifier.local.to_id());
+
                                     self.add_declare_var_idents(&specifier.local);
+
                                     setter_fn_stmts.push(
                                         AssignExpr {
                                             span: specifier.span,
@@ -714,6 +777,7 @@ impl Fold for SystemJs {
                             setter_fn_stmts,
                         });
                     }
+
                     ModuleDecl::ExportNamed(decl) => match decl.src {
                         Some(s) => {
                             let src = match &self.resolver {
@@ -725,9 +789,12 @@ impl Fold for SystemJs {
                                     .unwrap(),
                                 Resolver::Default => s.value,
                             };
+
                             for specifier in decl.specifiers {
                                 let source_alias = local_name_for_src(&src);
+
                                 let mut export_names = Vec::new();
+
                                 let mut export_values = Vec::new();
 
                                 match specifier {
@@ -736,6 +803,7 @@ impl Fold for SystemJs {
                                             Some(m) => get_module_export_name(m).0,
                                             None => get_module_export_name(&specifier.orig).0,
                                         });
+
                                         export_values.push(
                                             MemberExpr {
                                                 span: DUMMY_SP,
@@ -749,17 +817,21 @@ impl Fold for SystemJs {
                                             .into(),
                                         );
                                     }
+
                                     ExportSpecifier::Default(specifier) => {
                                         export_names.push(specifier.exported.sym.clone());
+
                                         export_values.push(
                                             quote_ident!(source_alias.clone())
                                                 .make_member(quote_ident!("default"))
                                                 .into(),
                                         );
                                     }
+
                                     ExportSpecifier::Namespace(specifier) => {
                                         export_names
                                             .push(get_module_export_name(&specifier.name).0);
+
                                         export_values
                                             .push(quote_ident!(source_alias.clone()).into());
                                     }
@@ -774,6 +846,7 @@ impl Fold for SystemJs {
                                 });
                             }
                         }
+
                         None => {
                             for specifier in decl.specifiers {
                                 if let ExportSpecifier::Named(specifier) = specifier {
@@ -785,10 +858,12 @@ impl Fold for SystemJs {
                                             Some(m) => get_module_export_name(m).0,
                                             None => id.0.clone(),
                                         });
+
                                         self.export_values.push(Box::new(get_module_export_expr(
                                             &specifier.orig,
                                         )));
                                     }
+
                                     if self.import_idents.iter().any(|i| id == *i) {
                                         execute_stmts.push(
                                             self.export_call(
@@ -802,6 +877,7 @@ impl Fold for SystemJs {
                                             .into_stmt(),
                                         );
                                     }
+
                                     self.add_export_name(
                                         id,
                                         match specifier.exported {
@@ -817,10 +893,15 @@ impl Fold for SystemJs {
                         match decl.decl {
                             Decl::Class(class_decl) => {
                                 let ident = class_decl.ident;
+
                                 self.export_names.push(ident.sym.clone());
+
                                 self.export_values.push(Expr::undefined(DUMMY_SP));
+
                                 self.add_declare_var_idents(&ident);
+
                                 self.add_export_name(ident.to_id(), ident.sym.clone());
+
                                 execute_stmts.push(
                                     AssignExpr {
                                         span: DUMMY_SP,
@@ -835,42 +916,59 @@ impl Fold for SystemJs {
                                     .into_stmt(),
                                 );
                             }
+
                             Decl::Fn(fn_decl) => {
                                 self.export_names.push(fn_decl.ident.sym.clone());
+
                                 self.export_values.push(fn_decl.ident.clone().into());
+
                                 self.add_export_name(
                                     fn_decl.ident.to_id(),
                                     fn_decl.ident.sym.clone(),
                                 );
+
                                 before_body_stmts.push(fn_decl.into());
                             }
+
                             Decl::Var(var_decl) => {
                                 let mut decl = VarDecl {
                                     decls: Vec::new(),
                                     ..*var_decl
                                 };
+
                                 for var_declarator in var_decl.decls {
                                     let mut tos: Vec<Id> = Vec::new();
+
                                     var_declarator.visit_with(&mut VarCollector { to: &mut tos });
+
                                     for to in tos {
                                         let ident = Ident::new(to.0.clone(), DUMMY_SP, to.1);
+
                                         self.add_export_name(to, ident.sym.clone());
                                     }
+
                                     decl.decls.push(var_declarator);
                                 }
+
                                 execute_stmts.push(decl.into());
                             }
+
                             _ => {}
                         };
                     }
+
                     ModuleDecl::ExportDefaultDecl(decl) => {
                         match decl.decl {
                             DefaultDecl::Class(class_expr) => {
                                 if let Some(ident) = &class_expr.ident {
                                     self.export_names.push("default".into());
+
                                     self.export_values.push(Expr::undefined(DUMMY_SP));
+
                                     self.add_declare_var_idents(ident);
+
                                     self.add_export_name(ident.to_id(), "default".into());
+
                                     execute_stmts.push(
                                         AssignExpr {
                                             span: DUMMY_SP,
@@ -882,14 +980,19 @@ impl Fold for SystemJs {
                                     );
                                 } else {
                                     self.export_names.push("default".into());
+
                                     self.export_values.push(class_expr.into());
                                 }
                             }
+
                             DefaultDecl::Fn(fn_expr) => {
                                 if let Some(ident) = &fn_expr.ident {
                                     self.export_names.push("default".into());
+
                                     self.export_values.push(ident.clone().into());
+
                                     self.add_export_name(ident.to_id(), "default".into());
+
                                     before_body_stmts.push(
                                         FnDecl {
                                             ident: ident.clone(),
@@ -900,18 +1003,22 @@ impl Fold for SystemJs {
                                     );
                                 } else {
                                     self.export_names.push("default".into());
+
                                     self.export_values.push(fn_expr.into());
                                 }
                             }
+
                             _ => {}
                         };
                     }
+
                     ModuleDecl::ExportDefaultExpr(expr) => {
                         execute_stmts.push(
                             self.export_call("default".into(), expr.span, *expr.expr)
                                 .into_stmt(),
                         );
                     }
+
                     ModuleDecl::ExportAll(decl) => {
                         self.add_module_item_meta(ModuleItemMeta {
                             export_names: Vec::new(),
@@ -921,12 +1028,14 @@ impl Fold for SystemJs {
                             setter_fn_stmts: Vec::new(),
                         });
                     }
+
                     _ => {}
                 },
                 ModuleItem::Stmt(stmt) => match stmt {
                     Stmt::Decl(decl) => match decl {
                         Decl::Class(class_decl) => {
                             self.add_declare_var_idents(&class_decl.ident);
+
                             execute_stmts.push(
                                 AssignExpr {
                                     span: DUMMY_SP,
@@ -941,9 +1050,11 @@ impl Fold for SystemJs {
                                 .into_stmt(),
                             );
                         }
+
                         Decl::Fn(fn_decl) => {
                             before_body_stmts.push(fn_decl.into());
                         }
+
                         _ => execute_stmts.push(decl.into()),
                     },
                     _ => execute_stmts.push(stmt),
@@ -971,7 +1082,9 @@ impl Fold for SystemJs {
         // ====================
         if !self.export_names.is_empty() {
             let mut export_names = self.export_names.drain(..).collect();
+
             let mut export_values = self.export_values.drain(..).collect();
+
             before_body_stmts
                 .append(&mut self.build_export_call(&mut export_names, &mut export_values));
         }
@@ -988,10 +1101,12 @@ impl Fold for SystemJs {
 
         let module_item_meta_list: Vec<ModuleItemMeta> =
             self.module_item_meta_list.drain(..).collect();
+
         for meta in module_item_meta_list {
             dep_module_names
                 .elems
                 .push(Some(quote_str!(meta.src.clone()).as_arg()));
+
             setters.elems.push(Some(
                 Function {
                     params: vec![Param {
@@ -1072,7 +1187,9 @@ impl Fold for SystemJs {
                 .into(),
             );
         }
+
         function_stmts.append(&mut before_body_stmts);
+
         function_stmts.push(return_stmt.into());
 
         let function = Box::new(Function {

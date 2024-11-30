@@ -109,6 +109,7 @@ impl ForOf {
                 }
                 .into(),
             );
+
             let update = Some(
                 UpdateExpr {
                     span: DUMMY_SP,
@@ -120,6 +121,7 @@ impl ForOf {
             );
 
             let mut decls = Vec::with_capacity(2);
+
             decls.push(VarDeclarator {
                 span: DUMMY_SP,
                 name: i.clone().into(),
@@ -152,6 +154,7 @@ impl ForOf {
                         1,
                         "Variable declarator of for of loop cannot contain multiple entries"
                     );
+
                     prepend_stmt(
                         &mut body.stmts,
                         VarDecl {
@@ -218,6 +221,7 @@ impl ForOf {
         // Loose mode
         if self.c.loose {
             let iterator = private_ident!("_iterator");
+
             let step = private_ident!("_step");
 
             let decls = vec![
@@ -255,6 +259,7 @@ impl ForOf {
                         1,
                         "Variable declarator of for of loop cannot contain multiple entries"
                     );
+
                     prepend_stmt(
                         &mut body.stmts,
                         VarDecl {
@@ -288,6 +293,7 @@ impl ForOf {
             }
 
             // !(_step = _iterator()).done;
+
             let test = UnaryExpr {
                 span: DUMMY_SP,
                 op: op!("!"),
@@ -323,6 +329,7 @@ impl ForOf {
                 body: Box::new(Stmt::Block(body)),
             }
             .into();
+
             return match label {
                 Some(label) => LabeledStmt {
                     span,
@@ -335,6 +342,7 @@ impl ForOf {
         }
 
         let var_span = left.span();
+
         let var_ctxt = SyntaxContext::empty().apply_mark(Mark::fresh(Mark::root()));
 
         let mut body = match *body {
@@ -347,12 +355,15 @@ impl ForOf {
         };
 
         let step = quote_ident!(var_ctxt, var_span, "_step");
+
         let step_value = step.clone().make_member(quote_ident!("value"));
+
         body.stmts.insert(
             0,
             match left {
                 ForHead::VarDecl(mut var) => {
                     assert_eq!(var.decls.len(), 1);
+
                     VarDecl {
                         span: var.span,
                         kind: var.kind,
@@ -365,6 +376,7 @@ impl ForOf {
                     }
                     .into()
                 }
+
                 ForHead::Pat(pat) => AssignExpr {
                     span: DUMMY_SP,
                     left: pat.try_into().unwrap(),
@@ -385,20 +397,25 @@ impl ForOf {
 
         let normal_completion_ident =
             Ident::new("_iteratorNormalCompletion".into(), var_span, var_ctxt);
+
         self.top_level_vars.push(VarDeclarator {
             span: DUMMY_SP,
             name: normal_completion_ident.clone().into(),
             init: Some(true.into()),
             definite: false,
         });
+
         let error_flag_ident = Ident::new("_didIteratorError".into(), var_span, var_ctxt);
+
         self.top_level_vars.push(VarDeclarator {
             span: DUMMY_SP,
             name: error_flag_ident.clone().into(),
             init: Some(false.into()),
             definite: false,
         });
+
         let error_ident = Ident::new("_iteratorError".into(), var_span, var_ctxt);
+
         self.top_level_vars.push(VarDeclarator {
             span: DUMMY_SP,
             name: error_ident.clone().into(),
@@ -513,9 +530,11 @@ impl ForOf {
                 param: Some(quote_ident!("err").into()),
                 // _didIteratorError = true;
                 // _iteratorError = err;
+
                 body: BlockStmt {
                     stmts: vec![
                         // _didIteratorError = true;
+
                         AssignExpr {
                             span: DUMMY_SP,
                             left: error_flag_ident.clone().into(),
@@ -524,6 +543,7 @@ impl ForOf {
                         }
                         .into_stmt(),
                         // _iteratorError = err;
+
                         AssignExpr {
                             span: DUMMY_SP,
                             left: error_ident.clone().into(),
@@ -576,6 +596,7 @@ fn make_finally_block(
                 // null) {
                 //   _iterator.return();
                 // }
+
                 Stmt::If(IfStmt {
                     span: DUMMY_SP,
                     test: Box::new(Expr::Bin(BinExpr {
@@ -615,6 +636,7 @@ fn make_finally_block(
                 // if (_didIteratorError) {
                 //   throw _iteratorError;
                 // }
+
                 Stmt::If(IfStmt {
                     span: DUMMY_SP,
                     test: Box::new(Expr::Ident(error_flag_ident)),
@@ -699,16 +721,19 @@ impl VisitMut for ForOf {
 
                         *s = self.fold_for_stmt(Some(label.clone()), stmt.take());
                     }
+
                     _ => {
                         body.visit_mut_with(self);
                     }
                 }
             }
+
             Stmt::ForOf(stmt) => {
                 stmt.visit_mut_children_with(self);
 
                 *s = self.fold_for_stmt(None, stmt.take())
             }
+
             _ => s.visit_mut_children_with(self),
         }
     }

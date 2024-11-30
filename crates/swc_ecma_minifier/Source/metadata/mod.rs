@@ -29,6 +29,7 @@ pub(crate) fn info_marker<'a>(
             .map(|f| NodeIgnoringSpan::borrowed(f.as_ref()))
             .collect()
     });
+
     InfoMarker {
         options,
         comments,
@@ -71,6 +72,7 @@ impl InfoMarker<'_> {
                     return true;
                 }
             }
+
             _ => (),
         }
 
@@ -130,13 +132,17 @@ impl VisitMut for InfoMarker<'_> {
 
     fn visit_mut_export_default_decl(&mut self, e: &mut ExportDefaultDecl) {
         self.state.is_in_export = true;
+
         e.visit_mut_children_with(self);
+
         self.state.is_in_export = false;
     }
 
     fn visit_mut_export_default_expr(&mut self, e: &mut ExportDefaultExpr) {
         self.state.is_in_export = true;
+
         e.visit_mut_children_with(self);
+
         self.state.is_in_export = false;
     }
 
@@ -289,6 +295,7 @@ pub(super) fn has_const_ann(comments: Option<&dyn Comments>, span: Span) -> bool
             if !c.text.starts_with('*') {
                 return false;
             }
+
             let t = c.text[1..].trim();
             //
             if t.starts_with("@const") {
@@ -315,11 +322,14 @@ where
     F: FnMut(&Comment) -> bool,
 {
     let mut found = false;
+
     if let Some(comments) = comments {
         let cs = comments.get_leading(span.lo);
+
         if let Some(cs) = cs {
             for c in &cs {
                 found |= op(c);
+
                 if found {
                     break;
                 }

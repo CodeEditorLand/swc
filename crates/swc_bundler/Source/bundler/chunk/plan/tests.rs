@@ -13,7 +13,9 @@ fn assert_cycles(map: AHashMap<String, String>, cycle_entries: Vec<&str>) {
 
     tester.run(|tester| {
         let mut entries = AHashMap::default();
+
         entries.insert("main.js".to_string(), tester.module("main.js"));
+
         let (_plan, _graph, cycles) = tester.bundler.determine_entries(entries).unwrap();
 
         dbg!(&cycles);
@@ -34,10 +36,15 @@ fn assert_cycles(map: AHashMap<String, String>, cycle_entries: Vec<&str>) {
 #[test]
 fn deno_10820_1() {
     let mut map = HashMap::default();
+
     map.insert("main.js".to_string(), "import './router.js'".to_string());
+
     map.insert("data.js".to_string(), "import './main.js'".to_string());
+
     map.insert("page1.js".to_string(), "import './data.js'".to_string());
+
     map.insert("page2.js".to_string(), "import './data.js'".to_string());
+
     map.insert(
         "router.js".to_string(),
         "

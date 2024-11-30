@@ -75,6 +75,7 @@ impl Parse for Config {
         }
 
         let pattern: LitStr = input.parse()?;
+
         let pattern = pattern.value();
 
         let mut config = Self {
@@ -83,8 +84,10 @@ impl Parse for Config {
         };
 
         let comma: Option<Token![,]> = input.parse()?;
+
         if comma.is_some() {
             let meta: Meta = input.parse()?;
+
             update(&mut config, meta);
         }
 
@@ -96,17 +99,21 @@ pub fn expand(callee: &Ident, attr: Config) -> Result<Vec<TokenStream>, Error> {
     let base_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect(
         "#[fixture] requires CARGO_MANIFEST_DIR because it's relative to cargo manifest directory",
     ));
+
     let resolved_path = RelativePath::new(&attr.pattern).to_path(&base_dir);
+
     let pattern = resolved_path.to_string_lossy();
 
     let paths =
         glob(&pattern).with_context(|| format!("glob failed for whole path: `{}`", pattern))?;
+
     let mut test_fns = Vec::new();
     // Allow only alphanumeric and underscore characters for the test_name.
     static RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"[^A-Za-z0-9_]").unwrap());
 
     'add: for path in paths {
         let path = path.with_context(|| "glob failed for file".to_string())?;
+
         let abs_path = path
             .canonicalize()
             .with_context(|| format!("failed to canonicalize {}", path.display()))?;
@@ -118,6 +125,7 @@ pub fn expand(callee: &Ident, attr: Config) -> Result<Vec<TokenStream>, Error> {
                 path.display()
             )
         })?;
+
         let path_str = path.to_string_lossy();
         // Skip excluded files
         for pattern in &attr.exclude_patterns {
@@ -134,6 +142,7 @@ pub fn expand(callee: &Ident, attr: Config) -> Result<Vec<TokenStream>, Error> {
             Component::Normal(s) => s.to_string_lossy().starts_with('.'),
             _ => false,
         });
+
         let test_name = format!(
             "{}_{}",
             callee,
@@ -146,11 +155,13 @@ pub fn expand(callee: &Ident, attr: Config) -> Result<Vec<TokenStream>, Error> {
             )
         )
         .replace("___", "__");
+
         let test_ident = Ident::new(&test_name, Span::call_site());
 
         let ignored_attr = if ignored { quote!(#[ignore]) } else { quote!() };
 
         let path_str = abs_path.to_string_lossy();
+
         let f = quote!(
             #[test]
             #[inline(never)]

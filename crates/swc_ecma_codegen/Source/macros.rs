@@ -4,6 +4,7 @@ macro_rules! opt_leading_space {
     ($emitter:expr, $e:expr) => {
         if let Some(ref e) = $e {
             formatting_space!($emitter);
+
             emit!($emitter, e);
         }
     };
@@ -108,6 +109,7 @@ macro_rules! semi {
 macro_rules! srcmap {
     ($emitter:expr, $n:expr, true) => {{
         let lo = $n.span_lo();
+
         if !lo.is_dummy() {
             $emitter.wr.add_srcmap(lo)?;
         }
@@ -117,6 +119,7 @@ macro_rules! srcmap {
     };
     ($emitter:expr, $n:expr, false, $subtract:expr) => {
         let hi = $n.span_hi();
+
         if !hi.is_dummy() {
             if $subtract {
                 // hi is exclusive

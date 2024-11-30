@@ -56,6 +56,7 @@ pub fn find_executable(name: &str) -> Option<PathBuf> {
 
     {
         let locked = CACHE.read().unwrap();
+
         if let Some(cached) = locked.get(name) {
             return Some(cached.clone());
         }
@@ -65,6 +66,7 @@ pub fn find_executable(name: &str) -> Option<PathBuf> {
         env::split_paths(&paths)
             .filter_map(|dir| {
                 let full_path = dir.join(name);
+
                 if full_path.is_file() {
                     Some(full_path)
                 } else {
@@ -85,8 +87,11 @@ pub fn find_executable(name: &str) -> Option<PathBuf> {
             .and_then(|output| {
                 if output.status.success() {
                     let path = String::from_utf8(output.stdout).ok()?;
+
                     let path = path.trim();
+
                     let path = PathBuf::from(path);
+
                     if path.is_file() {
                         return Some(path);
                     }
@@ -98,6 +103,7 @@ pub fn find_executable(name: &str) -> Option<PathBuf> {
 
     if let Some(path) = path.clone() {
         let mut locked = CACHE.write().unwrap();
+
         locked.insert(name.to_string(), path);
     }
 
@@ -112,7 +118,9 @@ where
     let _log = init();
 
     let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
+
     let (handler, errors) = self::string_errors::new_handler(cm.clone(), treat_err_as_bug);
+
     let result = swc_common::GLOBALS.set(&swc_common::Globals::new(), || {
         HANDLER.set(&handler, || op(cm, &handler))
     });
@@ -131,7 +139,9 @@ where
     let _log = init();
 
     let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
+
     let (handler, errors) = self::string_errors::new_handler(cm.clone(), treat_err_as_bug);
+
     let result = swc_common::GLOBALS.set(&swc_common::Globals::new(), || op(cm, handler));
 
     match result {
@@ -158,6 +168,7 @@ impl Tester {
 
     pub fn no_error(mut self) -> Self {
         self.treat_err_as_bug = true;
+
         self
     }
 
@@ -170,6 +181,7 @@ impl Tester {
 
         let (handler, errors) =
             self::string_errors::new_handler(self.cm.clone(), self.treat_err_as_bug);
+
         let result = swc_common::GLOBALS.set(&self.globals, || op(self.cm.clone(), handler));
 
         match result {
@@ -187,14 +199,18 @@ impl Tester {
 
         let (handler, errors) =
             self::diag_errors::new_handler(self.cm.clone(), self.treat_err_as_bug);
+
         let result = swc_common::GLOBALS.set(&self.globals, || op(self.cm.clone(), handler));
 
         let mut errs: Vec<_> = errors.into();
+
         errs.sort_by_key(|d| {
             let span = d.span.primary_span().unwrap();
+
             let cp = self.cm.lookup_char_pos(span.lo());
 
             let line = cp.line;
+
             let column = cp.col.0 + 1;
 
             line * 10000 + column
@@ -246,6 +262,7 @@ pub fn print_left_right(left: &dyn Debug, right: &dyn Debug) -> String {
     let (left, right) = (print(left), print(right));
 
     let cur = thread::current();
+
     let test_name = cur
         .name()
         .expect("rustc sets test name as the name of thread");
@@ -253,6 +270,7 @@ pub fn print_left_right(left: &dyn Debug, right: &dyn Debug) -> String {
     // ./target/debug/tests/${test_name}/
     let target_dir = {
         let mut buf = paths::test_results_dir().to_path_buf();
+
         for m in test_name.split("::") {
             buf.push(m)
         }
@@ -269,6 +287,7 @@ pub fn print_left_right(left: &dyn Debug, right: &dyn Debug) -> String {
     };
 
     write_to_file(&target_dir.join("left"), &left);
+
     write_to_file(&target_dir.join("right"), &right);
 
     format!(
@@ -281,7 +300,9 @@ pub fn print_left_right(left: &dyn Debug, right: &dyn Debug) -> String {
 macro_rules! assert_eq_ignore_span {
     ($l:expr, $r:expr) => {{
         println!("{}", module_path!());
+
         let (l, r) = ($crate::drop_span($l), $crate::drop_span($r));
+
         if l != r {
             panic!("assertion failed\n{}", $crate::print_left_right(&l, &r));
         }
@@ -325,6 +346,7 @@ pub fn unignore_fixture(fixture_path: &Path) {
                 continue;
             }
         }
+
         new_path.push(c);
     }
 

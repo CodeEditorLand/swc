@@ -22,14 +22,18 @@ macro_rules! tr {
 					StringInput::from(&*fm),
 					None,
 				);
+
 				let module = parser.parse_module().map_err(|_| ()).unwrap();
+
 				helpers::HELPERS.set(&Default::default(), || {
 					let mut tr = $tr();
 
 					$b.iter(|| {
 						let module = module.clone();
+
 						black_box(module.fold_with(&mut tr))
 					});
+
 					Ok(())
 				})
 			})
@@ -60,8 +64,11 @@ fn resolver_with_hygiene(b:&mut Bencher) {
 
 fn bench_cases(c:&mut Criterion) {
 	c.bench_function("es/resolver/typescript", resolver);
+
 	c.bench_function("es/fixer/typescript", fixer);
+
 	c.bench_function("es/hygiene/typescript", hygiene);
+
 	c.bench_function("es/resolver_with_hygiene/typescript", resolver_with_hygiene);
 static SOURCE: &str = include_str!("../../swc_ecma_minifier/benches/full/typescript.js");
 
@@ -77,12 +84,16 @@ macro_rules! tr {
                     StringInput::from(&*fm),
                     None,
                 );
+
                 let module = parser.parse_module().map_err(|_| ()).unwrap();
+
                 helpers::HELPERS.set(&Default::default(), || {
                     $b.iter(|| {
                         let module = Program::Module(module.clone());
+
                         black_box(module.apply($tr()))
                     });
+
                     Ok(())
                 })
             })
@@ -115,8 +126,11 @@ fn resolver_with_hygiene(b: &mut Bencher) {
 
 fn bench_cases(c: &mut Criterion) {
     c.bench_function("es/resolver/typescript", resolver);
+
     c.bench_function("es/fixer/typescript", fixer);
+
     c.bench_function("es/hygiene/typescript", hygiene);
+
     c.bench_function("es/resolver_with_hygiene/typescript", resolver_with_hygiene);
 }
 

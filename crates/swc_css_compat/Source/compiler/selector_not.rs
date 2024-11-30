@@ -45,6 +45,7 @@ impl Compiler {
                         }
                     }
                 }
+
                 _ => new_subclass_selectors.push(selector),
             }
         }

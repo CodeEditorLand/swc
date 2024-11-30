@@ -33,9 +33,11 @@ impl NoNew {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, MESSAGE).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, MESSAGE).emit();
             }
+
             _ => {}
         });
     }
@@ -51,6 +53,7 @@ impl NoNew {
                     args.visit_children_with(self);
                 }
             }
+
             Expr::Seq(SeqExpr { exprs, .. }) => {
                 let last_idx = exprs.len() - 1;
 
@@ -65,11 +68,13 @@ impl NoNew {
                     }
                 });
             }
+
             Expr::Paren(ParenExpr { expr, .. }) => {
                 // dive into parens
                 // (0, new A(), 0)
                 self.check_and_pass_new_expr(expr.as_ref());
             }
+
             _ => {
                 expr.visit_children_with(self);
             }
@@ -81,6 +86,7 @@ impl NoNew {
             Pat::Assign(AssignPat { right, .. }) => {
                 self.check_and_pass_new_expr(right.as_ref());
             }
+
             Pat::Array(ArrayPat { elems, .. }) => elems.iter().for_each(|elem| {
                 if let Some(elem) = elem {
                     // cases
@@ -95,6 +101,7 @@ impl NoNew {
                     ObjectPatProp::KeyValue(KeyValuePatProp { value, .. }) => {
                         self.check_var_name(value.as_ref());
                     }
+
                     ObjectPatProp::Assign(AssignPatProp { value, .. }) => {
                         if let Some(expr) = value.as_ref() {
                             // cases
@@ -104,9 +111,11 @@ impl NoNew {
                             self.check_and_pass_new_expr(expr.as_ref());
                         }
                     }
+
                     _ => {}
                 });
             }
+
             _ => {}
         }
     }
@@ -143,6 +152,7 @@ impl Visit for NoNew {
 
     fn visit_class_prop(&mut self, class_prop: &ClassProp) {
         class_prop.decorators.visit_children_with(self);
+
         class_prop.key.visit_children_with(self);
 
         if let Some(value) = &class_prop.value {

@@ -8,6 +8,7 @@ use crate::alias::Access;
 
 pub trait Storage: Sized + Default {
     type ScopeData: ScopeDataLike;
+
     type VarData: VarDataLike;
 
     fn scope(&mut self, ctxt: SyntaxContext) -> &mut Self::ScopeData;
@@ -31,6 +32,7 @@ pub trait Storage: Sized + Default {
     ) -> &mut Self::VarData;
 
     fn get_initialized_cnt(&self) -> usize;
+
     fn truncate_initialized_cnt(&mut self, len: usize);
 
     fn mark_property_mutation(&mut self, id: Id);

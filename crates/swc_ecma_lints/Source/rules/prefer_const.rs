@@ -39,13 +39,16 @@ struct VariableMeta {
     // for cases like
     // let a;
     // { a } = foo();
+
     destructuring_assign: bool,
     // for cases like
     // for (let x of arr) {}
+
     declared_into_cycle_head: bool,
     // for case
     // let a;
     // a = 10;
+
     postinitialized: bool,
 
     used_before_initialize: bool,
@@ -82,9 +85,11 @@ impl PreferConst {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, &message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, &message).emit();
             }
+
             _ => {}
         });
     }
@@ -112,32 +117,39 @@ impl PreferConst {
             Pat::Ident(id) => {
                 self.add_var_meta(&Ident::from(id), initialized);
             }
+
             Pat::Assign(AssignPat { left, .. }) => {
                 self.collect_decl_pat(initialized, left.as_ref());
             }
+
             Pat::Array(ArrayPat { elems, .. }) => {
                 elems.iter().flatten().for_each(|elem| {
                     self.collect_decl_pat(initialized, elem);
                 });
             }
+
             Pat::Object(ObjectPat { props, .. }) => {
                 props.iter().for_each(|prop| {
                     match prop {
                         ObjectPatProp::KeyValue(KeyValuePatProp { value, .. }) => {
                             self.collect_decl_pat(initialized, value.as_ref());
                         }
+
                         ObjectPatProp::Assign(AssignPatProp { key, .. }) => {
                             self.add_var_meta(&Ident::from(key), initialized);
                         }
+
                         ObjectPatProp::Rest(RestPat { arg, .. }) => {
                             self.collect_decl_pat(initialized, arg.as_ref());
                         }
                     };
                 });
             }
+
             Pat::Rest(RestPat { arg, .. }) => {
                 self.collect_decl_pat(initialized, arg.as_ref());
             }
+
             _ => {}
         }
     }
@@ -148,6 +160,7 @@ impl PreferConst {
         if let Some(var_meta) = self.vars_meta.get_mut(&id) {
             if destructuring_assign && !var_meta.initialized {
                 var_meta.destructuring_assign = true;
+
                 var_meta.span = ident.span;
 
                 return;
@@ -168,6 +181,7 @@ impl PreferConst {
             Pat::Ident(id) => {
                 self.consider_mutation_for_ident(&Ident::from(id), destructuring_assign);
             }
+
             Pat::Array(ArrayPat { elems, .. }) => elems.iter().flatten().for_each(|elem| {
                 self.consider_mutation(elem, destructuring_assign);
             }),
@@ -176,12 +190,15 @@ impl PreferConst {
                     ObjectPatProp::KeyValue(KeyValuePatProp { value, .. }) => {
                         self.consider_mutation(value.as_ref(), true);
                     }
+
                     ObjectPatProp::Assign(AssignPatProp { key, .. }) => {
                         self.consider_mutation_for_ident(&Ident::from(key), true);
                     }
+
                     _ => {}
                 });
             }
+
             _ => {}
         }
     }
@@ -245,17 +262,21 @@ impl Visit for PreferConst {
                             self.consider_mutation(elem, true);
                         })
                     }
+
                     AssignTargetPat::Object(ObjectPat { props, .. }) => {
                         props.iter().for_each(|prop| match prop {
                             ObjectPatProp::KeyValue(KeyValuePatProp { value, .. }) => {
                                 self.consider_mutation(value.as_ref(), true);
                             }
+
                             ObjectPatProp::Assign(AssignPatProp { key, .. }) => {
                                 self.consider_mutation_for_ident(&Ident::from(key), true);
                             }
+
                             _ => {}
                         });
                     }
+
                     AssignTargetPat::Invalid(_) => {}
                 },
                 _ => (),
@@ -275,19 +296,25 @@ impl Visit for PreferConst {
 
     fn visit_for_in_stmt(&mut self, for_in_stmt: &ForInStmt) {
         self.cycle_head_depth += 1;
+
         for_in_stmt.left.visit_children_with(self);
+
         self.cycle_head_depth -= 1;
 
         for_in_stmt.right.visit_children_with(self);
+
         for_in_stmt.body.visit_children_with(self);
     }
 
     fn visit_for_of_stmt(&mut self, for_of_stmt: &ForOfStmt) {
         self.cycle_head_depth += 1;
+
         for_of_stmt.left.visit_children_with(self);
+
         self.cycle_head_depth -= 1;
 
         for_of_stmt.right.visit_children_with(self);
+
         for_of_stmt.body.visit_children_with(self);
     }
 

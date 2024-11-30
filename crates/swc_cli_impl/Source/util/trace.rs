@@ -12,6 +12,7 @@ pub(crate) fn init_trace(out_file: &Option<String>) -> Option<FlushGuard> {
     }
 
     let (chrome_layer, guard) = layer.build();
+
     tracing_subscriber::registry()
         .with(chrome_layer.with_filter(filter::filter_fn(|metadata| {
             !metadata.target().contains("cranelift") && !metadata.name().contains("log ")

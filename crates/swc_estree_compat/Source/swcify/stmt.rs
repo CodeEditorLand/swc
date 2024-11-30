@@ -474,6 +474,7 @@ impl Swcify for ExportDefaultDeclaration {
         match self.declaration {
             ExportDefaultDeclType::Func(v) => {
                 let d = v.swcify(ctx);
+
                 ExportDefaultDecl {
                     span: ctx.span(&self.base),
                     decl: DefaultDecl::Fn(FnExpr {
@@ -483,8 +484,10 @@ impl Swcify for ExportDefaultDeclaration {
                 }
                 .into()
             }
+
             ExportDefaultDeclType::Class(v) => {
                 let d = v.swcify(ctx);
+
                 ExportDefaultDecl {
                     span: ctx.span(&self.base),
                     decl: DefaultDecl::Class(ClassExpr {
@@ -494,6 +497,7 @@ impl Swcify for ExportDefaultDeclaration {
                 }
                 .into()
             }
+
             ExportDefaultDeclType::Expr(v) => ExportDefaultExpr {
                 span: ctx.span(&self.base),
                 expr: v.swcify(ctx),
@@ -545,9 +549,11 @@ impl Swcify for swc_estree_ast::ExportSpecifierType {
             swc_estree_ast::ExportSpecifierType::Export(v) => {
                 swc_ecma_ast::ExportSpecifier::from(v.swcify(ctx))
             }
+
             swc_estree_ast::ExportSpecifierType::Default(v) => {
                 swc_ecma_ast::ExportSpecifier::from(v.swcify(ctx))
             }
+
             swc_estree_ast::ExportSpecifierType::Namespace(v) => {
                 swc_ecma_ast::ExportSpecifier::from(v.swcify(ctx))
             }
@@ -669,6 +675,7 @@ impl Swcify for swc_estree_ast::ModuleExportNameType {
             swc_estree_ast::ModuleExportNameType::Ident(ident) => {
                 swc_ecma_ast::ModuleExportName::Ident(ident.swcify(ctx).into())
             }
+
             swc_estree_ast::ModuleExportNameType::Str(s) => s.swcify(ctx).into(),
         }
     }

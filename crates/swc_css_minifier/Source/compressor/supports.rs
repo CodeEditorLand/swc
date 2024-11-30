@@ -42,6 +42,7 @@ impl Compressor {
                     {
                         true
                     }
+
                     SupportsConditionType::Or(supports_or) => match &*supports_or.condition {
                         SupportsInParens::SupportsCondition(supports_condition)
                             if self.is_first_or_supports_type(supports_condition)
@@ -49,6 +50,7 @@ impl Compressor {
                         {
                             true
                         }
+
                         _ => false,
                     },
                     _ => false,
@@ -77,6 +79,7 @@ impl Compressor {
                                     new_conditions.extend(iter);
                                 }
                             }
+
                             SupportsConditionType::Or(supports_or) => {
                                 match *supports_or.condition {
                                     SupportsInParens::SupportsCondition(supports_condition)
@@ -102,11 +105,13 @@ impl Compressor {
                                             new_conditions.extend(iter);
                                         }
                                     }
+
                                     _ => {
                                         new_conditions.push(SupportsConditionType::Or(supports_or));
                                     }
                                 }
                             }
+
                             _ => {
                                 new_conditions.push(item);
                             }
@@ -116,6 +121,7 @@ impl Compressor {
                     n.conditions = new_conditions;
                 }
             }
+
             Some(SupportsConditionType::And(_)) => {
                 let need_compress = n.conditions.iter().any(|item| match item {
                     SupportsConditionType::SupportsInParens(
@@ -125,6 +131,7 @@ impl Compressor {
                     {
                         true
                     }
+
                     SupportsConditionType::And(supports_and) => match &*supports_and.condition {
                         SupportsInParens::SupportsCondition(supports_condition)
                             if self.is_first_and_supports_type(supports_condition)
@@ -132,6 +139,7 @@ impl Compressor {
                         {
                             true
                         }
+
                         _ => false,
                     },
                     _ => false,
@@ -160,6 +168,7 @@ impl Compressor {
                                     new_conditions.extend(iter);
                                 }
                             }
+
                             SupportsConditionType::And(supports_and) => match *supports_and
                                 .condition
                             {
@@ -185,6 +194,7 @@ impl Compressor {
                                         new_conditions.extend(iter);
                                     }
                                 }
+
                                 _ => {
                                     new_conditions.push(SupportsConditionType::And(supports_and));
                                 }
@@ -198,6 +208,7 @@ impl Compressor {
                     n.conditions = new_conditions;
                 }
             }
+
             _ => {}
         }
 
@@ -215,6 +226,7 @@ impl Compressor {
                     *n = supports_in_parens.clone();
                 }
             }
+
             _ => {}
         }
     }

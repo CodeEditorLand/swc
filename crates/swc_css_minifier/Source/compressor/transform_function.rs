@@ -19,11 +19,14 @@ impl Compressor {
                             value: "translatey".into(),
                             raw: None,
                         });
+
                         function.value = vec![second.clone()];
                     }
+
                     _ => {}
                 }
             }
+
             ComponentValue::Function(function)
                 if function.name == "translate3d" && function.value.len() == 5 =>
             {
@@ -42,11 +45,14 @@ impl Compressor {
                             value: "translatez".into(),
                             raw: None,
                         });
+
                         function.value = vec![third.clone()];
                     }
+
                     _ => {}
                 }
             }
+
             ComponentValue::Function(function)
                 if function.name == "scale" && function.value.len() == 3 =>
             {
@@ -65,6 +71,7 @@ impl Compressor {
                             value: "scalex".into(),
                             raw: None,
                         });
+
                         function.value = vec![first.clone()];
                     }
                     (Some(ComponentValue::Integer(first_number)), Some(second))
@@ -75,11 +82,14 @@ impl Compressor {
                             value: "scaley".into(),
                             raw: None,
                         });
+
                         function.value = vec![second.clone()];
                     }
+
                     _ => {}
                 }
             }
+
             ComponentValue::Function(function)
                 if function.name == "scale3d" && function.value.len() == 5 =>
             {
@@ -98,6 +108,7 @@ impl Compressor {
                             value: "scalex".into(),
                             raw: None,
                         });
+
                         function.value = vec![first.clone()];
                     }
                     (
@@ -110,6 +121,7 @@ impl Compressor {
                             value: "scaley".into(),
                             raw: None,
                         });
+
                         function.value = vec![second.clone()];
                     }
                     (
@@ -122,11 +134,14 @@ impl Compressor {
                             value: "scalez".into(),
                             raw: None,
                         });
+
                         function.value = vec![third.clone()];
                     }
+
                     _ => {}
                 }
             }
+
             ComponentValue::Function(function)
                 if function.name == "matrix3d" && function.value.len() == 31 =>
             {
@@ -191,6 +206,7 @@ impl Compressor {
                             value: "matrix".into(),
                             raw: None,
                         });
+
                         function.value = vec![
                             first.clone(),
                             first_comma.clone(),
@@ -205,9 +221,11 @@ impl Compressor {
                             fourteenth.clone(),
                         ];
                     }
+
                     _ => {}
                 }
             }
+
             ComponentValue::Function(function)
                 if function.name == "rotate3d" && function.value.len() == 7 =>
             {
@@ -231,6 +249,7 @@ impl Compressor {
                             value: "rotatex".into(),
                             raw: None,
                         });
+
                         function.value = vec![fourth_value.clone()];
                     }
                     (
@@ -247,6 +266,7 @@ impl Compressor {
                             value: "rotatey".into(),
                             raw: None,
                         });
+
                         function.value = vec![fourth_value.clone()];
                     }
                     (
@@ -263,11 +283,14 @@ impl Compressor {
                             value: "rotate".into(),
                             raw: None,
                         });
+
                         function.value = vec![fourth_value.clone()];
                     }
+
                     _ => {}
                 }
             }
+
             ComponentValue::Function(function)
                 if function.name == "rotatez" && function.value.len() == 1 =>
             {
@@ -290,6 +313,7 @@ impl Compressor {
                             value: "skewx".into(),
                             raw: None,
                         });
+
                         function.value = vec![first.clone()];
                     }
 
@@ -301,11 +325,14 @@ impl Compressor {
                             value: "skewy".into(),
                             raw: None,
                         });
+
                         function.value = vec![second.clone()];
                     }
+
                     _ => {}
                 }
             }
+
             _ => {}
         }
     }

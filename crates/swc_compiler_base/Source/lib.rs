@@ -67,25 +67,30 @@ pub fn parse_js(
         let mut error = false;
 
         let mut errors = std::vec::Vec::new();
+
         let program_result = match is_module {
             IsModule::Bool(true) => {
                 parse_file_as_module(&fm, syntax, target, comments, &mut errors)
                     .map(Program::Module)
             }
+
             IsModule::Bool(false) => {
                 parse_file_as_script(&fm, syntax, target, comments, &mut errors)
                     .map(Program::Script)
             }
+
             IsModule::Unknown => parse_file_as_program(&fm, syntax, target, comments, &mut errors),
         };
 
         for e in errors {
             e.into_diagnostic(handler).emit();
+
             error = true;
         }
 
         let program = program_result.map_err(|e| {
             e.into_diagnostic(handler).emit();
+
             Error::msg("Syntax Error")
         })?;
 
@@ -187,7 +192,9 @@ where
                     None
                 },
             );
+
             w.preamble(preamble).unwrap();
+
             let mut wr = Box::new(w) as Box<dyn WriteJs>;
 
             if codegen_config.minify {
@@ -247,22 +254,27 @@ where
                 map.unwrap()
                     .to_writer(&mut buf)
                     .context("failed to write source map")?;
+
                 let map = String::from_utf8(buf).context("source map is not utf-8")?;
                 (src, Some(map))
             } else {
                 (src, None)
             }
         }
+
         SourceMapsConfig::Str(_) => {
             let mut src = src;
+
             let mut buf = std::vec::Vec::new();
 
             map.unwrap()
                 .to_writer(&mut buf)
                 .context("failed to write source map file")?;
+
             let map = String::from_utf8(buf).context("source map is not utf-8")?;
 
             src.push_str("\n//# sourceMappingURL=data:application/json;base64,");
+
             BASE64_STANDARD.encode_string(map.as_bytes(), &mut src);
             (src, None)
         }
@@ -299,21 +311,25 @@ impl SourceMapGenConfig for SwcSourceMapConfig<'_> {
             Some(v) => v,
             None => return f.to_string(),
         };
+
         let target = match f {
             FileName::Real(v) => v,
             _ => return f.to_string(),
         };
 
         let rel = pathdiff::diff_paths(target, base_path);
+
         match rel {
             Some(v) => {
                 let s = v.to_string_lossy().to_string();
+
                 if cfg!(target_os = "windows") {
                     s.replace('\\', "/")
                 } else {
                     s
                 }
             }
+
             None => f.to_string(),
         }
     }
@@ -364,15 +380,19 @@ pub fn minify_file_comments(
                 });
                 !vc.is_empty()
             };
+
             let (mut l, mut t) = comments.borrow_all_mut();
 
             l.retain(preserve_excl);
+
             t.retain(preserve_excl);
         }
 
         BoolOr::Bool(false) => {
             let (mut l, mut t) = comments.borrow_all_mut();
+
             l.clear();
+
             t.clear();
         }
     }
@@ -392,6 +412,7 @@ impl SourceMapsConfig {
             SourceMapsConfig::Bool(b) => b,
             SourceMapsConfig::Str(ref s) => {
                 assert_eq!(s, "inline", "Source map must be true, false or inline");
+
                 true
             }
         }

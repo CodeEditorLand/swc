@@ -81,6 +81,7 @@ pub fn is_import_or_require(expr: &Expr) -> bool {
                 false
             }
         }
+
         Expr::Call(CallExpr {
             callee: Callee::Import(_),
             ..
@@ -106,6 +107,7 @@ impl Visit for UsedInJsx {
                 }) => (ident.sym.clone(), SyntaxContext::empty()),
                 _ => return,
             };
+
             if matches!(
                 ident.0.as_ref(),
                 "createElement" | "jsx" | "jsxDEV" | "jsxs"
@@ -128,6 +130,8 @@ impl Visit for UsedInJsx {
 
 pub fn collect_ident_in_jsx<V: VisitWith<UsedInJsx>>(item: &V) -> AHashSet<Id> {
     let mut visitor = UsedInJsx(AHashSet::default());
+
     item.visit_with(&mut visitor);
+
     visitor.0
 }

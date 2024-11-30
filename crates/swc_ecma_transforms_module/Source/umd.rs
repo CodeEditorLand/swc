@@ -83,6 +83,7 @@ impl VisitMut for Umd {
         );
 
         // "use strict";
+
         if self.config.config.strict_mode && !stmts.has_use_strict() {
             stmts.push(use_strict());
         }
@@ -94,6 +95,7 @@ impl VisitMut for Umd {
         let import_interop = self.config.config.import_interop();
 
         let mut strip = ModuleDeclStrip::new(self.const_var_kind);
+
         module_items.visit_mut_with(&mut strip);
 
         let ModuleDeclStrip {
@@ -189,10 +191,13 @@ impl Umd {
                 }
 
                 let need_re_export = link_flag.export_star();
+
                 let need_interop = link_flag.interop();
+
                 let need_new_var = link_flag.need_raw_import();
 
                 let mod_ident = private_ident!(local_name_for_src(&src));
+
                 let new_var_ident = if need_new_var {
                     private_ident!(local_name_for_src(&src))
                 } else {
@@ -211,6 +216,7 @@ impl Umd {
                 );
 
                 // _export_star(mod, exports);
+
                 let mut import_expr: Expr = if need_re_export {
                     helper_expr!(export_star).as_call(
                         DUMMY_SP,
@@ -221,6 +227,7 @@ impl Umd {
                 };
 
                 // _introp(mod);
+
                 if need_interop {
                     import_expr = match import_interop {
                         ImportInterop::Swc if link_flag.interop() => if link_flag.namespace() {
@@ -233,12 +240,14 @@ impl Umd {
                             helper_expr!(interop_require_wildcard)
                                 .as_call(PURE_SP, vec![import_expr.as_arg(), true.as_arg()])
                         }
+
                         _ => import_expr,
                     }
                 };
 
                 // mod = _introp(mod);
                 // var mod1 = _introp(mod);
+
                 if need_new_var {
                     let stmt: Stmt = import_expr
                         .into_var_decl(self.const_var_kind, new_var_ident.into())
@@ -249,6 +258,7 @@ impl Umd {
                     let stmt = import_expr
                         .make_assign_to(op!("="), mod_ident.into())
                         .into_stmt();
+
                     stmts.push(stmt);
                 } else if need_re_export {
                     stmts.push(import_expr.into_stmt());
@@ -335,14 +345,17 @@ impl Umd {
             SyntaxContext::empty().apply_mark(self.unresolved_mark),
             "require"
         );
+
         let define = quote_ident!(
             SyntaxContext::empty().apply_mark(self.unresolved_mark),
             "define"
         );
+
         let global_this = quote_ident!(
             SyntaxContext::empty().apply_mark(self.unresolved_mark),
             "globalThis"
         );
+
         let js_self = quote_ident!(
             SyntaxContext::empty().apply_mark(self.unresolved_mark),
             "self"
@@ -350,24 +363,32 @@ impl Umd {
 
         // adapter arguments
         let global = private_ident!("global");
+
         let factory = private_ident!("factory");
 
         let module_exports = module.clone().make_member(quote_ident!("exports"));
+
         let define_amd = define.clone().make_member(quote_ident!("amd"));
 
         let mut cjs_args = Vec::new();
+
         let mut amd_dep_list = Vec::new();
+
         let mut browser_args = Vec::new();
 
         let mut factory_params = Vec::new();
 
         if !is_export_assign && self.exports.is_some() {
             let filename = self.cm.span_to_filename(module_span);
+
             let exported_name = self.config.determine_export_name(filename);
+
             let global_lib = global.clone().make_member(exported_name.into());
 
             cjs_args.push(quote_ident!("exports").as_arg());
+
             amd_dep_list.push(Some(quote_str!("exports").as_arg()));
+
             browser_args.push(
                 ObjectLit {
                     span: DUMMY_SP,
@@ -376,6 +397,7 @@ impl Umd {
                 .make_assign_to(op!("="), global_lib.into())
                 .as_arg(),
             );
+
             factory_params.push(self.exports().into());
         }
 
@@ -400,29 +422,37 @@ impl Umd {
                         )
                         .as_arg(),
                 );
+
                 amd_dep_list.push(Some(quote_str!(src_span.0, src_path.clone()).as_arg()));
 
                 let global_dep = {
                     let dep_name = self.config.global_name(&src_path);
+
                     let global = global.clone();
+
                     if is_valid_prop_ident(&dep_name) {
                         global.make_member(quote_ident!(dep_name))
                     } else {
                         global.computed_member(quote_str!(dep_name))
                     }
                 };
+
                 browser_args.push(global_dep.as_arg());
+
                 factory_params.push(ident.into());
             });
 
         let cjs_if_test = js_typeof!(module => "object")
             .make_bin(op!("&&"), js_typeof!(module_exports.clone() => "object"));
+
         let mut cjs_if_body = factory.clone().as_call(DUMMY_SP, cjs_args);
+
         if is_export_assign {
             cjs_if_body = cjs_if_body.make_assign_to(op!("="), module_exports.clone().into());
         }
 
         let amd_if_test = js_typeof!(define.clone() => "function").make_bin(op!("&&"), define_amd);
+
         let amd_if_body = define.as_call(
             DUMMY_SP,
             vec![
@@ -444,6 +474,7 @@ impl Umd {
         .make_assign_to(op!("="), global.clone().into());
 
         let mut browser_if_body = factory.clone().as_call(DUMMY_SP, browser_args);
+
         if is_export_assign {
             browser_if_body = browser_if_body.make_assign_to(op!("="), module_exports.into());
         }

@@ -35,6 +35,7 @@ impl Scope {
 
     pub fn get_module_by_path(&self, file_name: &FileName) -> Option<TransformedModule> {
         let (id, _, _) = self.module_id_gen.gen(file_name);
+
         self.get_module(id)
     }
 
@@ -54,6 +55,7 @@ impl Scope {
     pub fn mark_as_cjs(&self, id: ModuleId) {
         if let Some(v) = self.is_cjs.get(&id) {
             v.store(true, Ordering::SeqCst);
+
             return;
         }
 
@@ -64,6 +66,7 @@ impl Scope {
     pub fn mark_as_wrapping_required(&self, id: ModuleId) {
         if let Some(v) = self.accessed_with_computed_key.get(&id) {
             v.store(true, Ordering::SeqCst);
+
             return;
         }
 
@@ -85,6 +88,7 @@ impl Scope {
         if !self.should_be_wrapped_with_a_fn(id) {
             return None;
         }
+
         let info = self.get_module(id)?;
 
         Some(Id::new("mod".into(), info.export_ctxt()))

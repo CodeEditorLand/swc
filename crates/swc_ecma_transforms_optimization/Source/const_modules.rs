@@ -50,6 +50,7 @@ fn parse_option(cm: &SourceMap, name: &str, src: String) -> Arc<Expr> {
         FileName::Internal(format!("<const-module-{}.js>", name)).into(),
         src,
     );
+
     if let Some(expr) = CACHE.get(&**fm.src) {
         return expr.clone();
     }
@@ -99,6 +100,7 @@ impl VisitMut for ConstModules {
         *n = n.take().move_flat_map(|item| match item {
             ModuleItem::ModuleDecl(ModuleDecl::Import(import)) => {
                 let entry = self.globals.get(&import.src.value);
+
                 if let Some(entry) = entry {
                     for s in &import.specifiers {
                         match *s {
@@ -111,6 +113,7 @@ impl VisitMut for ConstModules {
                                         ModuleExportName::Str(s) => &s.value,
                                     })
                                     .unwrap_or(&s.local.sym);
+
                                 let value = entry.get(imported).cloned().unwrap_or_else(|| {
                                     panic!(
                                         "The requested const_module `{}` does not provide an \
@@ -118,14 +121,19 @@ impl VisitMut for ConstModules {
                                         import.src.value, imported
                                     )
                                 });
+
                                 self.scope.imported.insert(imported.clone(), value);
                             }
+
                             ImportSpecifier::Namespace(ref s) => {
                                 self.scope.namespace.insert(s.local.to_id());
                             }
+
                             ImportSpecifier::Default(ref s) => {
                                 let imported = &s.local.sym;
+
                                 let default_import_key = atom!("default");
+
                                 let value =
                                     entry.get(&default_import_key).cloned().unwrap_or_else(|| {
                                         panic!(
@@ -134,6 +142,7 @@ impl VisitMut for ConstModules {
                                             import.src.value
                                         )
                                     });
+
                                 self.scope.imported.insert(imported.clone(), value);
                             }
                         };
@@ -144,6 +153,7 @@ impl VisitMut for ConstModules {
                     Some(import.into())
                 }
             }
+
             _ => Some(item),
         });
 
@@ -159,6 +169,7 @@ impl VisitMut for ConstModules {
             Expr::Ident(ref id @ Ident { ref sym, .. }) => {
                 if let Some(value) = self.scope.imported.get(sym) {
                     *n = (**value).clone();
+
                     return;
                 }
 
@@ -169,6 +180,7 @@ impl VisitMut for ConstModules {
                     )
                 }
             }
+
             Expr::Member(MemberExpr { obj, prop, .. }) if obj.is_ident() => {
                 if let Some(module_name) = obj
                     .as_ident()
@@ -201,6 +213,7 @@ impl VisitMut for ConstModules {
                     n.visit_mut_children_with(self);
                 }
             }
+
             _ => {
                 n.visit_mut_children_with(self);
             }
@@ -215,6 +228,7 @@ impl VisitMut for ConstModules {
                         key: id.take().into(),
                         value: Box::new((**value).clone()),
                     });
+
                     return;
                 }
 
@@ -225,6 +239,7 @@ impl VisitMut for ConstModules {
                     )
                 }
             }
+
             _ => n.visit_mut_children_with(self),
         }
     }

@@ -65,14 +65,17 @@ impl<'a> Binder<'a> {
         match *self.body {
             Data::Enum(DataEnum { ref variants, .. }) => {
                 let enum_name = &self.ident;
+
                 variants
                     .iter()
                     .map(|v| VariantBinder::new(Some(enum_name), &v.ident, &v.fields, &v.attrs))
                     .collect()
             }
+
             Data::Struct(DataStruct { ref fields, .. }) => {
                 vec![VariantBinder::new(None, self.ident, fields, self.attrs)]
             }
+
             Data::Union(_) => unimplemented!("Binder for union type"),
         }
     }
@@ -124,6 +127,7 @@ impl<'a> VariantBinder<'a> {
 
                 parse_quote!(#enum_name::#vn)
             }
+
             None => self.name.clone().into(),
         }
     }
@@ -150,6 +154,7 @@ impl<'a> VariantBinder<'a> {
                 // Unit struct does not have any field to bind
                 (pat, Vec::new())
             }
+
             Fields::Named(FieldsNamed {
                 named: ref fields,
                 brace_token,
@@ -160,6 +165,7 @@ impl<'a> VariantBinder<'a> {
                     .pairs()
                     .map(|e| {
                         let (t, p) = e.into_tuple();
+
                         Pair::new(t, p.cloned())
                     })
                     .enumerate()
@@ -172,11 +178,13 @@ impl<'a> VariantBinder<'a> {
 
                             let binded_ident =
                                 Ident::new(&format!("{}{}", prefix, ident), ident.span());
+
                             bindings.push(BindedField {
                                 idx,
                                 binded_ident: binded_ident.clone(),
                                 field: f,
                             });
+
                             FieldPat {
                                 attrs: f
                                     .attrs
@@ -198,6 +206,7 @@ impl<'a> VariantBinder<'a> {
                     })
                     .collect();
                 // EnumName::VariantName { fields }
+
                 let pat = Pat::Struct(PatStruct {
                     attrs: Default::default(),
                     qself: None,
@@ -208,6 +217,7 @@ impl<'a> VariantBinder<'a> {
                 });
                 (pat, bindings)
             }
+
             Fields::Unnamed(FieldsUnnamed {
                 unnamed: ref fields,
                 paren_token,
@@ -219,6 +229,7 @@ impl<'a> VariantBinder<'a> {
                     .pairs()
                     .map(|e| {
                         let (t, p) = e.into_tuple();
+
                         Pair::new(t, p.cloned())
                     })
                     .enumerate()

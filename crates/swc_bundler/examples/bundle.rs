@@ -68,6 +68,7 @@ fn print_bundles(cm:Lrc<SourceMap>, modules:Vec<Bundle>, minify:bool) {
 
 			{
 				let wr = JsWriter::new(cm.clone(), "\n", &mut buf, None);
+
 				let mut emitter = Emitter {
 					cfg:swc_ecma_codegen::Config::default().with_minify(true),
 					cm:cm.clone(),
@@ -89,6 +90,7 @@ fn print_bundles(cm:Lrc<SourceMap>, modules:Vec<Bundle>, minify:bool) {
 		rayon::spawn(move || drop(bundled));
 
 		println!("Created output.js ({}kb)", code.len() / 1024);
+
 		fs::write("output.js", &code).unwrap();
 	}
 }
@@ -98,6 +100,7 @@ fn do_test(_entry:&Path, entries:HashMap<String, FileName>, inline:bool, minify:
 		let start = Instant::now();
 
 		let globals = Box::leak(Box::default());
+
 		let mut bundler = Bundler::new(
 			globals,
 			cm.clone(),
@@ -119,6 +122,7 @@ fn do_test(_entry:&Path, entries:HashMap<String, FileName>, inline:bool, minify:
 		);
 
 		let mut modules = bundler.bundle(entries).map_err(|err| println!("{:?}", err))?;
+
 		println!("Bundled as {} modules", modules.len());
 
 		#[cfg(feature = "concurrent")]
@@ -128,10 +132,12 @@ fn do_test(_entry:&Path, entries:HashMap<String, FileName>, inline:bool, minify:
 
 		{
 			let dur = start.elapsed();
+
 			println!("Bundler.bundle() took {}", to_ms(dur));
 		}
 
 		let error = false;
+
 		if minify {
 			let start = Instant::now();
 
@@ -162,18 +168,22 @@ fn do_test(_entry:&Path, entries:HashMap<String, FileName>, inline:bool, minify:
 							},
 						)
 						.expect_module();
+
 						b.module.visit_mut_with(&mut fixer(None));
+
 						b
 					})
 				})
 				.collect();
 
 			let dur = start.elapsed();
+
 			println!("Minification took {}", to_ms(dur));
 		}
 
 		{
 			let cm = cm;
+
 			print_bundles(cm, modules, minify);
 		}
 
@@ -192,12 +202,17 @@ fn main() -> Result<(), Error> {
 	let minify = env::var("MINIFY").unwrap_or_else(|_| "0".to_string()) == "1";
 
 	let main_file = env::args().nth(1).unwrap();
+
 	let mut entries = HashMap::default();
+
 	entries.insert("main".to_string(), FileName::Real(main_file.clone().into()));
 
 	let start = Instant::now();
+
 	do_test(Path::new(&main_file), entries, false, minify);
+
 	let dur = start.elapsed();
+
 	println!("Took {}", to_ms(dur));
 
 	Ok(())
@@ -208,6 +223,7 @@ fn print_bundles(cm: Lrc<SourceMap>, modules: Vec<Bundle>, minify: bool) {
 
             {
                 let wr = JsWriter::new(cm.clone(), "\n", &mut buf, None);
+
                 let mut emitter = Emitter {
                     cfg: swc_ecma_codegen::Config::default().with_minify(true),
                     cm: cm.clone(),
@@ -229,6 +245,7 @@ fn print_bundles(cm: Lrc<SourceMap>, modules: Vec<Bundle>, minify: bool) {
         rayon::spawn(move || drop(bundled));
 
         println!("Created output.js ({}kb)", code.len() / 1024);
+
         fs::write("output.js", &code).unwrap();
     }
 }
@@ -238,6 +255,7 @@ fn do_test(_entry: &Path, entries: HashMap<String, FileName>, inline: bool, mini
         let start = Instant::now();
 
         let globals = Box::leak(Box::default());
+
         let mut bundler = Bundler::new(
             globals,
             cm.clone(),
@@ -261,6 +279,7 @@ fn do_test(_entry: &Path, entries: HashMap<String, FileName>, inline: bool, mini
         let mut modules = bundler
             .bundle(entries)
             .map_err(|err| println!("{:?}", err))?;
+
         println!("Bundled as {} modules", modules.len());
 
         #[cfg(feature = "concurrent")]
@@ -270,10 +289,12 @@ fn do_test(_entry: &Path, entries: HashMap<String, FileName>, inline: bool, mini
 
         {
             let dur = start.elapsed();
+
             println!("Bundler.bundle() took {}", to_ms(dur));
         }
 
         let error = false;
+
         if minify {
             let start = Instant::now();
 
@@ -304,18 +325,22 @@ fn do_test(_entry: &Path, entries: HashMap<String, FileName>, inline: bool, mini
                             },
                         )
                         .expect_module();
+
                         b.module.visit_mut_with(&mut fixer(None));
+
                         b
                     })
                 })
                 .collect();
 
             let dur = start.elapsed();
+
             println!("Minification took {}", to_ms(dur));
         }
 
         {
             let cm = cm;
+
             print_bundles(cm, modules, minify);
         }
 
@@ -336,12 +361,17 @@ fn main() -> Result<(), Error> {
     let minify = env::var("MINIFY").unwrap_or_else(|_| "0".to_string()) == "1";
 
     let main_file = env::args().nth(1).unwrap();
+
     let mut entries = HashMap::default();
+
     entries.insert("main".to_string(), FileName::Real(main_file.clone().into()));
 
     let start = Instant::now();
+
     do_test(Path::new(&main_file), entries, false, minify);
+
     let dur = start.elapsed();
+
     println!("Took {}", to_ms(dur));
 
     Ok(())
@@ -402,12 +432,15 @@ impl Load for Loader {
 		.unwrap_or_else(|err| {
 			let handler =
 				Handler::with_tty_emitter(ColorConfig::Always, false, false, Some(self.cm.clone()));
+
 			err.into_diagnostic(&handler).emit();
+
 			panic!("failed to parse")
 		});
 
 		Ok(ModuleData { fm, module, helpers:Default::default() })
 	}
+
     fn get_import_meta_props(
         &self,
         span: Span,
@@ -464,7 +497,9 @@ impl Load for Loader {
         .unwrap_or_else(|err| {
             let handler =
                 Handler::with_tty_emitter(ColorConfig::Always, false, false, Some(self.cm.clone()));
+
             err.into_diagnostic(&handler).emit();
+
             panic!("failed to parse")
         });
 

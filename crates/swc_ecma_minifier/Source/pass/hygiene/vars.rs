@@ -16,10 +16,12 @@ where
     N: for<'aa> VisitWith<VarAnalyzer<'aa>>,
 {
     let mut data = All::default();
+
     let mut v = VarAnalyzer {
         all: &mut data,
         cur: Default::default(),
     };
+
     node.visit_with(&mut v);
 
     data
@@ -51,6 +53,7 @@ impl<'a> Scope<'a> {
 
         while let Some(scope) = cur {
             let mut w = scope.data.borrow_mut();
+
             w.decls.entry(i.sym.clone()).or_default().insert(i.ctxt);
 
             cur = scope.parent;
@@ -67,6 +70,7 @@ macro_rules! scoped {
     ($v:expr, $n:expr) => {
         let data = {
             let child = Scope::new(Some(&$v.cur));
+
             let mut v = VarAnalyzer {
                 all: &mut $v.all,
                 cur: child,
@@ -78,6 +82,7 @@ macro_rules! scoped {
         };
 
         let old = $v.all.scopes.insert($n.ctxt, data);
+
         debug_assert!(old.is_none(), "{:?}", $n.ctxt);
     };
 }

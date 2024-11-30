@@ -30,6 +30,7 @@ impl Parse for InputFieldAttr {
 impl MyField {
     fn from_field(f: &Field) -> Self {
         let mut lo = false;
+
         let mut hi = false;
 
         for attr in &f.attrs {
@@ -39,6 +40,7 @@ impl MyField {
 
             match &attr.meta {
                 Meta::Path(..) => {}
+
                 Meta::List(list) => {
                     let input = parse2::<InputFieldAttr>(list.tokens.clone())
                         .expect("failed to parse as `InputFieldAttr`");
@@ -53,6 +55,7 @@ impl MyField {
                         }
                     }
                 }
+
                 _ => panic!("Unknown span attribute"),
             }
         }
@@ -110,6 +113,7 @@ pub fn derive(input: DeriveInput) -> ItemImpl {
             }
         }
     };
+
     item.with_generics(input.generics)
 }
 
@@ -151,6 +155,7 @@ fn make_body_for_variant(v: &VariantBinder<'_>, bindings: Vec<BindedField<'_>>) 
                 .any(|attr| is_attr_name(attr, "span"))
         })
         .any(|b| b);
+
     if !has_any_span_attr {
         let span_field = bindings
             .iter()
@@ -178,6 +183,7 @@ fn make_body_for_variant(v: &VariantBinder<'_>, bindings: Vec<BindedField<'_>>) 
 
     // TODO: Only one field should be `#[span(lo)]`.
     let lo = fields.iter().find(|&(_, f)| f.lo);
+
     let hi = fields.iter().find(|&(_, f)| f.hi);
 
     match (lo, hi) {
@@ -186,6 +192,7 @@ fn make_body_for_variant(v: &VariantBinder<'_>, bindings: Vec<BindedField<'_>>) 
             Box::new(parse_quote!(swc_common::Spanned::span(#lo_field)
                 .with_hi(swc_common::Spanned::span(#hi_field).hi())))
         }
+
         _ => panic!("#[derive(Spanned)]: #[span(lo)] and #[span(hi)] is required"),
     }
 }

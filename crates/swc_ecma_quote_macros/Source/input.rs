@@ -26,13 +26,18 @@ pub(super) struct QuoteVar {
 impl Parse for QuoteInput {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let src = input.parse()?;
+
         let as_token = input.parse()?;
+
         let output_type = input.parse()?;
+
         let vars = if input.is_empty() {
             None
         } else {
             let comma_token = input.parse()?;
+
             let vars = Punctuated::parse_terminated(input)?;
+
             Some((comma_token, vars))
         };
 
@@ -51,6 +56,7 @@ impl Parse for QuoteVar {
 
         let ty = if input.peek(Token![:]) {
             let _: Token![:] = input.parse()?;
+
             Some(input.parse()?)
         } else {
             None

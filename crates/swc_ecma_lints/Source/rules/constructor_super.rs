@@ -71,9 +71,11 @@ impl ConstructorSuper {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, message).emit();
             }
+
             _ => {}
         });
     }
@@ -93,6 +95,7 @@ impl ConstructorSuper {
             SuperClass::Invalid => {
                 self.emit_report(span, BAD_SUPER_MESSAGE);
             }
+
             SuperClass::NotSetted => {
                 if let Some(span) = self.class_meta.loop_span {
                     self.emit_report(span, MORE_THAN_ONE_CALL_POSSIBLE_MESSAGE);
@@ -102,6 +105,7 @@ impl ConstructorSuper {
                     self.emit_report(span, CALL_SUPER_EXCPECTED_MESSAGE);
                 }
             }
+
             SuperClass::Valid => {
                 if let Some(span) = self.class_meta.loop_span {
                     self.emit_report(span, MORE_THAN_ONE_CALL_POSSIBLE_MESSAGE);
@@ -123,7 +127,9 @@ impl ConstructorSuper {
                     self.emit_report(span, CALL_SUPER_EXCPECTED_MESSAGE);
                 }
             }
+
             SuperClass::NotSetted => {}
+
             SuperClass::Invalid => {
                 if self.class_meta.code_path.super_calls_count == 0 {
                     self.emit_report(span, CALL_SUPER_EXCPECTED_MESSAGE);
@@ -180,6 +186,7 @@ impl Visit for ConstructorSuper {
                 && self.class_meta.constructor_scope == self.scope
             {
                 self.class_meta.code_path.super_calls_count += 1;
+
                 self.class_meta.code_path.super_call_missed = false;
             }
 

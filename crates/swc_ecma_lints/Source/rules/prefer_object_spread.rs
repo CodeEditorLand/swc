@@ -63,9 +63,11 @@ impl PreferObjectSpread {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, message).emit();
             }
+
             _ => {}
         });
     }
@@ -91,6 +93,7 @@ impl PreferObjectSpread {
                     }
                 }
             }
+
             Expr::Ident(_) => ArgType::Ident,
             Expr::Paren(paren) => Self::recognize_expr_arg(&paren.expr),
             Expr::Seq(seq) => {
@@ -98,6 +101,7 @@ impl PreferObjectSpread {
 
                 Self::recognize_expr_arg(last)
             }
+
             _ => ArgType::Other,
         }
     }
@@ -126,6 +130,7 @@ impl PreferObjectSpread {
                 Expr::Tpl(tlp) => {
                     tlp.exprs.is_empty() && tlp.quasis.len() == 1 && tlp.quasis[0].raw == "assign"
                 }
+
                 _ => false,
             },
             _ => false,
@@ -173,6 +178,7 @@ impl PreferObjectSpread {
 
                 self.emit_report(call_expr.span, USE_SPREAD_MESSAGE);
             }
+
             _ => {}
         }
     }

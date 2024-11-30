@@ -42,7 +42,9 @@ impl QueryRef for ImportQuery {
             .get(&ident.to_id())
             .map(|(mod_ident, mod_prop)| -> Box<Expr> {
                 let mut mod_ident = mod_ident.clone();
+
                 let span = ident.span;
+
                 mod_ident.span = span;
 
                 let mod_expr = if self.lazy_record.contains(&mod_ident.to_id()) {

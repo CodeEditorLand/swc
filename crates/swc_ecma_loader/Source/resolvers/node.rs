@@ -51,13 +51,17 @@ struct BrowserCache {
 /// the base directory for a package.
 fn find_package_root(path: &Path) -> Option<PathBuf> {
     let mut parent = path.parent();
+
     while let Some(p) = parent {
         let pkg = p.join(PACKAGE);
+
         if pkg.is_file() {
             return Some(p.to_path_buf());
         }
+
         parent = p.parent();
     }
+
     None
 }
 
@@ -148,6 +152,7 @@ impl NodeModulesResolver {
                 return Ok(FileName::Real(path.canonicalize()?));
             }
         }
+
         bail!("index not found")
     }
 
@@ -172,6 +177,7 @@ impl NodeModulesResolver {
         }
 
         let try_exact = path.extension().is_some();
+
         if try_exact {
             if path.is_file() {
                 return Ok(Some(path.to_path_buf()));
@@ -179,7 +185,9 @@ impl NodeModulesResolver {
         } else {
             // We try `.js` first.
             let mut path = path.to_path_buf();
+
             path.set_extension("js");
+
             if path.is_file() {
                 return Ok(Some(path));
             }
@@ -192,9 +200,12 @@ impl NodeModulesResolver {
 
         if let Some(name) = path.file_name() {
             let mut ext_path = path.to_path_buf();
+
             let name = name.to_string_lossy();
+
             for ext in EXTENSIONS {
                 ext_path.set_file_name(format!("{}.{}", name, ext));
+
                 if ext_path.is_file() {
                     return Ok(Some(ext_path));
                 }
@@ -203,6 +214,7 @@ impl NodeModulesResolver {
             // TypeScript-specific behavior: if the extension is ".js" or ".jsx",
             // try replacing it with ".ts" or ".tsx".
             ext_path.set_file_name(name.into_owned());
+
             let old_ext = path.extension().and_then(|ext| ext.to_str());
 
             if let Some(old_ext) = old_ext {
@@ -254,6 +266,7 @@ impl NodeModulesResolver {
         }
 
         let pkg_path = path.join(PACKAGE);
+
         if allow_package_entry && pkg_path.is_file() {
             if let Some(main) = self.resolve_package_entry(path, &pkg_path)? {
                 return Ok(Some(main));
@@ -263,10 +276,12 @@ impl NodeModulesResolver {
         // Try to resolve to an index file.
         for ext in EXTENSIONS {
             let ext_path = path.join(format!("index.{}", ext));
+
             if ext_path.is_file() {
                 return Ok(Some(ext_path));
             }
         }
+
         Ok(None)
     }
 
@@ -291,7 +306,9 @@ impl NodeModulesResolver {
         };
 
         let file = File::open(pkg_path)?;
+
         let reader = BufReader::new(file);
+
         let pkg: PackageJson = serde_json::from_reader(reader)
             .context(format!("failed to deserialize {}", pkg_path.display()))?;
 
@@ -299,22 +316,26 @@ impl NodeModulesResolver {
             TargetEnv::Node => {
                 vec![pkg.module.as_ref(), pkg.main.as_ref()]
             }
+
             TargetEnv::Browser => {
                 if let Some(browser) = &pkg.browser {
                     match browser {
                         Browser::Str(path) => {
                             vec![Some(path), pkg.module.as_ref(), pkg.main.as_ref()]
                         }
+
                         Browser::Obj(map) => {
                             let mut bucket = BrowserCache::default();
 
                             for (k, v) in map {
                                 let target_key = Path::new(k);
+
                                 let mut components = target_key.components();
 
                                 // Relative file paths are sources for this package
                                 let source = if let Some(Component::CurDir) = components.next() {
                                     let path = pkg_dir.join(k);
+
                                     if let Ok(file) = self
                                         .resolve_as_file(&path)
                                         .or_else(|_| self.resolve_as_directory(&path, false))
@@ -330,11 +351,14 @@ impl NodeModulesResolver {
                                 match v {
                                     StringOrBool::Str(dest) => {
                                         let path = pkg_dir.join(dest);
+
                                         let file = self
                                             .resolve_as_file(&path)
                                             .or_else(|_| self.resolve_as_directory(&path, false))?;
+
                                         if let Some(file) = file {
                                             let target = file.clean();
+
                                             let target = target
                                                 .strip_prefix(current_dir().unwrap_or_default())
                                                 .map(|target| target.to_path_buf())
@@ -347,6 +371,7 @@ impl NodeModulesResolver {
                                             }
                                         }
                                     }
+
                                     StringOrBool::Bool(flag) => {
                                         // If somebody set boolean `true` which is an
                                         // invalid value we will just ignore it
@@ -374,6 +399,7 @@ impl NodeModulesResolver {
 
         if let Some(Some(target)) = main_fields.iter().find(|x| x.is_some()) {
             let path = pkg_dir.join(target);
+
             return self
                 .resolve_as_file(&path)
                 .or_else(|_| self.resolve_as_directory(&path, false));
@@ -393,11 +419,15 @@ impl NodeModulesResolver {
         }
 
         let absolute_path = to_absolute_path(base_dir)?;
+
         let mut path = Some(&*absolute_path);
+
         while let Some(dir) = path {
             let node_modules = dir.join("node_modules");
+
             if node_modules.is_dir() {
                 let path = node_modules.join(target);
+
                 if let Some(result) = self
                     .resolve_as_file(&path)
                     .ok()
@@ -407,6 +437,7 @@ impl NodeModulesResolver {
                     return Ok(Some(result));
                 }
             }
+
             path = dir.parent();
         }
 
@@ -441,6 +472,7 @@ impl NodeModulesResolver {
 
         let base_dir = if base.is_file() {
             let cwd = &Path::new(".");
+
             base.parent().unwrap_or(cwd)
         } else {
             base
@@ -452,9 +484,11 @@ impl NodeModulesResolver {
             if let Some(pkg_base) = find_package_root(base) {
                 if let Some(item) = BROWSER_CACHE.get(&pkg_base) {
                     let value = item.value();
+
                     if value.module_ignores.contains(module_specifier) {
                         return Ok(FileName::Custom(module_specifier.into()));
                     }
+
                     if let Some(rewrite) = value.module_rewrites.get(module_specifier) {
                         return self.wrap(Some(rewrite.to_path_buf()));
                     }
@@ -486,6 +520,7 @@ impl NodeModulesResolver {
         let file_name = {
             if target_path.is_absolute() {
                 let path = PathBuf::from(target_path);
+
                 self.resolve_as_file(&path)
                     .or_else(|_| self.resolve_as_directory(&path, true))
                     .and_then(|p| self.wrap(p))
@@ -496,6 +531,7 @@ impl NodeModulesResolver {
                     #[cfg(windows)]
                     let path = {
                         let base_dir = BasePath::new(base_dir).unwrap();
+
                         base_dir
                             .join(target.replace('/', "\\"))
                             .normalize_virtually()
@@ -504,6 +540,7 @@ impl NodeModulesResolver {
                     };
                     #[cfg(not(windows))]
                     let path = base_dir.join(target);
+
                     self.resolve_as_file(&path)
                         .or_else(|_| self.resolve_as_directory(&path, true))
                         .and_then(|p| self.wrap(p))
@@ -511,8 +548,11 @@ impl NodeModulesResolver {
                     self.resolve_node_modules(base_dir, target)
                         .and_then(|path| {
                             let file_path = path.context("failed to get the node_modules path");
+
                             let current_directory = current_dir()?;
+
                             let relative_path = diff_paths(file_path?, current_directory);
+
                             self.wrap(relative_path)
                         })
                 }
@@ -524,12 +564,16 @@ impl NodeModulesResolver {
                 if let FileName::Real(path) = &v {
                     if let Some(pkg_base) = find_package_root(path) {
                         let pkg_base = to_absolute_path(&pkg_base).unwrap();
+
                         if let Some(item) = BROWSER_CACHE.get(&pkg_base) {
                             let value = item.value();
+
                             let path = to_absolute_path(path).unwrap();
+
                             if value.ignores.contains(&path) {
                                 return Ok(FileName::Custom(path.display().to_string()));
                             }
+
                             if let Some(rewrite) = value.rewrites.get(&path) {
                                 return self.wrap(Some(rewrite.to_path_buf()));
                             }
@@ -537,6 +581,7 @@ impl NodeModulesResolver {
                     }
                 }
             }
+
             Ok(v)
         });
 

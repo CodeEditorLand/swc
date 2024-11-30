@@ -120,9 +120,12 @@ where
             let mut v = IdCollector {
                 ids: Default::default(),
             };
+
             n.visit_with(&mut v);
+
             v.ids
         };
+
         let (decls, preserved) = collect_decls(
             n,
             if has_eval {
@@ -131,6 +134,7 @@ where
                 None
             },
         );
+
         usages
             .into_iter()
             .filter(|used_id| !decls.contains(used_id))
@@ -151,20 +155,25 @@ where
 
                 ..Default::default()
             };
+
             if skip_one {
                 node.visit_children_with(&mut v);
             } else {
                 node.visit_with(&mut v);
             }
+
             v.scope
         };
+
         scope.prepare_renaming();
 
         let mut map = RenameMap::default();
 
         let mut unresolved = if !top_level {
             let mut unresolved = self.unresolved.clone();
+
             unresolved.extend(self.get_unresolved(node, has_eval));
+
             Cow::Owned(unresolved)
         } else {
             Cow::Borrowed(&self.unresolved)
@@ -184,6 +193,7 @@ where
 
         if R::MANGLE {
             let cost = scope.rename_cost();
+
             scope.rename_in_mangle_mode(
                 &self.renamer,
                 &mut map,
@@ -217,6 +227,7 @@ where
                             v
                         );
                     }
+
                     Entry::Vacant(e) => {
                         e.insert(v.clone());
                     }
@@ -230,6 +241,7 @@ where
     fn load_cache(&mut self) {
         if let Some(cache) = self.renamer.get_cached() {
             self.previous_cache = cache.into_owned();
+
             self.total_map = Some(Default::default());
         }
     }
@@ -296,7 +308,9 @@ where
             n.visit_mut_children_with(self);
         } else {
             let id = n.ident.to_id();
+
             let inserted = self.preserved.insert(id.clone());
+
             let map = self.get_map(n, true, false, false);
 
             if inserted {
@@ -314,7 +328,9 @@ where
             n.visit_mut_children_with(self);
         } else {
             let id = n.ident.to_id();
+
             let inserted = self.preserved.insert(id.clone());
+
             let map = self.get_map(n, true, false, false);
 
             if inserted {
@@ -332,9 +348,11 @@ where
             DefaultDecl::Class(n) => {
                 n.visit_mut_children_with(self);
             }
+
             DefaultDecl::Fn(n) => {
                 n.visit_mut_children_with(self);
             }
+
             DefaultDecl::TsInterfaceDecl(n) => {
                 n.visit_mut_children_with(self);
             }
@@ -428,5 +446,6 @@ mod renamer_single {
     pub trait Sync {}
 
     impl<T> Send for T where T: ?Sized {}
+
     impl<T> Sync for T where T: ?Sized {}
 }

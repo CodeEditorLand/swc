@@ -33,6 +33,7 @@ impl Analyzer {
                 ScopeKind::Fn => {
                     self.scope.add_decl(&id, self.has_eval, self.top_level_mark);
                 }
+
                 ScopeKind::Block => self.hoisted_vars.push(id),
             }
         } else {
@@ -46,6 +47,7 @@ impl Analyzer {
                 ScopeKind::Fn => {
                     self.scope.reserve_decl(len);
                 }
+
                 ScopeKind::Block => {
                     self.hoisted_vars.reserve(len);
                 }
@@ -83,27 +85,34 @@ impl Analyzer {
             };
 
             op(&mut v);
+
             if !v.hoisted_vars.is_empty() {
                 debug_assert!(matches!(v.scope.kind, ScopeKind::Block));
+
                 self.reserve_usage(v.hoisted_vars.len());
+
                 v.hoisted_vars.clone().into_iter().for_each(|id| {
                     // For variables declared in block scope using `var` and `function`,
                     // We should create a fake usage in the block to prevent conflicted
                     // renaming.
                     v.add_usage(id);
                 });
+
                 match self.scope.kind {
                     ScopeKind::Fn => {
                         self.reserve_decl(v.hoisted_vars.len(), true);
+
                         v.hoisted_vars
                             .into_iter()
                             .for_each(|id| self.add_decl(id, true));
                     }
+
                     ScopeKind::Block => {
                         self.hoisted_vars.extend(v.hoisted_vars);
                     }
                 }
             }
+
             self.scope.children.push(v.scope);
         }
     }
@@ -135,10 +144,15 @@ impl Visit for Analyzer {
     fn visit_arrow_expr(&mut self, e: &ArrowExpr) {
         self.with_fn_scope(|v| {
             let old = v.is_pat_decl;
+
             v.is_pat_decl = true;
+
             e.params.visit_with(v);
+
             v.is_pat_decl = false;
+
             e.body.visit_with(v);
+
             v.is_pat_decl = old;
         });
     }
@@ -147,6 +161,7 @@ impl Visit for Analyzer {
         let old = self.is_pat_decl;
 
         self.is_pat_decl = false;
+
         n.visit_children_with(self);
 
         self.is_pat_decl = old;
@@ -175,16 +190,21 @@ impl Visit for Analyzer {
     fn visit_catch_clause(&mut self, n: &CatchClause) {
         self.with_scope(ScopeKind::Block, |v| {
             let old = v.is_pat_decl;
+
             let old_in_catch_params = v.in_catch_params;
 
             v.is_pat_decl = false;
+
             n.body.visit_children_with(v);
 
             v.is_pat_decl = true;
+
             v.in_catch_params = true;
+
             n.param.visit_with(v);
 
             v.is_pat_decl = old;
+
             v.in_catch_params = old_in_catch_params;
         })
     }
@@ -210,7 +230,9 @@ impl Visit for Analyzer {
 
         self.with_fn_scope(|v| {
             f.function.decorators.visit_with(v);
+
             f.function.params.visit_with(v);
+
             v.visit_fn_body_within_same_scope(&f.function.body);
         })
     }
@@ -218,7 +240,9 @@ impl Visit for Analyzer {
     fn visit_constructor(&mut self, f: &Constructor) {
         self.with_fn_scope(|v| {
             f.key.visit_with(v);
+
             f.params.visit_with(v);
+
             v.visit_fn_body_within_same_scope(&f.body);
         })
     }
@@ -234,6 +258,7 @@ impl Visit for Analyzer {
                     c.class.visit_with(v);
                 })
             }
+
             DefaultDecl::Fn(f) => {
                 if let Some(id) = &f.ident {
                     self.add_decl(id.to_id(), true);
@@ -241,6 +266,7 @@ impl Visit for Analyzer {
 
                 f.visit_with(self);
             }
+
             DefaultDecl::TsInterfaceDecl(_) => {}
         }
     }
@@ -250,6 +276,7 @@ impl Visit for Analyzer {
             ModuleExportName::Ident(orig) => {
                 self.add_usage(orig.to_id());
             }
+
             ModuleExportName::Str(..) => {}
         };
     }
@@ -258,6 +285,7 @@ impl Visit for Analyzer {
         let old_is_pat_decl = self.is_pat_decl;
 
         self.is_pat_decl = false;
+
         maybe_grow_default(|| e.visit_children_with(self));
 
         if let Expr::Ident(i) = e {
@@ -279,6 +307,7 @@ impl Visit for Analyzer {
             .params
             .iter()
             .any(|p| p.pat.is_rest() || p.pat.is_assign());
+
         if has_rest {
             self.add_usage(f.ident.to_id());
         }
@@ -289,6 +318,7 @@ impl Visit for Analyzer {
             }
 
             f.function.decorators.visit_with(v);
+
             f.function.params.visit_with(v);
             // WARN: Option<BlockStmt>::visit_mut_children_wth
             // is not same with BlockStmt::visit_mut_children_wth
@@ -300,6 +330,7 @@ impl Visit for Analyzer {
         if let Some(id) = &f.ident {
             self.with_fn_scope(|v| {
                 v.add_decl(id.to_id(), true);
+
                 v.with_fn_scope(|v| {
                     // https://github.com/swc-project/swc/issues/6819
                     //
@@ -314,7 +345,9 @@ impl Visit for Analyzer {
                     }
 
                     f.function.decorators.visit_with(v);
+
                     f.function.params.visit_with(v);
+
                     v.visit_fn_body_within_same_scope(&f.function.body);
                 });
             })
@@ -326,6 +359,7 @@ impl Visit for Analyzer {
     fn visit_for_in_stmt(&mut self, n: &ForInStmt) {
         self.with_scope(ScopeKind::Block, |v| {
             n.left.visit_with(v);
+
             n.right.visit_with(v);
 
             v.with_scope(ScopeKind::Block, |v| {
@@ -337,6 +371,7 @@ impl Visit for Analyzer {
     fn visit_for_of_stmt(&mut self, n: &ForOfStmt) {
         self.with_scope(ScopeKind::Block, |v| {
             n.left.visit_with(v);
+
             n.right.visit_with(v);
 
             v.with_scope(ScopeKind::Block, |v| {
@@ -348,7 +383,9 @@ impl Visit for Analyzer {
     fn visit_for_stmt(&mut self, n: &ForStmt) {
         self.with_scope(ScopeKind::Block, |v| {
             n.init.visit_with(v);
+
             n.test.visit_with(v);
+
             n.update.visit_with(v);
 
             v.with_scope(ScopeKind::Block, |v| {
@@ -361,7 +398,9 @@ impl Visit for Analyzer {
     fn visit_function(&mut self, f: &Function) {
         self.with_fn_scope(|v| {
             f.decorators.visit_with(v);
+
             f.params.visit_with(v);
+
             v.visit_fn_body_within_same_scope(&f.body);
         })
     }
@@ -402,18 +441,23 @@ impl Visit for Analyzer {
 
     fn visit_param(&mut self, e: &Param) {
         let old = self.is_pat_decl;
+
         let old_need_hoisted = self.var_belong_to_fn_scope;
 
         // Params belong to function scope.
         // Params in catch clause belong to block scope
         self.var_belong_to_fn_scope = !self.in_catch_params;
+
         self.is_pat_decl = false;
+
         e.decorators.visit_with(self);
 
         self.is_pat_decl = true;
+
         e.pat.visit_with(self);
 
         self.is_pat_decl = old;
+
         self.var_belong_to_fn_scope = old_need_hoisted
     }
 
@@ -437,17 +481,23 @@ impl Visit for Analyzer {
 
     fn visit_var_decl(&mut self, n: &VarDecl) {
         let old_need_hoisted = self.var_belong_to_fn_scope;
+
         self.var_belong_to_fn_scope = n.kind == VarDeclKind::Var;
+
         n.visit_children_with(self);
+
         self.var_belong_to_fn_scope = old_need_hoisted;
     }
 
     fn visit_var_declarator(&mut self, v: &VarDeclarator) {
         let old = self.is_pat_decl;
+
         self.is_pat_decl = true;
+
         v.name.visit_with(self);
 
         self.is_pat_decl = false;
+
         v.init.visit_with(self);
 
         self.is_pat_decl = old;

@@ -63,37 +63,49 @@ impl EnsureSize {
                     || f.swc.gzipped_size > terser.gzipped_size
                 {
                     println!();
+
                     println!("{}", f.fm.name);
                 }
+
                 if f.swc.gzipped_size > terser.gzipped_size {
                     println!("  Gzipped");
+
                     println!("    swc: {} bytes", f.swc.gzipped_size);
+
                     println!("    terser: {} bytes", terser.gzipped_size);
                 }
 
                 if f.swc.mangled_size > terser.mangled_size {
                     println!("  Mangled");
+
                     println!("    swc: {} bytes", f.swc.mangled_size);
+
                     println!("    terser: {} bytes", terser.mangled_size);
                 }
 
                 if f.swc.no_mangle_size > terser.no_mangle_size {
                     println!("  No-mangle");
+
                     println!("    swc: {} bytes", f.swc.no_mangle_size);
+
                     println!("    terser: {} bytes", terser.no_mangle_size);
                 }
             }
         }
         {
             let swc_total = results.iter().map(|f| f.swc.mangled_size).sum::<usize>();
+
             let terser_total = results
                 .iter()
                 .flat_map(|f| f.terser.map(|v| v.mangled_size))
                 .sum::<usize>();
 
             println!("Total");
+
             println!("  swc: {} bytes", swc_total);
+
             println!("  terser: {} bytes", terser_total);
+
             println!("  Size ratio: {}", swc_total as f64 / terser_total as f64);
 
             let swc_smaller_file_count = results
@@ -106,6 +118,7 @@ impl EnsureSize {
                     }
                 })
                 .count();
+
             println!(
                 "swc produced smaller or equal output for {} files out of {} files, {:.2}%",
                 swc_smaller_file_count,
@@ -115,14 +128,18 @@ impl EnsureSize {
         }
         {
             let swc_total = results.iter().map(|f| f.swc.gzipped_size).sum::<usize>();
+
             let terser_total = results
                 .iter()
                 .flat_map(|f| f.terser.map(|v| v.gzipped_size))
                 .sum::<usize>();
 
             println!("Total (gzipped)");
+
             println!("  swc: {} bytes", swc_total);
+
             println!("  terser: {} bytes", terser_total);
+
             println!("  Size ratio: {}", swc_total as f64 / terser_total as f64);
 
             let swc_smaller_file_count = results
@@ -135,6 +152,7 @@ impl EnsureSize {
                     }
                 })
                 .count();
+
             println!(
                 "swc produced smaller or equal output for {} files out of {} files, {:.2}%",
                 swc_smaller_file_count,
@@ -151,8 +169,10 @@ impl EnsureSize {
             info!("Checking {}", js_file.display());
 
             let fm = cm.load_file(js_file).context("failed to load file")?;
+
             let handler =
                 Handler::with_tty_emitter(ColorConfig::Never, true, false, Some(cm.clone()));
+
             HANDLER.set(&handler, || {
                 let code_mangled = {
                     let minified_mangled = get_minified(cm.clone(), js_file, true, true)?;
@@ -183,6 +203,7 @@ impl EnsureSize {
 
                 if !self.no_terser {
                     let terser_mangled = get_terser_output(js_file, true, true)?;
+
                     let terser_no_mangle = get_terser_output(js_file, true, false)?;
 
                     file_size.terser = Some(MinifierOutput {
@@ -194,6 +215,7 @@ impl EnsureSize {
 
                 if !self.no_esbuild {
                     let esbuild_mangled = get_esbuild_output(js_file, true)?;
+
                     let esbuild_no_mangle = get_esbuild_output(js_file, false)?;
 
                     file_size.esbuild = Some(MinifierOutput {

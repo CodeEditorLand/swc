@@ -135,6 +135,7 @@ impl VisitMut for Folder {
                 Some(name) => name,
                 None => return,
             };
+
             add_display_name(expr, name)
         }
     }

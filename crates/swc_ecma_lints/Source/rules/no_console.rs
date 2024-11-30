@@ -59,9 +59,11 @@ impl NoConsole {
                 LintRuleReaction::Error => {
                     handler.struct_span_err(span, MESSAGE).emit();
                 }
+
                 LintRuleReaction::Warning => {
                     handler.struct_span_warn(span, MESSAGE).emit();
                 }
+
                 _ => {}
             });
         }
@@ -77,6 +79,7 @@ impl Visit for NoConsole {
                 MemberProp::Ident(IdentName { sym, .. }) => {
                     self.check(member.span, ident, sym);
                 }
+
                 MemberProp::Computed(ComputedPropName { expr, .. }) => {
                     if let Expr::Lit(Lit::Str(Str { value, .. })) = expr.as_ref() {
                         self.check(member.span, ident, value);
@@ -84,6 +87,7 @@ impl Visit for NoConsole {
                         expr.visit_with(self);
                     }
                 }
+
                 _ => {}
             }
         }

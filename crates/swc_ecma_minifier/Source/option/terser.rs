@@ -284,6 +284,7 @@ impl TerserCompressorOptions {
                             )
                         })
                     };
+
                     let key = parse(if let Some(k) = k.strip_prefix('@') {
                         k.to_string()
                     } else {
@@ -324,6 +325,7 @@ impl TerserCompressorOptions {
                             0
                         }
                     }
+
                     TerserInlineOption::Num(n) => n,
                 })
                 .unwrap_or(if self.defaults { 3 } else { 0 }),
@@ -356,6 +358,7 @@ impl TerserCompressorOptions {
                             0
                         }
                     }
+
                     TerserSequenceOptions::Num(v) => v,
                 })
                 .unwrap_or(if self.defaults { 3 } else { 0 }),
@@ -472,6 +475,7 @@ fn value_to_expr(v: Value) -> Box<Expr> {
             })
             .into()
         }
+
         Value::String(v) => {
             let value: JsWord = v.into();
 
@@ -489,6 +493,7 @@ fn value_to_expr(v: Value) -> Box<Expr> {
                 .map(value_to_expr)
                 .map(|expr| Some(ExprOrSpread { spread: None, expr }))
                 .collect();
+
             ArrayLit {
                 span: DUMMY_SP,
                 elems,

@@ -42,11 +42,13 @@ macro_rules! check {
         let mut hash_mode = false;
 
         let mut i1 = 0;
+
         for_each_binding_ident($node, |id1| {
             i1 += 1;
 
             if !hash_mode {
                 let mut i2 = 0;
+
                 for_each_binding_ident($node, |id2| {
                     i2 += 1;
 

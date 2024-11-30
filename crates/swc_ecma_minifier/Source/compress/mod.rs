@@ -105,14 +105,19 @@ impl Compressor<'_> {
                 },
                 &data,
             );
+
             n.apply(&mut v);
+
             self.changed |= v.changed();
         }
 
         loop {
             self.changed = false;
+
             self.optimize_unit(n);
+
             self.pass += 1;
+
             if !self.changed {
                 break;
             }
@@ -140,7 +145,9 @@ impl Compressor<'_> {
 
         if self.options.passes != 0 && self.options.passes < self.pass {
             let done = dump(&*n, false);
+
             debug!("===== Done =====\n{}", done);
+
             return;
         }
 
@@ -173,7 +180,9 @@ impl Compressor<'_> {
         #[cfg(feature = "debug")]
         let start = {
             let start = n.dump();
+
             debug!("===== Start =====\n{}", start);
+
             start
         };
 
@@ -189,9 +198,11 @@ impl Compressor<'_> {
             let start = n.dump();
 
             let mut visitor = expr_simplifier(self.marks.unresolved_mark, ExprSimplifierConfig {});
+
             n.apply(&mut visitor);
 
             self.changed |= visitor.changed();
+
             if visitor.changed() {
                 debug!("compressor: Simplified expressions");
                 #[cfg(feature = "debug")]
@@ -216,6 +227,7 @@ impl Compressor<'_> {
             #[cfg(feature = "debug")]
             if !visitor.changed() {
                 let simplified = n.dump();
+
                 if start != simplified {
                     assert_eq!(
                         DebugUsingDisplay(&start),
@@ -240,6 +252,7 @@ impl Compressor<'_> {
                     debug_infinite_loop: self.pass >= 20,
                 },
             );
+
             n.apply(&mut visitor);
 
             self.changed |= visitor.changed();
@@ -247,6 +260,7 @@ impl Compressor<'_> {
             #[cfg(feature = "debug")]
             if visitor.changed() {
                 let src = n.dump();
+
                 debug!(
                     "===== Before pure =====\n{}\n===== After pure =====\n{}",
                     start, src
@@ -276,6 +290,7 @@ impl Compressor<'_> {
                 self.mode,
                 !self.dump_for_infinite_loop.is_empty(),
             );
+
             n.apply(&mut visitor);
 
             self.changed |= visitor.changed();
@@ -291,6 +306,7 @@ impl Compressor<'_> {
             let start_time = now();
 
             let mut v = dead_branch_remover(self.marks.unresolved_mark);
+
             n.apply(&mut v);
 
             if let Some(start_time) = start_time {
@@ -343,6 +359,7 @@ impl VisitMut for Compressor<'_> {
             {
                 false
             }
+
             _ => true,
         });
     }

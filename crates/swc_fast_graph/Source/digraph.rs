@@ -179,12 +179,14 @@ where
     /// Remove all nodes and edges
     pub fn clear(&mut self) {
         self.nodes.clear();
+
         self.edges.clear();
     }
 
     /// Add node `n` to the graph.
     pub fn add_node(&mut self, n: N) -> N {
         self.nodes.entry(n).or_default();
+
         n
     }
 
@@ -196,12 +198,14 @@ where
             None => return false,
             Some(sus) => sus,
         };
+
         for (succ, _) in links {
             // remove all successor links
             self.remove_single_edge(&succ, &n, Incoming);
             // Remove all edge values
             self.edges.swap_remove(&Self::edge_key(n, succ));
         }
+
         true
     }
 
@@ -240,6 +244,7 @@ where
                 .entry(a)
                 .or_insert_with(|| Vec::with_capacity(1))
                 .push((b, CompactDirection::Outgoing));
+
             if a != b {
                 // self loops don't have the Incoming entry
                 self.nodes
@@ -247,6 +252,7 @@ where
                     .or_insert_with(|| Vec::with_capacity(1))
                     .push((a, CompactDirection::Incoming));
             }
+
             None
         }
     }
@@ -265,16 +271,20 @@ where
                     {
                         Some(index) => {
                             sus.swap_remove(index);
+
                             true
                         }
+
                         None => false,
                     }
                 } else {
                     match sus.iter().position(|elt| &elt.0 == b) {
                         Some(index) => {
                             sus.swap_remove(index);
+
                             true
                         }
+
                         None => false,
                     }
                 }
@@ -299,13 +309,17 @@ where
     /// ```
     pub fn remove_edge(&mut self, a: N, b: N) -> Option<E> {
         let exist1 = self.remove_single_edge(&a, &b, Outgoing);
+
         let exist2 = if a != b {
             self.remove_single_edge(&b, &a, Incoming)
         } else {
             exist1
         };
+
         let weight = self.edges.shift_remove(&Self::edge_key(a, b));
+
         debug_assert!(exist1 == exist2 && exist1 == weight.is_some());
+
         weight
     }
 
@@ -431,14 +445,19 @@ where
     {
         // assuming two successive iterations of the same hashmap produce the same order
         let mut gr = Graph::with_capacity(self.node_count(), self.edge_count());
+
         for (&node, _) in &self.nodes {
             gr.add_node(node);
         }
+
         for ((a, b), edge_weight) in self.edges {
             let (ai, _, _) = self.nodes.get_full(&a).unwrap();
+
             let (bi, _, _) = self.nodes.get_full(&b).unwrap();
+
             gr.add_edge(node_index(ai), node_index(bi), edge_weight);
         }
+
         gr
     }
 }
@@ -455,9 +474,13 @@ where
         I: IntoIterator<Item = Item>,
     {
         let iter = iterable.into_iter();
+
         let (low, _) = iter.size_hint();
+
         let mut g = Self::with_capacity(0, low);
+
         g.extend(iter);
+
         g
     }
 }
@@ -476,11 +499,14 @@ where
         I: IntoIterator<Item = Item>,
     {
         let iter = iterable.into_iter();
+
         let (low, _) = iter.size_hint();
+
         self.edges.reserve(low);
 
         for elt in iter {
             let (source, target, weight) = elt.into_weighted_edge();
+
             self.add_edge(source, target, weight);
         }
     }
@@ -494,6 +520,7 @@ macro_rules! iterator_wrap {
         pub struct $name <$($typarm),*> where $($bounds)* {
             iter: $iter,
         }
+
         impl<$($typarm),*> Iterator for $name <$($typarm),*>
             where $($bounds)*
         {
@@ -513,6 +540,7 @@ macro_rules! iterator_wrap {
 
 iterator_wrap! {
     Nodes <'a, N> where { N: 'a + NodeTrait }
+
     item: N,
     iter: Cloned<Keys<'a, N, Vec<(N, CompactDirection)>>>,
 }
@@ -565,6 +593,7 @@ where
     fn next(&mut self) -> Option<N> {
         if Ty::is_directed() {
             let self_dir = self.dir;
+
             let start_node = self.start_node;
             (&mut self.iter)
                 .filter_map(move |&(n, dir)| {
@@ -604,6 +633,7 @@ where
             None => None,
             Some(b) => {
                 let a = self.from;
+
                 match self.edges.get(&FastGraphMap::<N, E, Ty>::edge_key(a, b)) {
                     None => unreachable!(),
                     Some(edge) => Some((a, b, edge)),
@@ -771,7 +801,9 @@ impl<'b, T> Ord for Ptr<'b, T> {
     /// order.
     fn cmp(&self, other: &Ptr<'b, T>) -> Ordering {
         let a: *const T = self.0;
+
         let b: *const T = other.0;
+
         a.cmp(&b)
     }
 }
@@ -789,6 +821,7 @@ impl<T> Eq for Ptr<'_, T> {}
 impl<T> Hash for Ptr<'_, T> {
     fn hash<H: hash::Hasher>(&self, st: &mut H) {
         let ptr = (self.0) as *const T;
+
         ptr.hash(st)
     }
 }
@@ -857,6 +890,7 @@ where
     N: Copy + PartialEq,
 {
     type EdgeId = (N, N);
+
     type NodeId = N;
 }
 
@@ -927,6 +961,7 @@ where
 
     fn to_index(&self, ix: Self::NodeId) -> usize {
         let (i, _, _) = self.nodes.get_full(&ix).unwrap();
+
         i
     }
 
@@ -936,7 +971,9 @@ where
             "The requested index {} is out-of-bounds.",
             ix
         );
+
         let (&key, _) = self.nodes.get_index(ix).unwrap();
+
         key
     }
 }

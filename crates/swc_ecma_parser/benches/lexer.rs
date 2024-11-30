@@ -10,10 +10,12 @@ fn bench_module(b:&mut Bencher, syntax:Syntax, src:&'static str) {
 
 		b.iter(|| {
 			let lexer = Lexer::new(syntax, Default::default(), StringInput::from(&*fm), None);
+
 			for t in lexer {
 				black_box(t);
 			}
 		});
+
 		Ok(())
 	});
 }
@@ -39,6 +41,7 @@ fn bench_files(c:&mut Criterion) {
 	c.bench_function("es/lexer/jquery mobile", |b| {
 		bench_module(b, Default::default(), include_str!("./files/jquery.mobile-1.4.2.js"))
 	});
+
 	c.bench_function("es/lexer/mootools", |b| {
 		bench_module(b, Default::default(), include_str!("./files/mootools-1.4.5.js"))
 	});
@@ -72,10 +75,12 @@ fn bench_module(b: &mut Bencher, syntax: Syntax, src: &'static str) {
 
         b.iter(|| {
             let lexer = Lexer::new(syntax, Default::default(), StringInput::from(&*fm), None);
+
             for t in lexer {
                 black_box(t);
             }
         });
+
         Ok(())
     });
 }
@@ -117,6 +122,7 @@ fn bench_files(c: &mut Criterion) {
             include_str!("./files/jquery.mobile-1.4.2.js"),
         )
     });
+
     c.bench_function("es/lexer/mootools", |b| {
         bench_module(
             b,

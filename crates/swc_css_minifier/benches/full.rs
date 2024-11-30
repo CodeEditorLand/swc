@@ -11,6 +11,7 @@ use swc_css_parser::parse_file;
 
 pub fn bench_files(c:&mut Criterion) {
 	let mut group = c.benchmark_group("css/minify/libraries");
+
 	group.sample_size(10);
 
 	let mut bench_file = |name:&str, path:&Path| {
@@ -28,6 +29,7 @@ pub fn bench_files(c:&mut Criterion) {
 	bench_file("bootstrap", Path::new("../../node_modules/bootstrap/dist/css/bootstrap.css"));
 pub fn bench_files(c: &mut Criterion) {
     let mut group = c.benchmark_group("css/minify/libraries");
+
     group.sample_size(10);
 
     let mut bench_file = |name: &str, path: &Path| {
@@ -56,6 +58,7 @@ fn run(src:&str) {
 			let fm = cm.new_source_file(FileName::Anon.into(), src.into());
 
 			let mut errors = Vec::new();
+
 			let mut ss:Stylesheet = parse_file(&fm, None, Default::default(), &mut errors).unwrap();
 
 			minify(&mut ss, Default::default());
@@ -63,6 +66,7 @@ fn run(src:&str) {
 			let mut buf = String::new();
 			{
 				let wr = BasicCssWriter::new(&mut buf, None, Default::default());
+
 				let mut generator = swc_css_codegen::CodeGenerator::new(
 					wr,
 					swc_css_codegen::CodegenConfig { minify:true },
@@ -72,6 +76,7 @@ fn run(src:&str) {
 			}
 
 			black_box(buf);
+
 			Ok(())
 		})
 	})
@@ -82,6 +87,7 @@ fn run(src: &str) {
             let fm = cm.new_source_file(FileName::Anon.into(), src.into());
 
             let mut errors = Vec::new();
+
             let mut ss: Stylesheet =
                 parse_file(&fm, None, Default::default(), &mut errors).unwrap();
 
@@ -90,6 +96,7 @@ fn run(src: &str) {
             let mut buf = String::new();
             {
                 let wr = BasicCssWriter::new(&mut buf, None, Default::default());
+
                 let mut generator = swc_css_codegen::CodeGenerator::new(
                     wr,
                     swc_css_codegen::CodegenConfig { minify: true },
@@ -99,6 +106,7 @@ fn run(src: &str) {
             }
 
             black_box(buf);
+
             Ok(())
         })
     })

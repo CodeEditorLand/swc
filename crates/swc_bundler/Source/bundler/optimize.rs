@@ -19,6 +19,7 @@ where
             if !self.config.disable_inliner {
                 node.visit_mut_with(&mut constant_propagation())
             }
+
             if !self.config.disable_dce {
                 node.visit_mut_with(&mut Repeat::new(dce::dce(
                     dce::Config {
@@ -31,6 +32,7 @@ where
                     self.unresolved_mark,
                 )));
             }
+
             node
         })
     }

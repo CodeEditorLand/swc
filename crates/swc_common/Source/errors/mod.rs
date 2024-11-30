@@ -147,12 +147,19 @@ pub type SourceMapperDyn = dyn SourceMapper;
 
 pub trait SourceMapper: crate::sync::Send + crate::sync::Sync {
     fn lookup_char_pos(&self, pos: BytePos) -> Loc;
+
     fn span_to_lines(&self, sp: Span) -> FileLinesResult;
+
     fn span_to_string(&self, sp: Span) -> String;
+
     fn span_to_filename(&self, sp: Span) -> Lrc<FileName>;
+
     fn merge_spans(&self, sp_lhs: Span, sp_rhs: Span) -> Option<Span>;
+
     fn call_span_if_macro(&self, sp: Span) -> Span;
+
     fn doctest_offset_line(&self, line: usize) -> usize;
+
     fn span_to_snippet(&self, sp: Span) -> Result<String, Box<SpanSnippetError>>;
 }
 
@@ -169,14 +176,17 @@ impl CodeSuggestion {
             hi_opt: Option<&Loc>,
         ) {
             let (lo, hi_opt) = (lo.col.to_usize(), hi_opt.map(|hi| hi.col.to_usize()));
+
             if let Some(line) = line_opt {
                 if let Some(lo) = line.char_indices().map(|(i, _)| i).nth(lo) {
                     let hi_opt = hi_opt.and_then(|hi| line.char_indices().map(|(i, _)| i).nth(hi));
+
                     buf.push_str(match hi_opt {
                         Some(hi) => &line[lo..hi],
                         None => &line[lo..],
                     });
                 }
+
                 if hi_opt.is_none() {
                     buf.push('\n');
                 }
@@ -200,14 +210,18 @@ impl CodeSuggestion {
                     .map(|part| part.span.lo())
                     .min()
                     .unwrap();
+
                 let hi = substitution
                     .parts
                     .iter()
                     .map(|part| part.span.hi())
                     .min()
                     .unwrap();
+
                 let bounding_span = Span::new(lo, hi);
+
                 let lines = cm.span_to_lines(bounding_span).unwrap();
+
                 assert!(!lines.lines.is_empty());
 
                 // To build up the result, we do this for each span:
@@ -220,14 +234,18 @@ impl CodeSuggestion {
                 //
                 // Finally push the trailing line segment of the last span
                 let fm = &lines.file;
+
                 let mut prev_hi = cm.lookup_char_pos(bounding_span.lo());
+
                 prev_hi.col = CharPos::from_usize(0);
 
                 let mut prev_line = fm.get_line(lines.lines[0].line_index);
+
                 let mut buf = String::new();
 
                 for part in &substitution.parts {
                     let cur_lo = cm.lookup_char_pos(part.span.lo());
+
                     if prev_hi.line == cur_lo.line {
                         push_trailing(&mut buf, prev_line.as_ref(), &prev_hi, Some(&cur_lo));
                     } else {
@@ -236,15 +254,20 @@ impl CodeSuggestion {
                         for idx in prev_hi.line..(cur_lo.line - 1) {
                             if let Some(line) = fm.get_line(idx) {
                                 buf.push_str(line.as_ref());
+
                                 buf.push('\n');
                             }
                         }
+
                         if let Some(cur_line) = fm.get_line(cur_lo.line - 1) {
                             buf.push_str(&cur_line[..cur_lo.col.to_usize()]);
                         }
                     }
+
                     buf.push_str(&part.snippet);
+
                     prev_hi = cm.lookup_char_pos(part.span.hi());
+
                     prev_line = fm.get_line(prev_hi.line - 1);
                 }
                 // if the replacement already ends with a newline, don't print the next line
@@ -400,10 +423,13 @@ impl Drop for Handler {
     fn drop(&mut self) {
         if self.err_count() == 0 {
             let mut bugs = self.delayed_span_bugs.borrow_mut();
+
             let has_bugs = !bugs.is_empty();
+
             for bug in bugs.drain(..) {
                 DiagnosticBuilder::new_diagnostic(self, bug).emit();
             }
+
             if has_bugs {
                 panic!("no errors encountered even though `delay_span_bug` issued");
             }
@@ -439,6 +465,7 @@ impl Handler {
         flags: HandlerFlags,
     ) -> Handler {
         let emitter = Box::new(EmitterWriter::stderr(color_config, cm, false, false));
+
         Handler::with_emitter_and_flags(emitter, flags)
     }
 
@@ -497,6 +524,7 @@ impl Handler {
     pub fn reset_err_count(&self) {
         // actually frees the underlying memory (which `clear` would not do)
         *self.emitted_diagnostics.borrow_mut() = Default::default();
+
         self.err_count.store(0, SeqCst);
     }
 
@@ -510,10 +538,13 @@ impl Handler {
         msg: &str,
     ) -> DiagnosticBuilder<'a> {
         let mut result = DiagnosticBuilder::new(self, Level::Warning, msg);
+
         result.set_span(sp);
+
         if !self.flags.can_emit_warnings {
             result.cancel();
         }
+
         result
     }
 
@@ -524,19 +555,25 @@ impl Handler {
         code: DiagnosticId,
     ) -> DiagnosticBuilder<'a> {
         let mut result = DiagnosticBuilder::new(self, Level::Warning, msg);
+
         result.set_span(sp);
+
         result.code(code);
+
         if !self.flags.can_emit_warnings {
             result.cancel();
         }
+
         result
     }
 
     pub fn struct_warn<'a>(&'a self, msg: &str) -> DiagnosticBuilder<'a> {
         let mut result = DiagnosticBuilder::new(self, Level::Warning, msg);
+
         if !self.flags.can_emit_warnings {
             result.cancel();
         }
+
         result
     }
 
@@ -546,7 +583,9 @@ impl Handler {
         msg: &str,
     ) -> DiagnosticBuilder<'a> {
         let mut result = DiagnosticBuilder::new(self, Level::Error, msg);
+
         result.set_span(sp);
+
         result
     }
 
@@ -557,8 +596,11 @@ impl Handler {
         code: DiagnosticId,
     ) -> DiagnosticBuilder<'a> {
         let mut result = DiagnosticBuilder::new(self, Level::Error, msg);
+
         result.set_span(sp);
+
         result.code(code);
+
         result
     }
 
@@ -574,7 +616,9 @@ impl Handler {
         code: DiagnosticId,
     ) -> DiagnosticBuilder<'a> {
         let mut result = DiagnosticBuilder::new(self, Level::Error, msg);
+
         result.code(code);
+
         result
     }
 
@@ -584,7 +628,9 @@ impl Handler {
         msg: &str,
     ) -> DiagnosticBuilder<'a> {
         let mut result = DiagnosticBuilder::new(self, Level::Fatal, msg);
+
         result.set_span(sp);
+
         result
     }
 
@@ -595,8 +641,11 @@ impl Handler {
         code: DiagnosticId,
     ) -> DiagnosticBuilder<'a> {
         let mut result = DiagnosticBuilder::new(self, Level::Fatal, msg);
+
         result.set_span(sp);
+
         result.code(code);
+
         result
     }
 
@@ -616,6 +665,7 @@ impl Handler {
 
     pub fn span_fatal<S: Into<MultiSpan>>(&self, sp: S, msg: &str) -> FatalError {
         self.emit(&sp.into(), msg, Fatal);
+
         FatalError
     }
 
@@ -626,6 +676,7 @@ impl Handler {
         code: DiagnosticId,
     ) -> FatalError {
         self.emit_with_code(&sp.into(), msg, code, Fatal);
+
         FatalError
     }
 
@@ -639,7 +690,9 @@ impl Handler {
         msg: &str,
     ) -> DiagnosticBuilder<'a> {
         let mut result = DiagnosticBuilder::new(self, Level::Error, msg);
+
         result.set_span(sp);
+
         result
     }
 
@@ -657,6 +710,7 @@ impl Handler {
 
     pub fn span_bug<S: Into<MultiSpan>>(&self, sp: S, msg: &str) -> ! {
         self.emit(&sp.into(), msg, Bug);
+
         panic!("{}", ExplicitBug);
     }
 
@@ -665,8 +719,11 @@ impl Handler {
             // FIXME: don't abort here if report_delayed_bugs is off
             self.span_bug(sp, msg);
         }
+
         let mut diagnostic = Diagnostic::new(Level::Bug, msg);
+
         diagnostic.set_span(sp.into());
+
         self.delay_as_bug(diagnostic);
     }
 
@@ -674,6 +731,7 @@ impl Handler {
         if self.flags.report_delayed_bugs {
             DiagnosticBuilder::new_diagnostic(self, diagnostic.clone()).emit();
         }
+
         self.delayed_span_bugs.borrow_mut().push(diagnostic);
     }
 
@@ -687,7 +745,9 @@ impl Handler {
 
     pub fn span_note_diag<'a>(&'a self, sp: Span, msg: &str) -> DiagnosticBuilder<'a> {
         let mut db = DiagnosticBuilder::new(self, Note, msg);
+
         db.set_span(sp);
+
         db
     }
 
@@ -703,7 +763,9 @@ impl Handler {
         if self.flags.treat_err_as_bug {
             self.bug(msg);
         }
+
         DiagnosticBuilder::new(self, Fatal, msg).emit();
+
         FatalError
     }
 
@@ -711,23 +773,29 @@ impl Handler {
         if self.flags.treat_err_as_bug {
             self.bug(msg);
         }
+
         let mut db = DiagnosticBuilder::new(self, Error, msg);
+
         db.emit();
     }
 
     pub fn warn(&self, msg: &str) {
         let mut db = DiagnosticBuilder::new(self, Warning, msg);
+
         db.emit();
     }
 
     pub fn note_without_error(&self, msg: &str) {
         let mut db = DiagnosticBuilder::new(self, Note, msg);
+
         db.emit();
     }
 
     pub fn bug(&self, msg: &str) -> ! {
         let mut db = DiagnosticBuilder::new(self, Bug, msg);
+
         db.emit();
+
         panic!("{}", ExplicitBug);
     }
 
@@ -737,6 +805,7 @@ impl Handler {
 
     fn bump_err_count(&self) {
         self.panic_if_treat_err_as_bug();
+
         self.err_count.fetch_add(1, SeqCst);
     }
 
@@ -758,7 +827,9 @@ impl Handler {
         let _ = self.fatal(&s);
 
         let can_show_explain = self.emitter.borrow().should_show_explain();
+
         let are_there_diagnostics = !self.emitted_diagnostic_codes.borrow().is_empty();
+
         if can_show_explain && are_there_diagnostics {
             let mut error_codes = self
                 .emitted_diagnostic_codes
@@ -769,19 +840,23 @@ impl Handler {
                     _ => None,
                 })
                 .collect::<Vec<_>>();
+
             if !error_codes.is_empty() {
                 error_codes.sort();
+
                 if error_codes.len() > 1 {
                     let limit = if error_codes.len() > 9 {
                         9
                     } else {
                         error_codes.len()
                     };
+
                     self.failure(&format!(
                         "Some errors occurred: {}{}",
                         error_codes[..limit].join(", "),
                         if error_codes.len() > 9 { "..." } else { "." }
                     ));
+
                     self.failure(&format!(
                         "For more information about an error, try `rustc --explain {}`.",
                         &error_codes[0]
@@ -800,6 +875,7 @@ impl Handler {
         if self.err_count() == 0 {
             return;
         }
+
         FatalError.raise();
     }
 
@@ -807,9 +883,13 @@ impl Handler {
         if lvl == Warning && !self.flags.can_emit_warnings {
             return;
         }
+
         let mut db = DiagnosticBuilder::new(self, lvl, msg);
+
         db.set_span(msp.clone());
+
         db.emit();
+
         if !self.continue_after_error.get() {
             self.abort_if_errors();
         }
@@ -819,9 +899,13 @@ impl Handler {
         if lvl == Warning && !self.flags.can_emit_warnings {
             return;
         }
+
         let mut db = DiagnosticBuilder::new_with_code(self, lvl, Some(code), msg);
+
         db.set_span(msp.clone());
+
         db.emit();
+
         if !self.continue_after_error.get() {
             self.abort_if_errors();
         }
@@ -838,6 +922,7 @@ impl Handler {
 
     pub fn force_print_db(&self, mut db: DiagnosticBuilder<'_>) {
         self.emitter.borrow_mut().emit(&db);
+
         db.cancel();
     }
 
@@ -856,8 +941,11 @@ impl Handler {
 
         let diagnostic_hash = {
             use std::hash::Hash;
+
             let mut hasher = StableHasher::new();
+
             diagnostic.hash(&mut hasher);
+
             hasher.finish()
         };
 
@@ -869,6 +957,7 @@ impl Handler {
             .insert(diagnostic_hash)
         {
             self.emitter.borrow_mut().emit(db);
+
             if db.is_error() {
                 self.bump_err_count();
             }
@@ -911,22 +1000,29 @@ impl Level {
     #[cfg(feature = "tty-emitter")]
     fn color(self) -> ColorSpec {
         let mut spec = ColorSpec::new();
+
         match self {
             Bug | Fatal | PhaseFatal | Error => {
                 spec.set_fg(Some(Color::Red)).set_intense(true);
             }
+
             Warning => {
                 spec.set_fg(Some(Color::Yellow)).set_intense(cfg!(windows));
             }
+
             Note => {
                 spec.set_fg(Some(Color::Green)).set_intense(true);
             }
+
             Help => {
                 spec.set_fg(Some(Color::Cyan)).set_intense(true);
             }
+
             FailureNote => {}
+
             Cancelled => unreachable!(),
         }
+
         spec
     }
 

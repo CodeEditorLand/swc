@@ -42,13 +42,17 @@ fn for_each_use_item(path: &[Ident], tree: &UseTree, op: &mut impl FnMut(Ident, 
             }
 
             let mut path = path.to_vec();
+
             path.push(p.ident.clone());
 
             for_each_use_item(&path, &p.tree, op);
         }
+
         UseTree::Name(name) => {
             let mut path = path.to_vec();
+
             path.push(name.ident.clone());
+
             op(
                 name.ident.clone(),
                 Path {
@@ -57,8 +61,11 @@ fn for_each_use_item(path: &[Ident], tree: &UseTree, op: &mut impl FnMut(Ident, 
                 },
             );
         }
+
         UseTree::Rename(..) => {}
+
         UseTree::Glob(_) => {}
+
         UseTree::Group(g) => {
             for item in &g.items {
                 for_each_use_item(path, item, op);
@@ -69,11 +76,13 @@ fn for_each_use_item(path: &[Ident], tree: &UseTree, op: &mut impl FnMut(Ident, 
 
 fn collect_use_items(file: &File) -> Vec<ItemUse> {
     let mut use_items = Vec::new();
+
     for item in &file.items {
         if let syn::Item::Use(item_use) = item {
             use_items.push(item_use.clone());
         }
     }
+
     use_items
 }
 

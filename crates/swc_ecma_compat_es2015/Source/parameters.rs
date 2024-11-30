@@ -16,6 +16,7 @@ use tracing::trace;
 
 pub fn parameters(c: Config, unresolved_mark: Mark) -> impl 'static + Pass {
     let unresolved_ctxt = SyntaxContext::empty().apply_mark(unresolved_mark);
+
     visit_mut_pass(Params {
         c,
         unresolved_ctxt,
@@ -73,9 +74,13 @@ pub struct Config {
 impl Params {
     fn visit_mut_fn_like(&mut self, ps: &mut Vec<Param>, body: &mut BlockStmt, is_setter: bool) {
         let mut params = Vec::new();
+
         let mut decls = Vec::new();
+
         let mut loose_stmt = Vec::new();
+
         let mut unpack_rest = None;
+
         let mut decls_after_unpack = Vec::new();
 
         let mut after_default = false;
@@ -96,6 +101,7 @@ impl Params {
                         params.push(param)
                     }
                 }
+
                 Pat::Array(..) | Pat::Object(..) => {
                     if after_default && !self.c.ignore_function_length {
                         decls.push(VarDeclarator {
@@ -111,12 +117,14 @@ impl Params {
                             pat: binding.clone().into(),
                             ..param
                         });
+
                         let decl = VarDeclarator {
                             span,
                             name: param.pat,
                             init: Some(binding.into()),
                             definite: false,
                         };
+
                         if self.c.ignore_function_length {
                             loose_stmt.push(
                                 VarDecl {
@@ -133,6 +141,7 @@ impl Params {
                         }
                     }
                 }
+
                 Pat::Assign(AssignPat { left, right, .. }) => {
                     // arguments.length will always be 1 in setter
                     if !(self.c.ignore_function_length || is_setter) {
@@ -171,6 +180,7 @@ impl Params {
                             pat: ident.clone().into(),
                             decorators: Vec::new(),
                         });
+
                         loose_stmt.push(
                             IfStmt {
                                 span,
@@ -197,11 +207,13 @@ impl Params {
                         )
                     } else {
                         let binding = private_ident!(span, "param");
+
                         params.push(Param {
                             span: DUMMY_SP,
                             decorators: Default::default(),
                             pat: binding.clone().into(),
                         });
+
                         loose_stmt.push(
                             VarDecl {
                                 span,
@@ -229,6 +241,7 @@ impl Params {
                         )
                     }
                 }
+
                 Pat::Rest(RestPat { arg, .. }) => {
                     // Inject a for statement
                     //
@@ -236,13 +249,16 @@ impl Params {
                     // _len; _key++){
                     //      a1[_key] = arguments[_key];
                     // }
+
                     assert!(unpack_rest.is_none());
 
                     // TODO: Optimize (use `arguments` instead of rest argument)
 
                     let mark = Mark::fresh(Mark::root());
+
                     let idx_ident =
                         quote_ident!(SyntaxContext::empty().apply_mark(mark), span, "_key");
+
                     let len_ident =
                         quote_ident!(SyntaxContext::empty().apply_mark(mark), span, "_len");
 
@@ -251,12 +267,14 @@ impl Params {
                         arg => {
                             let tmp_ident =
                                 quote_ident!(SyntaxContext::empty().apply_mark(mark), span, "_tmp");
+
                             decls_after_unpack.push(VarDeclarator {
                                 span: DUMMY_SP,
                                 name: arg,
                                 init: Some(Box::new(tmp_ident.clone().into())),
                                 definite: false,
                             });
+
                             tmp_ident
                         }
                     };
@@ -279,6 +297,7 @@ impl Params {
                                 .into(),
                             }
                             .into();
+
                             if !min_zero {
                                 return bin;
                             }
@@ -422,6 +441,7 @@ impl Params {
                         .into(),
                     )
                 }
+
                 _ => unreachable!(),
             }
         }
@@ -440,7 +460,9 @@ impl Params {
                 .into(),
             )
         }
+
         iter.extend(unpack_rest);
+
         if !decls_after_unpack.is_empty() {
             iter.push(
                 VarDecl {
@@ -453,8 +475,10 @@ impl Params {
                 .into(),
             );
         }
+
         if (is_setter || self.c.ignore_function_length) && !loose_stmt.is_empty() {
             loose_stmt.extend(iter);
+
             prepend_stmts(&mut body.stmts, loose_stmt.into_iter());
         } else {
             prepend_stmts(&mut body.stmts, iter.into_iter());
@@ -474,8 +498,11 @@ impl VisitMut for Params {
         prop.key.visit_mut_children_with(self);
 
         let old_in_prop = self.in_prop;
+
         self.in_prop = !prop.is_static;
+
         prop.value.visit_mut_with(self);
+
         self.in_prop = old_in_prop;
     }
 
@@ -488,18 +515,23 @@ impl VisitMut for Params {
             }
 
             let old_in_subclass = self.in_subclass;
+
             let old_in_prop = self.in_prop;
+
             self.in_subclass = false;
+
             self.in_prop = false;
 
             f.visit_mut_children_with(self);
 
             let mut body = f.body.take().unwrap();
+
             self.visit_mut_fn_like(&mut f.params, &mut body, true);
 
             f.body = Some(body);
 
             self.in_subclass = old_in_subclass;
+
             self.in_prop = old_in_prop;
         } else {
             m.visit_mut_children_with(self);
@@ -509,8 +541,11 @@ impl VisitMut for Params {
     // same for private prop
     fn visit_mut_private_prop(&mut self, prop: &mut PrivateProp) {
         let old_in_prop = self.in_prop;
+
         self.in_prop = !prop.is_static;
+
         prop.value.visit_mut_with(self);
+
         self.in_prop = old_in_prop;
     }
 
@@ -524,7 +559,9 @@ impl VisitMut for Params {
         if let Some(decls) = decls {
             if let BlockStmtOrExpr::Expr(v) = body {
                 let mut stmts = Vec::new();
+
                 prepend_stmt(&mut stmts, decls);
+
                 stmts.push(
                     ReturnStmt {
                         span: DUMMY_SP,
@@ -545,6 +582,7 @@ impl VisitMut for Params {
         f.visit_mut_children_with(self);
 
         let mut params = Vec::new();
+
         if f.param.is_some() {
             params.push(Param {
                 span: DUMMY_SP,
@@ -571,6 +609,7 @@ impl VisitMut for Params {
 
     fn visit_mut_constructor(&mut self, f: &mut Constructor) {
         trace!("visit_mut_constructor(parmas.len() = {})", f.params.len());
+
         f.params.visit_mut_with(self);
 
         if let Some(BlockStmt { stmts, .. }) = &mut f.body {
@@ -586,6 +625,7 @@ impl VisitMut for Params {
                     if let Some(this_id) = this_id {
                         init_this(stmts, &this_id)
                     }
+
                     prepend_stmt(stmts, stmt);
                 }
             } else {
@@ -624,7 +664,9 @@ impl VisitMut for Params {
                         f.visit_mut_children_with(&mut self.hoister)
                     } else {
                         let mut hoister = FnEnvHoister::new(self.unresolved_ctxt);
+
                         f.visit_mut_children_with(&mut hoister);
+
                         local_vars = hoister.to_stmt();
                     }
                 }
@@ -687,6 +729,7 @@ impl VisitMut for Params {
                         .into(),
                         _ => func,
                     };
+
                     return;
                 }
 
@@ -700,6 +743,7 @@ impl VisitMut for Params {
                         Stmt::Return(ReturnStmt { arg: Some(arg), .. }) => {
                             Box::new(BlockStmtOrExpr::Expr(arg))
                         }
+
                         _ => unreachable!(),
                     }
                 } else {
@@ -718,6 +762,7 @@ impl VisitMut for Params {
                 }
                 .into();
             }
+
             _ => e.visit_mut_children_with(self),
         }
     }
@@ -728,18 +773,23 @@ impl VisitMut for Params {
         }
 
         let old_in_subclass = self.in_subclass;
+
         let old_in_prop = self.in_prop;
+
         self.in_subclass = false;
+
         self.in_prop = false;
 
         f.visit_mut_children_with(self);
 
         let mut body = f.body.take().unwrap();
+
         self.visit_mut_fn_like(&mut f.params, &mut body, false);
 
         f.body = Some(body);
 
         self.in_subclass = old_in_subclass;
+
         self.in_prop = old_in_prop;
     }
 
@@ -751,8 +801,11 @@ impl VisitMut for Params {
         f.visit_mut_children_with(self);
 
         let mut params = Vec::new();
+
         let mut body = f.body.take().unwrap();
+
         self.visit_mut_fn_like(&mut params, &mut body, false);
+
         debug_assert_eq!(params, Vec::new());
 
         f.body = Some(body);
@@ -772,23 +825,29 @@ impl VisitMut for Params {
         }];
 
         let mut body = f.body.take().unwrap();
+
         self.visit_mut_fn_like(&mut params, &mut body, true);
 
         debug_assert!(params.len() == 1);
 
         f.param = Box::new(params.pop().unwrap().pat);
+
         f.body = Some(body);
     }
 
     fn visit_mut_class(&mut self, c: &mut Class) {
         let old_in_subclass = self.in_subclass;
+
         let old_in_prop = self.in_prop;
 
         self.in_subclass = c.super_class.is_some();
+
         self.in_prop = false;
+
         c.visit_mut_children_with(self);
 
         self.in_subclass = old_in_subclass;
+
         self.in_prop = old_in_prop;
     }
 

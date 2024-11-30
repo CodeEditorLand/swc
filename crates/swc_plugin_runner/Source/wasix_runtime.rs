@@ -12,23 +12,30 @@ use wasmer_wasix::Runtime;
 static ENGINE: Lazy<Mutex<wasmer::Engine>> = Lazy::new(|| {
     // Use empty enumset to disable simd.
     use enumset::EnumSet;
+
     use wasmer::{
         sys::{BaseTunables, EngineBuilder},
         CompilerConfig, Target, Triple,
     };
+
     let mut set = EnumSet::new();
 
     // [TODO]: Should we use is_x86_feature_detected! macro instead?
     #[cfg(target_arch = "x86_64")]
     set.insert(wasmer::CpuFeature::SSE2);
+
     let target = Target::new(Triple::host(), set);
 
     let config = wasmer_compiler_cranelift::Cranelift::default();
+
     let mut engine = EngineBuilder::new(Box::new(config) as Box<dyn CompilerConfig>)
         .set_target(Some(target))
         .engine();
+
     let tunables = BaseTunables::for_target(engine.target());
+
     engine.set_tunables(tunables);
+
     parking_lot::Mutex::new(wasmer::Engine::from(engine))
 });
 
@@ -72,6 +79,7 @@ pub fn build_wasi_runtime(
         SharedCache::default().with_fallback(wasmer_wasix::runtime::module_cache::in_memory());
 
     let dummy_loader = UnsupportedPackageLoader;
+
     let rt = PluggableRuntime {
         rt: Arc::new(TokioTaskManager::default()),
         networking: Arc::new(virtual_net::UnsupportedVirtualNetworking::default()),
@@ -92,6 +100,7 @@ pub fn build_wasi_runtime(
 #[allow(unused_mut)]
 pub(crate) fn new_store() -> Store {
     let engine = ENGINE.lock().clone();
+
     Store::new(engine)
 }
 

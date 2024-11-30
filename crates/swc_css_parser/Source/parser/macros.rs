@@ -1,6 +1,7 @@
 macro_rules! span {
     ($parser:expr, $start:expr) => {{
         let last_pos = $parser.input.last_pos();
+
         swc_common::Span::new($start, last_pos)
     }};
 }
@@ -49,6 +50,7 @@ macro_rules! cur {
             Some(v) => v,
             None => {
                 let last_pos = $parser.input.last_pos();
+
                 let span = swc_common::Span::new(last_pos, last_pos);
 
                 for error in $parser.input.take_errors() {
@@ -77,6 +79,7 @@ macro_rules! is_case_insensitive_ident {
             {
                 true
             }
+
             _ => false,
         }
     }};
@@ -92,6 +95,7 @@ macro_rules! is_one_of_case_insensitive_ident {
                     false
                 }
             }
+
             _ => false,
         }
     };
@@ -149,6 +153,7 @@ macro_rules! eat {
     ($parser:expr, $tt:tt) => {
         if is!($parser, $tt) {
             bump!($parser);
+
             true
         } else {
             false
@@ -160,6 +165,7 @@ macro_rules! expect {
     ($parser:expr, $tt:tt) => {
         if !eat!($parser, $tt) {
             let span = $parser.input.cur_span();
+
             return Err(crate::error::Error::new(
                 span,
                 crate::error::ErrorKind::ExpectedButGot(stringify!($tt)),

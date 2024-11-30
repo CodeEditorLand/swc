@@ -7,6 +7,7 @@ where
     F: FnOnce(&Lrc<SourceMap>, &Handler) -> Result<Ret, Error>,
 {
     let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
+
     try_with_handler(
         cm.clone(),
         HandlerOpts {

@@ -5,6 +5,7 @@ use super::*;
 
 fn tr() -> impl Pass {
     let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
+
     jsx_src(true, cm)
 }
 

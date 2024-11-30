@@ -144,6 +144,7 @@ where
                     .map(|(idx, node)| {
                         GLOBALS.set(globals, || {
                             let mut visitor = Parallel::create(&*self);
+
                             op(&mut visitor, idx, node);
 
                             visitor

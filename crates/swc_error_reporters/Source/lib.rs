@@ -73,6 +73,7 @@ impl SourceCode for MietteSourceCode<'_> {
         context_lines_after: usize,
     ) -> Result<Box<dyn SpanContents<'a> + 'a>, MietteError> {
         let lo = span.offset();
+
         let hi = lo + span.len();
 
         let mut span = Span::new(BytePos(lo as _), BytePos(hi as _));
@@ -87,6 +88,7 @@ impl SourceCode for MietteSourceCode<'_> {
                     .sum::<usize>();
 
                 span.lo.0 -= (len as u32) - 1;
+
                 span
             })
             .unwrap_or(span);
@@ -101,6 +103,7 @@ impl SourceCode for MietteSourceCode<'_> {
                     .sum::<usize>();
 
                 span.hi.0 += (len as u32) - 1;
+
                 span
             })
             .unwrap_or(span);
@@ -111,10 +114,13 @@ impl SourceCode for MietteSourceCode<'_> {
                 if src.lines().next().is_some() {
                     return span;
                 }
+
                 let lo = src.len() - src.trim_start().len();
+
                 let hi = src.len() - src.trim_end().len();
 
                 span.lo.0 += lo as u32;
+
                 span.hi.0 -= hi as u32;
 
                 span
@@ -131,6 +137,7 @@ impl SourceCode for MietteSourceCode<'_> {
         }
 
         let loc = self.0.lookup_char_pos(span.lo());
+
         let line_count = loc.file.lines.len();
 
         let name = if self.1.skip_filename {
@@ -266,7 +273,9 @@ impl fmt::Display for MietteDiagnostic<'_> {
 
 fn convert_span(span: Span) -> SourceSpan {
     let len = span.hi - span.lo;
+
     let start = SourceOffset::from(span.lo.0 as usize);
+
     SourceSpan::new(start, len.0 as usize)
 }
 
@@ -373,6 +382,7 @@ fn level_to_severity(level: Level) -> Option<Severity> {
         Level::FailureNote | Level::Bug | Level::Fatal | Level::PhaseFatal | Level::Error => {
             Some(Severity::Error)
         }
+
         Level::Warning => Some(Severity::Warning),
         Level::Note | Level::Help => Some(Severity::Advice),
         Level::Cancelled => None,

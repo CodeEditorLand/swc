@@ -7,8 +7,10 @@ fn bench_alloc(c:&mut Criterion) {
 	fn direct_alloc_std(b:&mut Bencher, times:usize) {
 		b.iter(|| {
 			let mut buf = std::vec::Vec::new();
+
 			for i in 0..times {
 				let item:std::boxed::Box<usize> = black_box(std::boxed::Box::new(black_box(i)));
+
 				buf.push(item);
 			}
 		})
@@ -17,8 +19,10 @@ fn bench_alloc(c:&mut Criterion) {
 	fn direct_alloc_no_scope(b:&mut Bencher, times:usize) {
 		b.iter(|| {
 			let mut vec = SwcVec::new();
+
 			for i in 0..times {
 				let item:SwcBox<usize> = black_box(SwcBox::new(black_box(i)));
+
 				vec.push(item);
 			}
 		})
@@ -29,8 +33,10 @@ fn bench_alloc(c:&mut Criterion) {
 			let alloc = FastAlloc::default();
 
 			let mut vec = SwcVec::new_in(alloc);
+
 			for i in 0..times {
 				let item:SwcBox<usize> = black_box(SwcBox::new_in(black_box(i), alloc));
+
 				vec.push(item);
 			}
 		})
@@ -39,12 +45,14 @@ fn bench_alloc(c:&mut Criterion) {
 	fn direct_alloc_scoped(b:&mut Bencher, times:usize) {
 		b.iter(|| {
 			let allocator = Allocator::default();
+
 			let _guard = unsafe { allocator.guard() };
 
 			let mut vec = SwcVec::new();
 
 			for i in 0..times {
 				let item:SwcBox<usize> = black_box(SwcBox::new(black_box(i)));
+
 				vec.push(item);
 			}
 		})
@@ -53,6 +61,7 @@ fn bench_alloc(c:&mut Criterion) {
 	fn fast_alloc_scoped(b:&mut Bencher, times:usize) {
 		b.iter(|| {
 			let alloc = Allocator::default();
+
 			let _guard = unsafe { alloc.guard() };
 
 			let alloc = FastAlloc::default();
@@ -61,20 +70,24 @@ fn bench_alloc(c:&mut Criterion) {
 
 			for i in 0..times {
 				let item:SwcBox<usize> = black_box(SwcBox::new_in(black_box(i), alloc));
+
 				vec.push(item);
 			}
 		})
 	}
 
 	c.bench_function("common/allocator/alloc/std/1000000", |b| direct_alloc_std(b, 1000000));
+
 	c.bench_function("common/allocator/alloc/no-scope/1000000", |b| {
 		direct_alloc_no_scope(b, 1000000)
 	});
+
 	c.bench_function("common/allocator/alloc/scoped/1000000", |b| direct_alloc_scoped(b, 1000000));
 
 	c.bench_function("common/allocator/alloc/cached-no-scope/1000000", |b| {
 		fast_alloc_no_scope(b, 1000000)
 	});
+
 	c.bench_function("common/allocator/alloc/cached-scoped/1000000", |b| {
 		fast_alloc_scoped(b, 1000000)
 	});
@@ -82,8 +95,10 @@ fn bench_alloc(c: &mut Criterion) {
     fn direct_alloc_std(b: &mut Bencher, times: usize) {
         b.iter(|| {
             let mut buf = std::vec::Vec::new();
+
             for i in 0..times {
                 let item: std::boxed::Box<usize> = black_box(std::boxed::Box::new(black_box(i)));
+
                 buf.push(item);
             }
         })
@@ -92,8 +107,10 @@ fn bench_alloc(c: &mut Criterion) {
     fn direct_alloc_no_scope(b: &mut Bencher, times: usize) {
         b.iter(|| {
             let mut vec = SwcVec::new();
+
             for i in 0..times {
                 let item: SwcBox<usize> = black_box(SwcBox::new(black_box(i)));
+
                 vec.push(item);
             }
         })
@@ -104,8 +121,10 @@ fn bench_alloc(c: &mut Criterion) {
             let alloc = FastAlloc::default();
 
             let mut vec = SwcVec::new_in(alloc);
+
             for i in 0..times {
                 let item: SwcBox<usize> = black_box(SwcBox::new_in(black_box(i), alloc));
+
                 vec.push(item);
             }
         })
@@ -114,12 +133,14 @@ fn bench_alloc(c: &mut Criterion) {
     fn direct_alloc_scoped(b: &mut Bencher, times: usize) {
         b.iter(|| {
             let allocator = Allocator::default();
+
             let _guard = unsafe { allocator.guard() };
 
             let mut vec = SwcVec::new();
 
             for i in 0..times {
                 let item: SwcBox<usize> = black_box(SwcBox::new(black_box(i)));
+
                 vec.push(item);
             }
         })
@@ -128,6 +149,7 @@ fn bench_alloc(c: &mut Criterion) {
     fn fast_alloc_scoped(b: &mut Bencher, times: usize) {
         b.iter(|| {
             let alloc = Allocator::default();
+
             let _guard = unsafe { alloc.guard() };
 
             let alloc = FastAlloc::default();
@@ -136,6 +158,7 @@ fn bench_alloc(c: &mut Criterion) {
 
             for i in 0..times {
                 let item: SwcBox<usize> = black_box(SwcBox::new_in(black_box(i), alloc));
+
                 vec.push(item);
             }
         })
@@ -144,9 +167,11 @@ fn bench_alloc(c: &mut Criterion) {
     c.bench_function("common/allocator/alloc/std/1000000", |b| {
         direct_alloc_std(b, 1000000)
     });
+
     c.bench_function("common/allocator/alloc/no-scope/1000000", |b| {
         direct_alloc_no_scope(b, 1000000)
     });
+
     c.bench_function("common/allocator/alloc/scoped/1000000", |b| {
         direct_alloc_scoped(b, 1000000)
     });
@@ -154,6 +179,7 @@ fn bench_alloc(c: &mut Criterion) {
     c.bench_function("common/allocator/alloc/cached-no-scope/1000000", |b| {
         fast_alloc_no_scope(b, 1000000)
     });
+
     c.bench_function("common/allocator/alloc/cached-scoped/1000000", |b| {
         fast_alloc_scoped(b, 1000000)
     });

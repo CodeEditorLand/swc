@@ -12,23 +12,30 @@ pub type Symbol = Str;
 /// Ported from `EmitWriteJs`.
 pub trait WriteJs {
     fn increase_indent(&mut self) -> Result;
+
     fn decrease_indent(&mut self) -> Result;
 
     /// This *may* write semicolon.
     fn write_semi(&mut self, span: Option<Span>) -> Result;
 
     fn write_space(&mut self) -> Result;
+
     fn write_keyword(&mut self, span: Option<Span>, s: &'static str) -> Result;
+
     fn write_operator(&mut self, span: Option<Span>, s: &str) -> Result;
+
     fn write_param(&mut self, s: &str) -> Result;
+
     fn write_property(&mut self, s: &str) -> Result;
 
     fn write_line(&mut self) -> Result;
 
     fn write_lit(&mut self, span: Span, s: &str) -> Result;
+
     fn write_comment(&mut self, s: &str) -> Result;
 
     fn write_str_lit(&mut self, span: Span, s: &str) -> Result;
+
     fn write_str(&mut self, s: &str) -> Result;
 
     fn write_symbol(&mut self, span: Span, s: &str) -> Result;

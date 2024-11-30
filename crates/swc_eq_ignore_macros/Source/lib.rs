@@ -60,8 +60,11 @@ impl Deriver {
         let body = self.make_body(&input.data);
 
         let trait_name = &self.trait_name;
+
         let ty = &input.ident;
+
         let method_name = &self.method_name;
+
         quote!(
             #[automatically_derived]
             impl ::swc_common::#trait_name for #ty {
@@ -81,11 +84,14 @@ impl Deriver {
 
                 parse_quote!(match (self, other) { #arm })
             }
+
             Data::Enum(e) => {
                 //
                 let mut arms = Punctuated::<_, Token![,]>::default();
+
                 for v in &e.variants {
                     let vi = &v.ident;
+
                     let arm = self.make_arm_from_fields(parse_quote!(Self::#vi), &v.fields);
 
                     arms.push(arm);
@@ -95,13 +101,16 @@ impl Deriver {
 
                 parse_quote!(match (self, other) { #arms })
             }
+
             Data::Union(_) => unimplemented!("union"),
         }
     }
 
     fn make_arm_from_fields(&self, pat_path: Path, fields: &Fields) -> Arm {
         let mut l_pat_fields = Punctuated::<_, Token![,]>::default();
+
         let mut r_pat_fields = Punctuated::<_, Token![,]>::default();
+
         let mut exprs = Vec::new();
 
         for (i, field) in fields
@@ -130,6 +139,7 @@ impl Deriver {
                 .unwrap_or_else(|| Ident::new(&format!("_{}", i), field.ty.span()));
             //
             let l_binding_ident = Ident::new(&format!("_l_{}", base), base.span());
+
             let r_binding_ident = Ident::new(&format!("_r_{}", base), base.span());
 
             let make_pat_field = |ident: &Ident| FieldPat {
@@ -152,6 +162,7 @@ impl Deriver {
             };
 
             l_pat_fields.push(make_pat_field(&l_binding_ident));
+
             r_pat_fields.push(make_pat_field(&r_binding_ident));
 
             exprs.push(parse_quote!(#l_binding_ident.#method_name(#r_binding_ident)));
@@ -176,6 +187,7 @@ impl Deriver {
                 paren_token: Default::default(),
                 elems: {
                     let mut elems = Punctuated::default();
+
                     elems.push(Pat::Struct(PatStruct {
                         attrs: Default::default(),
                         qself: None,
@@ -187,6 +199,7 @@ impl Deriver {
                             dot2_token: Token![..](Span::call_site()),
                         }),
                     }));
+
                     elems.push(Pat::Struct(PatStruct {
                         attrs: Default::default(),
                         qself: None,
@@ -198,6 +211,7 @@ impl Deriver {
                             dot2_token: Token![..](Span::call_site()),
                         }),
                     }));
+
                     elems
                 },
             }),

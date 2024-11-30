@@ -27,9 +27,11 @@ impl Compiler {
 
                 Some(value)
             }
+
             Some(ComponentValue::Ident(ident)) if ident.value.eq_ignore_ascii_case("none") => {
                 Some(0.0)
             }
+
             _ => None,
         }
     }
@@ -38,6 +40,7 @@ impl Compiler {
         match percentage {
             Some(ComponentValue::Percentage(percentage)) => {
                 let Number { value, .. } = &percentage.value;
+
                 if *value > 100.0 {
                     return Some(1.0);
                 } else if *value < 0.0 {
@@ -46,9 +49,11 @@ impl Compiler {
 
                 Some(*value / 100.0)
             }
+
             Some(ComponentValue::Ident(ident)) if ident.value.eq_ignore_ascii_case("none") => {
                 Some(0.0)
             }
+
             _ => None,
         }
     }
@@ -69,6 +74,7 @@ impl Compiler {
 
                     Some(*value)
                 }
+
                 AlphaValue::Percentage(Percentage {
                     value: Number { value, .. },
                     ..
@@ -97,14 +103,17 @@ impl Compiler {
                 Some(value) => value,
                 _ => return,
             };
+
             let w = match self.get_percentage(function.value.get(1)) {
                 Some(value) => value,
                 _ => return,
             };
+
             let b = match self.get_percentage(function.value.get(2)) {
                 Some(value) => value,
                 _ => return,
             };
+
             let a = match self.get_alpha_value(function.value.get(4)) {
                 Some(value) => value,
                 _ => return,

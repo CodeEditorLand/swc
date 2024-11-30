@@ -33,6 +33,7 @@ impl SourceMapContent {
             SourceMapContent::Json(s) => {
                 SourceMap::from_slice(s.as_bytes()).context("failed to parse sourcemap")
             }
+
             SourceMapContent::Parsed {
                 sources,
                 names,
@@ -43,12 +44,17 @@ impl SourceMapContent {
                 sources_content,
             } => {
                 let mut dst_col;
+
                 let mut src_id = 0;
+
                 let mut src_line = 0;
+
                 let mut src_col = 0;
+
                 let mut name_id = 0;
 
                 let allocation_size = mappings.matches(&[',', ';'][..]).count() + 10;
+
                 let mut tokens = Vec::with_capacity(allocation_size);
 
                 let mut nums = Vec::with_capacity(6);
@@ -66,10 +72,13 @@ impl SourceMapContent {
                         }
 
                         nums.clear();
+
                         nums = parse_vlq_segment(segment)?;
+
                         dst_col = (i64::from(dst_col) + nums[0]) as u32;
 
                         let mut src = !0;
+
                         let mut name = !0;
 
                         if nums.len() > 1 {
@@ -79,20 +88,26 @@ impl SourceMapContent {
                                     nums.len()
                                 );
                             }
+
                             src_id = (i64::from(src_id) + nums[1]) as u32;
+
                             if src_id >= sources.len() as u32 {
                                 bail!("invalid source reference: {}", src_id);
                             }
 
                             src = src_id;
+
                             src_line = (i64::from(src_line) + nums[2]) as u32;
+
                             src_col = (i64::from(src_col) + nums[3]) as u32;
 
                             if nums.len() > 4 {
                                 name_id = (i64::from(name_id) + nums[4]) as u32;
+
                                 if name_id >= names.len() as u32 {
                                     bail!("invalid name reference: {}", name_id);
                                 }
+
                                 name = name_id;
                             }
                         }
@@ -116,7 +131,9 @@ impl SourceMapContent {
                     sources.clone(),
                     sources_content.clone(),
                 );
+
                 map.set_source_root(source_root.clone());
+
                 Ok(map)
             }
         }

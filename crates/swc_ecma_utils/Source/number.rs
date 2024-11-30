@@ -6,6 +6,7 @@ pub trait ToJsString {
 impl ToJsString for f64 {
     fn to_js_string(&self) -> String {
         let mut buffer = ryu_js::Buffer::new();
+
         buffer.format(*self).to_string()
     }
 }
@@ -195,19 +196,28 @@ mod test_js_number {
     #[test]
     fn test_as_int32() {
         assert_eq!(JsNumber(f64::NAN).as_int32(), 0);
+
         assert_eq!(JsNumber(0.0).as_int32(), 0);
+
         assert_eq!(JsNumber(-0.0).as_int32(), 0);
+
         assert_eq!(JsNumber(f64::INFINITY).as_int32(), 0);
+
         assert_eq!(JsNumber(f64::NEG_INFINITY).as_int32(), 0);
     }
 
     #[test]
     fn test_as_uint32() {
         assert_eq!(JsNumber(f64::NAN).as_uint32(), 0);
+
         assert_eq!(JsNumber(0.0).as_uint32(), 0);
+
         assert_eq!(JsNumber(-0.0).as_uint32(), 0);
+
         assert_eq!(JsNumber(f64::INFINITY).as_uint32(), 0);
+
         assert_eq!(JsNumber(f64::NEG_INFINITY).as_uint32(), 0);
+
         assert_eq!(JsNumber(-8.0).as_uint32(), 4294967288);
     }
 
@@ -216,19 +226,25 @@ mod test_js_number {
         assert_eq!(JsNumber(1.0) + JsNumber(2.0), JsNumber(3.0));
 
         assert!((JsNumber(1.0) + JsNumber(f64::NAN)).is_nan());
+
         assert!((JsNumber(f64::NAN) + JsNumber(1.0)).is_nan());
+
         assert!((JsNumber(f64::NAN) + JsNumber(f64::NAN)).is_nan());
+
         assert!((JsNumber(f64::INFINITY) + JsNumber(f64::NEG_INFINITY)).is_nan());
+
         assert!((JsNumber(f64::NEG_INFINITY) + JsNumber(f64::INFINITY)).is_nan());
 
         assert_eq!(
             JsNumber(f64::INFINITY) + JsNumber(1.0),
             JsNumber(f64::INFINITY)
         );
+
         assert_eq!(
             JsNumber(f64::NEG_INFINITY) + JsNumber(1.0),
             JsNumber(f64::NEG_INFINITY)
         );
+
         assert_eq!(JsNumber(-0.0) + JsNumber(0.0), JsNumber(-0.0));
     }
 }

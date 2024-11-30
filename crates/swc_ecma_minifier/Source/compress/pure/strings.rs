@@ -30,18 +30,23 @@ impl Pure<'_> {
 
         match l_l.get_type() {
             Known(Type::Str) => {}
+
             _ => return,
         }
+
         match r_l.get_type() {
             Known(Type::Str) => {}
+
             _ => return,
         }
 
         let lls = l_l.as_pure_string(&self.expr_ctx);
+
         let rls = r_l.as_pure_string(&self.expr_ctx);
 
         if let (Known(lls), Known(rls)) = (lls, rls) {
             self.changed = true;
+
             report_change!("evaluate: 'foo' + ('bar' + baz) => 'foobar' + baz");
 
             let s = lls.into_owned() + &*rls;
@@ -82,6 +87,7 @@ impl Pure<'_> {
             }
 
             self.changed = true;
+
             report_change!("evaluating a template to a string");
             *e = BinExpr {
                 span: tpl.span,
@@ -114,6 +120,7 @@ impl Pure<'_> {
         }
 
         self.changed = true;
+
         report_change!("evaluating nested template literals");
 
         let mut new_tpl = Tpl {
@@ -121,7 +128,9 @@ impl Pure<'_> {
             quasis: Default::default(),
             exprs: Default::default(),
         };
+
         let mut cur_cooked_str = String::new();
+
         let mut cur_raw_str = String::new();
 
         for idx in 0..(tpl.quasis.len() + tpl.exprs.len()) {
@@ -129,9 +138,11 @@ impl Pure<'_> {
                 let q = tpl.quasis[idx / 2].take();
 
                 cur_cooked_str.push_str(&Str::from_tpl_raw(&q.raw));
+
                 cur_raw_str.push_str(&q.raw);
             } else {
                 let mut e = tpl.exprs[idx / 2].take();
+
                 self.eval_nested_tpl(&mut e);
 
                 match *e {
@@ -144,11 +155,15 @@ impl Pure<'_> {
                                 let q = e.quasis[idx / 2].take();
 
                                 cur_cooked_str.push_str(Str::from_tpl_raw(&q.raw).as_ref());
+
                                 cur_raw_str.push_str(&q.raw);
                             } else {
                                 let cooked = Atom::from(&*cur_cooked_str);
+
                                 let raw = Atom::from(&*cur_raw_str);
+
                                 cur_cooked_str.clear();
+
                                 cur_raw_str.clear();
 
                                 new_tpl.quasis.push(TplElement {
@@ -164,10 +179,14 @@ impl Pure<'_> {
                             }
                         }
                     }
+
                     _ => {
                         let cooked = Atom::from(&*cur_cooked_str);
+
                         let raw = Atom::from(&*cur_raw_str);
+
                         cur_cooked_str.clear();
+
                         cur_raw_str.clear();
 
                         new_tpl.quasis.push(TplElement {
@@ -184,7 +203,9 @@ impl Pure<'_> {
         }
 
         let cooked = Atom::from(&*cur_cooked_str);
+
         let raw = Atom::from(&*cur_raw_str);
+
         new_tpl.quasis.push(TplElement {
             span: DUMMY_SP,
             tail: false,
@@ -214,6 +235,7 @@ impl Pure<'_> {
                             value: value.clone(),
                         })
                         .into();
+
                         return;
                     }
                 }
@@ -243,6 +265,7 @@ impl Pure<'_> {
                     .into();
                 }
             }
+
             _ => {}
         }
     }
@@ -254,10 +277,12 @@ impl Pure<'_> {
     /// string literal should be done before calling this pass.
     pub(super) fn compress_tpl(&mut self, tpl: &mut Tpl) {
         debug_assert_eq!(tpl.exprs.len() + 1, tpl.quasis.len());
+
         let has_str_lit = tpl
             .exprs
             .iter()
             .any(|expr| matches!(&**expr, Expr::Lit(Lit::Str(..))));
+
         if !has_str_lit {
             return;
         }
@@ -265,13 +290,17 @@ impl Pure<'_> {
         trace_op!("compress_tpl");
 
         let mut quasis = Vec::new();
+
         let mut exprs = Vec::new();
+
         let mut cur_raw = String::new();
+
         let mut cur_cooked = Some(String::new());
 
         for i in 0..(tpl.exprs.len() + tpl.quasis.len()) {
             if i % 2 == 0 {
                 let i = i / 2;
+
                 let q = tpl.quasis[i].clone();
 
                 if q.cooked.is_some() {
@@ -285,6 +314,7 @@ impl Pure<'_> {
                 }
             } else {
                 let i = i / 2;
+
                 let e = &tpl.exprs[i];
 
                 match &**e {
@@ -297,6 +327,7 @@ impl Pure<'_> {
                             cur_cooked.push_str("");
                         }
                     }
+
                     _ => {
                         cur_cooked = Some(String::new());
                     }
@@ -309,9 +340,11 @@ impl Pure<'_> {
         for i in 0..(tpl.exprs.len() + tpl.quasis.len()) {
             if i % 2 == 0 {
                 let i = i / 2;
+
                 let q = tpl.quasis[i].take();
 
                 cur_raw.push_str(&q.raw);
+
                 if let Some(cooked) = q.cooked {
                     if let Some(cur_cooked) = &mut cur_cooked {
                         cur_cooked.push_str(&cooked);
@@ -323,6 +356,7 @@ impl Pure<'_> {
                 }
             } else {
                 let i = i / 2;
+
                 let e = tpl.exprs[i].take();
 
                 match *e {
@@ -341,6 +375,7 @@ impl Pure<'_> {
                             cur_raw.push_str(&convert_str_value_to_tpl_raw(&s.value));
                         }
                     }
+
                     _ => {
                         quasis.push(TplElement {
                             span: DUMMY_SP,
@@ -348,6 +383,7 @@ impl Pure<'_> {
                             cooked: cur_cooked.take().map(From::from),
                             raw: take(&mut cur_raw).into(),
                         });
+
                         cur_cooked = Some(String::new());
 
                         exprs.push(e);
@@ -368,6 +404,7 @@ impl Pure<'_> {
         debug_assert_eq!(exprs.len() + 1, quasis.len());
 
         tpl.quasis = quasis;
+
         tpl.exprs = exprs;
     }
 
@@ -441,6 +478,7 @@ impl Pure<'_> {
                         r_first.raw
                     )
                     .into();
+
                     r_first.raw = new;
 
                     l.take();
@@ -453,21 +491,27 @@ impl Pure<'_> {
 
                 {
                     let l_last = l.quasis.pop().unwrap();
+
                     let r_first = rt.quasis.first_mut().unwrap();
+
                     let new: Atom = format!("{}{}", l_last.raw, r_first.raw).into();
 
                     r_first.raw = new;
                 }
 
                 l.quasis.extend(rt.quasis.take());
+
                 l.exprs.extend(rt.exprs.take());
                 // Remove r
                 r.take();
 
                 debug_assert!(l.quasis.len() == l.exprs.len() + 1, "{:?} is invalid", l);
+
                 self.changed = true;
+
                 report_change!("strings: Merged two template literals");
             }
+
             _ => {}
         }
     }
@@ -488,6 +532,7 @@ impl Pure<'_> {
             ) = &mut *bin.left
             {
                 let type_of_second = left.right.get_type();
+
                 let type_of_third = bin.right.get_type();
 
                 if let Value::Known(Type::Str) = type_of_second {
@@ -498,9 +543,11 @@ impl Pure<'_> {
                                 bin.right.as_pure_string(&self.expr_ctx)
                             {
                                 let new_str = format!("{}{}", second_str, third_str);
+
                                 let left_span = left.span;
 
                                 self.changed = true;
+
                                 report_change!(
                                     "strings: Concatting `{} + {}` to `{}`",
                                     second_str,
@@ -537,26 +584,32 @@ impl Pure<'_> {
         }) = e
         {
             let lt = left.get_type();
+
             let rt = right.get_type();
+
             if let Value::Known(Type::Str) = lt {
                 if let Value::Known(Type::Str) = rt {
                     match &**left {
                         Expr::Lit(Lit::Str(Str { value, .. })) if value.is_empty() => {
                             self.changed = true;
+
                             report_change!(
                                 "string: Dropping empty string literal (in lhs) because it does \
                                  not changes type"
                             );
 
                             *e = *right.take();
+
                             return;
                         }
+
                         _ => (),
                     }
 
                     match &**right {
                         Expr::Lit(Lit::Str(Str { value, .. })) if value.is_empty() => {
                             self.changed = true;
+
                             report_change!(
                                 "string: Dropping empty string literal (in rhs) because it does \
                                  not changes type"
@@ -564,6 +617,7 @@ impl Pure<'_> {
 
                             *e = *left.take();
                         }
+
                         _ => (),
                     }
                 }

@@ -28,7 +28,9 @@ pub(crate) fn inline(injected_ctxt: SyntaxContext, module: &mut Modules) {
     }
 
     let mut v = Inliner { data: data.into() };
+
     module.par_visit_mut_with(&mut v);
+
     module.retain_mut(|_, s| !matches!(s, ModuleItem::Stmt(Stmt::Empty(..))));
 }
 
@@ -77,6 +79,7 @@ impl Visit for Analyzer<'_> {
 
     fn visit_var_declarator(&mut self, n: &VarDeclarator) {
         n.visit_children_with(self);
+
         if let (Pat::Ident(from), Some(Expr::Ident(to))) = (&n.name, n.init.as_deref()) {
             self.store(from.id.clone().into(), to.into());
         }
@@ -100,6 +103,7 @@ impl VisitMut for Inliner {
     fn visit_mut_ident(&mut self, n: &mut Ident) {
         if let Some(mapped) = self.data.ids.get(&n.clone().into()).cloned() {
             *n = mapped.into();
+
             n.visit_mut_with(self);
         }
     }
@@ -114,10 +118,13 @@ impl VisitMut for Inliner {
         match n {
             Prop::Shorthand(i) => {
                 let orig = i.clone();
+
                 i.visit_mut_with(self);
+
                 if i.ctxt == orig.ctxt {
                     return;
                 }
+
                 if i.sym != orig.sym {
                     *n = Prop::KeyValue(KeyValueProp {
                         key: PropName::Ident(orig.into()),
@@ -125,6 +132,7 @@ impl VisitMut for Inliner {
                     });
                 }
             }
+
             _ => {
                 n.visit_mut_children_with(self);
             }
@@ -134,11 +142,15 @@ impl VisitMut for Inliner {
     fn visit_mut_prop_name(&mut self, n: &mut PropName) {
         match n {
             PropName::Ident(_) => {}
+
             PropName::Str(_) => {}
+
             PropName::Num(_) => {}
+
             PropName::Computed(e) => {
                 e.expr.visit_mut_with(self);
             }
+
             PropName::BigInt(_) => {}
         }
     }
@@ -150,6 +162,7 @@ impl VisitMut for Inliner {
             Stmt::Decl(Decl::Var(var)) if var.decls.is_empty() => {
                 *n = EmptyStmt { span: DUMMY_SP }.into();
             }
+
             _ => {}
         }
     }

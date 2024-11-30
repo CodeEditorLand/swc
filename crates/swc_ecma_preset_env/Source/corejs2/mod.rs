@@ -161,6 +161,7 @@ impl Visit for UsageVisitor {
     ///  - `Array.from`
     fn visit_member_expr(&mut self, node: &MemberExpr) {
         node.obj.visit_with(self);
+
         if let MemberProp::Computed(c) = &node.prop {
             c.visit_with(self);
         }
@@ -236,6 +237,7 @@ impl Visit for UsageVisitor {
                     }
                 }
             }
+
             MemberProp::Computed(ComputedPropName { expr, .. }) => {
                 if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
                     for (name, imports) in INSTANCE_PROPERTIES {
@@ -245,8 +247,10 @@ impl Visit for UsageVisitor {
                     }
                 }
             }
+
             _ => {}
         }
+
         if let Expr::Ident(obj) = &*node.obj {
             for (ty, props) in STATIC_PROPERTIES {
                 if obj.sym == **ty {
@@ -326,6 +330,7 @@ fn is_symbol_iterator(e: &Expr) -> bool {
         Expr::Member(MemberExpr { obj, prop, .. }) if prop.is_ident_with("iterator") => {
             obj.is_ident_ref_to("Symbol")
         }
+
         _ => false,
     }
 }

@@ -61,6 +61,7 @@ fn true_by_default() -> bool {
 
 fn fixture_tr(t: &mut Tester, mut options: FixtureOptions) -> impl Pass {
     let unresolved_mark = Mark::new();
+
     let top_level_mark = Mark::new();
 
     options.options.next = Some(options.babel_8_breaking || options.options.runtime.is_some());
@@ -85,6 +86,7 @@ fn fixture_tr(t: &mut Tester, mut options: FixtureOptions) -> impl Pass {
 
 fn integration_tr(t: &mut Tester, mut options: FixtureOptions) -> impl Pass {
     let unresolved_mark = Mark::new();
+
     let top_level_mark = Mark::new();
 
     options.options.next = Some(options.babel_8_breaking || options.options.runtime.is_some());
@@ -152,6 +154,7 @@ var x =
   <div>
     foo
     {"bar"}
+
     baz
     <div>
       buz
@@ -159,6 +162,7 @@ var x =
     </div>
     qux
     {null}
+
     quack
   </div>
   "#
@@ -707,15 +711,18 @@ var x =
     attr1={
       "foo" + "bar"
     }
+
     attr2={
       "foo" + "bar" +
 
       "baz" + "bug"
     }
+
     attr3={
       "foo" + "bar" +
       "baz" + "bug"
     }
+
     attr4="baz">
   </div>
 "#
@@ -918,6 +925,7 @@ test!(
     }),
     |t| {
         let top_level_mark = Mark::fresh(Mark::root());
+
         tr(t, Default::default(), top_level_mark)
     },
     issue_351,
@@ -946,6 +954,7 @@ test!(
     }),
     |t| {
         let top_level_mark = Mark::fresh(Mark::root());
+
         tr(t, Default::default(), top_level_mark)
     },
     issue_517,
@@ -956,6 +965,7 @@ test!(
 #[test]
 fn jsx_text() {
     assert_eq!(jsx_text_to_str(" ".into()), *" ");
+
     assert_eq!(jsx_text_to_str("Hello world".into()), *"Hello world");
     //    assert_eq!(jsx_text_to_str(" \n".into()), *" ");
 }
@@ -982,6 +992,7 @@ test!(
     }),
     |t| {
         let top_level_mark = Mark::fresh(Mark::root());
+
         let unresolved_mark = Mark::fresh(Mark::root());
 
         (
@@ -1024,6 +1035,7 @@ test!(
     }),
     |t| {
         let unresolved_mark = Mark::new();
+
         let top_level_mark = Mark::new();
 
         (
@@ -1046,6 +1058,7 @@ test!(
 #[testing::fixture("tests/jsx/fixture/**/input.js")]
 fn fixture(input: PathBuf) {
     let mut output = input.with_file_name("output.js");
+
     if !output.exists() {
         output = input.with_file_name("output.mjs");
     }
@@ -1057,6 +1070,7 @@ fn fixture(input: PathBuf) {
         }),
         &|t| {
             let options = parse_options(input.parent().unwrap());
+
             fixture_tr(t, options)
         },
         &input,
@@ -1072,6 +1086,7 @@ fn fixture(input: PathBuf) {
 #[testing::fixture("tests/integration/fixture/**/input.js")]
 fn integration(input: PathBuf) {
     let mut output = input.with_file_name("output.js");
+
     if !output.exists() {
         output = input.with_file_name("output.mjs");
     }
@@ -1083,6 +1098,7 @@ fn integration(input: PathBuf) {
         }),
         &|t| {
             let options = parse_options(input.parent().unwrap());
+
             integration_tr(t, options)
         },
         &input,
@@ -1122,6 +1138,7 @@ fn test_script(src: &str, output: &Path, options: Options) {
         let script = parser.parse_script().unwrap();
 
         let top_level_mark = Mark::new();
+
         let unresolved_mark = Mark::new();
 
         let script = Program::Script(script).apply((
@@ -1154,9 +1171,11 @@ fn test_script(src: &str, output: &Path, options: Options) {
         };
 
         // println!("Emitting: {:?}", module);
+
         emitter.emit_program(&script).unwrap();
 
         let s = String::from_utf8_lossy(&buf).to_string();
+
         assert!(NormalizedOutput::new_raw(s).compare_to_file(output).is_ok());
 
         Ok(())

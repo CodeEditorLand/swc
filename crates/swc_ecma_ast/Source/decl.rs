@@ -51,6 +51,7 @@ macro_rules! decl_from {
     ($($variant_ty:ty),*) => {
         $(
             bridge_from!(crate::Stmt, Decl, $variant_ty);
+
             bridge_from!(crate::ModuleItem, crate::Stmt, $variant_ty);
         )*
     };
@@ -71,8 +72,11 @@ macro_rules! decl_from_boxed {
     ($($variant_ty:ty),*) => {
         $(
             bridge_from!(Box<crate::Stmt>, Decl, $variant_ty);
+
             bridge_from!(Box<crate::Stmt>, Decl, Box<$variant_ty>);
+
             bridge_from!(crate::Stmt, Decl, Box<$variant_ty>);
+
             bridge_from!(crate::ModuleItem, crate::Stmt, Box<$variant_ty>);
         )*
     };

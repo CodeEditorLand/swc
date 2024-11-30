@@ -139,6 +139,7 @@ impl Visit for Transform {
 
     fn visit_ts_namespace_decl(&mut self, n: &TsNamespaceDecl) {
         let id = n.id.to_id();
+
         let namespace_id = self.namespace_id.replace(id);
 
         n.body.visit_with(self);
@@ -167,14 +168,17 @@ impl Visit for Transform {
                         .zip(iter::repeat(self.namespace_id.clone()))
                 });
             }
+
             Decl::TsEnum(ts_enum_decl) => {
                 self.exported_binding
                     .insert(ts_enum_decl.id.to_id(), self.namespace_id.clone());
             }
+
             Decl::TsModule(ts_module_decl) => {
                 self.exported_binding
                     .insert(ts_module_decl.id.to_id(), self.namespace_id.clone());
             }
+
             _ => {}
         }
     }
@@ -222,6 +226,7 @@ impl VisitMut for Transform {
                 },
             });
         }
+
         node.visit_mut_children_with(self);
     }
 
@@ -254,7 +259,9 @@ impl VisitMut for Transform {
 
     fn visit_mut_module_items(&mut self, node: &mut Vec<ModuleItem>) {
         let var_list = self.var_list.take();
+
         node.visit_mut_children_with(self);
+
         let var_list = mem::replace(&mut self.var_list, var_list);
 
         if !var_list.is_empty() {
@@ -272,10 +279,13 @@ impl VisitMut for Transform {
 
     fn visit_mut_class_members(&mut self, node: &mut Vec<ClassMember>) {
         let prop_list = self.in_class_prop.take();
+
         let init_list = self.in_class_prop_init.take();
 
         node.visit_mut_children_with(self);
+
         let prop_list = mem::replace(&mut self.in_class_prop, prop_list);
+
         let init_list = mem::replace(&mut self.in_class_prop_init, init_list);
 
         if !prop_list.is_empty() {
@@ -302,7 +312,9 @@ impl VisitMut for Transform {
                     let (pat, expr, id) = match param {
                         TsParamPropParam::Ident(binding_ident) => {
                             let id = binding_ident.to_id();
+
                             let prop_name = PropName::Ident(IdentName::from(&*binding_ident));
+
                             let value = Ident::from(&*binding_ident).into();
 
                             (
@@ -311,6 +323,7 @@ impl VisitMut for Transform {
                                 id,
                             )
                         }
+
                         TsParamPropParam::Assign(assign_pat) => {
                             let AssignPat { left, .. } = &assign_pat;
 
@@ -319,7 +332,9 @@ impl VisitMut for Transform {
                             };
 
                             let id = binding_ident.id.to_id();
+
                             let prop_name = PropName::Ident(binding_ident.id.clone().into());
+
                             let value = binding_ident.id.clone().into();
 
                             (
@@ -331,6 +346,7 @@ impl VisitMut for Transform {
                     };
 
                     self.in_class_prop.push(id);
+
                     self.in_class_prop_init.push(expr);
 
                     *param_or_ts_param_prop = Param {
@@ -340,19 +356,25 @@ impl VisitMut for Transform {
                     }
                     .into();
                 }
+
                 ParamOrTsParamProp::Param(..) => {}
             });
 
         node.params.visit_mut_children_with(self);
+
         node.body.visit_mut_children_with(self);
     }
 
     fn visit_mut_stmts(&mut self, node: &mut Vec<Stmt>) {
         let var_list = self.var_list.take();
+
         node.visit_mut_children_with(self);
+
         let var_list = mem::replace(&mut self.var_list, var_list);
+
         if !var_list.is_empty() {
             let decls = var_list.into_iter().map(id_to_var_declarator).collect();
+
             node.push(
                 VarDecl {
                     decls,
@@ -365,6 +387,7 @@ impl VisitMut for Transform {
 
     fn visit_mut_ts_namespace_decl(&mut self, node: &mut TsNamespaceDecl) {
         let id = node.id.to_id();
+
         let namespace_id = self.namespace_id.replace(id);
 
         node.body.visit_mut_with(self);
@@ -437,11 +460,14 @@ impl VisitMut for Transform {
                 // visit inner directly to bypass visit_mut_var_declarator
                 for decl in var_decl.decls.iter_mut() {
                     decl.name.visit_mut_with(self);
+
                     decl.init.visit_mut_with(self);
                 }
+
                 return;
             }
         }
+
         node.visit_mut_children_with(self);
     }
 
@@ -455,8 +481,11 @@ impl VisitMut for Transform {
 
     fn visit_mut_var_declarator(&mut self, n: &mut VarDeclarator) {
         let ref_rewriter = self.ref_rewriter.take();
+
         n.name.visit_mut_with(self);
+
         self.ref_rewriter = ref_rewriter;
+
         n.init.visit_mut_with(self);
     }
 
@@ -480,36 +509,51 @@ impl VisitMut for Transform {
 
     fn visit_mut_assign_expr(&mut self, n: &mut AssignExpr) {
         let is_lhs = mem::replace(&mut self.is_lhs, true);
+
         n.left.visit_mut_with(self);
+
         self.is_lhs = false;
+
         n.right.visit_mut_with(self);
+
         self.is_lhs = is_lhs;
     }
 
     fn visit_mut_assign_pat(&mut self, n: &mut AssignPat) {
         let is_lhs = mem::replace(&mut self.is_lhs, true);
+
         n.left.visit_mut_with(self);
+
         self.is_lhs = false;
+
         n.right.visit_mut_with(self);
+
         self.is_lhs = is_lhs;
     }
 
     fn visit_mut_update_expr(&mut self, n: &mut UpdateExpr) {
         let is_lhs = mem::replace(&mut self.is_lhs, true);
+
         n.arg.visit_mut_with(self);
+
         self.is_lhs = is_lhs;
     }
 
     fn visit_mut_assign_pat_prop(&mut self, n: &mut AssignPatProp) {
         n.key.visit_mut_with(self);
+
         let is_lhs = mem::replace(&mut self.is_lhs, false);
+
         n.value.visit_mut_with(self);
+
         self.is_lhs = is_lhs;
     }
 
     fn visit_mut_member_expr(&mut self, n: &mut MemberExpr) {
         let is_lhs = mem::replace(&mut self.is_lhs, false);
+
         n.visit_mut_children_with(self);
+
         self.is_lhs = is_lhs;
     }
 
@@ -570,6 +614,7 @@ impl Transform {
 
                 self.transform_ts_module(*ts_module, is_export)
             }
+
             Decl::TsEnum(ts_enum) => {
                 let id = ts_enum.id.to_id();
 
@@ -577,10 +622,13 @@ impl Transform {
 
                 self.transform_ts_enum(*ts_enum, is_first, is_export)
             }
+
             Decl::Fn(FnDecl { ref ident, .. }) | Decl::Class(ClassDecl { ref ident, .. }) => {
                 self.decl_id_record.insert(ident.to_id());
+
                 FoldedDecl::Decl(node)
             }
+
             decl => FoldedDecl::Decl(decl),
         }
     }
@@ -593,6 +641,7 @@ struct InitArg<'a> {
 
 impl InitArg<'_> {
     // {}
+
     fn empty() -> ExprOrSpread {
         ExprOrSpread {
             spread: None,
@@ -612,6 +661,7 @@ impl InitArg<'_> {
     }
 
     // N || {}
+
     fn or_empty(&self) -> ExprOrSpread {
         let expr = self.namespace_id.cloned().map_or_else(
             || -> Expr { self.id.clone().into() },
@@ -688,6 +738,7 @@ impl Transform {
             .into_iter()
             .map(|m| {
                 let span = m.span;
+
                 let name = m.id.as_ref().clone();
 
                 let key = TsEnumRecordKey {
@@ -712,6 +763,7 @@ impl Transform {
             .map(|item| item.build_assign(&id.to_id()));
 
         let namespace_export = self.namespace_id.is_some() && is_export;
+
         let iife = !is_first || namespace_export;
 
         let body = if !iife {
@@ -745,6 +797,7 @@ impl Transform {
                 id: &id,
                 namespace_id: self.namespace_id.as_ref().filter(|_| is_export),
             };
+
             if !is_first {
                 break 'init_arg init_arg.get();
             }
@@ -816,6 +869,7 @@ impl Transform {
 impl Transform {
     fn transform_ts_module(&self, ts_module: TsModuleDecl, is_export: bool) -> FoldedDecl {
         debug_assert!(!ts_module.declare);
+
         debug_assert!(!ts_module.global);
 
         let TsModuleDecl {
@@ -854,10 +908,12 @@ impl Transform {
             TsNamespaceBody::TsModuleBlock(ts_module_block) => {
                 return Self::transform_ts_module_block(id, ts_module_block);
             }
+
             TsNamespaceBody::TsNamespaceDecl(ts_namespace_decl) => ts_namespace_decl,
         };
 
         debug_assert!(!declare);
+
         debug_assert!(!global);
 
         let body = Self::transform_ts_namespace_body(local_name.to_id(), *body);
@@ -919,9 +975,12 @@ impl Transform {
                     Decl::Class(ClassDecl { ref ident, .. })
                     | Decl::Fn(FnDecl { ref ident, .. }) => {
                         let assign_stmt = Self::assign_prop(&id, ident, span);
+
                         stmts.push(decl.into());
+
                         stmts.push(assign_stmt);
                     }
+
                     Decl::Var(var_decl) => {
                         let mut exprs: Vec<Box<_>> = var_decl
                             .decls
@@ -931,6 +990,7 @@ impl Transform {
                                      span, name, init, ..
                                  }| {
                                     let right = init?;
+
                                     let left = name.try_into().unwrap();
 
                                     Some(
@@ -968,6 +1028,7 @@ impl Transform {
                             .into(),
                         );
                     }
+
                     decl => unreachable!("{decl:?}"),
                 },
                 ModuleItem::ModuleDecl(ModuleDecl::TsImportEquals(decl)) => {
@@ -979,6 +1040,7 @@ impl Transform {
                             let stmt = if decl.is_export {
                                 // Foo.foo = bar.baz
                                 let left = id.clone().make_member(decl.id.clone().into());
+
                                 let expr = init.make_assign_to(op!("="), left.into());
 
                                 ExprStmt {
@@ -998,6 +1060,7 @@ impl Transform {
 
                             stmts.push(stmt);
                         }
+
                         TsModuleRef::TsExternalModuleRef(..) => {
                             // TS1147
                             HANDLER.with(|handler| {
@@ -1011,6 +1074,7 @@ impl Transform {
                         }
                     }
                 }
+
                 item => {
                     HANDLER.with(|handler| {
                         handler
@@ -1040,7 +1104,9 @@ impl Transform {
         mut init_list: Vec<Box<Expr>>,
     ) {
         let mut constructor = None;
+
         let mut cons_index = 0;
+
         for (index, member) in class_member_list.iter_mut().enumerate() {
             match member {
                 ClassMember::Constructor(..) => {
@@ -1048,9 +1114,12 @@ impl Transform {
                         span: member.span(),
                     }
                     .into();
+
                     constructor = mem::replace(member, empty).constructor();
+
                     cons_index = index;
                 }
+
                 ClassMember::ClassProp(ClassProp {
                     key,
                     value: value @ Some(..),
@@ -1072,11 +1141,13 @@ impl Transform {
                                 expr: ident.into(),
                             })
                         }
+
                         _ => key.clone(),
                     };
 
                     init_list.push(assign_value_to_this_prop(key, *value.take().unwrap()));
                 }
+
                 ClassMember::PrivateProp(PrivateProp {
                     key,
                     value: value @ Some(..),
@@ -1088,6 +1159,7 @@ impl Transform {
                         *value.take().unwrap(),
                     ));
                 }
+
                 _ => {}
             }
         }
@@ -1149,6 +1221,7 @@ impl Transform {
 
 impl Transform {
     // Foo.x = x;
+
     fn assign_prop(id: &Id, prop: &Ident, span: Span) -> Stmt {
         let expr = prop
             .clone()
@@ -1214,14 +1287,18 @@ impl Transform {
 
     fn visit_mut_for_ts_import_export(&mut self, node: &mut Module) {
         let mut should_inject = false;
+
         let create_require = private_ident!("_createRequire");
+
         let require = private_ident!("__require");
 
         // NOTE: This is not correct!
         // However, all unresolved_span are used in TsImportExportAssignConfig::Classic
         // which is deprecated and not used in real world.
         let unresolved_ctxt = self.unresolved_ctxt;
+
         let cjs_require = quote_ident!(unresolved_ctxt, "require");
+
         let cjs_exports = quote_ident!(unresolved_ctxt, "exports");
 
         let mut cjs_export_assign = None;
@@ -1234,6 +1311,7 @@ impl Transform {
                         "TsImportEquals has top-level context and it should not be identical to \
                          the unresolved mark"
                     );
+
                     debug_assert_eq!(decl.id.ctxt, self.top_level_ctxt);
 
                     match &mut decl.module_ref {
@@ -1252,6 +1330,7 @@ impl Transform {
                                 .into()
                             } else {
                                 var_decl.span = decl.span;
+
                                 var_decl.into()
                             };
                         }
@@ -1260,11 +1339,13 @@ impl Transform {
                             match self.import_export_assign_config {
                                 TsImportExportAssignConfig::Classic => {
                                     // require("foo");
+
                                     let mut init = cjs_require
                                         .clone()
                                         .as_call(DUMMY_SP, vec![expr.take().as_arg()]);
 
                                     // exports.foo = require("foo");
+
                                     if decl.is_export {
                                         init = init.make_assign_to(
                                             op!("="),
@@ -1277,13 +1358,17 @@ impl Transform {
 
                                     // const foo = require("foo");
                                     // const foo = exports.foo = require("foo");
+
                                     let mut var_decl = init
                                         .into_var_decl(VarDeclKind::Const, decl.id.take().into());
+
                                     var_decl.span = decl.span;
 
                                     *module_item = var_decl.into();
                                 }
+
                                 TsImportExportAssignConfig::Preserve => {}
+
                                 TsImportExportAssignConfig::NodeNext => {
                                     should_inject = true;
 
@@ -1300,9 +1385,11 @@ impl Transform {
                                         .into()
                                     } else {
                                         var_decl.span = decl.span;
+
                                         var_decl.into()
                                     };
                                 }
+
                                 TsImportExportAssignConfig::EsNext => {
                                     // TS1202
                                     HANDLER.with(|handler| {
@@ -1317,6 +1404,7 @@ impl Transform {
                         }
                     }
                 }
+
                 ModuleItem::ModuleDecl(ModuleDecl::TsExportAssignment(..)) => {
                     let ts_export_assign = module_item
                         .take()
@@ -1327,6 +1415,7 @@ impl Transform {
 
                     cjs_export_assign.get_or_insert(ts_export_assign);
                 }
+
                 _ => {}
             }
         }
@@ -1334,6 +1423,7 @@ impl Transform {
         if should_inject {
             node.body.prepend_stmts([
                 // import { createRequire } from "module";
+
                 ImportDecl {
                     span: DUMMY_SP,
                     specifiers: vec![ImportNamedSpecifier {
@@ -1350,6 +1440,7 @@ impl Transform {
                 }
                 .into(),
                 // const __require = _createRequire(import.meta.url);
+
                 create_require
                     .as_call(
                         DUMMY_SP,
@@ -1393,9 +1484,11 @@ impl Transform {
                         node.body.push(stmt.into());
                     }
                 }
+
                 TsImportExportAssignConfig::Preserve => {
                     node.body.push(cjs_export_assign.into());
                 }
+
                 TsImportExportAssignConfig::NodeNext | TsImportExportAssignConfig::EsNext => {
                     // TS1203
                     HANDLER.with(|handler| {
@@ -1456,6 +1549,7 @@ impl EnumMemberItem {
 
     fn build_assign(self, enum_id: &Id) -> Stmt {
         let is_string = self.value.is_string();
+
         let value: Expr = self.value.into();
 
         let inner_assign = value.make_assign_to(

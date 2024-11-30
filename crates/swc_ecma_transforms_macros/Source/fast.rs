@@ -10,6 +10,7 @@ pub fn expand(attr: TokenStream, item: ItemImpl) -> ItemImpl {
         handler: syn::parse2(attr).expect("Usage should be like #[fast_path(ArrowVisitor)]"),
         mode: detect_mode(&item),
     };
+
     let items = expander.inject_default_methods(item.items);
 
     ItemImpl {
@@ -59,9 +60,11 @@ impl Expander {
                 ImplItem::Fn(i) => i.sig.ident.to_string().ends_with(name),
                 _ => false,
             });
+
             if has {
                 continue;
             }
+
             let name = Ident::new(&format!("{}_{}", self.mode.prefix(), name), call_site());
 
             let method = match self.mode {
@@ -90,13 +93,16 @@ impl Expander {
             .inputs
             .last()
             .expect("method of Fold / VisitMut must accept two parameters");
+
         let ty_arg = match ty_arg {
             FnArg::Receiver(_) => unreachable!(),
             FnArg::Typed(ty) => ty,
         };
+
         if m.sig.ident == "visit_mut_ident" || m.sig.ident == "fold_ident" {
             return m;
         }
+
         if m.block.stmts.is_empty() {
             return m;
         }
@@ -122,10 +128,13 @@ impl Expander {
                 }
             ),
         };
+
         let mut stmts = vec![fast_path];
+
         stmts.extend(m.block.stmts);
 
         m.block.stmts = stmts;
+
         m
     }
 }

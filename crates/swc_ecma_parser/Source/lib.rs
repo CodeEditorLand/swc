@@ -475,7 +475,9 @@ pub fn with_file_parser<T>(
     op: impl for<'aa> FnOnce(&mut Parser<Lexer>) -> PResult<T>,
 ) -> PResult<T> {
     let lexer = Lexer::new(syntax, target, SourceFileInput::from(fm), comments);
+
     let mut p = Parser::new_from(lexer);
+
     let ret = op(&mut p);
 
     recovered_errors.append(&mut p.take_errors());
@@ -508,6 +510,7 @@ macro_rules! expose {
 expose!(parse_file_as_expr, Box<Expr>, |p| {
     // This allow to parse `import.meta`
     p.input().ctx.can_be_module = true;
+
     p.parse_expr()
 });
 expose!(parse_file_as_module, Module, |p| { p.parse_module() });

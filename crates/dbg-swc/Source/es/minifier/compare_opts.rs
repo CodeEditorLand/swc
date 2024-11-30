@@ -23,14 +23,17 @@ impl CompareOptsCommand {
         let files = all_js_files(&self.path)?;
 
         let mut default_sum = 0;
+
         let mut new_sum = 0;
 
         for file in files {
             let default_record = get_minified(cm.clone(), &file, true, true)?;
+
             let default_code = print_js(cm.clone(), &default_record.module, true)
                 .context("failed to convert ast to code")?;
 
             eprintln!("default: {} bytes", default_code.as_bytes().len());
+
             default_sum += default_code.as_bytes().len();
 
             let new_record = get_minified_with_opts(
@@ -47,14 +50,17 @@ impl CompareOptsCommand {
                     ..Default::default()
                 }),
             )?;
+
             let new_code = print_js(cm.clone(), &new_record.module, true)
                 .context("failed to convert ast to code")?;
 
             eprintln!("new: {} bytes", new_code.as_bytes().len());
+
             new_sum += new_code.as_bytes().len();
         }
 
         eprintln!("default (total): {} bytes", default_sum);
+
         eprintln!("new (total): {} bytes", new_sum);
 
         Ok(())

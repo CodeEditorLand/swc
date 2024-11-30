@@ -34,6 +34,7 @@ pub fn diff_json_value(
     normalize: &mut dyn FnMut(&str, &mut Value),
 ) -> bool {
     normalize_value_recursively(a, normalize);
+
     normalize_value_recursively(b, normalize);
 
     remove_common(a, b)
@@ -55,6 +56,7 @@ fn remove_common(a: &mut Value, b: &mut Value) -> bool {
                     if remove_common(a_v, b_v) {
                         // Remove from both
                         b.remove(key);
+
                         return false;
                     }
                 } else {
@@ -67,6 +69,7 @@ fn remove_common(a: &mut Value, b: &mut Value) -> bool {
                 // Preserve by default
                 true
             });
+
             b.retain(|key, b_v| {
                 // Remove if b.foo is null and a does not have foo
                 if b_v == &Value::Null && !a.contains_key(key) {

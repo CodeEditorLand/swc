@@ -21,6 +21,7 @@ impl Optimizer<'_> {
             op!("===") | op!("==") | op!("!==") | op!("!=") => {
                 if e.left.is_ident() && e.left.eq_ignore_span(&e.right) {
                     let id: Ident = e.left.clone().ident().unwrap();
+
                     if let Some(t) = self.typeofs.get(&id.to_id()) {
                         match &**t {
                             "object" | "function" => {
@@ -28,13 +29,16 @@ impl Optimizer<'_> {
                                     e.span,
                                     e.op == op!("===") || e.op == op!("=="),
                                 ));
+
                                 e.right.take();
 
                                 self.changed = true;
+
                                 report_change!("Evaluate comparing to self");
 
                                 return;
                             }
+
                             _ => {}
                         }
                     }
@@ -47,6 +51,7 @@ impl Optimizer<'_> {
         if e.op == op!("===") || e.op == op!("!==") {
             if (e.left.is_ident() || e.left.is_member()) && e.left.eq_ignore_span(&e.right) {
                 self.changed = true;
+
                 report_change!("Reducing comparison of same variable ({})", e.op);
 
                 e.op = if e.op == op!("===") {
@@ -54,11 +59,13 @@ impl Optimizer<'_> {
                 } else {
                     op!("!=")
                 };
+
                 return;
             }
         }
 
         let lt = e.left.get_type();
+
         let rt = e.right.get_type();
 
         if e.op == op!("===") {
@@ -66,7 +73,9 @@ impl Optimizer<'_> {
                 if let Known(rt) = rt {
                     if lt == rt {
                         e.op = op!("==");
+
                         self.changed = true;
+
                         report_change!(
                             "Reduced `===` to `==` because types of operands are identical"
                         )
@@ -88,8 +97,11 @@ impl Optimizer<'_> {
                     || (n.left.is_str() && right.right.is_str())
                 {
                     self.changed = true;
+
                     report_change!("Remove extra paren in binary expression");
+
                     let left = n.left.take();
+
                     let BinExpr {
                         op,
                         left: rl,
@@ -103,6 +115,7 @@ impl Optimizer<'_> {
                         right: rl,
                     }
                     .into();
+
                     n.right = rr;
                 }
             }
@@ -116,9 +129,12 @@ impl Optimizer<'_> {
         if n.op != op!("==") && n.op != op!("!=") {
             return None;
         }
+
         let flag = n.op == op!("!=");
+
         let mut make_lit_bool = |value: bool| {
             self.changed = true;
+
             Some(
                 Lit::Bool(Bool {
                     span: n.span,
@@ -127,26 +143,36 @@ impl Optimizer<'_> {
                 .into(),
             )
         };
+
         match (n.left.get_type().opt()?, n.right.get_type().opt()?) {
             // Abort if types differ, or one of them is unknown.
             (lt, rt) if lt != rt => {}
             (Type::Obj, Type::Obj) => {}
             (Type::Num, Type::Num) => {
                 let l = n.left.as_pure_number(&self.ctx.expr_ctx).opt()?;
+
                 let r = n.right.as_pure_number(&self.ctx.expr_ctx).opt()?;
+
                 report_change!("Optimizing: literal comparison => num");
+
                 return make_lit_bool(l == r);
             }
             (Type::Str, Type::Str) => {
                 let l = &n.left.as_pure_string(&self.ctx.expr_ctx).opt()?;
+
                 let r = &n.right.as_pure_string(&self.ctx.expr_ctx).opt()?;
+
                 report_change!("Optimizing: literal comparison => str");
+
                 return make_lit_bool(l == r);
             }
             (_, _) => {
                 let l = n.left.as_pure_bool(&self.ctx.expr_ctx).opt()?;
+
                 let r = n.right.as_pure_bool(&self.ctx.expr_ctx).opt()?;
+
                 report_change!("Optimizing: literal comparison => bool");
+
                 return make_lit_bool(l == r);
             }
         };
@@ -183,6 +209,7 @@ impl Optimizer<'_> {
                     | Expr::Bin(BinExpr { op: op!(">"), .. }) => {
                         if let Known(Type::Bool) = arg.get_type() {
                             self.changed = true;
+
                             report_change!("Optimizing: `!!expr` => `expr`");
                             *e = *arg.take();
                         }
@@ -197,6 +224,7 @@ impl Optimizer<'_> {
     /// TODO: Optimize based on the type.
     pub(super) fn negate_twice(&mut self, e: &mut Expr, is_ret_val_ignored: bool) {
         self.negate(e, is_ret_val_ignored);
+
         self.negate(e, is_ret_val_ignored);
     }
 
@@ -238,11 +266,13 @@ impl Optimizer<'_> {
 
                     match &**left {
                         Expr::This(..) | Expr::Ident(..) | Expr::Lit(..) => {}
+
                         _ => return,
                     }
 
                     (op, left)
                 }
+
                 _ => return,
             },
             _ => return,
@@ -252,22 +282,28 @@ impl Optimizer<'_> {
             BinaryOp::Mul => {
                 op!("*=")
             }
+
             BinaryOp::BitOr => {
                 op!("|=")
             }
+
             BinaryOp::BitXor => {
                 op!("^=")
             }
+
             BinaryOp::BitAnd => {
                 op!("&=")
             }
+
             _ => return,
         };
 
         report_change!("Compressing: `e = 3 & e` => `e &= 3`");
 
         self.changed = true;
+
         e.op = op;
+
         e.right = left.take();
     }
 
@@ -293,6 +329,7 @@ impl Optimizer<'_> {
         match bin.op {
             op!("&&") | op!("||") => {
                 self.compress_logical_exprs_as_bang_bang(&mut bin.left, true);
+
                 self.compress_logical_exprs_as_bang_bang(&mut bin.right, true);
             }
 
@@ -300,21 +337,26 @@ impl Optimizer<'_> {
         }
 
         let lt = bin.left.get_type();
+
         match lt {
             // Don't change type
             Known(Type::Bool) => {}
+
             _ => return,
         }
 
         let rt = bin.right.get_type();
+
         match rt {
             Known(Type::Bool) => {}
+
             _ => return,
         }
 
         match bin.op {
             op!("&&") => {
                 let rb = bin.right.as_pure_bool(&self.ctx.expr_ctx);
+
                 let rb = match rb {
                     Value::Known(v) => v,
                     _ => return,
@@ -322,14 +364,17 @@ impl Optimizer<'_> {
 
                 if rb {
                     self.changed = true;
+
                     report_change!("Optimizing: e && true => !!e");
 
                     self.negate_twice(&mut bin.left, false);
                     *e = *bin.left.take();
                 }
             }
+
             op!("||") => {
                 let rb = bin.right.as_pure_bool(&self.ctx.expr_ctx);
+
                 let rb = match rb {
                     Value::Known(v) => v,
                     _ => return,
@@ -337,12 +382,14 @@ impl Optimizer<'_> {
 
                 if !rb {
                     self.changed = true;
+
                     report_change!("Optimizing: e || false => !!e");
 
                     self.negate_twice(&mut bin.left, false);
                     *e = *bin.left.take();
                 }
             }
+
             _ => {}
         }
     }
@@ -365,6 +412,7 @@ impl Optimizer<'_> {
                         report_change!(
                             "Converting typeof of variable to literal as we know the value"
                         );
+
                         self.changed = true;
                         *e = Lit::Str(Str {
                             span: *span,
@@ -377,6 +425,7 @@ impl Optimizer<'_> {
 
                 Expr::Arrow(..) | Expr::Fn(..) | Expr::Class(..) => {
                     report_change!("Converting typeof to 'function' as we know the value");
+
                     self.changed = true;
                     *e = Lit::Str(Str {
                         span: *span,
@@ -388,6 +437,7 @@ impl Optimizer<'_> {
 
                 Expr::Array(..) | Expr::Object(..) => {
                     report_change!("Converting typeof to 'object' as we know the value");
+
                     self.changed = true;
                     *e = Lit::Str(Str {
                         span: *span,
@@ -396,6 +446,7 @@ impl Optimizer<'_> {
                     })
                     .into();
                 }
+
                 _ => {}
             }
         }

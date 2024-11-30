@@ -19,17 +19,22 @@ fn main() {
 				None,
 				&mut Vec::new(),
 			);
+
 			let mut program = match module {
 				Ok(v) => Program::Module(v),
 				Err(err) => {
 					err.into_diagnostic(handler).emit();
+
 					return Err(());
 				},
 			};
 
 			let unresolved_mark = Mark::new();
+
 			let top_level_mark = Mark::new();
+
 			let unresolved_ctxt = SyntaxContext::empty().apply_mark(unresolved_mark);
+
 			let top_level_ctxt = SyntaxContext::empty().apply_mark(top_level_mark);
 
 			program.visit_mut_with(&mut resolver(unresolved_mark, top_level_mark, false));
@@ -44,6 +49,7 @@ fn main() {
 			});
 
 			let module = program.expect_module();
+
 			rules.lint_module(&module);
 
 			Err(())
@@ -66,17 +72,22 @@ fn main() {
                 None,
                 &mut Vec::new(),
             );
+
             let mut program = match module {
                 Ok(v) => Program::Module(v),
                 Err(err) => {
                     err.into_diagnostic(handler).emit();
+
                     return Err(());
                 }
             };
 
             let unresolved_mark = Mark::new();
+
             let top_level_mark = Mark::new();
+
             let unresolved_ctxt = SyntaxContext::empty().apply_mark(unresolved_mark);
+
             let top_level_ctxt = SyntaxContext::empty().apply_mark(top_level_mark);
 
             program.mutate(resolver(unresolved_mark, top_level_mark, false));
@@ -91,6 +102,7 @@ fn main() {
             });
 
             let module = program.expect_module();
+
             rules.lint_module(&module);
 
             Err(())

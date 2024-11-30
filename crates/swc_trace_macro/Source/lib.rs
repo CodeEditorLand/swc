@@ -26,6 +26,7 @@ pub fn swc_trace(
                 bracket_token: Default::default(),
                 meta: parse_quote!(tracing::instrument(level = "info", skip_all)),
             };
+
             m.attrs.push(attr);
         }
     });

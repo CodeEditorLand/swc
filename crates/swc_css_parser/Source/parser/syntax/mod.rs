@@ -25,6 +25,7 @@ where
                 ..self.ctx
             })
             .parse_as::<Vec<Rule>>()?;
+
         let last = self.input.last_pos();
 
         // Return the stylesheet.
@@ -52,6 +53,7 @@ where
             is_top_level: false,
             ..self.ctx
         };
+
         loop {
             // <EOF-token>
             // Return the list of rules.
@@ -96,15 +98,18 @@ where
                 // append it to the list of rules.
                 _ => {
                     let state = self.input.state();
+
                     let qualified_rule = self.with_ctx(ctx).parse_as::<Box<QualifiedRule>>();
 
                     match qualified_rule {
                         Ok(i) => rules.push(Rule::QualifiedRule(i)),
                         Err(err) => {
                             self.errors.push(err);
+
                             self.input.reset(&state);
 
                             let span = self.input.cur_span();
+
                             let mut list_of_component_values = ListOfComponentValues {
                                 span: Default::default(),
                                 children: Vec::new(),
@@ -141,13 +146,16 @@ where
         // value of the current input token, its prelude initially set to an empty list,
         // and its value initially set to nothing.
         let span = self.input.cur_span();
+
         let at_keyword_name = match bump!(self) {
             Token::AtKeyword { value, raw } => (value, raw),
             _ => {
                 unreachable!()
             }
         };
+
         let is_dashed_ident = at_keyword_name.0.starts_with("--");
+
         let name = if is_dashed_ident {
             AtRuleName::DashedIdent(DashedIdent {
                 span: Span::new(span.lo + BytePos(1), span.hi),
@@ -161,7 +169,9 @@ where
                 raw: Some(at_keyword_name.1),
             })
         };
+
         let mut prelude = Vec::new();
+
         let mut at_rule = AtRule {
             span: Default::default(),
             name,
@@ -187,6 +197,7 @@ where
                 at_rule.prelude = Some(Box::new(AtRulePrelude::ListOfComponentValues(
                     self.create_locv(prelude),
                 )));
+
                 at_rule.span = span!(self, span.lo);
 
                 // Canonicalization against a grammar
@@ -206,6 +217,7 @@ where
                     at_rule.prelude = Some(Box::new(AtRulePrelude::ListOfComponentValues(
                         self.create_locv(prelude),
                     )));
+
                     at_rule.span = span!(self, span.lo);
 
                     // Canonicalization against a grammar
@@ -223,12 +235,15 @@ where
                     at_rule.prelude = Some(Box::new(AtRulePrelude::ListOfComponentValues(
                         self.create_locv(prelude),
                     )));
+
                     at_rule.block = Some(block);
+
                     at_rule.span = span!(self, span.lo);
 
                     // Canonicalization against a grammar
                     if !is_dashed_ident && self.ctx.need_canonicalize {
                         at_rule = self.canonicalize_at_rule_prelude(at_rule)?;
+
                         at_rule = self.canonicalize_at_rule_block(at_rule)?;
                     }
 
@@ -239,6 +254,7 @@ where
                 // value to the at-rule’s prelude.
                 _ => {
                     let component_value = self.parse_as::<ComponentValue>()?;
+
                     prelude.push(component_value);
                 }
             }
@@ -256,6 +272,7 @@ where
         // Create a new qualified rule with its prelude initially set to an empty list,
         // and its value initially set to nothing.
         let span = self.input.cur_span();
+
         let mut prelude = Vec::new();
 
         // Repeatedly consume the next input token:
@@ -289,6 +306,7 @@ where
                 // qualified rule.
                 tok!("{") => {
                     let block = self.parse_as::<SimpleBlock>()?;
+
                     let mut qualified_rule = QualifiedRule {
                         span: span!(self, span.lo),
                         prelude: QualifiedRulePrelude::ListOfComponentValues(
@@ -301,6 +319,7 @@ where
                     if self.ctx.need_canonicalize {
                         qualified_rule =
                             self.canonicalize_qualified_rule_prelude(qualified_rule)?;
+
                         qualified_rule = self.canonicalize_qualified_rule_block(qualified_rule)?;
                     }
 
@@ -324,6 +343,7 @@ where
 {
     fn parse(&mut self) -> PResult<Vec<StyleBlock>> {
         let mut declarations = Vec::new();
+
         let mut rules = Vec::new();
 
         loop {
@@ -352,6 +372,7 @@ where
                     {
                         list_of_component_values.span =
                             Span::new(list_of_component_values.span_lo(), token_and_span.span_hi());
+
                         list_of_component_values
                             .children
                             .push(ComponentValue::PreservedToken(Box::new(token_and_span)));
@@ -391,6 +412,7 @@ where
                     }
 
                     let span = self.input.cur_span();
+
                     let mut temporary_list = ListOfComponentValues {
                         span: Default::default(),
                         children: Vec::new(),
@@ -421,6 +443,7 @@ where
                 // declarations set to true. If anything was returned, append it to rules.
                 _ => {
                     let state = self.input.state();
+
                     let qualified_rule = self
                         .with_ctx(Ctx {
                             block_contents_grammar: BlockContentsGrammar::StyleBlock,
@@ -433,6 +456,7 @@ where
                         Ok(i) => rules.push(StyleBlock::QualifiedRule(i)),
                         Err(err) => {
                             self.errors.push(err);
+
                             self.input.reset(&state);
 
                             let span = self.input.cur_span();
@@ -499,6 +523,7 @@ where
                     {
                         list_of_component_values.span =
                             Span::new(list_of_component_values.span_lo(), token_and_span.span_hi());
+
                         list_of_component_values
                             .children
                             .push(ComponentValue::PreservedToken(Box::new(token_and_span)));
@@ -525,6 +550,7 @@ where
                 // it to the list of declarations.
                 tok!("ident") => {
                     let span = self.input.cur_span();
+
                     let mut temporary_list = ListOfComponentValues {
                         span: Default::default(),
                         children: Vec::new(),
@@ -611,13 +637,16 @@ where
         //
         // Return nothing.
         let span = self.input.cur_span();
+
         let declaration_name = match cur!(self) {
             Token::Ident { value, .. } => value,
             _ => {
                 return Err(Error::new(span, ErrorKind::Expected("ident")));
             }
         };
+
         let is_dashed_ident = declaration_name.starts_with("--");
+
         let name = if is_dashed_ident {
             let ident = self.parse()?;
 
@@ -627,6 +656,7 @@ where
 
             DeclarationName::Ident(ident)
         };
+
         let mut declaration = Declaration {
             span: Default::default(),
             name,
@@ -649,8 +679,11 @@ where
         // 5. As long as the next input token is anything other than an <EOF-token>,
         // consume a component value and append it to the declaration’s value.
         let mut is_valid_to_canonicalize = true;
+
         let mut last_whitespaces = (0, 0, 0);
+
         let mut exclamation_point_span = None;
+
         let mut important_ident = None;
 
         loop {
@@ -675,11 +708,13 @@ where
                         ));
 
                         important_ident = None;
+
                         last_whitespaces = (last_whitespaces.2, 0, 0);
                     }
 
                     exclamation_point_span = Some(token_and_span.span);
                 }
+
                 ComponentValue::PreservedToken(token_and_span)
                     if matches!(token_and_span.token, Token::WhiteSpace { .. }) =>
                 {
@@ -693,11 +728,13 @@ where
                         (None, None) => {
                             last_whitespaces.0 += 1;
                         }
+
                         _ => {
                             unreachable!();
                         }
                     }
                 }
+
                 ComponentValue::PreservedToken(token_and_span)
                     if exclamation_point_span.is_some()
                         && matches!(
@@ -707,6 +744,7 @@ where
                 {
                     important_ident = Some(token_and_span.clone());
                 }
+
                 _ => {
                     if let Err(err) = self.validate_declaration_value(&component_value) {
                         is_valid_to_canonicalize = false;
@@ -725,6 +763,7 @@ where
                         ));
 
                         important_ident = None;
+
                         exclamation_point_span = None;
                     }
                 }
@@ -741,12 +780,14 @@ where
             (exclamation_point_span, important_ident)
         {
             let span = Span::new(exclamation_point_span.lo, important_ident.span_hi());
+
             let value = match important_ident.token {
                 Token::Ident { value, raw, .. } => (value, raw),
                 _ => {
                     unreachable!();
                 }
             };
+
             let value = Ident {
                 span: important_ident.span,
                 value: value.0.to_ascii_lowercase(),
@@ -840,6 +881,7 @@ where
         // Create a simple block with its associated token set to the current input
         // token and with its value initially set to an empty list.
         let span = self.input.cur_span();
+
         let name = match cur!(self) {
             tok!("{") | tok!("(") | tok!("[") => self.input.bump().unwrap(),
             _ => {
@@ -849,6 +891,7 @@ where
                 ));
             }
         };
+
         let mut simple_block = SimpleBlock {
             span: Default::default(),
             name,
@@ -885,11 +928,13 @@ where
 
                     break;
                 }
+
                 tok!(")") if simple_block.name.token == Token::LParen => {
                     bump!(self);
 
                     break;
                 }
+
                 tok!("}") if simple_block.name.token == Token::LBrace => {
                     bump!(self);
 
@@ -925,13 +970,16 @@ where
         // Create a function with its name equal to the value of the current input token
         // and with its value initially set to an empty list.
         let span = self.input.cur_span();
+
         let function_name = match bump!(self) {
             Token::Function { value, raw } => (value, raw),
             _ => {
                 unreachable!()
             }
         };
+
         let is_dashed_ident = function_name.0.starts_with("--");
+
         let name = if is_dashed_ident {
             FunctionName::DashedIdent(DashedIdent {
                 span: Span::new(span.lo, span.hi - BytePos(1)),
@@ -945,6 +993,7 @@ where
                 raw: Some(function_name.1),
             })
         };
+
         let mut function = Function {
             span: Default::default(),
             name,
@@ -1000,6 +1049,7 @@ where
 {
     fn parse(&mut self) -> PResult<ListOfComponentValues> {
         let span = self.input.cur_span();
+
         let mut children = Vec::new();
 
         // Repeatedly consume a component value from input until an <EOF-token> is

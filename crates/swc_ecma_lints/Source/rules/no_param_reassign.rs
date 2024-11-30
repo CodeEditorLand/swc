@@ -63,9 +63,11 @@ impl NoParamReassign {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, &message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, &message).emit();
             }
+
             _ => {}
         });
     }
@@ -78,6 +80,7 @@ impl NoParamReassign {
                     .unwrap()
                     .insert(id.to_id());
             }
+
             Pat::Object(ObjectPat { props, .. }) => props.iter().for_each(|prop| {
                 match prop {
                     ObjectPatProp::Assign(AssignPatProp { key, .. }) => {
@@ -86,9 +89,11 @@ impl NoParamReassign {
                             .unwrap()
                             .insert(key.to_id());
                     }
+
                     ObjectPatProp::KeyValue(KeyValuePatProp { value, .. }) => {
                         self.collect_function_params(value.as_ref());
                     }
+
                     _ => {}
                 };
             }),
@@ -155,9 +160,11 @@ impl NoParamReassign {
                     self.emit_report(ident.span, &ident.sym);
                 }
             }
+
             Expr::Member(member_expr) => {
                 self.check_obj_member(member_expr);
             }
+
             _ => {}
         }
     }
@@ -168,9 +175,11 @@ impl NoParamReassign {
                 AssignTargetPat::Array(array_pat) => {
                     self.check_array_pat(array_pat);
                 }
+
                 AssignTargetPat::Object(object_pat) => {
                     self.check_object_pat(object_pat);
                 }
+
                 AssignTargetPat::Invalid(..) => {}
             },
             AssignTarget::Simple(expr) => match expr {
@@ -179,6 +188,7 @@ impl NoParamReassign {
                         self.emit_report(ident.span, &ident.sym);
                     }
                 }
+
                 SimpleAssignTarget::Member(member_expr) => {
                     self.check_obj_member(member_expr);
                 }
@@ -195,9 +205,11 @@ impl NoParamReassign {
                     self.emit_report(ident.span, &ident.sym);
                 }
             }
+
             Expr::Member(member_expr) => {
                 self.check_obj_member(member_expr);
             }
+
             _ => {}
         }
     }
@@ -217,9 +229,11 @@ impl NoParamReassign {
                     self.emit_report(key.span, &key.sym);
                 }
             }
+
             ObjectPatProp::KeyValue(KeyValuePatProp { value, .. }) => {
                 self.check_pat(value.as_ref());
             }
+
             _ => {}
         });
     }
@@ -231,17 +245,21 @@ impl NoParamReassign {
                     self.emit_report(id.span, &id.sym);
                 }
             }
+
             Pat::Expr(expr) => {
                 if let Expr::Member(member_expr) = expr.as_ref() {
                     self.check_obj_member(member_expr);
                 }
             }
+
             Pat::Object(p) => {
                 self.check_object_pat(p);
             }
+
             Pat::Array(p) => {
                 self.check_array_pat(p);
             }
+
             _ => {}
         }
     }
@@ -252,6 +270,7 @@ impl Visit for NoParamReassign {
 
     fn visit_function(&mut self, function: &Function) {
         self.scopes.push(function.span);
+
         self.scoped_params.insert(function.span, Default::default());
 
         function.params.iter().for_each(|param| {
@@ -261,6 +280,7 @@ impl Visit for NoParamReassign {
         function.visit_children_with(self);
 
         self.scopes.pop();
+
         self.scoped_params.remove(&function.span);
     }
 

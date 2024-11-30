@@ -13,7 +13,9 @@ where
 {
     pub(super) fn with_ctx(&mut self, ctx: Ctx) -> WithCtx<S> {
         let orig_ctx = self.ctx;
+
         self.ctx = ctx;
+
         WithCtx {
             analyzer: self,
             orig_ctx,

@@ -90,11 +90,13 @@ impl Compressor {
                     .and_modify(|mana| *mana += 1)
                     .or_insert(1);
             }
+
             prelude => {
                 let name = match prelude {
                     AtRulePrelude::KeyframesPrelude(KeyframesName::CustomIdent(custom_ident)) => {
                         &custom_ident.value
                     }
+
                     AtRulePrelude::KeyframesPrelude(KeyframesName::Str(s)) => &s.value,
                     _ => return,
                 };
@@ -135,6 +137,7 @@ impl Compressor {
                         false
                     }
                 }
+
                 prelude => {
                     let name = match prelude {
                         AtRulePrelude::KeyframesPrelude(KeyframesName::CustomIdent(
@@ -176,6 +179,7 @@ impl Compressor {
                     }
                 }
             }
+
             ParentNode::SimpleBlock(simple_block) => {
                 for index in 0..simple_block.value.len() {
                     let node = simple_block.value.get(index);
@@ -241,6 +245,7 @@ impl Compressor {
                 let mut checker = CompatibilityChecker::default();
 
                 left_selector_list.visit_with(&mut checker);
+
                 right_selector_list.visit_with(&mut checker);
 
                 checker.allow_to_merge
@@ -252,10 +257,12 @@ impl Compressor {
                 let mut checker = CompatibilityChecker::default();
 
                 left_relative_selector_list.visit_with(&mut checker);
+
                 right_relative_selector_list.visit_with(&mut checker);
 
                 checker.allow_to_merge
             }
+
             _ => false,
         }
     }
@@ -271,6 +278,7 @@ impl Compressor {
 
         // Merge when declarations are exactly equal
         // e.g. h1 { color: red } h2 { color: red }
+
         if left.block.eq_ignore_span(&right.block) {
             match (&mut left.prelude, &mut right.prelude) {
                 (
@@ -279,6 +287,7 @@ impl Compressor {
                 ) => {
                     let selector_list =
                         self.merge_selector_list(prev_selector_list, current_selector_list);
+
                     let mut qualified_rule = QualifiedRule {
                         span: Span::new(left.span_lo(), right.span_hi()),
                         prelude: QualifiedRulePrelude::SelectorList(selector_list),
@@ -297,6 +306,7 @@ impl Compressor {
                         prev_relative_selector_list,
                         current_relative_selector_list,
                     );
+
                     let mut qualified_rule = QualifiedRule {
                         span: Span::new(left.span_lo(), right.span_hi()),
                         prelude: QualifiedRulePrelude::RelativeSelectorList(relative_selector_list),
@@ -307,14 +317,17 @@ impl Compressor {
 
                     return Some(qualified_rule);
                 }
+
                 _ => {}
             }
         }
 
         // Merge when both selectors are exactly equal
         // e.g. a { color: blue } a { font-weight: bold }
+
         if left.prelude.eq_ignore_span(&right.prelude) {
             let block = self.merge_simple_block(&mut left.block, &mut right.block);
+
             let mut qualified_rule = QualifiedRule {
                 span: Span::new(left.span_lo(), right.span_hi()),
                 prelude: left.prelude.take(),
@@ -350,10 +363,12 @@ impl Compressor {
         // e.g.
         // @media print { .color { color: red; } }
         // @media print { .color { color: blue; } }
+
         if left.prelude.eq_ignore_span(&right.prelude) {
             if let Some(left_block) = &mut left.block {
                 if let Some(right_block) = &mut right.block {
                     let block = self.merge_simple_block(left_block, right_block);
+
                     let mut at_rule = AtRule {
                         span: Span::new(left.span.span_lo(), right.span.span_lo()),
                         name: left.name.clone(),
@@ -373,8 +388,11 @@ impl Compressor {
 
     pub(super) fn compress_stylesheet(&mut self, stylesheet: &mut Stylesheet) {
         let mut names: AHashMap<Name, isize> = Default::default();
+
         let mut prev_rule_idx = None;
+
         let mut remove_rules_list = Vec::new();
+
         let mut prev_index = 0;
 
         for index in 0..stylesheet.rules.len() {
@@ -385,6 +403,7 @@ impl Compressor {
                 Some(idx) => a.get_mut(idx),
                 None => None,
             };
+
             let rule = match b.first_mut() {
                 Some(v) => v,
                 None => continue,
@@ -405,9 +424,11 @@ impl Compressor {
                 {
                     false
                 }
+
                 Rule::QualifiedRule(qualified_rule) if qualified_rule.block.value.is_empty() => {
                     false
                 }
+
                 Rule::AtRule(at_rule)
                     if self.is_mergeable_at_rule(at_rule)
                         && matches!(prev_rule, Some(Rule::AtRule(_))) =>
@@ -422,6 +443,7 @@ impl Compressor {
 
                     true
                 }
+
                 Rule::QualifiedRule(qualified_rule)
                     if matches!(prev_rule, Some(Rule::QualifiedRule(_))) =>
                 {
@@ -437,6 +459,7 @@ impl Compressor {
 
                     true
                 }
+
                 _ => {
                     if let Rule::AtRule(rule) = rule {
                         self.collect_names(rule, &mut names);
@@ -450,12 +473,16 @@ impl Compressor {
                 match rule {
                     Rule::AtRule(at_rule) if self.is_mergeable_at_rule(at_rule) => {
                         prev_index = index;
+
                         prev_rule_idx = Some(index);
                     }
+
                     Rule::QualifiedRule(_) => {
                         prev_index = index;
+
                         prev_rule_idx = Some(index);
                     }
+
                     _ => {
                         prev_rule_idx = None;
                     }
@@ -504,14 +531,18 @@ impl Compressor {
             // .bar {
             //     color: green;
             // }
+
             self.compress_stylesheet(stylesheet);
         }
     }
 
     pub(super) fn compress_simple_block(&mut self, simple_block: &mut SimpleBlock) {
         let mut names: AHashMap<Name, isize> = Default::default();
+
         let mut prev_rule_idx = None;
+
         let mut remove_rules_list = Vec::new();
+
         let mut prev_index = 0;
 
         for index in 0..simple_block.value.len() {
@@ -522,6 +553,7 @@ impl Compressor {
                 Some(idx) => a.get_mut(idx),
                 None => None,
             };
+
             let rule = match b.first_mut() {
                 Some(v) => v,
                 None => continue,
@@ -537,16 +569,19 @@ impl Compressor {
                 {
                     false
                 }
+
                 ComponentValue::QualifiedRule(qualified_rule)
                     if qualified_rule.block.value.is_empty() =>
                 {
                     false
                 }
+
                 ComponentValue::KeyframeBlock(keyframe_block)
                     if keyframe_block.block.value.is_empty() =>
                 {
                     false
                 }
+
                 ComponentValue::AtRule(at_rule)
                     if prev_rule.is_some() && self.is_mergeable_at_rule(at_rule) =>
                 {
@@ -560,6 +595,7 @@ impl Compressor {
 
                     true
                 }
+
                 ComponentValue::QualifiedRule(qualified_rule) if prev_rule.is_some() => {
                     if let Some(ComponentValue::QualifiedRule(prev_rule)) = &mut prev_rule {
                         if let Some(qualified_rule) =
@@ -573,6 +609,7 @@ impl Compressor {
 
                     true
                 }
+
                 ComponentValue::Declaration(declaration) if prev_rule.is_some() => {
                     if let Some(ComponentValue::Declaration(prev_rule)) = &mut prev_rule {
                         if self.is_same_declaration_name(prev_rule, declaration)
@@ -584,6 +621,7 @@ impl Compressor {
 
                     true
                 }
+
                 _ => {
                     if let ComponentValue::AtRule(rule) = rule {
                         self.collect_names(rule, &mut names);
@@ -597,16 +635,22 @@ impl Compressor {
                 match rule {
                     ComponentValue::AtRule(at_rule) if self.is_mergeable_at_rule(at_rule) => {
                         prev_index = index;
+
                         prev_rule_idx = Some(index);
                     }
+
                     ComponentValue::QualifiedRule(_) => {
                         prev_index = index;
+
                         prev_rule_idx = Some(index);
                     }
+
                     ComponentValue::Declaration(_) => {
                         prev_index = index;
+
                         prev_rule_idx = Some(index);
                     }
+
                     _ => {
                         prev_rule_idx = None;
                     }
@@ -657,6 +701,7 @@ impl Compressor {
             //         color: green;
             //     }
             // }
+
             self.compress_simple_block(simple_block);
         }
     }

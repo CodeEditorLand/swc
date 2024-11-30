@@ -28,12 +28,14 @@ impl<T> MoveMap<T> for Vec<T> {
     {
         unsafe {
             let old_len = self.len();
+
             self.set_len(0); // make sure we just leak elements in case of panic
 
             for index in 0..old_len {
                 let item_ptr = self.as_mut_ptr().add(index);
                 // move the item out of the vector and map it
                 let item = ptr::read(item_ptr);
+
                 let item = f(item);
 
                 ptr::write(item_ptr, item);
@@ -52,21 +54,27 @@ impl<T> MoveMap<T> for Vec<T> {
         I: IntoIterator<Item = T>,
     {
         let mut read_i = 0;
+
         let mut write_i = 0;
+
         unsafe {
             let mut old_len = self.len();
+
             self.set_len(0); // make sure we just leak elements in case of panic
 
             while read_i < old_len {
                 // move the read_i'th item out of the vector and map it
                 // to an iterator
                 let e = ptr::read(self.as_ptr().add(read_i));
+
                 let iter = f(e).into_iter();
+
                 read_i += 1;
 
                 for e in iter {
                     if write_i < read_i {
                         ptr::write(self.as_mut_ptr().add(write_i), e);
+
                         write_i += 1;
                     } else {
                         // If this is reached we ran out of space
@@ -74,12 +82,15 @@ impl<T> MoveMap<T> for Vec<T> {
                         // However, the vector is in a valid state here,
                         // so we just do a somewhat inefficient insert.
                         self.set_len(old_len);
+
                         self.insert(write_i, e);
 
                         old_len = self.len();
+
                         self.set_len(0);
 
                         read_i += 1;
+
                         write_i += 1;
                     }
                 }

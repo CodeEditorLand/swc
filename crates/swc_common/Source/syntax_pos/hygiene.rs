@@ -98,14 +98,19 @@ extern "C" {
     // inner raw value as well as fn and let each context constructs struct
     // on their side.
     fn __mark_fresh_proxy(mark: u32) -> u32;
+
     fn __mark_parent_proxy(self_mark: u32) -> u32;
+
     fn __syntax_context_apply_mark_proxy(self_syntax_context: u32, mark: u32) -> u32;
+
     fn __syntax_context_outer_proxy(self_mark: u32) -> u32;
 
     // These are proxy fn uses serializable context to pass forward mutated param
     // with return value back to the guest.
     fn __mark_is_descendant_of_proxy(self_mark: u32, ancestor: u32, allocated_ptr: i32);
+
     fn __mark_least_ancestor(a: u32, b: u32, allocated_ptr: i32);
+
     fn __syntax_context_remove_mark_proxy(self_mark: u32, allocated_ptr: i32);
 }
 
@@ -130,6 +135,7 @@ impl Mark {
         #[cfg(not(all(feature = "__plugin_mode", target_arch = "wasm32")))]
         return with_marks(|marks| {
             marks.push(MarkData { parent });
+
             Mark(marks.len() as u32 - 1)
         });
     }
@@ -167,10 +173,12 @@ impl Mark {
         // In here, preallocate memory for the context.
 
         use crate::plugin::serialized::VersionedSerializable;
+
         let serialized = crate::plugin::serialized::PluginSerializedBytes::try_serialize(
             &VersionedSerializable::new(MutableMarkContext(0, 0, 0)),
         )
         .expect("Should be serializable");
+
         let (ptr, len) = serialized.as_ptr();
 
         // Calling host proxy fn. Inside of host proxy, host will
@@ -201,8 +209,10 @@ impl Mark {
                 if self == Mark::root() {
                     return false;
                 }
+
                 self = marks[self.0 as usize].parent;
             }
+
             true
         })
     }
@@ -216,6 +226,7 @@ impl Mark {
             &VersionedSerializable::new(MutableMarkContext(0, 0, 0)),
         )
         .expect("Should be serializable");
+
         let (ptr, len) = serialized.as_ptr();
 
         unsafe {
@@ -230,7 +241,9 @@ impl Mark {
             .deserialize()
             .expect("Should able to deserialize")
             .into_inner();
+
         a = Mark::from_u32(context.0);
+
         b = Mark::from_u32(context.1);
 
         return Mark(context.2);
@@ -250,8 +263,10 @@ impl Mark {
         with_marks(|marks| {
             // Compute the path from a to the root
             let mut a_path = HashSet::<Mark>::default();
+
             while a != Mark::root() {
                 a_path.insert(a);
+
                 a = marks[a.0 as usize].parent;
             }
 
@@ -340,9 +355,11 @@ impl SyntaxContext {
             }
 
             let m = ctxt.remove_mark();
+
             if m == mark {
                 return true;
             }
+
             if m == Mark::root() {
                 return false;
             }
@@ -368,6 +385,7 @@ impl SyntaxContext {
         #[cfg(not(all(feature = "__plugin_mode", target_arch = "wasm32")))]
         {
             assert_ne!(mark, Mark::root());
+
             self.apply_mark_internal(mark)
         }
     }
@@ -376,16 +394,19 @@ impl SyntaxContext {
     fn apply_mark_internal(self, mark: Mark) -> SyntaxContext {
         HygieneData::with(|data| {
             let syntax_contexts = &mut data.syntax_contexts;
+
             let mut opaque = syntax_contexts[self.0 as usize].opaque;
 
             let prev_ctxt = opaque;
             *data.markings.entry((prev_ctxt, mark)).or_insert_with(|| {
                 let new_opaque = SyntaxContext(syntax_contexts.len() as u32);
+
                 syntax_contexts.push(SyntaxContextData {
                     outer_mark: mark,
                     prev_ctxt,
                     opaque: new_opaque,
                 });
+
                 new_opaque
             })
         })
@@ -396,8 +417,10 @@ impl SyntaxContext {
         use crate::plugin::serialized::VersionedSerializable;
 
         let context = VersionedSerializable::new(MutableMarkContext(0, 0, 0));
+
         let serialized = crate::plugin::serialized::PluginSerializedBytes::try_serialize(&context)
             .expect("Should be serializable");
+
         let (ptr, len) = serialized.as_ptr();
 
         unsafe {
@@ -439,6 +462,7 @@ impl SyntaxContext {
         HygieneData::with(|data| {
             let outer_mark = data.syntax_contexts[self.0 as usize].outer_mark;
             *self = data.syntax_contexts[self.0 as usize].prev_ctxt;
+
             outer_mark
         })
     }
@@ -473,9 +497,11 @@ impl SyntaxContext {
     /// not w.r.t. a macro definition scope).
     pub fn adjust(&mut self, expansion: Mark) -> Option<Mark> {
         let mut scope = None;
+
         while !expansion.is_descendant_of(self.outer()) {
             scope = Some(self.remove_mark());
         }
+
         scope
     }
 
@@ -511,15 +537,19 @@ impl SyntaxContext {
         mut glob_ctxt: SyntaxContext,
     ) -> Option<Option<Mark>> {
         let mut scope = None;
+
         while !expansion.is_descendant_of(glob_ctxt.outer()) {
             scope = Some(glob_ctxt.remove_mark());
+
             if self.remove_mark() != scope.unwrap() {
                 return None;
             }
         }
+
         if self.adjust(expansion).is_some() {
             return None;
         }
+
         Some(scope)
     }
 
@@ -540,14 +570,17 @@ impl SyntaxContext {
         }
 
         let mut marks = Vec::new();
+
         while !expansion.is_descendant_of(glob_ctxt.outer()) {
             marks.push(glob_ctxt.remove_mark());
         }
 
         let scope = marks.last().cloned();
+
         while let Some(mark) = marks.pop() {
             *self = self.apply_mark(mark);
         }
+
         Some(scope)
     }
 

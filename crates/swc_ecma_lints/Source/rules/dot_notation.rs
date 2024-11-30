@@ -61,9 +61,11 @@ impl DotNotation {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, &message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, &message).emit();
             }
+
             _ => {}
         });
     }
@@ -106,9 +108,11 @@ impl Visit for DotNotation {
 
                     self.check(prop.span, quote_type, &lit_str.value);
                 }
+
                 Expr::Member(member) => {
                     member.visit_children_with(self);
                 }
+
                 _ => {
                     prop.visit_with(self);
                 }

@@ -12,6 +12,7 @@ macro_rules! test_stmt {
             None,
             |_| {
                 let unresolved_mark = Mark::new();
+
                 let top_level_mark = Mark::new();
 
                 (
@@ -67,62 +68,92 @@ fn usage() {
 #[test]
 fn compiled_out_simple() {
     compiled_out!(";");
+
     compiled_out!("8;");
+
     compiled_out!("8+8;");
 }
 
 #[test]
 fn test_remove_no_op_labelled_statement() {
     test("a: break a;", "");
+
     test("a: { break a; }", "");
 
     test("a: { break a; console.log('unreachable'); }", "");
+
     test(
         "a: { break a; var x = 1; } x = 2;",
         "a: { var x; break a; } x = 2; ",
     );
 
     test("b: { var x = 1; } x = 2;", "b: var x = 1; x = 2;");
+
     test("a: b: { var x = 1; } x = 2;", "a: b: var x = 1; x = 2;");
 }
 
 #[test]
 fn test_fold_block() {
     test("{{foo()}}", "foo()");
+
     test("{foo();{}}", "foo()");
+
     test("{{foo()}{}}", "foo()");
+
     test("{{foo()}{bar()}}", "foo();bar()");
+
     test("{if(false)foo(); {bar()}}", "bar()");
+
     test("{if(false)if(false)if(false)foo(); {bar()}}", "bar()");
 
     test("{'hi'}", "'hi'");
+
     test("{x==3}", "x");
+
     test("{`hello ${foo}`}", "");
+
     test("{ (function(){x++}) }", "");
+
     test_same("function f(){return;}");
+
     test("function f(){return 3;}", "function f(){return 3}");
+
     test_same("function f(){if(x)return; x=3; return; }");
+
     test("{x=3;;;y=2;;;}", "x=3;y=2");
 
     // Cases to test for empty block.
     test("while(x()){x}", "while(x())x;");
+
     test("while(x()){x()}", "while(x())x()");
+
     test("for(x=0;x<100;x++){x}", "for(x=0;x<100;x++)x;");
+
     test("for(x in y){x}", "for(x in y)x;");
+
     test("for (x of y) {x}", "for(x of y)x;");
+
     test_same("for (let x = 1; x <10; x++ );");
+
     test_same("for (var x = 1; x <10; x++ );");
 }
 
 #[test]
 fn test_fold_block_with_declaration() {
     test_same("{let x}");
+
     test_same("function f() {let x}");
+
     test_same("{const x = 1}");
+
     test_same("{x = 2; y = 4; let z;}");
+
     test("{'hi'; let x;}", "{'hi'; let x}");
+
     test("{x = 4; {let y}}", "x = 4; {let y}");
+
     test_same("{class C {}} {class C1 {}}");
+
     test("{label: var x}", "label: var x");
     // `{label: let x}` is a syntax error
     test_same("{label: var x; let y;}");
@@ -132,14 +163,17 @@ fn test_fold_block_with_declaration() {
 /// Try to remove spurious blocks with multiple children
 fn test_fold_blocks_with_many_children() {
     test("function f() { if (false) {} }", "function f(){}");
+
     test(
         "function f() { { if (false) {} if (true) {} {} } }",
         "function f(){}",
     );
+
     test(
         "{var x; var y; var z; class Foo { constructor() { var a; { var b; } } } }",
         "{var x;var y;var z;class Foo { constructor() { var a;var b} } }",
     );
+
     test(
         "{var x; var y; var z; { { var a; { var b; } } } }",
         "var x;var y;var z; var a;var b",
@@ -149,59 +183,79 @@ fn test_fold_blocks_with_many_children() {
 #[test]
 fn test_if() {
     test("if (1){ x=1; } else { x = 2;}", "x=1");
+
     test("if (false){ x = 1; } else { x = 2; }", "x=2");
+
     test("if (undefined){ x = 1; } else { x = 2; }", "x=2");
+
     test("if (null){ x = 1; } else { x = 2; }", "x=2");
+
     test("if (void 0){ x = 1; } else { x = 2; }", "x=2");
+
     test("if (void foo()){ x = 1; } else { x = 2; }", "foo();x=2");
+
     test(
         "if (false){ x = 1; } else if (true) { x = 3; } else { x = 2; }",
         "x=3",
     );
+
     test("if (x){ x = 1; } else if (false) { x = 3; }", "if(x)x=1");
+
     test_same(concat!(
         "if (x) {",
         "  if (y) log(1);",
         "  else if (z) log(2);",
         "} else log(3);",
     ));
+
     test_same("if (0 | x) y = 1; else y = 2;");
     // test("if (1 | x) y = 1; else y = 2;", "y=1;");
     // test("if (0 & x) y = 1; else y = 2;", "y=2");
+
     test_same("if (1 & x) y = 1; else y = 2;");
 }
 
 #[test]
 fn test_hook() {
     test("true ? a() : b()", "a()");
+
     test("false ? a() : b()", "b()");
 
     test("a() ? b() : true", "a() && b()");
+
     test("a() ? true : b()", "a() || b()");
 
     test("(a = true) ? b() : c()", "a = true, b()");
+
     test("(a = false) ? b() : c()", "a = false, c()");
+
     test(
         "do {f()} while((a = true) ? b() : c())",
         "do f(); while(a = true , b())",
     );
+
     test(
         "do {f()} while((a = false) ? b() : c())",
         "do f(); while(a = false , c())",
     );
 
     test("var x = (true) ? 1 : 0", "var x=1");
+
     test(
         "var y = (true) ? ((false) ? 12 : (cond ? 1 : 2)) : 13",
         "var y=cond?1:2",
     );
 
     test_same("var z=x?void 0:y()");
+
     test_same("z=x?void 0:y()");
+
     test_same("z*=x?void 0:y()");
 
     test_same("var z=x?y():void 0");
+
     test_same("(w?x:void 0).y=z");
+
     test_same("(w?x:void 0).y+=z");
 
     test("y = (x ? void 0 : void 0)", "y = void 0");
@@ -211,38 +265,51 @@ fn test_hook() {
 #[ignore]
 fn test_hook_extra() {
     test("y = (x ? f() : f())", "y = f()");
+
     test("(function(){}) ? function(){} : function(){}", "");
 }
 
 #[test]
 fn test_constant_condition_with_side_effect1() {
     test("if (b=true) x=1;", "b=true;x=1");
+
     test("if (b=/ab/) x=1;", "b=/ab/;x=1");
+
     test("if (b=/ab/){ x=1; } else { x=2; }", "b=/ab/;x=1");
     // test("var b;b=/ab/;if(b)x=1;", "var b;b=/ab/;x=1");
+
     test_same("var b;b=f();if(b)x=1;");
     // test("var b=/ab/;if(b)x=1;", "var b=/ab/;x=1");
+
     test_same("var b=f();if(b)x=1;");
+
     test_same("b=b++;if(b)x=b;");
+
     test("(b=0,b=1);if(b)x=b;", "b=0,b=1;if(b)x=b;");
     // test("b=1;if(foo,b)x=b;", "b=1;x=b;");
+
     test_same("b=1;if(foo=1,b)x=b;");
 }
 
 #[test]
 fn test_constant_condition_with_side_effect2() {
     test("(b=true)?x=1:x=2;", "b=true,x=1");
+
     test("(b=false)?x=1:x=2;", "b=false,x=2");
+
     test("if (b=/ab/) x=1;", "b=/ab/;x=1");
     // test("var b;b=/ab/;(b)?x=1:x=2;", "var b;b=/ab/;x=1");
+
     test_same("var b;b=f();b?x=1:x=2;");
     // test("var b=/ab/;(b)?x=1:x=2;", "var b=/ab/;x=1");
+
     test_same("var b=f();b?x=1:x=2;");
 }
 
 #[test]
 fn test_var_lifting() {
     test("if(true)var a", "var a");
+
     test("if(false)var a", "var a");
 
     // More var lifting tests in PeepholeIntegrationTests
@@ -251,20 +318,30 @@ fn test_var_lifting() {
 #[test]
 fn test_let_const_lifting() {
     test("if(true) {const x = 1}", "{const x = 1}");
+
     test("if(false) {const x = 1}", "");
+
     test("if(true) {let x}", "{let x}");
+
     test("if(false) {let x}", "");
 }
 
 #[test]
 fn test_fold_useless_for() {
     test("for(;false;) { foo() }", "");
+
     test("for(;void 0;) { foo() }", "");
+
     test("for(;undefined;) { foo() }", "");
+
     test("for(;true;) foo() ", "for(;;) foo() ");
+
     test_same("for(;;) foo()");
+
     test("for(;false;) { var a = 0; }", "var a");
+
     test("for(;false;) { const a = 0; }", "");
+
     test("for(;false;) { let a = 0; }", "");
 
     // Make sure it plays nice with minimizing
@@ -274,9 +351,13 @@ fn test_fold_useless_for() {
 #[test]
 fn test_fold_useless_do_1() {
     test("do { foo() } while(false);", "foo()");
+
     test("do { foo() } while(void 0);", "foo()");
+
     test("do { foo() } while(undefined);", "foo(); undefined");
+
     test("do { foo() } while(true);", "for(;;) foo();");
+
     test("do { var a = 0; } while(false);", "var a=0");
 }
 
@@ -293,19 +374,24 @@ fn test_fold_useless_do_3() {
         "do { try { foo() } catch (e) { break; } } while (0);",
         "try { foo(); } catch (e) { break; }",
     );
+
     test("do { foo(); break; } while(0)", "foo();");
+
     test(
         "do { for (;;) {foo(); continue;} } while(0)",
         "for (;;) {foo(); continue;}",
     );
+
     test(
         "l1: do { for (;;) { foo() } } while(0)",
         "l1: for(;;) foo();",
     );
+
     test(
         "do { switch (1) { default: foo(); break} } while(0)",
         "foo();",
     );
+
     test(
         "do { switch (1) { default: foo(); continue} } while(0)",
         "foo();",
@@ -321,6 +407,7 @@ fn test_fold_useless_do_3() {
 #[ignore]
 fn test_fold_useless_do_extra() {
     test("do { x = 1; } while (x = 0);", "x = 1; x = 0;");
+
     test(
         "let x = 1; (function() { do { let x = 2; } while (x = 10, false); })();",
         "let x = 1; (function() { { let x = 2 } x = 10 })();",
@@ -330,6 +417,7 @@ fn test_fold_useless_do_extra() {
 #[test]
 fn test_no_fold_do_with_conditional_stopper() {
     test_same("do { if (Date.now() > 0) break; } while (0);");
+
     test_same("do { if (Date.now() > 0) continue; } while (0);");
 }
 
@@ -341,30 +429,45 @@ fn test_fold_empty_do() {
 #[test]
 fn test_minimize_loop_with_constant_condition_vanilla_for() {
     test("for(;true;) foo()", "for(;;) foo()");
+
     test("for(;0;) foo()", "");
+
     test("for(;0.0;) foo()", "");
+
     test("for(;NaN;) foo()", "");
+
     test("for(;null;) foo()", "");
+
     test("for(;undefined;) foo()", "");
+
     test("for(;'';) foo()", "");
 }
 
 #[test]
 fn test_minimize_loop_with_constant_condition_do_while() {
     test("do { foo(); } while (true)", "for(;;)foo();");
+
     test("do { foo(); } while (0)", "foo();");
+
     test("do { foo(); } while (0.0)", "foo();");
+
     test("do { foo(); } while (NaN)", "foo(); NaN");
+
     test("do { foo(); } while (null)", "foo();");
+
     test("do { foo(); } while (undefined)", "foo(); undefined");
+
     test("do { foo(); } while ('')", "foo();");
 }
 
 #[test]
 fn test_fold_constant_comma_expressions() {
     test("if (true, false) {foo()}", "");
+
     test("if (false, true) {foo()}", "foo()");
+
     test("true, foo()", "foo()");
+
     test("(1 + 2 + ''), foo()", "foo()");
 }
 
@@ -383,11 +486,14 @@ fn test_remove_useless_ops2() {
 
     // Known side-effect free functions calls are removed.
     test("Math.random()", "");
+
     test("Math.random(f() + g())", "f(),g();");
+
     test("Math.random(f(),g(),h())", "f(),g(),h();");
 
     // Calls to functions with unknown side-effects are left.
     test_same("f();");
+
     test_same("(function () { f(); })();");
 
     // We know that this function has no side effects because of the
@@ -396,55 +502,82 @@ fn test_remove_useless_ops2() {
 
     // Uncalled function expressions are removed
     test("(function () {});", "");
+
     test("(function f() {});", "");
+
     test("(function* f() {})", "");
     // ... including any code they contain.
     test("(function () {foo();});", "");
 
     // Useless operators are removed.
     test("+f()", "f()");
+
     test("a=(+f(),g())", "a=(f(),g())");
+
     test("a=(true,g())", "a=g()");
+
     test("f(),true", "f()");
+
     test("f() + g()", "f(),g()");
 
     test("for(;;+f()){}", "for(;;f());");
+
     test("for(+f();;g()){}", "for(f();;g());");
+
     test("for(;;Math.random(f(),g(),h())){}", "for(;;f(),g(),h());");
 
     // The optimization cascades into conditional expressions:
     test("g() && +f()", "g() && f()");
+
     test("g() || +f()", "g() || f()");
+
     test("x ? g() : +f()", "x ? g() : f()");
 
     test("+x()", "x()");
+
     test("+x() * 2", "x()");
+
     test("-(+x() * 2)", "x()");
+
     test("2 -(+x() * 2)", "x()");
     //test("x().foo", "x()");
+
     test_same("x().foo()");
 
     test_same("x++");
+
     test_same("++x");
+
     test_same("x--");
+
     test_same("--x");
+
     test_same("x = 2");
+
     test_same("x *= 2");
 
     // Sanity check, other expression are left alone.
     test_same("function f() {}");
+
     test_same("var x;");
 }
 
 #[test]
 fn test_optimize_switch_1() {
     test("switch(a){}", "a");
+
     test("switch(foo()){}", "foo()");
+
     test("switch(a){default:}", "a");
+
     test("switch(a){default:break;}", "a");
+
     test("switch(a){default:var b;break;}", "a;var b");
+
     test("switch(a){case 1: default:}", "a");
+
     test("switch(a){default: case 1:}", "a");
+
     test("switch(a){default: break; case 1:break;}", "a");
     //test(
     //    "switch(a){default: var b; break; case 1: var c; break;}",
@@ -454,11 +587,14 @@ fn test_optimize_switch_1() {
 
     // Can't remove cases if a default exists and is not the last case.
     test_same("function f() {switch(a){default: return; case 1: break;}}");
+
     test(
         "function f() {switch(1){default: return; case 1: break;}}",
         "function f() {}",
     );
+
     test_same("function f() {switch(a){case 1: foo();}}");
+
     test_same("function f() {switch(a){case 3: case 2: case 1: foo();}}");
 
     test(
@@ -469,6 +605,7 @@ fn test_optimize_switch_1() {
     //    "switch(a){case 1: default:break; case 2: foo()}",
     //    "switch(a){case 2: foo()}",
     //);
+
     test_same("switch(a){case 1: goo(); default:break; case 2: foo()}");
 
     // TODO(johnlenz): merge the useless "case 2"
@@ -476,6 +613,7 @@ fn test_optimize_switch_1() {
 
     // Can't remove unused code with a "var" in it.
     test("switch(1){case 2: var x=0;}", "var x;");
+
     test(
         "switch ('repeated') {\ncase 'repeated':\n  foo();\n  break;\ncase 'repeated':\n  var \
          x=0;\n  break;\n}",
@@ -484,13 +622,16 @@ fn test_optimize_switch_1() {
 
     // Can't remove cases if something useful is done.
     test_same("switch(a){case 1: var c =2; break;}");
+
     test_same("function f() {switch(a){case 1: return;}}");
+
     test_same("x:switch(a){case 1: break x;}");
 
     test(
         "switch ('foo') {\ncase 'foo':\n  foo();\n  break;\ncase 'bar':\n  bar();\n  break;\n}",
         "foo();",
     );
+
     test(
         "switch ('noMatch') {\ncase 'foo':\n  foo();\n  break;\ncase 'bar':\n  bar();\n  break;\n}",
         "",
@@ -550,31 +691,38 @@ fn test_optimize_switch_4() {
          bar();\n  break;\n}",
         "foo();",
     );
+
     test(
         "switch ('foo') {\ncase 'bar':\n  bar();\n  break;\ncase notConstant:\n  foobar();\n  \
          break;\ncase 'foo':\n  foo();\n  break;\n}",
         "switch ('foo') {\ncase notConstant:\n  foobar();\n  break;\ncase 'foo':\n  foo();\n  \
          break;\n}",
     );
+
     test(
         "switch (1) {\ncase 1:\n  foo();\n  break;\ncase 2:\n  bar();\n  break;\n}",
         "foo();",
     );
+
     test(
         "switch (true) {\ncase true:\n  foo();\n  break;\ncase false:\n  bar();\n break;
+
             default: foobar(); break; \n}",
         "foo();",
     );
+
     test(
         "switch (1) {\ncase 1.1:\n  foo();\n  break;\ncase 2:\n  bar();\n  break;\n}",
         "",
     );
+
     test(
         "switch (0) {\ncase NaN:\n  foobar();\n  break;\ncase -0.0:\n  foo();\n  break;\ncase \
          2:\n  bar();\n  break;\n}",
         "foo();",
     );
     // test_same("switch ('\\v') {\ncase '\\u000B':\n  foo();\n}");
+
     test(
         concat!(
             "switch ('empty') {",
@@ -1143,6 +1291,7 @@ fn test_hook8() {
 #[test]
 fn test_hook9() {
     test("true ? a() : (function f() {})()", "a()");
+
     test(
         "false ? a() : (function f() {alert(x)})()",
         "(function f() {alert(x)})()",
@@ -1152,6 +1301,7 @@ fn test_hook9() {
 #[test]
 fn test_hook10() {
     test("((function () {}), true) ? a() : b()", "a()");
+
     test(
         "((function () {alert(x)})(), true) ? a() : b()",
         "(function(){alert(x)})(),a()",
@@ -1271,6 +1421,7 @@ fn test_call() {
     // We use a function with no side-effects, otherwise the entire invocation would
     // be preserved.
     test("Math.sin(0);", "");
+
     test("1 + Math.sin(0);", "");
 }
 
@@ -1279,9 +1430,13 @@ fn test_call_containing_spread() {
     // We use a function with no side-effects, otherwise the entire invocation would
     // be preserved.
     test("Math.sin(...c)", "[...c]");
+
     test("Math.sin(4, ...c, a)", "[...c, a]");
+
     test("Math.sin(foo(), ...c, bar())", "[foo(), ...c, bar()]");
+
     test("Math.sin(...a, b, ...c)", "[...a, b, ...c]");
+
     test("Math.sin(...b, ...c)", "[...b, ...c]");
 }
 
@@ -1291,6 +1446,7 @@ fn test_new() {
     // We use a function with no side-effects, otherwise the entire invocation would
     // be preserved.
     test("new Date;", "");
+
     test("1 + new Date;", "");
 }
 
@@ -1299,8 +1455,11 @@ fn test_new_containing_spread_1() {
     // We use a function with no side-effects, otherwise the entire invocation would
     // be preserved.
     test("new Date(...c)", "[...c]");
+
     test("new Date(4, ...c, a)", "[...c, a]");
+
     test("new Date(...a, b, ...c)", "[...a, b, ...c]");
+
     test("new Date(...b, ...c)", "[...b, ...c]");
 }
 
@@ -1318,6 +1477,7 @@ fn test_tagged_template_lit_simple_template() {
     // We use a function with no side-effects, otherwise the entire invocation would
     // be preserved.
     test("Math.sin`Simple`", "");
+
     test("1 + Math.sin`Simple`", "");
 }
 
@@ -1327,81 +1487,114 @@ fn test_tagged_template_lit_substituting_template() {
     // We use a function with no side-effects, otherwise the entire invocation would
     // be preserved.
     test("Math.sin`Complex ${butSafe}`", "");
+
     test("Math.sin`Complex ${andDangerous()}`", "andDangerous()");
 }
 
 #[test]
 fn test_fold_assign() {
     test("x=x", "x");
+
     test_same("x=xy");
+
     test_same("x=x + 1");
+
     test_same("x.a=x.a");
+
     test("var y=(x=x)", "var y=x");
+
     test("y=1 + (x=x)", "y=1 + x");
 }
 
 #[test]
 fn test_try_catch_finally() {
     test_same("try {foo()} catch (e) {bar()}");
+
     test_same("try { try {foo()} catch (e) {bar()}} catch (x) {bar()}");
+
     test("try {var x = 1} finally {}", "var x = 1;");
+
     test_same("try {var x = 1} finally {x()}");
+
     test(
         "function f() { return; try{var x = 1}finally{} }",
         "function f() { var x; return; }",
     );
+
     test("try {} finally {x()}", "x()");
+
     test("try {} catch (e) { bar()} finally {x()}", "x()");
+
     test("try {} catch (e) { bar()}", "");
+
     test(
         "try {} catch (e) { var a = 0; } finally {x()}",
         "var a; x()",
     );
+
     test("try {} catch (e) {}", "");
+
     test("try {} finally {}", "");
+
     test("try {} catch (e) {} finally {}", "");
 }
 
 #[test]
 fn test_object_literal() {
     test("({})", "");
+
     test("({a:1})", "");
+
     test("({a:foo()})", "foo()");
+
     test("({'a':foo()})", "foo()");
+
     test("({}).foo", "({}).foo");
     // Object-spread may trigger getters.
     test_same("({...a})");
+
     test_same("({...foo()})");
 }
 
 #[test]
 fn test_array_literal() {
     test("([])", "");
+
     test("([1])", "");
+
     test("([a])", "");
+
     test("([foo()])", "foo()");
 }
 
 #[test]
 fn test_array_literal_containing_spread() {
     test("([...c])", "[...c]");
+
     test("([4, ...c, a])", "[...c, a]");
+
     test("([foo(), ...c, bar()])", "[foo(), ...c, bar()]");
+
     test("([...a, b, ...c])", "[...a, b, ...c]");
+
     test("([...b, ...c])", "[...b, ...c]");
 }
 
 #[test]
 fn test_await() {
     test_same("async function f() { await something(); }");
+
     test_same("async function f() { await some.thing(); }");
 }
 
 #[test]
 fn test_empty_pattern_in_declaration_removed_1() {
     test("var [] = [];", "");
+
     test("let [] = [];", "");
+
     test("const [] = [];", "");
+
     test("var {} = [];", "");
 }
 
@@ -1414,22 +1607,29 @@ fn test_empty_pattern_in_declaration_removed_2() {
 #[test]
 fn test_empty_array_pattern_in_assign_removed() {
     test("({} = {});", "");
+
     test("({} = foo());", "foo()");
+
     test("[] = [];", "");
+
     test("[] = foo();", "foo()");
 }
 
 #[test]
 fn test_empty_pattern_in_params_not_removed() {
     test_same("function f([], a) {}");
+
     test_same("function f({}, a) {}");
 }
 
 #[test]
 fn test_empty_pattern_in_for_of_loop_not_removed() {
     test_same("for (let [] of foo());");
+
     test_same("for (const [] of foo());");
+
     test_same("for ([] of foo());");
+
     test_same("for ({} of foo());");
 }
 
@@ -1447,15 +1647,20 @@ fn test_empty_slot_in_array_pattern_with_default_value_maybe_removed_2() {
 #[test]
 fn test_empty_key_in_object_pattern_removed() {
     test("const {f: {}} = {};", "");
+
     test("const {f: []} = {};", "");
+
     test("const {f: {}, g} = {};", "const {g} = {};");
+
     test("const {f: [], g} = {};", "const {g} = {};");
+
     test_same("const {[foo()]: {}} = {};");
 }
 
 #[test]
 fn test_empty_key_in_object_pattern_not_removed_with_object_rest() {
     test_same("const {f: {}, ...g} = foo()");
+
     test_same("const {f: [], ...g} = foo()");
 }
 
@@ -1465,10 +1670,12 @@ fn test_undefined_default_parameter_removed() {
         "function f(x=undefined,y) {  }", //
         "function f(x,y)             {  }",
     );
+
     test(
         "function f(x,y=undefined,z) {  }", //
         "function f(x,y          ,z) {  }",
     );
+
     test(
         "function f(x=undefined,y=undefined,z=undefined) {  }", //
         "function f(x,          y,          z)           {  }",
@@ -1481,6 +1688,7 @@ fn test_pure_void_default_parameter_removed_1() {
         "function f(x = void 0) {  }", //
         "function f(x         ) {  }",
     );
+
     test(
         "function f(x = void \"XD\") {  }", //
         "function f(x              ) {  }",
@@ -1499,13 +1707,16 @@ fn test_pure_void_default_parameter_removed_2() {
 #[test]
 fn test_no_default_parameter_not_removed() {
     test_same("function f(x,y) {  }");
+
     test_same("function f(x) {  }");
+
     test_same("function f() {  }");
 }
 
 #[test]
 fn test_effectful_default_parameter_not_removed() {
     test_same("function f(x = void console.log(1)) {  }");
+
     test_same("function f(x = void f()) { alert(x); }");
 }
 
@@ -1515,21 +1726,28 @@ fn test_destructuring_undefined_default_parameter() {
         "function f({a=undefined,b=1,c}) {  }", //
         "function f({a          ,b=1,c}) {  }",
     );
+
     test(
         "function f({a={},b=0}=undefined) {  }", //
         "function f({a={},b=0}) {  }",
     );
+
     test(
         "function f({a=undefined,b=0}) {  }", //
         "function f({a,b=0}) {  }",
     );
+
     test(
         " function f({a: {b = undefined}}) {  }", //
         " function f({a: {b}}) {  }",
     );
+
     test_same("function f({a,b}) {  }");
+
     test_same("function f({a=0, b=1}) {  }");
+
     test_same("function f({a=0,b=0}={}) {  }");
+
     test_same("function f({a={},b=0}={}) {  }");
 }
 
@@ -1539,6 +1757,7 @@ fn test_undefined_default_object_patterns() {
         "const {a = undefined} = obj;", //
         "const {a} = obj;",
     );
+
     test(
         "const {a = void 0} = obj;", //
         "const {a} = obj;",
@@ -1755,13 +1974,16 @@ fn return_function_hoisting() {
     test(
         "function test() {
             return foo();
+
             function foo() {
                 return 2;
             }
+
             console.log('hi');
         }",
         "function test() {
             return foo();
+
             function foo() {
                 return 2;
             }
@@ -1785,6 +2007,7 @@ fn issue_1825() {
         function p() {
             throw new Error('Something');
         }
+
         while(p(), 1)console.log('Hello world');
         ",
     );
@@ -1802,6 +2025,7 @@ fn issue_6732_1() {
     if (false) {
         foo(function () {
             var module = {};
+
             return module;
         });
     }
@@ -1817,6 +2041,7 @@ fn issue_6732_2() {
     if (false) {
         function foo() {
             var module = {};
+
             return module;
         };
     }

@@ -84,11 +84,13 @@ impl UseIsNan {
                     }
                 }
             }
+
             Expr::Ident(ident) => {
                 if &*ident.sym == "NaN" {
                     self.emit_report(expr_span.unwrap_or(ident.span), label_msg);
                 }
             }
+
             Expr::Member(MemberExpr {
                 obj, prop, span, ..
             }) => {
@@ -104,6 +106,7 @@ impl UseIsNan {
                                     self.emit_report(expr_span.unwrap_or(*span), label_msg);
                                 }
                             }
+
                             MemberProp::Computed(ComputedPropName { expr, .. }) => {
                                 if let Expr::Lit(Lit::Str(Str { value, .. })) = expr.as_ref() {
                                     if value == "NaN" {
@@ -111,11 +114,13 @@ impl UseIsNan {
                                     }
                                 }
                             }
+
                             _ => {}
                         }
                     }
                 }
             }
+
             _ => {}
         }
     }
@@ -129,7 +134,9 @@ impl Visit for UseIsNan {
             } else {
                 "this will always return true"
             };
+
             self.check(Some(bin_expr.span), bin_expr.left.as_ref(), label_msg);
+
             self.check(Some(bin_expr.span), bin_expr.right.as_ref(), label_msg);
         }
     }

@@ -44,14 +44,18 @@ impl VarData {
     pub fn get_expr(&self) -> syn::Expr {
         if self.is_counting {
             *self.clone.borrow_mut() += 1;
+
             return self.expr_for_var_ref();
         }
 
         let use_clone = {
             let mut b = self.clone.borrow_mut();
+
             let val = *b;
+
             if val > 0 {
                 *b -= 1;
+
                 val != 1
             } else {
                 false
@@ -83,12 +87,14 @@ pub(super) fn prepare_vars(
     vars: Punctuated<QuoteVar, Token![,]>,
 ) -> (Vec<syn::Stmt>, AHashMap<VarPos, Vars>) {
     let mut stmts = Vec::new();
+
     let mut init_map = AHashMap::<_, Vars>::default();
 
     for var in vars {
         let value = var.value;
 
         let ident = var.name.clone();
+
         let ident_str = ident.to_string();
 
         let pos = match var.ty {
@@ -101,6 +107,7 @@ pub(super) fn prepare_vars(
                     },
             })) => {
                 let segment = segments.first().unwrap();
+
                 match segment.ident.to_string().as_str() {
                     "Ident" => VarPos::Ident,
                     "Expr" => VarPos::Expr,
@@ -110,6 +117,7 @@ pub(super) fn prepare_vars(
                     _ => panic!("Invalid type: {:?}", segment.ident),
                 }
             }
+
             None => VarPos::Ident,
             _ => {
                 panic!(
@@ -145,6 +153,7 @@ pub(super) fn prepare_vars(
             },
             call_site(),
         );
+
         stmts.push(parse_quote! {
             let #var_ident: swc_core::ecma::ast::#type_name = #value;
         });

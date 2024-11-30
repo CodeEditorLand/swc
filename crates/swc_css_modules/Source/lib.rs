@@ -96,11 +96,14 @@ pub fn compile<'a>(ss: &mut Stylesheet, config: impl 'a + TransformConfig) -> Tr
     for (key, composes) in &composes {
         add(&mut compiler.result, &compiler.data, key, composes);
     }
+
     for (key, composes) in &composes {
         add(&mut compiler.result, &compiler.data, key, composes);
     }
+
     compiler.result.renamed.iter_mut().for_each(|(_, v)| {
         v.sort();
+
         v.dedup();
     });
 
@@ -149,6 +152,7 @@ where
                     &mut n.value,
                 );
             }
+
             KeyframesName::Str(n) if !self.data.is_global_mode => {
                 n.raw = None;
 
@@ -161,6 +165,7 @@ where
                     &mut n.value,
                 );
             }
+
             KeyframesName::PseudoFunction(pseudo_function)
                 if pseudo_function.pseudo.value == "local" =>
             {
@@ -168,9 +173,11 @@ where
                     KeyframesName::CustomIdent(custom_ident) => {
                         *n = KeyframesName::CustomIdent(custom_ident.clone());
                     }
+
                     KeyframesName::Str(string) => {
                         *n = KeyframesName::Str(string.clone());
                     }
+
                     _ => {
                         unreachable!();
                     }
@@ -180,14 +187,17 @@ where
 
                 return;
             }
+
             KeyframesName::PseudoPrefix(pseudo_prefix) if pseudo_prefix.pseudo.value == "local" => {
                 match &pseudo_prefix.name {
                     KeyframesName::CustomIdent(custom_ident) => {
                         *n = KeyframesName::CustomIdent(custom_ident.clone());
                     }
+
                     KeyframesName::Str(string) => {
                         *n = KeyframesName::Str(string.clone());
                     }
+
                     _ => {
                         unreachable!();
                     }
@@ -197,6 +207,7 @@ where
 
                 return;
             }
+
             KeyframesName::PseudoFunction(pseudo_function)
                 if pseudo_function.pseudo.value == "global" =>
             {
@@ -204,9 +215,11 @@ where
                     KeyframesName::CustomIdent(custom_ident) => {
                         *n = KeyframesName::CustomIdent(custom_ident.clone());
                     }
+
                     KeyframesName::Str(string) => {
                         *n = KeyframesName::Str(string.clone());
                     }
+
                     _ => {
                         unreachable!();
                     }
@@ -214,6 +227,7 @@ where
 
                 return;
             }
+
             KeyframesName::PseudoPrefix(pseudo_prefix)
                 if pseudo_prefix.pseudo.value == "global" =>
             {
@@ -221,9 +235,11 @@ where
                     KeyframesName::CustomIdent(custom_ident) => {
                         *n = KeyframesName::CustomIdent(custom_ident.clone());
                     }
+
                     KeyframesName::Str(string) => {
                         *n = KeyframesName::Str(string.clone());
                     }
+
                     _ => {
                         unreachable!();
                     }
@@ -231,6 +247,7 @@ where
 
                 return;
             }
+
             _ => {}
         }
 
@@ -284,6 +301,7 @@ where
 
                 true
             }
+
             _ => true,
         });
     }
@@ -322,8 +340,10 @@ where
                                         });
                                     }
                                 }
+
                                 return;
                             }
+
                             _ => (),
                         }
                     }
@@ -331,7 +351,9 @@ where
                     for class_name in n.value.iter_mut() {
                         if let ComponentValue::Ident(ident) = class_name {
                             let Ident { span, value, .. } = &mut **ident;
+
                             let orig = value.clone();
+
                             rename(
                                 *span,
                                 &mut self.config,
@@ -362,9 +384,13 @@ where
                     let mut can_change = true;
 
                     let mut iteration_count_visited = false;
+
                     let mut fill_mode_visited = false;
+
                     let mut direction_visited = false;
+
                     let mut easing_function_visited = false;
+
                     let mut play_state_visited = false;
 
                     for v in &mut n.value {
@@ -383,6 +409,7 @@ where
                                     "infinite" => {
                                         if !iteration_count_visited {
                                             iteration_count_visited = true;
+
                                             continue;
                                         }
                                     }
@@ -391,6 +418,7 @@ where
                                     "none" | "forwards" | "backwards" | "both" => {
                                         if !fill_mode_visited {
                                             fill_mode_visited = true;
+
                                             continue;
                                         }
                                     }
@@ -398,6 +426,7 @@ where
                                     "normal" | "reverse" | "alternate" | "alternate-reverse" => {
                                         if !direction_visited {
                                             direction_visited = true;
+
                                             continue;
                                         }
                                     }
@@ -406,6 +435,7 @@ where
                                     | "step-start" | "step-end" => {
                                         if !easing_function_visited {
                                             easing_function_visited = true;
+
                                             continue;
                                         }
                                     }
@@ -413,9 +443,11 @@ where
                                     "running" | "paused" => {
                                         if !play_state_visited {
                                             play_state_visited = true;
+
                                             continue;
                                         }
                                     }
+
                                     _ => {}
                                 }
 
@@ -429,11 +461,14 @@ where
                                     &mut self.data.renamed_to_orig,
                                     value,
                                 );
+
                                 can_change = false;
                             }
+
                             ComponentValue::Integer(_) => {
                                 iteration_count_visited = true;
                             }
+
                             ComponentValue::Function(f) => {
                                 if let FunctionName::Ident(ident) = &f.name {
                                     match &*ident.value {
@@ -441,12 +476,14 @@ where
                                         "steps" | "cubic-bezier" | "linear" => {
                                             easing_function_visited = true;
                                         }
+
                                         _ => {
                                             // should be syntax error
                                         }
                                     }
                                 }
                             }
+
                             ComponentValue::Delimiter(delimiter) => {
                                 if matches!(
                                     &**delimiter,
@@ -459,12 +496,17 @@ where
 
                                     // reset all flags
                                     iteration_count_visited = false;
+
                                     fill_mode_visited = false;
+
                                     direction_visited = false;
+
                                     easing_function_visited = false;
+
                                     play_state_visited = false;
                                 }
                             }
+
                             _ => (),
                         }
                     }
@@ -488,6 +530,7 @@ where
                         }
                     }
                 }
+
                 _ => {}
             }
         }
@@ -528,23 +571,28 @@ where
                                     )) = children.get_mut(0)
                                     {
                                         let old_is_global_mode = self.data.is_global_mode;
+
                                         let old_inside = self.data.is_global_mode;
 
                                         self.data.is_global_mode = false;
+
                                         self.data.is_in_local_pseudo_class = true;
 
                                         complex_selector.visit_mut_with(self);
 
                                         let mut complex_selector_children =
                                             complex_selector.children.clone();
+
                                         prepend_left_subclass_selectors(
                                             &mut complex_selector_children,
                                             &mut selector.subclass_selectors,
                                             sel_index,
                                         );
+
                                         new_children.extend(complex_selector_children);
 
                                         self.data.is_global_mode = old_is_global_mode;
+
                                         self.data.is_in_local_pseudo_class = old_inside;
                                     }
                                 } else {
@@ -552,8 +600,10 @@ where
                                         if let Some(n) = n.as_mut_compound_selector() {
                                             n.subclass_selectors.remove(sel_index);
                                         }
+
                                         new_children.push(n);
                                     }
+
                                     self.data.is_global_mode = false;
                                 }
 
@@ -567,11 +617,13 @@ where
                                     {
                                         let mut complex_selector_children =
                                             complex_selector.children.clone();
+
                                         prepend_left_subclass_selectors(
                                             &mut complex_selector_children,
                                             &mut selector.subclass_selectors,
                                             sel_index,
                                         );
+
                                         new_children.extend(complex_selector_children);
                                     }
                                 } else {
@@ -579,13 +631,16 @@ where
                                         if let Some(n) = n.as_mut_compound_selector() {
                                             n.subclass_selectors.remove(sel_index);
                                         }
+
                                         new_children.push(n);
                                     }
+
                                     self.data.is_global_mode = true;
                                 }
 
                                 continue 'complex;
                             }
+
                             _ => {}
                         }
                     }
@@ -625,12 +680,14 @@ fn rename<C>(
 {
     if let Some(renamed) = orig_to_renamed.get(name) {
         *name = renamed.clone();
+
         return;
     }
 
     let new = config.new_name_for(name);
 
     orig_to_renamed.insert(name.clone(), new.clone());
+
     renamed_to_orig.insert(new.clone(), name.clone());
 
     {
@@ -643,6 +700,7 @@ fn rename<C>(
                 raw: None,
             },
         };
+
         if !e.contains(&v) {
             e.push(v);
         }
@@ -673,6 +731,7 @@ fn process_local<C>(
                 &mut sel.text.value,
             );
         }
+
         SubclassSelector::Class(sel) => {
             sel.text.raw = None;
 
@@ -685,8 +744,11 @@ fn process_local<C>(
                 &mut sel.text.value,
             );
         }
+
         SubclassSelector::Attribute(_) => {}
+
         SubclassSelector::PseudoClass(_) => {}
+
         SubclassSelector::PseudoElement(_) => {}
     }
 }

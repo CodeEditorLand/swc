@@ -26,7 +26,9 @@ pub struct Loader {
 impl Load for Loader {
     fn load(&self, f: &FileName) -> Result<ModuleData, Error> {
         eprintln!("load: {}", f);
+
         let v = self.files.get(&f.to_string());
+
         let v = v.unwrap();
 
         let fm = self.cm.new_source_file(f.clone().into(), v.to_string());
@@ -39,6 +41,7 @@ impl Load for Loader {
         );
 
         let mut parser = Parser::new_from(lexer);
+
         let module = parser.parse_module().unwrap();
 
         Ok(ModuleData {
@@ -89,7 +92,9 @@ impl Tester<'_> {
             StringInput::from(&*fm),
             None,
         );
+
         let mut parser = Parser::new_from(lexer);
+
         parser.parse_module().unwrap()
     }
 
@@ -98,9 +103,11 @@ impl Tester<'_> {
         let expected = self.parse(expected);
 
         let mut m = m.clone();
+
         m.visit_mut_with(&mut HygieneRemover);
 
         let m = drop_span(m);
+
         let expected = drop_span(expected);
 
         assert_eq!(m, expected)
@@ -118,6 +125,7 @@ pub(crate) struct TestBuilder {
 impl TestBuilder {
     pub fn file(mut self, name: &str, src: &str) -> Self {
         self.files.insert(name.to_string(), src.to_string());
+
         self
     }
 

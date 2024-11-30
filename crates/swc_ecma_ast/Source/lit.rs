@@ -40,6 +40,7 @@ pub enum Lit {
 macro_rules! bridge_lit_from {
     ($bridge: ty, $src:ty) => {
         bridge_expr_from!(crate::Lit, $src);
+
         bridge_from!(Lit, $bridge, $src);
     };
 }
@@ -102,6 +103,7 @@ pub struct EncodeBigInt;
 #[cfg(feature = "rkyv-impl")]
 impl rkyv::with::ArchiveWith<Box<BigIntValue>> for EncodeBigInt {
     type Archived = rkyv::Archived<String>;
+
     type Resolver = rkyv::Resolver<String>;
 
     unsafe fn resolve_with(
@@ -113,6 +115,7 @@ impl rkyv::with::ArchiveWith<Box<BigIntValue>> for EncodeBigInt {
         use rkyv::Archive;
 
         let s = field.to_string();
+
         s.resolve(pos, resolver, out);
     }
 }
@@ -127,6 +130,7 @@ where
         serializer: &mut S,
     ) -> Result<Self::Resolver, S::Error> {
         let field = field.to_string();
+
         rkyv::string::ArchivedString::serialize_from_str(&field, serializer)
     }
 }
@@ -153,7 +157,9 @@ where
 impl<'a> arbitrary::Arbitrary<'a> for BigInt {
     fn arbitrary(u: &mut arbitrary::Unstructured<'_>) -> arbitrary::Result<Self> {
         let span = u.arbitrary()?;
+
         let value = Box::new(u.arbitrary::<usize>()?.into());
+
         let raw = Some(u.arbitrary::<String>()?.into());
 
         Ok(Self { span, value, raw })
@@ -199,7 +205,9 @@ impl Take for Str {
 impl<'a> arbitrary::Arbitrary<'a> for Str {
     fn arbitrary(u: &mut arbitrary::Unstructured<'_>) -> arbitrary::Result<Self> {
         let span = u.arbitrary()?;
+
         let value = u.arbitrary::<String>()?.into();
+
         let raw = Some(u.arbitrary::<String>()?.into());
 
         Ok(Self { span, value, raw })
@@ -243,8 +251,10 @@ impl Str {
                             'v' => {
                                 buf.push('\u{000B}');
                             }
+
                             _ => {
                                 buf.push('\\');
+
                                 buf.push(next);
                             }
                         }
@@ -358,7 +368,9 @@ impl Take for Regex {
 impl<'a> arbitrary::Arbitrary<'a> for Regex {
     fn arbitrary(u: &mut arbitrary::Unstructured<'_>) -> arbitrary::Result<Self> {
         let span = u.arbitrary()?;
+
         let exp = u.arbitrary::<String>()?.into();
+
         let flags = "".into(); // TODO
 
         Ok(Self { span, exp, flags })
@@ -403,8 +415,11 @@ impl Hash for Number {
     fn hash<H: Hasher>(&self, state: &mut H) {
         fn integer_decode(val: f64) -> (u64, i16, i8) {
             let bits: u64 = val.to_bits();
+
             let sign: i8 = if bits >> 63 == 0 { 1 } else { -1 };
+
             let mut exponent: i16 = ((bits >> 52) & 0x7ff) as i16;
+
             let mantissa = if exponent == 0 {
                 (bits & 0xfffffffffffff) << 1
             } else {
@@ -416,7 +431,9 @@ impl Hash for Number {
         }
 
         self.span.hash(state);
+
         integer_decode(self.value).hash(state);
+
         self.raw.hash(state);
     }
 }
@@ -440,7 +457,9 @@ impl Display for Number {
 impl<'a> arbitrary::Arbitrary<'a> for Number {
     fn arbitrary(u: &mut arbitrary::Unstructured<'_>) -> arbitrary::Result<Self> {
         let span = u.arbitrary()?;
+
         let value = u.arbitrary::<f64>()?;
+
         let raw = Some(u.arbitrary::<String>()?.into());
 
         Ok(Self { span, value, raw })

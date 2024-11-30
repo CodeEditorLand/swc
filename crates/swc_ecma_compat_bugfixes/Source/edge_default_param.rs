@@ -22,7 +22,9 @@ impl VisitMut for EdgeDefaultParam {
 
     fn visit_mut_arrow_expr(&mut self, n: &mut ArrowExpr) {
         self.in_arrow = true;
+
         n.params.visit_mut_children_with(self);
+
         self.in_arrow = false;
 
         n.body.visit_mut_children_with(self);
@@ -30,6 +32,7 @@ impl VisitMut for EdgeDefaultParam {
 
     fn visit_mut_object_pat(&mut self, n: &mut ObjectPat) {
         n.visit_mut_children_with(self);
+
         if !self.in_arrow {
             return;
         }
@@ -63,7 +66,9 @@ impl VisitMut for EdgeDefaultParam {
 #[cfg(test)]
 mod tests {
     use swc_common::Mark;
+
     use swc_ecma_transforms_base::resolver;
+
     use swc_ecma_transforms_testing::test;
 
     use super::*;

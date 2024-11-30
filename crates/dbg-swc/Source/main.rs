@@ -78,6 +78,7 @@ fn main() -> Result<()> {
                             let swc_output = print_js(cm.clone(), &m.module, true)?;
 
                             let terser_output = get_terser_output(&input, true, true)?;
+
                             if swc_output.trim().len() > terser_output.trim().len() {
                                 // It's interesting, as our output is larger than terser's.
                                 return Ok(());

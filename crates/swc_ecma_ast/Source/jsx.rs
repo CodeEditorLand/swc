@@ -206,7 +206,9 @@ pub struct JSXText {
 impl<'a> arbitrary::Arbitrary<'a> for JSXText {
     fn arbitrary(u: &mut arbitrary::Unstructured<'_>) -> arbitrary::Result<Self> {
         let span = u.arbitrary()?;
+
         let value = u.arbitrary::<String>()?.into();
+
         let raw = u.arbitrary::<String>()?.into();
 
         Ok(Self { span, value, raw })

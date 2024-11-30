@@ -29,7 +29,9 @@ impl PluginModuleBytes for RawPluginModuleBytes {
 
     fn compile_module(&self) -> Result<(Store, Module), Error> {
         let store = new_store();
+
         let module = Module::new(&store, &self.bytes)?;
+
         Ok((store, module))
     }
 }
@@ -88,6 +90,7 @@ impl CompiledPluginModuleBytes {
 impl From<RawPluginModuleBytes> for CompiledPluginModuleBytes {
     fn from(raw: RawPluginModuleBytes) -> Self {
         let (store, module) = raw.compile_module().unwrap();
+
         Self::new(raw.plugin_name, module, store)
     }
 }

@@ -21,6 +21,7 @@ impl Default for Preference {
 
 pub fn color_hex_alpha(ctx: LintRuleContext<ColorHexAlphaConfig>) -> Box<dyn LintRule> {
     let preference = ctx.config().clone().unwrap_or_default();
+
     visitor_rule(ctx.reaction(), ColorHexAlpha { ctx, preference })
 }
 
@@ -33,6 +34,7 @@ struct ColorHexAlpha {
 impl Visit for ColorHexAlpha {
     fn visit_hex_color(&mut self, hex_color: &HexColor) {
         let length = hex_color.value.len();
+
         match self.preference {
             Preference::Always if length == 3 || length == 6 => {
                 self.ctx.report(
@@ -40,12 +42,14 @@ impl Visit for ColorHexAlpha {
                     format!("Expected alpha channel in '#{}'.", hex_color.value),
                 );
             }
+
             Preference::Never if length == 4 || length == 8 => {
                 self.ctx.report(
                     hex_color,
                     format!("Unexpected alpha channel in '#{}'.", hex_color.value),
                 );
             }
+
             _ => {}
         }
 

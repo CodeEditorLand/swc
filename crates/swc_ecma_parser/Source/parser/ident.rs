@@ -18,9 +18,11 @@ impl<I: Tokens> Parser<I> {
 
     pub(super) fn parse_private_name(&mut self) -> PResult<PrivateName> {
         let start = cur_pos!(self);
+
         assert_and_bump!(self, '#');
 
         let hash_end = self.input.prev_span().hi;
+
         if self.input.cur_pos() - hash_end != BytePos(0) {
             syntax_error!(
                 self,
@@ -30,6 +32,7 @@ impl<I: Tokens> Parser<I> {
         }
 
         let id = self.parse_ident_name()?;
+
         Ok(PrivateName {
             span: span!(self, start),
             name: id.sym,
@@ -86,6 +89,7 @@ impl<I: Tokens> Parser<I> {
                 unexpected!(self, "identifier or string");
             }
         };
+
         Ok(module_export_name)
     }
 
@@ -117,6 +121,7 @@ impl<I: Tokens> Parser<I> {
                         SyntaxError::InvalidIdentInStrict(name.clone().into()),
                     );
                 }
+
                 Word::Keyword(name @ Keyword::Yield) | Word::Keyword(name @ Keyword::Let) => {
                     p.emit_strict_mode_err(
                         p.input.prev_span(),
@@ -138,6 +143,7 @@ impl<I: Tokens> Parser<I> {
                         SyntaxError::InvalidIdentInStrict(name.clone().into()),
                     );
                 }
+
                 _ => {}
             }
 
@@ -156,6 +162,7 @@ impl<I: Tokens> Parser<I> {
                 Word::Keyword(Keyword::Await) if p.ctx().module | p.ctx().in_async => {
                     syntax_error!(p, p.input.prev_span(), SyntaxError::InvalidIdentInAsync)
                 }
+
                 Word::Keyword(Keyword::This) if p.input.syntax().typescript() => Ok(atom!("this")),
                 Word::Keyword(Keyword::Let) => Ok(atom!("let")),
                 Word::Ident(ident) => {
@@ -164,8 +171,10 @@ impl<I: Tokens> Parser<I> {
                     {
                         p.emit_err(p.input.prev_span(), SyntaxError::ArgumentsInClassField)
                     }
+
                     Ok(ident.into())
                 }
+
                 Word::Keyword(Keyword::Yield) if incl_yield => Ok(atom!("yield")),
                 Word::Keyword(Keyword::Await) if incl_await => Ok(atom!("await")),
                 Word::Keyword(..) | Word::Null | Word::True | Word::False => {

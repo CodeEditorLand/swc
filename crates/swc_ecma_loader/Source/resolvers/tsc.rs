@@ -71,6 +71,7 @@ where
                 );
 
                 let pos = from.as_bytes().iter().position(|&c| c == b'*');
+
                 let pat = if from.contains('*') {
                     if from.as_bytes().iter().rposition(|&c| c == b'*') != pos {
                         panic!("`paths.{}` should have only one wildcard", from)
@@ -140,6 +141,7 @@ where
                 } else {
                     false
                 };
+
                 let is_target_in_node_modules = if let FileName::Real(v) = &resolved.filename {
                     v.components().any(|c| match c {
                         Component::Normal(v) => v == "node_modules",
@@ -162,6 +164,7 @@ where
 
             Err(err) => {
                 warn!("{:?}", err);
+
                 Err(err)
             }
         }
@@ -218,12 +221,14 @@ where
                     debug!("Checking `{}` in `jsc.paths`", prefix);
 
                     let extra = module_specifier.strip_prefix(prefix);
+
                     let extra = match extra {
                         Some(v) => v,
                         None => {
                             if cfg!(debug_assertions) {
                                 trace!("skip because src doesn't start with prefix");
                             }
+
                             continue;
                         }
                     };
@@ -233,6 +238,7 @@ where
                     }
 
                     let mut errors = Vec::new();
+
                     for target in to {
                         let replaced = target.replace('*', extra);
 
@@ -271,6 +277,7 @@ where
                                  1",
                                 replaced, module_specifier
                             );
+
                             return Ok(Resolution {
                                 slug: Some(
                                     replaced
@@ -291,6 +298,7 @@ where
                         errors
                     )
                 }
+
                 Pattern::Exact(from) => {
                     // Should be exactly matched
                     if module_specifier != from {
@@ -298,6 +306,7 @@ where
                     }
 
                     let tp = Path::new(&to[0]);
+
                     let slug = to[0]
                         .split([std::path::MAIN_SEPARATOR, '/'])
                         .last()

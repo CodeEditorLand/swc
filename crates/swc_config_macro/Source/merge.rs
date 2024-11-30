@@ -7,9 +7,11 @@ pub fn expand(input: DeriveInput) -> TokenStream {
     match &input.data {
         syn::Data::Struct(s) => {
             let body = call_merge_for_fields(&quote!(self), &s.fields);
+
             let body = join_stmts(&body);
 
             let ident = &input.ident;
+
             parse_quote!(
                 #[automatically_derived]
                 impl swc_config::merge::Merge for #ident {
@@ -19,6 +21,7 @@ pub fn expand(input: DeriveInput) -> TokenStream {
                 }
             )
         }
+
         syn::Data::Enum(_) => unimplemented!("derive(Merge) does not support an enum"),
         syn::Data::Union(_) => unimplemented!("derive(Merge) does not support a union"),
     }
@@ -29,7 +32,9 @@ fn call_merge_for_fields(obj: &dyn ToTokens, fields: &Fields) -> Vec<Stmt> {
         let r = quote!(_other);
 
         let l = access_field(obj, idx, f);
+
         let r = access_field(&r, idx, f);
+
         parse_quote!(swc_config::merge::Merge::merge(&mut #l, #r))
     }
 

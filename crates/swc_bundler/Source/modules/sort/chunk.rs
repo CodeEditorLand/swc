@@ -30,6 +30,7 @@ impl Modules {
         cm: &Lrc<SourceMap>,
     ) -> Vec<Chunk> {
         let injected_ctxt = self.injected_ctxt;
+
         let mut chunks = Vec::new();
 
         let mut modules = take(&mut self.modules);
@@ -67,6 +68,7 @@ fn toposort_real_modules<'a>(
     cm: &Lrc<SourceMap>,
 ) -> Vec<Chunk> {
     let mut queue = modules.iter().map(|v| v.0).collect::<VecDeque<_>>();
+
     queue.push_front(entry);
 
     let mut chunks = Vec::new();
@@ -78,11 +80,13 @@ fn toposort_real_modules<'a>(
 
     #[cfg(not(target_arch = "wasm32"))]
     let start = Instant::now();
+
     let sorted_ids = toposort_real_module_ids(queue, graph, cycles).collect::<Vec<_>>();
     #[cfg(not(target_arch = "wasm32"))]
     let end = Instant::now();
     #[cfg(not(target_arch = "wasm32"))]
     tracing::debug!("Toposort of module ids took {:?}", end - start);
+
     for ids in sorted_ids {
         if ids.is_empty() {
             continue;
@@ -95,6 +99,7 @@ fn toposort_real_modules<'a>(
                 module
                     .body
                     .retain(|item| !matches!(item, ModuleItem::Stmt(Stmt::Empty(..))));
+
                 if module.body.is_empty() {
                     continue;
                 }
@@ -112,6 +117,7 @@ fn toposort_real_modules<'a>(
             chunks.push(Chunk {
                 stmts: stmts.into_iter().next().unwrap(),
             });
+
             continue;
         }
 
@@ -139,6 +145,7 @@ fn cycles_for(
     checked: &mut Vec<ModuleId>,
 ) -> IndexSet<ModuleId, ARandomState> {
     checked.push(id);
+
     let mut v = cycles
         .iter()
         .filter(|v| v.contains(&id))
@@ -152,6 +159,7 @@ fn cycles_for(
         if checked.contains(&added) {
             continue;
         }
+
         v.extend(cycles_for(cycles, added, checked));
     }
 
@@ -164,6 +172,7 @@ fn toposort_real_module_ids<'a>(
     cycles: &'a [Vec<ModuleId>],
 ) -> impl 'a + Iterator<Item = Vec<ModuleId>> {
     let mut done = AHashSet::<ModuleId>::default();
+
     let mut errorred = AHashSet::<ModuleId>::default();
 
     from_fn(move || {
@@ -184,13 +193,16 @@ fn toposort_real_module_ids<'a>(
 
                 // Emit
                 done.insert(id);
+
                 errorred.clear();
+
                 return Some(vec![id]);
             }
 
             // dbg!(&deps);
 
             let mut all_modules_in_circle = cycles_for(cycles, id, &mut Default::default());
+
             all_modules_in_circle.reverse();
 
             // dbg!(&all_modules_in_circle);
@@ -229,7 +241,9 @@ fn toposort_real_module_ids<'a>(
 
                     continue;
                 }
+
                 tracing::info!("Using slow, fallback logic for topological sorting");
+
                 all_modules_in_circle.extend(deps_of_circle);
             }
 
@@ -237,7 +251,9 @@ fn toposort_real_module_ids<'a>(
 
             // Emit
             done.extend(all_modules_in_circle.iter().copied());
+
             errorred.clear();
+
             return Some(all_modules_in_circle.into_iter().collect());
         }
 

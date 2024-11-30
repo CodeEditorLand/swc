@@ -90,6 +90,7 @@ where
         );
 
         doctype.push('<');
+
         doctype.push('!');
 
         if self.config.minify {
@@ -100,6 +101,7 @@ where
 
         if let Some(name) = &n.name {
             doctype.push(' ');
+
             doctype.push_str(name);
         }
 
@@ -117,7 +119,9 @@ where
             let public_id_quote = if public_id.contains('"') { '\'' } else { '"' };
 
             doctype.push(public_id_quote);
+
             doctype.push_str(public_id);
+
             doctype.push(public_id_quote);
 
             if let Some(system_id) = &n.system_id {
@@ -126,7 +130,9 @@ where
                 let system_id_quote = if system_id.contains('"') { '\'' } else { '"' };
 
                 doctype.push(system_id_quote);
+
                 doctype.push_str(system_id);
+
                 doctype.push(system_id_quote);
             }
         } else if let Some(system_id) = &n.system_id {
@@ -143,21 +149,26 @@ where
             let system_id_quote = if system_id.contains('"') { '\'' } else { '"' };
 
             doctype.push(system_id_quote);
+
             doctype.push_str(system_id);
+
             doctype.push(system_id_quote);
         }
 
         doctype.push('>');
 
         write_raw!(self, n.span, &doctype);
+
         formatting_newline!(self);
     }
 
     fn basic_emit_element(&mut self, n: &Element) -> Result {
         let has_attributes = !n.attributes.is_empty();
+
         let is_void_element = n.children.is_empty();
 
         write_raw!(self, "<");
+
         write_raw!(self, &n.tag_name);
 
         if has_attributes {
@@ -188,8 +199,11 @@ where
         }
 
         write_raw!(self, "<");
+
         write_raw!(self, "/");
+
         write_raw!(self, &n.tag_name);
+
         write_raw!(self, ">");
 
         Ok(())
@@ -217,6 +231,7 @@ where
 
         if let Some(prefix) = &n.prefix {
             attribute.push_str(prefix);
+
             attribute.push(':');
         }
 
@@ -255,7 +270,9 @@ where
         let mut comment = String::with_capacity(n.data.len() + 7);
 
         comment.push_str("<!--");
+
         comment.push_str(&n.data);
+
         comment.push_str("-->");
 
         write_multiline_raw!(self, n.span, &comment);
@@ -266,9 +283,13 @@ where
         let mut processing_instruction = String::with_capacity(n.target.len() + n.data.len() + 5);
 
         processing_instruction.push_str("<?");
+
         processing_instruction.push_str(&n.target);
+
         processing_instruction.push(' ');
+
         processing_instruction.push_str(&n.data);
+
         processing_instruction.push_str("?>");
 
         write_multiline_raw!(self, n.span, &processing_instruction);
@@ -279,7 +300,9 @@ where
         let mut cdata_section = String::with_capacity(n.data.len() + 12);
 
         cdata_section.push_str("<![CDATA[");
+
         cdata_section.push_str(&n.data);
+
         cdata_section.push_str("]]>");
 
         write_multiline_raw!(self, n.span, &cdata_section);
@@ -320,9 +343,11 @@ where
     fn write_delim(&mut self, f: ListFormat) -> Result {
         match f & ListFormat::DelimitersMask {
             ListFormat::None => {}
+
             ListFormat::SpaceDelimited => {
                 space!(self)
             }
+
             _ => unreachable!(),
         }
 
@@ -338,7 +363,9 @@ fn normalize_attribute_value(value: &str) -> String {
     let mut normalized = String::with_capacity(value.len() + 2);
 
     normalized.push('"');
+
     normalized.push_str(&escape_string(value, true));
+
     normalized.push('"');
 
     normalized
@@ -347,6 +374,7 @@ fn normalize_attribute_value(value: &str) -> String {
 #[allow(clippy::unused_peekable)]
 fn minify_text(value: &str) -> String {
     let mut result = String::with_capacity(value.len());
+
     let mut chars = value.chars().peekable();
 
     while let Some(c) = chars.next() {
@@ -360,6 +388,7 @@ fn minify_text(value: &str) -> String {
             '>' => {
                 result.push_str("&gt;");
             }
+
             _ => result.push(c),
         }
     }
@@ -377,27 +406,37 @@ fn minify_amp(chars: &mut Peekable<Chars>) -> String {
                 // Prevent `&amp;#38;` -> `&#38`
                 Some(number @ '0'..='9') => {
                     result.push_str("&amp;");
+
                     result.push(hash);
+
                     result.push(number);
                 }
+
                 Some(x @ 'x' | x @ 'X') => {
                     match chars.peek() {
                         // HEX CODE
                         // Prevent `&amp;#x38;` -> `&#x38`
                         Some(c) if c.is_ascii_hexdigit() => {
                             result.push_str("&amp;");
+
                             result.push(hash);
+
                             result.push(x);
                         }
+
                         _ => {
                             result.push('&');
+
                             result.push(hash);
+
                             result.push(x);
                         }
                     }
                 }
+
                 any => {
                     result.push('&');
+
                     result.push(hash);
 
                     if let Some(any) = any {
@@ -412,11 +451,14 @@ fn minify_amp(chars: &mut Peekable<Chars>) -> String {
             let mut entity_temporary_buffer = String::with_capacity(33);
 
             entity_temporary_buffer.push('&');
+
             entity_temporary_buffer.push(c);
 
             result.push('&');
+
             result.push_str(&entity_temporary_buffer[1..]);
         }
+
         any => {
             result.push('&');
 
@@ -458,6 +500,7 @@ fn escape_string(value: &str, is_attribute_mode: bool) -> String {
             '>' if !is_attribute_mode => {
                 result.push_str("&gt;");
             }
+
             _ => result.push(c),
         }
     }

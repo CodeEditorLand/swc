@@ -40,8 +40,11 @@ where
                 idents_to_deglob: Default::default(),
                 in_obj_of_member: false,
             };
+
             module.body.visit_mut_with(&mut v);
+
             v.deglob_phase = true;
+
             module.body.visit_mut_with(&mut v);
 
             v.info
@@ -135,6 +138,7 @@ impl RawImports {
         for prev in self.imports.iter_mut() {
             if prev.src.value == import.src.value {
                 prev.specifiers.extend(import.specifiers.clone());
+
                 return;
             }
         }
@@ -154,7 +158,9 @@ where
         if self.bundler.is_external(src) {
             return None;
         }
+
         let path = self.bundler.resolve(self.path, src).ok()?;
+
         let (_, local_mark, export_mark) = self.bundler.scope.module_id_gen.gen(&path);
 
         Some((
@@ -168,11 +174,14 @@ where
         if self.bundler.is_external(src) {
             return;
         }
+
         let path = self.bundler.resolve(self.path, src);
+
         let path = match path {
             Ok(v) => v,
             Err(_) => return,
         };
+
         let (id, _, _) = self.bundler.scope.module_id_gen.gen(&path);
 
         self.bundler.scope.mark_as_wrapping_required(id);
@@ -180,10 +189,12 @@ where
 
     fn mark_as_cjs(&self, src: &JsWord) {
         let path = self.bundler.resolve(self.path, src);
+
         let path = match path {
             Ok(v) => v,
             Err(_) => return,
         };
+
         let (id, _, _) = self.bundler.scope.module_id_gen.gen(&path);
 
         self.bundler.scope.mark_as_cjs(id);
@@ -191,7 +202,9 @@ where
 
     fn add_forced_ns_for(&mut self, id: Id) {
         self.idents_to_deglob.remove(&id);
+
         self.imported_idents.remove(&id);
+
         self.usages.remove(&id);
 
         if let Some(src) = self
@@ -228,8 +241,10 @@ where
                         if self.bundler.is_external(&src.value) {
                             return;
                         }
+
                         if let Expr::Ident(i) = &mut **callee {
                             self.mark_as_cjs(&src.value);
+
                             if let Some((_, export_ctxt)) = self.ctxt_for(&src.value) {
                                 i.ctxt = export_ctxt;
                             }
@@ -248,6 +263,7 @@ where
 
                         if self.top_level {
                             self.info.insert(&decl);
+
                             return;
                         }
 
@@ -270,6 +286,7 @@ where
                     _ => {}
                 }
             }
+
             _ => {}
         }
     }
@@ -286,6 +303,7 @@ where
                     // If a module is accessed with unknown key, we should import
                     // everything from it.
                     self.add_forced_ns_for(obj.to_id());
+
                     return;
                 }
 
@@ -300,22 +318,28 @@ where
 
                     false
                 });
+
                 let import = match import {
                     Some(v) => v,
                     None => return,
                 };
 
                 let mark = self.ctxt_for(&import.src.value);
+
                 let exported_ctxt = match mark {
                     None => return,
                     Some(ctxts) => ctxts.1,
                 };
+
                 let prop = match &e.prop {
                     MemberProp::Ident(i) => {
                         let mut i = Ident::from(i.clone());
+
                         i.ctxt = exported_ctxt;
+
                         i
                     }
+
                     _ => unreachable!(
                         "Non-computed member expression with property other than ident is invalid"
                     ),
@@ -334,6 +358,7 @@ where
             Expr::Member(e) => e,
             _ => return,
         };
+
         if me.prop.is_computed() {
             return;
         }
@@ -347,6 +372,7 @@ where
 
         match usages {
             Some(..) => {}
+
             _ => return,
         };
 
@@ -354,6 +380,7 @@ where
             MemberProp::Ident(v) => Ident::from(v.clone()),
             _ => return,
         };
+
         prop.ctxt = self.imported_idents.get(&obj.to_id()).copied().unwrap();
 
         *e = prop.into();
@@ -380,9 +407,11 @@ where
                 // PR 3139 (https://github.com/swc-project/swc/pull/3139) removes the syntax context from any named exports from other sources.
                 exported.ctxt = self.module_ctxt;
             }
+
             Some(ModuleExportName::Str(..)) => unimplemented!("module string names unimplemented"),
             None => {
                 let exported = Ident::new(orig.sym.clone(), orig.span, self.module_ctxt);
+
                 s.exported = Some(ModuleExportName::Ident(exported));
             }
         }
@@ -402,12 +431,14 @@ where
                 if let Expr::Ident(i) = &e {
                     if !self.in_obj_of_member {
                         self.add_forced_ns_for(i.to_id());
+
                         return;
                     }
                 }
             }
 
             self.analyze_usage(e);
+
             self.find_require(e);
         } else {
             self.try_deglob(e);
@@ -434,23 +465,30 @@ where
                     match specifier {
                         ImportSpecifier::Named(n) => {
                             self.imported_idents.insert(n.local.to_id(), export_ctxt);
+
                             match &mut n.imported {
                                 Some(ModuleExportName::Ident(imported)) => {
                                     imported.ctxt = export_ctxt;
                                 }
+
                                 Some(ModuleExportName::Str(..)) => {
                                     unimplemented!("module string names unimplemented")
                                 }
+
                                 None => {
                                     let mut imported: Ident = n.local.clone();
+
                                     imported.ctxt = export_ctxt;
+
                                     n.imported = Some(ModuleExportName::Ident(imported));
                                 }
                             }
                         }
+
                         ImportSpecifier::Default(n) => {
                             self.imported_idents.insert(n.local.to_id(), n.local.ctxt);
                         }
+
                         ImportSpecifier::Namespace(n) => {
                             self.imported_idents.insert(n.local.to_id(), export_ctxt);
                         }
@@ -459,6 +497,7 @@ where
             }
 
             self.info.insert(import);
+
             return;
         }
 
@@ -483,6 +522,7 @@ where
                             .into_iter()
                             .map(|id| {
                                 self.idents_to_deglob.insert(id.clone());
+
                                 ImportSpecifier::Named(ImportNamedSpecifier {
                                     span: DUMMY_SP,
                                     local: Ident::new(id.0, DUMMY_SP, id.1),
@@ -506,6 +546,7 @@ where
 
                 if !specifiers.is_empty() {
                     import.specifiers = specifiers;
+
                     return;
                 }
 
@@ -517,11 +558,14 @@ where
 
     fn visit_mut_member_expr(&mut self, e: &mut MemberExpr) {
         let old = self.in_obj_of_member;
+
         self.in_obj_of_member = true;
+
         e.obj.visit_mut_with(self);
 
         if let MemberProp::Computed(c) = &mut e.prop {
             self.in_obj_of_member = false;
+
             c.visit_mut_with(self);
         }
 
@@ -530,6 +574,7 @@ where
 
     fn visit_mut_module_items(&mut self, items: &mut Vec<ModuleItem>) {
         self.top_level = true;
+
         items.visit_mut_children_with(self);
 
         items.retain_mut(|item| match item {
@@ -545,6 +590,7 @@ where
 
         if self.deglob_phase {
             let mut wrapping_required = Vec::new();
+
             for import in self.info.imports.iter_mut() {
                 let use_ns = self.info.forced_ns.contains(&import.src.value)
                     || self
@@ -571,6 +617,7 @@ where
 
     fn visit_mut_stmts(&mut self, items: &mut Vec<Stmt>) {
         self.top_level = false;
+
         items.visit_mut_children_with(self)
     }
 
@@ -579,6 +626,7 @@ where
 
         if let SuperProp::Computed(c) = &mut e.prop {
             self.in_obj_of_member = false;
+
             c.visit_mut_with(self);
         }
 
@@ -609,6 +657,7 @@ where
                     && args.len() == 1 =>
                 {
                     let span = *span;
+
                     let src = match args.first().unwrap() {
                         ExprOrSpread { spread: None, expr } => match &**expr {
                             Expr::Lit(Lit::Str(s)) => s.clone(),

@@ -11,6 +11,7 @@ use swc_ecma_parser::{lexer::Lexer, Capturing, Parser, StringInput, Syntax};
 
 fn main() {
 	let cm:Lrc<SourceMap> = Default::default();
+
 	let handler = Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(cm.clone()));
 
 	// Real usage
@@ -42,7 +43,9 @@ fn main() {
 		.expect("Failed to parse module.");
 
 	println!("Tokens: {:?}", parser.input().take());
+
     let cm: Lrc<SourceMap> = Default::default();
+
     let handler = Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(cm.clone()));
 
     // Real usage

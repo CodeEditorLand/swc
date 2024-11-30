@@ -100,6 +100,7 @@ impl Compressor {
                     b_raw: None,
                 });
             }
+
             _ => {}
         }
     }
@@ -118,6 +119,7 @@ impl Compressor {
                     })
                 }
             }
+
             SubclassSelector::PseudoClass(PseudoClassSelector {
                 name,
                 children: Some(children),
@@ -141,6 +143,7 @@ impl Compressor {
                         children: None,
                     })
                 }
+
                 _ => {}
             },
             SubclassSelector::PseudoClass(PseudoClassSelector {
@@ -166,6 +169,7 @@ impl Compressor {
                         children: None,
                     })
                 }
+
                 _ => {}
             },
             SubclassSelector::PseudoClass(PseudoClassSelector {
@@ -191,6 +195,7 @@ impl Compressor {
                         children: None,
                     })
                 }
+
                 _ => {}
             },
             SubclassSelector::PseudoClass(PseudoClassSelector {
@@ -217,9 +222,11 @@ impl Compressor {
                             children: None,
                         })
                     }
+
                     _ => {}
                 }
             }
+
             _ => {}
         }
     }
@@ -256,6 +263,7 @@ impl Compressor {
             }
 
             let chars = value.chars();
+
             let mut starts_with_hyphen = false;
 
             for (idx, c) in chars.enumerate() {
@@ -268,10 +276,12 @@ impl Compressor {
                             starts_with_hyphen = true;
                         }
                     }
+
                     _ if !matches!(c, '-' | '_' | 'a'..='z' | 'A'..='Z' | '0'..='9' | '\u{00a0}'..='\u{10FFFF}') =>
                     {
                         return;
                     }
+
                     _ => {}
                 }
             }

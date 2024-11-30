@@ -30,21 +30,29 @@ impl VisitMut for StripType {
 
     fn visit_mut_array_pat(&mut self, n: &mut ArrayPat) {
         n.visit_mut_children_with(self);
+
         n.optional = false;
     }
 
     fn visit_mut_auto_accessor(&mut self, n: &mut AutoAccessor) {
         n.type_ann = None;
+
         n.accessibility = None;
+
         n.definite = false;
+
         n.is_override = false;
+
         n.is_abstract = false;
+
         n.visit_mut_children_with(self);
     }
 
     fn visit_mut_class(&mut self, n: &mut Class) {
         n.is_abstract = false;
+
         n.implements.clear();
+
         n.visit_mut_children_with(self);
     }
 
@@ -82,33 +90,49 @@ impl VisitMut for StripType {
 
     fn visit_mut_class_method(&mut self, n: &mut ClassMethod) {
         n.accessibility = None;
+
         n.is_override = false;
+
         n.is_abstract = false;
+
         n.is_optional = false;
+
         n.visit_mut_children_with(self);
     }
 
     fn visit_mut_class_prop(&mut self, prop: &mut ClassProp) {
         prop.declare = false;
+
         prop.readonly = false;
+
         prop.is_override = false;
+
         prop.is_optional = false;
+
         prop.is_abstract = false;
+
         prop.definite = false;
+
         prop.accessibility = None;
+
         prop.visit_mut_children_with(self);
     }
 
     fn visit_mut_private_method(&mut self, n: &mut PrivateMethod) {
         n.accessibility = None;
+
         n.is_abstract = false;
+
         n.is_optional = false;
+
         n.is_override = false;
+
         n.visit_mut_children_with(self);
     }
 
     fn visit_mut_constructor(&mut self, n: &mut Constructor) {
         n.accessibility = None;
+
         n.visit_mut_children_with(self);
     }
 
@@ -146,11 +170,13 @@ impl VisitMut for StripType {
 
     fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
         n.retain(should_retain_module_item);
+
         n.visit_mut_children_with(self);
     }
 
     fn visit_mut_object_pat(&mut self, pat: &mut ObjectPat) {
         pat.visit_mut_children_with(self);
+
         pat.optional = false;
     }
 
@@ -176,10 +202,15 @@ impl VisitMut for StripType {
 
     fn visit_mut_private_prop(&mut self, prop: &mut PrivateProp) {
         prop.readonly = false;
+
         prop.is_override = false;
+
         prop.is_optional = false;
+
         prop.definite = false;
+
         prop.accessibility = None;
+
         prop.visit_mut_children_with(self);
     }
 
@@ -206,6 +237,7 @@ impl VisitMut for StripType {
 
     fn visit_mut_stmts(&mut self, n: &mut Vec<Stmt>) {
         n.visit_mut_children_with(self);
+
         n.retain(|s| !matches!(s, Stmt::Empty(e) if e.span.is_dummy()));
     }
 
@@ -224,6 +256,7 @@ impl VisitMut for StripType {
     fn visit_mut_ts_param_prop(&mut self, n: &mut TsParamProp) {
         // skip accessibility
         n.decorators.visit_mut_with(self);
+
         n.param.visit_mut_with(self);
     }
 }
@@ -233,6 +266,7 @@ fn should_retain_module_item(module_item: &ModuleItem) -> bool {
         ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(export_decl)) => {
             should_retain_decl(&export_decl.decl)
         }
+
         ModuleItem::Stmt(stmt) => should_retain_stmt(stmt),
         _ => module_item.is_concrete(),
     }
@@ -271,6 +305,7 @@ impl IsConcrete for TsNamespaceBody {
             Self::TsModuleBlock(ts_module_block) => {
                 ts_module_block.body.iter().any(|item| item.is_concrete())
             }
+
             Self::TsNamespaceDecl(ts_namespace_decl) => ts_namespace_decl.body.is_concrete(),
         }
     }

@@ -141,6 +141,7 @@ where
             }),
             Err(..) => {
                 let d = de::ContentDeserializer::<D::Error>::new(content);
+
                 Ok(BoolOr::Data(T::deserialize(d)?))
             }
         }

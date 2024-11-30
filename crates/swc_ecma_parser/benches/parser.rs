@@ -7,6 +7,7 @@ use swc_ecma_parser::{lexer::Lexer, Parser, StringInput, Syntax, TsSyntax};
 fn bench_module(b:&mut Bencher, syntax:Syntax, src:&'static str) {
 	let _ = ::testing::run_test(false, |cm, _| {
 		let comments = SingleThreadedComments::default();
+
 		let fm = cm.new_source_file(FileName::Anon.into(), src.into());
 
 		b.iter(|| {
@@ -17,10 +18,13 @@ fn bench_module(b:&mut Bencher, syntax:Syntax, src:&'static str) {
 					StringInput::from(&*fm),
 					Some(&comments),
 				);
+
 				let mut parser = Parser::new_from(lexer);
+
 				parser.parse_module()
 			});
 		});
+
 		Ok(())
 	});
 }
@@ -46,6 +50,7 @@ fn bench_files(c:&mut Criterion) {
 	c.bench_function("es/parser/jquery mobile", |b| {
 		bench_module(b, Default::default(), include_str!("./files/jquery.mobile-1.4.2.js"))
 	});
+
 	c.bench_function("es/parser/mootools", |b| {
 		bench_module(b, Default::default(), include_str!("./files/mootools-1.4.5.js"))
 	});
@@ -76,6 +81,7 @@ fn bench_files(c:&mut Criterion) {
 fn bench_module(b: &mut Bencher, syntax: Syntax, src: &'static str) {
     let _ = ::testing::run_test(false, |cm, _| {
         let comments = SingleThreadedComments::default();
+
         let fm = cm.new_source_file(FileName::Anon.into(), src.into());
 
         b.iter(|| {
@@ -86,10 +92,13 @@ fn bench_module(b: &mut Bencher, syntax: Syntax, src: &'static str) {
                     StringInput::from(&*fm),
                     Some(&comments),
                 );
+
                 let mut parser = Parser::new_from(lexer);
+
                 parser.parse_module()
             });
         });
+
         Ok(())
     });
 }
@@ -131,6 +140,7 @@ fn bench_files(c: &mut Criterion) {
             include_str!("./files/jquery.mobile-1.4.2.js"),
         )
     });
+
     c.bench_function("es/parser/mootools", |b| {
         bench_module(
             b,

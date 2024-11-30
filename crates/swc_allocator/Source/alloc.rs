@@ -54,6 +54,7 @@ impl Allocator {
 
         #[cfg(feature = "scoped")]
         ALLOC.set(Some(s));
+
         AllocGuard {
             #[cfg(feature = "scoped")]
             orig,
@@ -125,6 +126,7 @@ unsafe impl std::alloc::Allocator for FastAlloc {
         #[cfg(feature = "scoped")]
         if self.alloc.is_some() {
             self.with_allocator(|alloc, _| alloc.deallocate(ptr, layout));
+
             return;
         }
 

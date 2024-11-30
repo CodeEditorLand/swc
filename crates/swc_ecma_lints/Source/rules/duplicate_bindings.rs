@@ -52,6 +52,7 @@ impl DuplicateBindings {
                     *prev.get_mut() = info
                 }
             }
+
             Entry::Vacant(e) => {
                 e.insert(info);
             }
@@ -68,14 +69,17 @@ impl DuplicateBindings {
 
     fn visit_with_kind<V: VisitWith<Self>>(&mut self, e: &V, kind: Option<VarDeclKind>) {
         let old_var_decl_kind = self.var_decl_kind.take();
+
         let old_is_pat_decl = self.is_pat_decl;
 
         self.var_decl_kind = kind;
+
         self.is_pat_decl = true;
 
         e.visit_children_with(self);
 
         self.is_pat_decl = old_is_pat_decl;
+
         self.var_decl_kind = old_var_decl_kind;
     }
 
@@ -88,6 +92,7 @@ impl DuplicateBindings {
         get_fn_ident: F,
     ) {
         let mut fn_name = AHashMap::default();
+
         for s in s {
             if let Some(ident) = get_fn_ident(s) {
                 if let Some(prev) = fn_name.get(&ident.sym) {
@@ -103,6 +108,7 @@ impl DuplicateBindings {
 
     fn visit_with_stmts(&mut self, s: &[Stmt], lexical_function: bool) {
         let old = self.lexical_function;
+
         self.lexical_function = lexical_function;
 
         if lexical_function {
@@ -115,6 +121,7 @@ impl DuplicateBindings {
         } else {
             s.visit_children_with(self);
         }
+
         self.lexical_function = old;
     }
 }
@@ -146,8 +153,11 @@ impl Visit for DuplicateBindings {
             decorators,
             ..
         } = f;
+
         params.visit_with(self);
+
         decorators.visit_with(self);
+
         if let Some(body) = body {
             self.visit_with_stmts(&body.stmts, false)
         }
@@ -155,7 +165,9 @@ impl Visit for DuplicateBindings {
 
     fn visit_arrow_expr(&mut self, a: &ArrowExpr) {
         let ArrowExpr { params, body, .. } = a;
+
         params.visit_with(self);
+
         if let BlockStmtOrExpr::BlockStmt(b) = &**body {
             self.visit_with_stmts(&b.stmts, false)
         }
@@ -194,14 +206,17 @@ impl Visit for DuplicateBindings {
 
     fn visit_expr(&mut self, e: &Expr) {
         let old_var_decl_kind = self.var_decl_kind.take();
+
         let old_is_pat_decl = self.is_pat_decl;
 
         self.var_decl_kind = None;
+
         self.is_pat_decl = false;
 
         e.visit_children_with(self);
 
         self.is_pat_decl = old_is_pat_decl;
+
         self.var_decl_kind = old_var_decl_kind;
     }
 

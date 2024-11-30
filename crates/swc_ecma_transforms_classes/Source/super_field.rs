@@ -53,8 +53,11 @@ macro_rules! mark_nested {
             // injected `_define_property` should be handled like method
             if self.folding_constructor && !self.in_injected_define_property_call {
                 let old = self.in_nested_scope;
+
                 self.in_nested_scope = true;
+
                 n.visit_mut_children_with(self);
+
                 self.in_nested_scope = old;
             } else {
                 n.visit_mut_children_with(self)
@@ -67,6 +70,7 @@ impl VisitMut for SuperFieldAccessFolder<'_> {
     noop_visit_mut_type!();
 
     // mark_nested!(fold_function, Function);
+
     mark_nested!(visit_mut_class, Class);
 
     visit_mut_only_key!();
@@ -92,13 +96,18 @@ impl VisitMut for SuperFieldAccessFolder<'_> {
                 ..
             }) if expr.is_ident_ref_to("_define_property") => {
                 let old = self.in_injected_define_property_call;
+
                 self.in_injected_define_property_call = true;
+
                 n.visit_mut_children_with(self);
+
                 self.in_injected_define_property_call = old;
             }
+
             Expr::SuperProp(..) => {
                 self.visit_mut_super_member_get(n);
             }
+
             Expr::Update(UpdateExpr { arg, .. }) if arg.is_super_prop() => {
                 if let Expr::SuperProp(SuperPropExpr {
                     obj: Super {
@@ -111,6 +120,7 @@ impl VisitMut for SuperFieldAccessFolder<'_> {
                     *arg = self.super_to_update_call(*super_token, prop.clone()).into();
                 }
             }
+
             Expr::Assign(AssignExpr {
                 ref left,
                 op: op!("="),
@@ -118,12 +128,16 @@ impl VisitMut for SuperFieldAccessFolder<'_> {
                 ..
             }) if is_assign_to_super_prop(left) => {
                 right.visit_mut_with(self);
+
                 self.visit_mut_super_member_set(n)
             }
+
             Expr::Assign(AssignExpr { left, right, .. }) if is_assign_to_super_prop(left) => {
                 right.visit_mut_with(self);
+
                 self.visit_mut_super_member_update(n);
             }
+
             Expr::Call(CallExpr {
                 callee: Callee::Expr(callee_expr),
                 args,
@@ -133,6 +147,7 @@ impl VisitMut for SuperFieldAccessFolder<'_> {
 
                 self.visit_mut_super_member_call(n);
             }
+
             _ => {
                 n.visit_mut_children_with(self);
             }
@@ -141,8 +156,11 @@ impl VisitMut for SuperFieldAccessFolder<'_> {
 
     fn visit_mut_pat(&mut self, n: &mut Pat) {
         let in_pat = self.in_pat;
+
         self.in_pat = true;
+
         n.visit_mut_children_with(self);
+
         self.in_pat = in_pat;
     }
 
@@ -153,8 +171,11 @@ impl VisitMut for SuperFieldAccessFolder<'_> {
 
         if self.folding_constructor && !self.in_injected_define_property_call {
             let old = self.in_nested_scope;
+
             self.in_nested_scope = true;
+
             n.visit_mut_children_with(self);
+
             self.in_nested_scope = old;
         } else {
             n.visit_mut_children_with(self);
@@ -203,10 +224,12 @@ impl SuperFieldAccessFolder<'_> {
                             ident
                         }
                     }
+
                     _ => ThisExpr { span: DUMMY_SP }.as_arg(),
                 };
 
                 let callee = self.super_to_get_call(*super_token, prop.clone());
+
                 let mut args = args.clone();
 
                 if args.len() == 1 && is_rest_arguments(&args[0]) {
@@ -216,13 +239,16 @@ impl SuperFieldAccessFolder<'_> {
                         args: iter::once(this)
                             .chain(iter::once({
                                 let mut arg = args.pop().unwrap();
+
                                 arg.spread = None;
+
                                 arg
                             }))
                             .collect(),
                         ..Default::default()
                     }
                     .into();
+
                     return;
                 }
 
@@ -277,6 +303,7 @@ impl SuperFieldAccessFolder<'_> {
         }) = n
         {
             let super_token = *super_token;
+
             prop.visit_mut_children_with(self);
 
             let prop = prop.take();

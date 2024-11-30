@@ -21,6 +21,7 @@ impl Default for HexForm {
 
 pub fn color_hex_length(ctx: LintRuleContext<ColorHexLengthConfig>) -> Box<dyn LintRule> {
     let form = ctx.config().clone().unwrap_or_default();
+
     visitor_rule(ctx.reaction(), ColorHexLength { ctx, form })
 }
 
@@ -45,12 +46,15 @@ impl Visit for ColorHexLength {
             HexForm::Long => {
                 if let Some(lengthened) = lengthen(&hex_color.value) {
                     let message = self.build_message(&hex_color.value, &lengthened);
+
                     self.ctx.report(hex_color, message);
                 }
             }
+
             HexForm::Short => {
                 if let Some(shortened) = shorten(&hex_color.value) {
                     let message = self.build_message(&hex_color.value, &shortened);
+
                     self.ctx.report(hex_color, message);
                 }
             }
@@ -62,6 +66,7 @@ impl Visit for ColorHexLength {
 
 fn shorten(hex: &str) -> Option<String> {
     let chars = hex.chars().collect::<Vec<_>>();
+
     match &*chars {
         [c1, c2, c3, c4, c5, c6] if c1 == c2 && c3 == c4 && c5 == c6 => {
             Some(format!("{c1}{c3}{c5}"))
@@ -69,12 +74,14 @@ fn shorten(hex: &str) -> Option<String> {
         [c1, c2, c3, c4, c5, c6, c7, c8] if c1 == c2 && c3 == c4 && c5 == c6 && c7 == c8 => {
             Some(format!("{c1}{c3}{c5}{c7}"))
         }
+
         _ => None,
     }
 }
 
 fn lengthen(hex: &str) -> Option<String> {
     let chars = hex.chars().collect::<Vec<_>>();
+
     match &*chars {
         [c1, c2, c3] => Some(format!("{r}{r}{g}{g}{b}{b}", r = c1, g = c2, b = c3)),
         [c1, c2, c3, c4] => Some(format!(

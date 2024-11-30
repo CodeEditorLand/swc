@@ -8,10 +8,12 @@ use swc_ecma_parser::{lexer::Lexer, Parser, StringInput, Syntax, TsSyntax};
 
 fn main() {
 	let mut cnt = 0;
+
 	let mut hasher = DefaultHasher::new();
 
 	for entry in walkdir::WalkDir::new("tests/typescript") {
 		let entry = entry.unwrap();
+
 		if !entry.path().to_string_lossy().ends_with(".ts")
 			&& !entry.path().to_string_lossy().ends_with(".tsx")
 		{
@@ -47,12 +49,16 @@ fn main() {
 	}
 
 	eprintln!("Parsed {} files", cnt);
+
 	eprintln!("Hash: {:?}", hasher);
+
     let mut cnt = 0;
+
     let mut hasher = DefaultHasher::new();
 
     for entry in walkdir::WalkDir::new("tests/typescript") {
         let entry = entry.unwrap();
+
         if !entry.path().to_string_lossy().ends_with(".ts")
             && !entry.path().to_string_lossy().ends_with(".tsx")
         {
@@ -88,5 +94,6 @@ fn main() {
     }
 
     eprintln!("Parsed {} files", cnt);
+
     eprintln!("Hash: {:?}", hasher);
 }

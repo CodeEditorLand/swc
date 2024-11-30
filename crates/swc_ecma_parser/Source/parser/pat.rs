@@ -41,12 +41,15 @@ impl<I: Tokens> Parser<I> {
 
         // "yield" and "await" is **lexically** accepted.
         let ident = self.parse_ident(true, true)?;
+
         if ident.is_reserved_in_strict_bind() {
             self.emit_strict_mode_err(ident.span, SyntaxError::EvalAndArgumentsInStrict);
         }
+
         if (self.ctx().in_async || self.ctx().in_static_block) && ident.sym == "await" {
             self.emit_err(ident.span, SyntaxError::ExpectedIdent);
         }
+
         if self.ctx().in_generator && ident.sym == "yield" {
             self.emit_err(ident.span, SyntaxError::ExpectedIdent);
         }
@@ -67,6 +70,7 @@ impl<I: Tokens> Parser<I> {
             //     expect!(self, ')');
             //     Ok(pat)
             // }
+
             _ => unexpected!(self, "yield, an identifier, [ or {"),
         }
     }
@@ -76,6 +80,7 @@ impl<I: Tokens> Parser<I> {
         trace_cur!(self, parse_binding_element);
 
         let start = cur_pos!(self);
+
         let left = self.parse_binding_pat_or_ident(false)?;
 
         if eat!(self, '=') {
@@ -102,7 +107,9 @@ impl<I: Tokens> Parser<I> {
         assert_and_bump!(self, '[');
 
         let mut elems = Vec::new();
+
         let mut comma = 0;
+
         let mut rest_span = Span::default();
 
         while !eof!(self) && !is!(self, ']') {
@@ -112,21 +119,29 @@ impl<I: Tokens> Parser<I> {
 
             if eat!(self, ',') {
                 comma += 1;
+
                 continue;
             }
+
             if comma > 0 {
                 elems.extend(iter::repeat(None).take(comma));
+
                 comma = 0;
             }
+
             let start = cur_pos!(self);
 
             let mut is_rest = false;
+
             if eat!(self, "...") {
                 is_rest = true;
+
                 let dot3_token = span!(self, start);
 
                 let pat = self.parse_binding_pat_or_ident(false)?;
+
                 rest_span = span!(self, start);
+
                 let pat = RestPat {
                     span: rest_span,
                     dot3_token,
@@ -134,6 +149,7 @@ impl<I: Tokens> Parser<I> {
                     type_ann: None,
                 }
                 .into();
+
                 elems.push(Some(pat));
             } else {
                 elems.push(self.parse_binding_element().map(Some)?);
@@ -141,6 +157,7 @@ impl<I: Tokens> Parser<I> {
 
             if !is!(self, ']') {
                 expect!(self, ',');
+
                 if is_rest && is!(self, ']') {
                     self.emit_err(self.input.prev_span(), SyntaxError::CommaAfterRestElement);
                 }
@@ -148,6 +165,7 @@ impl<I: Tokens> Parser<I> {
         }
 
         expect!(self, ']');
+
         let optional = (self.input.syntax().dts() || self.ctx().in_declare) && eat!(self, '?');
 
         Ok(ArrayPat {
@@ -171,6 +189,7 @@ impl<I: Tokens> Parser<I> {
                 )))
             )
             && (peeked_is!(self, IdentName) || peeked_is!(self, '{') || peeked_is!(self, '['));
+
         if has_modifier {
             let _ = self.parse_ts_modifier(&["public", "protected", "private", "readonly"], false);
         }
@@ -187,7 +206,9 @@ impl<I: Tokens> Parser<I> {
         let has_modifier = self.eat_any_ts_modifier()?;
 
         let pat_start = cur_pos!(self);
+
         let mut pat = self.parse_binding_element()?;
+
         let mut opt = false;
 
         if self.input.syntax().typescript() {
@@ -207,9 +228,12 @@ impl<I: Tokens> Parser<I> {
                         ref mut optional, ..
                     }) => {
                         *optional = true;
+
                         opt = true;
                     }
+
                     _ if self.input.syntax().dts() || self.ctx().in_declare => {}
+
                     _ => {
                         syntax_error!(
                             self,
@@ -237,6 +261,7 @@ impl<I: Tokens> Parser<I> {
                     ..
                 }) => {
                     let new_type_ann = self.try_parse_ts_type_ann()?;
+
                     if new_type_ann.is_some() {
                         *span = Span::new(pat_start, self.input.prev_span().hi);
                     }
@@ -253,10 +278,13 @@ impl<I: Tokens> Parser<I> {
                 Pat::Assign(AssignPat { ref mut span, .. }) => {
                     if (self.try_parse_ts_type_ann()?).is_some() {
                         *span = Span::new(pat_start, self.input.prev_span().hi);
+
                         self.emit_err(*span, SyntaxError::TSTypeAnnotationAfterAssign);
                     }
                 }
+
                 Pat::Invalid(..) => {}
+
                 _ => unreachable!("invalid syntax: Pat: {:?}", pat),
             }
         }
@@ -268,6 +296,7 @@ impl<I: Tokens> Parser<I> {
             }
 
             let right = self.parse_assignment_expr()?;
+
             if self.ctx().in_declare {
                 self.emit_err(span!(self, start), SyntaxError::TS2371);
             }
@@ -284,6 +313,7 @@ impl<I: Tokens> Parser<I> {
 
         if has_modifier {
             self.emit_err(span!(self, start), SyntaxError::TS2369);
+
             return Ok(pat);
         }
 
@@ -292,6 +322,7 @@ impl<I: Tokens> Parser<I> {
 
     pub(super) fn parse_constructor_params(&mut self) -> PResult<Vec<ParamOrTsParamProp>> {
         let mut params = Vec::new();
+
         let mut rest_span = Span::default();
 
         while !eof!(self) && !is!(self, ')') {
@@ -300,23 +331,30 @@ impl<I: Tokens> Parser<I> {
             }
 
             let param_start = cur_pos!(self);
+
             let decorators = self.parse_decorators(false)?;
+
             let pat_start = cur_pos!(self);
 
             let mut is_rest = false;
+
             if eat!(self, "...") {
                 is_rest = true;
+
                 let dot3_token = span!(self, pat_start);
 
                 let pat = self.parse_binding_pat_or_ident(false)?;
+
                 let type_ann = if self.input.syntax().typescript() && is!(self, ':') {
                     let cur_pos = cur_pos!(self);
+
                     Some(self.parse_ts_type_ann(/* eat_colon */ true, cur_pos)?)
                 } else {
                     None
                 };
 
                 rest_span = span!(self, pat_start);
+
                 let pat = RestPat {
                     span: rest_span,
                     dot3_token,
@@ -324,6 +362,7 @@ impl<I: Tokens> Parser<I> {
                     type_ann,
                 }
                 .into();
+
                 params.push(ParamOrTsParamProp::Param(Param {
                     span: span!(self, param_start),
                     decorators,
@@ -335,6 +374,7 @@ impl<I: Tokens> Parser<I> {
 
             if !is!(self, ')') {
                 expect!(self, ',');
+
                 if is!(self, ')') && is_rest {
                     self.emit_err(self.input.prev_span(), SyntaxError::CommaAfterRestElement);
                 }
@@ -359,8 +399,10 @@ impl<I: Tokens> Parser<I> {
         } else {
             (None, false, false)
         };
+
         if accessibility.is_none() && !is_override && !readonly {
             let pat = self.parse_formal_param_pat()?;
+
             Ok(ParamOrTsParamProp::Param(Param {
                 span: span!(self, param_start),
                 decorators,
@@ -372,6 +414,7 @@ impl<I: Tokens> Parser<I> {
                 Pat::Assign(a) => TsParamPropParam::Assign(a),
                 node => syntax_error!(self, node.span(), SyntaxError::TsInvalidParamPropPat),
             };
+
             Ok(ParamOrTsParamProp::TsParamProp(TsParamProp {
                 span: span!(self, param_start),
                 accessibility,
@@ -386,6 +429,7 @@ impl<I: Tokens> Parser<I> {
     #[allow(dead_code)]
     pub(super) fn parse_setter_param(&mut self, key_span: Span) -> PResult<Param> {
         let params = self.parse_formal_params()?;
+
         let cnt = params.iter().filter(|p| is_not_this(p)).count();
 
         if cnt != 1 {
@@ -407,6 +451,7 @@ impl<I: Tokens> Parser<I> {
 
     pub(super) fn parse_formal_params(&mut self) -> PResult<Vec<Param>> {
         let mut params = Vec::new();
+
         let mut rest_span = Span::default();
 
         while !eof!(self) && !is!(self, ')') {
@@ -415,7 +460,9 @@ impl<I: Tokens> Parser<I> {
             }
 
             let param_start = cur_pos!(self);
+
             let decorators = self.parse_decorators(false)?;
+
             let pat_start = cur_pos!(self);
 
             let pat = if eat!(self, "...") {
@@ -425,7 +472,9 @@ impl<I: Tokens> Parser<I> {
 
                 if eat!(self, '=') {
                     let right = self.parse_assignment_expr()?;
+
                     self.emit_err(pat.span(), SyntaxError::TS1048);
+
                     pat = AssignPat {
                         span: span!(self, pat_start),
                         left: Box::new(pat),
@@ -436,13 +485,16 @@ impl<I: Tokens> Parser<I> {
 
                 let type_ann = if self.input.syntax().typescript() && is!(self, ':') {
                     let cur_pos = cur_pos!(self);
+
                     let ty = self.parse_ts_type_ann(/* eat_colon */ true, cur_pos)?;
+
                     Some(ty)
                 } else {
                     None
                 };
 
                 rest_span = span!(self, pat_start);
+
                 let pat = RestPat {
                     span: rest_span,
                     dot3_token,
@@ -460,6 +512,7 @@ impl<I: Tokens> Parser<I> {
             } else {
                 self.parse_formal_param_pat()?
             };
+
             let is_rest = matches!(pat, Pat::Rest(_));
 
             params.push(Param {
@@ -470,6 +523,7 @@ impl<I: Tokens> Parser<I> {
 
             if !is!(self, ')') {
                 expect!(self, ',');
+
                 if is_rest && is!(self, ')') {
                     self.emit_err(self.input.prev_span(), SyntaxError::CommaAfterRestElement);
                 }
@@ -553,6 +607,7 @@ impl<I: Tokens> Parser<I> {
                     Expr::Paren(..) => {
                         return Ok(expr.into());
                     }
+
                     Expr::Ident(i) => return Ok(i.into()),
                     _ => {
                         return Ok(expr.into());
@@ -584,6 +639,7 @@ impl<I: Tokens> Parser<I> {
                     if !expr.is_valid_simple_assignment_target(self.ctx().strict) {
                         self.emit_err(span, SyntaxError::NotSimpleAssign)
                     }
+
                     match *expr {
                         Expr::Ident(i) => return Ok(i.into()),
                         _ => {
@@ -602,8 +658,10 @@ impl<I: Tokens> Parser<I> {
         match *expr {
             Expr::Paren(..) => {
                 self.emit_err(span, SyntaxError::InvalidPat);
+
                 Ok(Invalid { span }.into())
             }
+
             Expr::Assign(
                 assign_expr @ AssignExpr {
                     op: AssignOp::Assign,
@@ -613,24 +671,29 @@ impl<I: Tokens> Parser<I> {
                 let AssignExpr {
                     span, left, right, ..
                 } = assign_expr;
+
                 Ok(AssignPat {
                     span,
                     left: match left {
                         AssignTarget::Simple(left) => {
                             Box::new(self.reparse_expr_as_pat(pat_ty, left.into())?)
                         }
+
                         AssignTarget::Pat(pat) => pat.into(),
                     },
                     right,
                 }
                 .into())
             }
+
             Expr::Object(ObjectLit {
                 span: object_span,
                 props,
             }) => {
                 // {}
+
                 let len = props.len();
+
                 Ok(ObjectPat {
                     span: object_span,
                     props: props
@@ -638,6 +701,7 @@ impl<I: Tokens> Parser<I> {
                         .enumerate()
                         .map(|(idx, prop)| {
                             let span = prop.span();
+
                             match prop {
                                 PropOrSpread::Prop(prop) => match *prop {
                                     Prop::Shorthand(id) => {
@@ -647,6 +711,7 @@ impl<I: Tokens> Parser<I> {
                                             value: None,
                                         }))
                                     }
+
                                     Prop::KeyValue(kv_prop) => {
                                         Ok(ObjectPatProp::KeyValue(KeyValuePatProp {
                                             key: kv_prop.key,
@@ -656,6 +721,7 @@ impl<I: Tokens> Parser<I> {
                                             )?),
                                         }))
                                     }
+
                                     Prop::Assign(assign_prop) => {
                                         Ok(ObjectPatProp::Assign(AssignPatProp {
                                             span,
@@ -663,6 +729,7 @@ impl<I: Tokens> Parser<I> {
                                             value: Some(assign_prop.value),
                                         }))
                                     }
+
                                     _ => syntax_error!(self, prop.span(), SyntaxError::InvalidPat),
                                 },
 
@@ -679,11 +746,13 @@ impl<I: Tokens> Parser<I> {
                                     };
 
                                     let element_pat_ty = pat_ty.element();
+
                                     let pat = if let PatType::BindingElement = element_pat_ty {
                                         if let Expr::Ident(i) = *expr {
                                             i.into()
                                         } else {
                                             self.emit_err(span, SyntaxError::DotsWithoutIdentifier);
+
                                             Pat::Invalid(Invalid { span })
                                         }
                                     } else {
@@ -709,6 +778,7 @@ impl<I: Tokens> Parser<I> {
                 }
                 .into())
             }
+
             Expr::Ident(ident) => Ok(ident.into()),
             Expr::Array(ArrayLit {
                 elems: mut exprs, ..
@@ -728,6 +798,7 @@ impl<I: Tokens> Parser<I> {
                     exprs.iter().rev().take_while(|e| e.is_none()).count();
 
                 let len = exprs.len();
+
                 let mut params = Vec::with_capacity(exprs.len() - count_of_trailing_comma);
 
                 // Comma or other pattern cannot follow a rest pattern.
@@ -748,13 +819,16 @@ impl<I: Tokens> Parser<I> {
                         Some(ExprOrSpread { expr, .. }) => {
                             params.push(self.reparse_expr_as_pat(pat_ty.element(), expr).map(Some)?)
                         }
+
                         None => params.push(None),
                     }
                 }
 
                 if count_of_trailing_comma == 0 {
                     let expr = exprs.into_iter().next().unwrap();
+
                     let outer_expr_span = expr.span();
+
                     let last = match expr {
                         // Rest
                         Some(ExprOrSpread {
@@ -765,10 +839,13 @@ impl<I: Tokens> Parser<I> {
                             if let Expr::Assign(_) = *expr {
                                 self.emit_err(outer_expr_span, SyntaxError::TS1048);
                             };
+
                             if let Some(trailing_comma) = self.state.trailing_commas.get(&span.lo) {
                                 self.emit_err(*trailing_comma, SyntaxError::CommaAfterRestElement);
                             }
+
                             let expr_span = expr.span();
+
                             self.reparse_expr_as_pat(pat_ty.element(), expr)
                                 .map(|pat| {
                                     RestPat {
@@ -781,6 +858,7 @@ impl<I: Tokens> Parser<I> {
                                 })
                                 .map(Some)?
                         }
+
                         Some(ExprOrSpread { expr, .. }) => {
                             // TODO: is BindingPat correct?
                             self.reparse_expr_as_pat(pat_ty.element(), expr).map(Some)?
@@ -788,8 +866,10 @@ impl<I: Tokens> Parser<I> {
                         // TODO: syntax error if last element is ellison and ...rest exists.
                         None => None,
                     };
+
                     params.push(last);
                 }
+
                 Ok(ArrayPat {
                     span,
                     elems: params,
@@ -803,11 +883,13 @@ impl<I: Tokens> Parser<I> {
             // Note that assignment expression with '=' is valid, and handled above.
             Expr::Lit(..) | Expr::Assign(..) => {
                 self.emit_err(span, SyntaxError::InvalidPat);
+
                 Ok(Invalid { span }.into())
             }
 
             Expr::Yield(..) if self.ctx().in_generator => {
                 self.emit_err(span, SyntaxError::InvalidPat);
+
                 Ok(Invalid { span }.into())
             }
 
@@ -827,6 +909,7 @@ impl<I: Tokens> Parser<I> {
         let pat_ty = PatType::BindingPat;
 
         let len = exprs.len();
+
         if len == 0 {
             return Ok(Vec::new());
         }
@@ -841,6 +924,7 @@ impl<I: Tokens> Parser<I> {
                 | AssignTargetOrSpread::Pat(Pat::Rest(..)) => {
                     self.emit_err(expr.span(), SyntaxError::TS1014)
                 }
+
                 AssignTargetOrSpread::ExprOrSpread(ExprOrSpread {
                     spread: None, expr, ..
                 }) => params.push(self.reparse_expr_as_pat(pat_ty, expr)?),
@@ -849,8 +933,11 @@ impl<I: Tokens> Parser<I> {
         }
 
         debug_assert_eq!(exprs.len(), 1);
+
         let expr = exprs.into_iter().next().unwrap();
+
         let outer_expr_span = expr.span();
+
         let last = match expr {
             // Rest
             AssignTargetOrSpread::ExprOrSpread(ExprOrSpread {
@@ -860,10 +947,13 @@ impl<I: Tokens> Parser<I> {
                 if let Expr::Assign(_) = *expr {
                     self.emit_err(outer_expr_span, SyntaxError::TS1048)
                 };
+
                 if let Some(trailing_comma) = trailing_comma {
                     self.emit_err(trailing_comma, SyntaxError::CommaAfterRestElement);
                 }
+
                 let expr_span = expr.span();
+
                 self.reparse_expr_as_pat(pat_ty, expr).map(|pat| {
                     RestPat {
                         span: expr_span,
@@ -874,18 +964,22 @@ impl<I: Tokens> Parser<I> {
                     .into()
                 })?
             }
+
             AssignTargetOrSpread::ExprOrSpread(ExprOrSpread { expr, .. }) => {
                 self.reparse_expr_as_pat(pat_ty, expr)?
             }
+
             AssignTargetOrSpread::Pat(pat) => {
                 if let Some(trailing_comma) = trailing_comma {
                     if let Pat::Rest(..) = pat {
                         self.emit_err(trailing_comma, SyntaxError::CommaAfterRestElement);
                     }
                 }
+
                 pat
             }
         };
+
         params.push(last);
 
         if self.ctx().strict {
@@ -907,11 +1001,13 @@ impl<I: Tokens> Parser<I> {
                     self.emit_strict_mode_err(i.span, SyntaxError::EvalAndArgumentsInStrict)
                 }
             }
+
             Pat::Array(arr) => {
                 for pat in arr.elems.iter().flatten() {
                     self.pat_is_valid_argument_in_strict(pat)
                 }
             }
+
             Pat::Rest(r) => self.pat_is_valid_argument_in_strict(&r.arg),
             Pat::Object(obj) => {
                 for prop in obj.props.iter() {
@@ -920,6 +1016,7 @@ impl<I: Tokens> Parser<I> {
                         | ObjectPatProp::Rest(RestPat { arg: value, .. }) => {
                             self.pat_is_valid_argument_in_strict(value)
                         }
+
                         ObjectPatProp::Assign(AssignPatProp { key, .. }) => {
                             if key.is_reserved_in_strict_bind() {
                                 self.emit_strict_mode_err(
@@ -931,6 +1028,7 @@ impl<I: Tokens> Parser<I> {
                     }
                 }
             }
+
             Pat::Assign(a) => self.pat_is_valid_argument_in_strict(&a.left),
             Pat::Invalid(_) | Pat::Expr(_) => (),
         }
@@ -940,6 +1038,7 @@ impl<I: Tokens> Parser<I> {
 #[cfg(test)]
 mod tests {
     use swc_common::DUMMY_SP as span;
+
     use swc_ecma_visit::assert_eq_ignore_span;
 
     use super::*;

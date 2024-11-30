@@ -33,9 +33,11 @@ impl NoSparseArrays {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, MESSAGE).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, MESSAGE).emit();
             }
+
             _ => {}
         });
     }

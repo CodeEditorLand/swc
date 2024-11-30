@@ -63,6 +63,7 @@ impl VisitMut for JsonParse {
         let e = match expr {
             Expr::Array(..) | Expr::Object(..) => {
                 let (is_lit, cost) = calc_literal_cost(&*expr, false);
+
                 if is_lit && cost >= self.min_cost {
                     let value =
                         serde_json::to_string(&jsonify(expr.take())).unwrap_or_else(|err| {
@@ -81,11 +82,13 @@ impl VisitMut for JsonParse {
                         ..Default::default()
                     }
                     .into();
+
                     return;
                 }
 
                 expr
             }
+
             _ => expr,
         };
 
@@ -104,6 +107,7 @@ fn jsonify(e: Expr) -> Value {
                 })
                 .map(|p: KeyValueProp| {
                     let value = jsonify(*p.value);
+
                     let key = match p.key {
                         PropName::Str(s) => s.value.to_string(),
                         PropName::Ident(id) => id.sym.to_string(),
@@ -280,18 +284,21 @@ mod tests {
         object_numeric_keys,
         r#"const a = { 1: "123", 23: 45, b: "b_val" };"#
     );
+
     test!(
         ::swc_ecma_parser::Syntax::default(),
         |_| json_parse(0),
         tpl,
         r"const a = [`\x22\x21\x224`];"
     );
+
     test!(
         ::swc_ecma_parser::Syntax::default(),
         |_| json_parse(0),
         tpl2,
         r#"const a = [`1${b}2`];"#
     );
+
     test!(
         ::swc_ecma_parser::Syntax::default(),
         |_| json_parse(0),

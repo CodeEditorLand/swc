@@ -31,8 +31,10 @@ impl Pure<'_> {
                     if obj.sym != *"console" {
                         return;
                     }
+
                     break;
                 }
+
                 Expr::Member(MemberExpr {
                     obj: loop_co_obj,
                     prop: MemberProp::Ident(_),
@@ -40,6 +42,7 @@ impl Pure<'_> {
                 }) => {
                     loop_co = loop_co_obj;
                 }
+
                 Expr::OptChain(opt_chain) => match opt_chain.base.as_member() {
                     Some(member) => loop_co = &member.obj,
                     None => return,
@@ -49,6 +52,7 @@ impl Pure<'_> {
         }
 
         report_change!("drop_console: Removing console call");
+
         self.changed = true;
         *e = *Expr::undefined(DUMMY_SP);
     }

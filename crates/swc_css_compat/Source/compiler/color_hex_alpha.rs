@@ -9,6 +9,7 @@ use crate::compiler::Compiler;
 
 fn shorten_hex_color(value: &str) -> Option<&str> {
     let length = value.len();
+
     let chars = value.as_bytes();
 
     if length == 8 && chars[6] == b'f' && chars[7] == b'f' {
@@ -28,6 +29,7 @@ impl Compiler {
             .and_then(|color| color.as_mut_hex_color())
         {
             hex_color.value = hex_color.value.to_ascii_lowercase();
+
             hex_color.raw = None;
 
             if hex_color.value.len() != 4 && hex_color.value.len() != 8 {
@@ -36,6 +38,7 @@ impl Compiler {
 
             if let Some(shortened) = shorten_hex_color(&hex_color.value) {
                 hex_color.value = shortened.into();
+
                 hex_color.raw = None;
 
                 return;

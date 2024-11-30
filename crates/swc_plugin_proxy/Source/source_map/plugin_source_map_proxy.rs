@@ -24,7 +24,9 @@ extern "C" {
         should_include_source_file: i32,
         allocated_ret_ptr: u32,
     ) -> u32;
+
     fn __doctest_offset_line_proxy(orig: u32) -> u32;
+
     fn __merge_spans_proxy(
         lhs_lo: u32,
         lhs_hi: u32,
@@ -32,15 +34,20 @@ extern "C" {
         rhs_hi: u32,
         allocated_ptr: u32,
     ) -> u32;
+
     fn __span_to_string_proxy(span_lo: u32, span_hi: u32, allocated_ret_ptr: u32) -> u32;
+
     fn __span_to_filename_proxy(span_lo: u32, span_hi: u32, allocated_ret_ptr: u32) -> u32;
+
     fn __span_to_source_proxy(span_lo: u32, span_hi: u32, allocated_ret_ptr: u32) -> u32;
+
     fn __span_to_lines_proxy(
         span_lo: u32,
         span_hi: u32,
         should_request_source_file: i32,
         allocated_ret_ptr: u32,
     ) -> u32;
+
     fn __lookup_byte_offset_proxy(byte_pos: u32, allocated_ret_ptr: u32) -> u32;
 }
 
@@ -73,6 +80,7 @@ impl PluginSourceMapProxy {
                 .expect("Host should return source code");
 
             let src = src?;
+
             return Ok(extract_source(&src, 0, src.len()));
         }
 
@@ -94,6 +102,7 @@ impl SourceMapper for PluginSourceMapProxy {
             } else {
                 0
             };
+
             let partial_loc: PartialLoc = read_returned_result_from_host(|serialized_ptr| unsafe {
                 __lookup_char_pos_source_map_proxy(
                     pos.0,
@@ -135,6 +144,7 @@ impl SourceMapper for PluginSourceMapProxy {
             } else {
                 0
             };
+
             let partial_files: PartialFileLinesResult =
                 read_returned_result_from_host(|serialized_ptr| unsafe {
                     __span_to_lines_proxy(
@@ -217,6 +227,7 @@ impl SourceMapper for PluginSourceMapProxy {
                 &swc_common::plugin::serialized::VersionedSerializable::new(span),
             )
             .expect("Should be serializable");
+
             let (ptr, len) = serialized.as_ptr();
 
             let ret =

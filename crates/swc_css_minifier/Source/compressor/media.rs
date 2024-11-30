@@ -47,6 +47,7 @@ impl Compressor {
                     {
                         true
                     }
+
                     MediaConditionAllType::Or(media_or) => match &media_or.condition {
                         MediaInParens::MediaCondition(media_condition)
                             if self.is_first_or_media_type(media_condition)
@@ -54,6 +55,7 @@ impl Compressor {
                         {
                             true
                         }
+
                         _ => false,
                     },
                     _ => false,
@@ -81,6 +83,7 @@ impl Compressor {
                                     new_conditions.extend(iter);
                                 }
                             }
+
                             MediaConditionAllType::Or(media_or) => match media_or.condition {
                                 MediaInParens::MediaCondition(media_condition)
                                     if self.is_first_or_media_type(&media_condition)
@@ -101,6 +104,7 @@ impl Compressor {
                                         new_conditions.extend(iter);
                                     }
                                 }
+
                                 _ => {
                                     new_conditions.push(MediaConditionAllType::Or(media_or));
                                 }
@@ -114,6 +118,7 @@ impl Compressor {
                     n.conditions = new_conditions;
                 }
             }
+
             Some(MediaConditionAllType::And(_)) => {
                 let need_compress = n.conditions.iter().any(|item| match item {
                     MediaConditionAllType::MediaInParens(MediaInParens::MediaCondition(
@@ -123,6 +128,7 @@ impl Compressor {
                     {
                         true
                     }
+
                     MediaConditionAllType::And(media_and) => match &media_and.condition {
                         MediaInParens::MediaCondition(media_condition)
                             if self.is_first_and_media_type(media_condition)
@@ -130,6 +136,7 @@ impl Compressor {
                         {
                             true
                         }
+
                         _ => false,
                     },
                     _ => false,
@@ -157,6 +164,7 @@ impl Compressor {
                                     new_conditions.extend(iter);
                                 }
                             }
+
                             MediaConditionAllType::And(media_and) => match media_and.condition {
                                 MediaInParens::MediaCondition(media_condition)
                                     if self.is_first_and_media_type(&media_condition)
@@ -177,6 +185,7 @@ impl Compressor {
                                         new_conditions.extend(iter);
                                     }
                                 }
+
                                 _ => {
                                     new_conditions.push(MediaConditionAllType::And(media_and));
                                 }
@@ -190,6 +199,7 @@ impl Compressor {
                     n.conditions = new_conditions;
                 }
             }
+
             _ => {}
         }
 
@@ -206,6 +216,7 @@ impl Compressor {
                 {
                     true
                 }
+
                 MediaConditionWithoutOrType::And(media_and) => match &media_and.condition {
                     MediaInParens::MediaCondition(media_condition)
                         if self.is_first_and_media_type(media_condition)
@@ -213,6 +224,7 @@ impl Compressor {
                     {
                         true
                     }
+
                     _ => false,
                 },
                 _ => false,
@@ -243,10 +255,12 @@ impl Compressor {
                                             new_conditions
                                                 .push(MediaConditionWithoutOrType::Not(media_not));
                                         }
+
                                         MediaConditionAllType::And(media_and) => {
                                             new_conditions
                                                 .push(MediaConditionWithoutOrType::And(media_and));
                                         }
+
                                         MediaConditionAllType::MediaInParens(media_in_parens) => {
                                             new_conditions.push(
                                                 MediaConditionWithoutOrType::MediaInParens(
@@ -254,6 +268,7 @@ impl Compressor {
                                                 ),
                                             );
                                         }
+
                                         _ => {
                                             unreachable!();
                                         }
@@ -261,6 +276,7 @@ impl Compressor {
                                 }
                             }
                         }
+
                         MediaConditionWithoutOrType::And(media_and) => match media_and.condition {
                             MediaInParens::MediaCondition(media_condition)
                                 if self.is_first_and_media_type(&media_condition)
@@ -286,11 +302,13 @@ impl Compressor {
                                                     MediaConditionWithoutOrType::Not(media_not),
                                                 );
                                             }
+
                                             MediaConditionAllType::And(media_and) => {
                                                 new_conditions.push(
                                                     MediaConditionWithoutOrType::And(media_and),
                                                 );
                                             }
+
                                             MediaConditionAllType::MediaInParens(
                                                 media_in_parens,
                                             ) => {
@@ -300,6 +318,7 @@ impl Compressor {
                                                     ),
                                                 );
                                             }
+
                                             _ => {
                                                 unreachable!();
                                             }
@@ -307,6 +326,7 @@ impl Compressor {
                                     }
                                 }
                             }
+
                             _ => {
                                 new_conditions.push(MediaConditionWithoutOrType::And(media_and));
                             }
@@ -335,6 +355,7 @@ impl Compressor {
                     *n = media_in_parens.clone();
                 }
             }
+
             _ => {}
         }
     }
@@ -358,22 +379,28 @@ impl Compressor {
                                         Some(ComponentValue::Function(function)) => {
                                             *n = MediaFeatureValue::Function(*function);
                                         }
+
                                         Some(ComponentValue::Dimension(dimension)) => {
                                             *n = MediaFeatureValue::Dimension(*dimension);
                                         }
+
                                         Some(ComponentValue::Number(number)) => {
                                             *n = MediaFeatureValue::Number(*number);
                                         }
+
                                         _ => {}
                                     }
                                 }
                             }
+
                             _ => {}
                         }
                     }
+
                     _ => {}
                 }
             }
+
             _ => {}
         }
     }
@@ -411,6 +438,7 @@ impl Compressor {
                     });
                 }
             }
+
             MediaFeature::Range(range) => {
                 if let MediaFeatureValue::Ident(name) = &*range.left {
                     if matches!(&*name.value, "color" | "color-index" | "monochrome")
@@ -446,6 +474,7 @@ impl Compressor {
                     }
                 }
             }
+
             _ => {}
         }
     }

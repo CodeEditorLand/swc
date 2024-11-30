@@ -21,7 +21,9 @@ pub fn analyze_source_file(
     source_file_start_pos: BytePos,
 ) -> (Vec<BytePos>, Vec<MultiByteChar>, Vec<NonNarrowChar>) {
     let mut lines = vec![source_file_start_pos];
+
     let mut multi_byte_chars = Vec::new();
+
     let mut non_narrow_chars = Vec::new();
 
     // Calls the right implementation, depending on hardware support available.
@@ -39,7 +41,9 @@ pub fn analyze_source_file(
     // it again.
     if let Some(&last_line_start) = lines.last() {
         let source_file_end = source_file_start_pos + BytePos::from_usize(src.len());
+
         assert!(source_file_end >= last_line_start);
+
         if last_line_start == source_file_end {
             lines.pop();
         }
@@ -60,7 +64,9 @@ fn analyze_source_file_generic(
     non_narrow_chars: &mut Vec<NonNarrowChar>,
 ) -> usize {
     assert!(src.len() >= scan_len);
+
     let mut i = 0;
+
     let src_bytes = src.as_bytes();
 
     while i < scan_len {
@@ -83,18 +89,23 @@ fn analyze_source_file_generic(
                 b'\r' => {
                     if let Some(b'\n') = src_bytes.get(i + 1) {
                         lines.push(pos + BytePos(2));
+
                         i += 2;
+
                         continue;
                     }
+
                     lines.push(pos + BytePos(1));
                 }
 
                 b'\n' => {
                     lines.push(pos + BytePos(1));
                 }
+
                 b'\t' => {
                     non_narrow_chars.push(NonNarrowChar::Tab(pos));
                 }
+
                 _ => {
                     non_narrow_chars.push(NonNarrowChar::ZeroWidth(pos));
                 }
@@ -104,16 +115,19 @@ fn analyze_source_file_generic(
             // This is either ASCII control character "DEL" or the beginning of
             // a multibyte char. Just decode to `char`.
             let c = src[i..].chars().next().unwrap();
+
             char_len = c.len_utf8();
 
             let pos = BytePos::from_usize(i) + output_offset;
 
             if char_len > 1 {
                 assert!((2..=4).contains(&char_len));
+
                 let mbc = MultiByteChar {
                     pos,
                     bytes: char_len as u8,
                 };
+
                 multi_byte_chars.push(mbc);
             }
 

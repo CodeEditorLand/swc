@@ -11,7 +11,9 @@ impl Compressor {
             match &**name {
                 "display" if declaration.value.len() > 1 => {
                     let mut outside = None;
+
                     let mut inside = None;
+
                     let mut list_item = None;
 
                     for value in declaration.value.iter() {
@@ -26,6 +28,7 @@ impl Compressor {
                             {
                                 outside = Some(outside_node);
                             }
+
                             inside_node @ ComponentValue::Ident(ident)
                                 if matches_eq_ignore_ascii_case!(
                                     ident.value,
@@ -39,6 +42,7 @@ impl Compressor {
                             {
                                 inside = Some(inside_node);
                             }
+
                             list_item_node @ ComponentValue::Ident(ident)
                                 if ident.value.eq_ignore_ascii_case("list-item") =>
                             {
@@ -54,6 +58,7 @@ impl Compressor {
 
                                 list_item = Some(list_item_node)
                             }
+
                             _ => {}
                         }
                     }
@@ -150,6 +155,7 @@ impl Compressor {
                         {
                             declaration.value = vec![inside.clone()];
                         }
+
                         _ => {}
                     }
                 }
@@ -168,14 +174,17 @@ impl Compressor {
                     if declaration.value.len() > 1 =>
                 {
                     let top = declaration.value.first();
+
                     let right = declaration
                         .value
                         .get(1)
                         .or_else(|| declaration.value.first());
+
                     let bottom = declaration
                         .value
                         .get(2)
                         .or_else(|| declaration.value.first());
+
                     let left = declaration
                         .value
                         .get(3)
@@ -223,6 +232,7 @@ impl Compressor {
                     if declaration.value.len() == 2 =>
                 {
                     let first = declaration.value.first();
+
                     let second = declaration.value.get(1);
 
                     if self.is_same_length_percentage_nodes(first, second)
@@ -233,14 +243,17 @@ impl Compressor {
                 }
                 "border-style" if declaration.value.len() > 1 => {
                     let top = declaration.value.first();
+
                     let right = declaration
                         .value
                         .get(1)
                         .or_else(|| declaration.value.first());
+
                     let bottom = declaration
                         .value
                         .get(2)
                         .or_else(|| declaration.value.first());
+
                     let left = declaration
                         .value
                         .get(3)
@@ -266,6 +279,7 @@ impl Compressor {
                 }
                 "border-spacing" | "border-image-repeat" if declaration.value.len() == 2 => {
                     let first = declaration.value.first();
+
                     let second = declaration.value.get(1);
 
                     if self.is_same_length_nodes(first, second) {
@@ -287,6 +301,7 @@ impl Compressor {
                                     raw: None,
                                 }))
                             }
+
                             ComponentValue::Ident(ident)
                                 if ident.value.eq_ignore_ascii_case("bold") =>
                             {
@@ -296,6 +311,7 @@ impl Compressor {
                                     raw: None,
                                 }))
                             }
+
                             _ => node,
                         })
                         .collect();
@@ -304,6 +320,7 @@ impl Compressor {
                     if declaration.value.len() == 2 =>
                 {
                     let first = declaration.value.first();
+
                     let second = declaration.value.get(1);
 
                     if let (
@@ -335,6 +352,7 @@ impl Compressor {
                             | ("no-repeat", "no-repeat") => {
                                 declaration.value.remove(1);
                             }
+
                             _ => {}
                         }
                     }
@@ -351,6 +369,7 @@ impl Compressor {
                     if declaration.value.len() == 2 =>
                 {
                     let first = declaration.value.first();
+
                     let second = declaration.value.get(1);
 
                     if self.is_same_ident(first, second) {
@@ -359,14 +378,17 @@ impl Compressor {
                 }
                 "animation" if !declaration.value.is_empty() => {
                     let first = declaration.value.first().cloned();
+
                     if let Some(ComponentValue::Str(ident)) = first {
                         declaration.value.remove(0);
+
                         match &*ident.value.to_ascii_lowercase() {
                             _ if crate::is_css_wide_keyword(&ident.value)
                                 || ident.value.eq_ignore_ascii_case("none") =>
                             {
                                 declaration.value.insert(0, ComponentValue::Str(ident));
                             }
+
                             to_be_identify => {
                                 declaration.value.insert(
                                     0,
@@ -396,12 +418,14 @@ impl Compressor {
                         .map(|node| match node {
                             ComponentValue::Str(ref ident) => {
                                 let value = ident.value.to_ascii_lowercase();
+
                                 match &*value {
                                     _ if crate::is_css_wide_keyword(&ident.value)
                                         || ident.value.eq_ignore_ascii_case("none") =>
                                     {
                                         node
                                     }
+
                                     to_be_identify => {
                                         if self.is_ident_shorter_than_str(to_be_identify) {
                                             ComponentValue::Ident(Box::new(Ident {
@@ -419,10 +443,12 @@ impl Compressor {
                                     }
                                 }
                             }
+
                             _ => node,
                         })
                         .collect();
                 }
+
                 _ => {}
             }
 
@@ -452,6 +478,7 @@ impl Compressor {
         node_2: Option<&ComponentValue>,
     ) -> bool {
         let Some(node_1) = node_1 else { return false };
+
         let Some(node_2) = node_2 else { return false };
 
         match (node_1, node_2) {
@@ -472,6 +499,7 @@ impl Compressor {
             (ComponentValue::Number(number_1), ComponentValue::Number(number_2)) => {
                 number_1.value == number_2.value
             }
+
             _ => false,
         }
     }
@@ -482,6 +510,7 @@ impl Compressor {
         node_2: Option<&ComponentValue>,
     ) -> bool {
         let Some(node_1) = node_1 else { return false };
+
         let Some(node_2) = node_2 else { return false };
 
         match (node_1, node_2) {
@@ -510,6 +539,7 @@ impl Compressor {
             (ComponentValue::Number(number_1), ComponentValue::Number(number_2)) => {
                 number_1.value == number_2.value
             }
+
             _ => false,
         }
     }
@@ -520,11 +550,13 @@ impl Compressor {
         node_2: Option<&ComponentValue>,
     ) -> bool {
         let Some(node_1) = node_1 else { return false };
+
         let Some(node_2) = node_2 else { return false };
 
         let Some(value_1) = node_1.as_ident().map(|ident| &ident.value) else {
             return false;
         };
+
         let Some(value_2) = node_2.as_ident().map(|ident| &ident.value) else {
             return false;
         };
@@ -1194,6 +1226,7 @@ impl Compressor {
                     raw: None,
                 }))];
             }
+
             _ => {}
         }
     }
@@ -1485,6 +1518,7 @@ impl Compressor {
                     }
                 }
             }
+
             _ => {}
         }
     }

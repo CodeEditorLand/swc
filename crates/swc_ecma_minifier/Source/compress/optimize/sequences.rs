@@ -65,10 +65,13 @@ impl Optimizer<'_> {
     {
         if !self.options.sequences() {
             log_abort!("sequences: make_sequence for statements is disabled");
+
             return;
         }
+
         if self.ctx.in_asm {
             log_abort!("sequences: asm.js is not supported");
+
             return;
         }
 
@@ -119,6 +122,7 @@ impl Optimizer<'_> {
                                 _ => false,
                             }
                         }
+
                         _ => false,
                     });
 
@@ -152,6 +156,7 @@ impl Optimizer<'_> {
         report_change!("sequences: Compressing statements as a sequences");
 
         self.changed = true;
+
         let mut exprs = Vec::new();
         // This is bigger than required.
         let mut new_stmts = Vec::with_capacity(stmts.len());
@@ -161,6 +166,7 @@ impl Optimizer<'_> {
                 Ok(stmt) => {
                     if is_directive(&stmt) {
                         new_stmts.push(T::from(stmt));
+
                         continue;
                     }
                     // If
@@ -171,6 +177,7 @@ impl Optimizer<'_> {
 
                         Stmt::If(mut stmt) => {
                             stmt.test.prepend_exprs(take(&mut exprs));
+
                             new_stmts.push(T::from(stmt.into()));
                         }
 
@@ -191,8 +198,10 @@ impl Optimizer<'_> {
                                 Some(e) => {
                                     e.prepend_exprs(take(&mut exprs));
                                 }
+
                                 _ => {
                                     let mut e = Expr::undefined(stmt.span);
+
                                     e.prepend_exprs(take(&mut exprs));
 
                                     stmt.arg = Some(e);
@@ -260,9 +269,12 @@ impl Optimizer<'_> {
                                                 }
                                             {
                                                 let seq = e.force_seq();
+
                                                 let extra =
                                                     seq.exprs.drain(1..).collect::<Vec<_>>();
+
                                                 seq.exprs.extend(take(&mut exprs));
+
                                                 seq.exprs.extend(extra);
 
                                                 if seq.exprs.len() == 1 {
@@ -277,8 +289,10 @@ impl Optimizer<'_> {
                                             }
                                         }
                                     }
+
                                     e.prepend_exprs(take(&mut exprs));
                                 }
+
                                 None => {
                                     if exprs.is_empty() {
                                         stmt.init = None;
@@ -288,10 +302,12 @@ impl Optimizer<'_> {
                                         )))
                                     }
                                 }
+
                                 _ => {
                                     unreachable!()
                                 }
                             }
+
                             new_stmts.push(T::from(stmt.into()));
                         }
 
@@ -338,6 +354,7 @@ impl Optimizer<'_> {
                         }
                     }
                 }
+
                 Err(item) => {
                     if !exprs.is_empty() {
                         new_stmts.push(T::from(
@@ -378,6 +395,7 @@ impl Optimizer<'_> {
         if true {
             return;
         }
+
         let need_work = stmts.iter().any(|stmt| match stmt.as_stmt() {
             Some(Stmt::Expr(e)) => match &*e.expr {
                 Expr::Seq(seq) => {
@@ -386,6 +404,7 @@ impl Optimizer<'_> {
                             matches!(&**expr, Expr::Assign(AssignExpr { op: op!("="), .. }))
                         })
                 }
+
                 _ => false,
             },
 
@@ -412,11 +431,14 @@ impl Optimizer<'_> {
                                         )
                                     })
                             }
+
                             _ => false,
                         } =>
                     {
                         let span = es.span;
+
                         let seq = es.expr.seq().unwrap();
+
                         new_stmts.extend(
                             seq.exprs
                                 .into_iter()
@@ -435,7 +457,9 @@ impl Optimizer<'_> {
                 }
             }
         }
+
         self.changed = true;
+
         report_change!(
             "sequences: Splitted a sequence expression to multiple expression statements"
         );
@@ -465,8 +489,11 @@ impl Optimizer<'_> {
                 if seq.exprs.is_empty() || seq.exprs.len() <= 1 {
                     return;
                 }
+
                 report_change!("sequences: Lifting Assign");
+
                 self.changed = true;
+
                 if let Some(last) = seq.exprs.last_mut() {
                     **last = AssignExpr {
                         span: *span,
@@ -489,6 +516,7 @@ impl Optimizer<'_> {
         T: ModuleItemExt,
     {
         let old_prepend = self.prepend_stmts.take();
+
         let old_append = self.append_stmts.take();
 
         op(stmts);
@@ -502,6 +530,7 @@ impl Optimizer<'_> {
         }
 
         self.prepend_stmts = old_prepend;
+
         self.append_stmts = old_append;
     }
 
@@ -524,7 +553,9 @@ impl Optimizer<'_> {
                 if let Some(lhs) = assign.left.as_ident() {
                     if lhs.sym == last_id.sym && lhs.ctxt == last_id.ctxt {
                         e.exprs.pop();
+
                         self.changed = true;
+
                         report_change!("sequences: Shifting assignment");
                     }
                 };
@@ -547,9 +578,11 @@ impl Optimizer<'_> {
         if let Some(last) = e.exprs.last() {
             if is_pure_undefined(&self.ctx.expr_ctx, last) {
                 self.changed = true;
+
                 report_change!("sequences: Shifting void");
 
                 e.exprs.pop();
+
                 let last = e.exprs.last_mut().unwrap();
 
                 *last = UnaryExpr {
@@ -578,6 +611,7 @@ impl Optimizer<'_> {
                     return None;
                 }
             }
+
             Stmt::Decl(Decl::Var(v)) => {
                 if options.reduce_vars || options.collapse_vars {
                     Either::Left(v.decls.iter_mut().map(Mergable::Var))
@@ -585,6 +619,7 @@ impl Optimizer<'_> {
                     return None;
                 }
             }
+
             Stmt::Return(ReturnStmt { arg: Some(arg), .. }) => {
                 Either::Right(once(Mergable::Expr(arg)))
             }
@@ -632,16 +667,19 @@ impl Optimizer<'_> {
     {
         if !self.options.sequences() && !self.options.collapse_vars && !self.options.reduce_vars {
             log_abort!("sequences: [x] Disabled");
+
             return;
         }
 
         if self.ctx.is_top_level_for_block_level_vars() && !self.options.top_level() {
             log_abort!("sequences: [x] Top level");
+
             return;
         }
 
         if self.data.scopes.get(&self.ctx.scope).unwrap().has_eval_call {
             log_abort!("sequences: Eval call");
+
             return;
         }
 
@@ -661,10 +699,12 @@ impl Optimizer<'_> {
         }
 
         let mut exprs = Vec::new();
+
         let mut buf = Vec::new();
 
         for stmt in stmts.iter_mut() {
             let is_end = is_end(stmt.as_stmt());
+
             let can_skip = match stmt.as_stmt() {
                 Some(Stmt::Decl(Decl::Fn(..))) => true,
                 _ => false,
@@ -675,6 +715,7 @@ impl Optimizer<'_> {
             } else {
                 None
             };
+
             if let Some(items) = items {
                 buf.extend(items)
             } else {
@@ -684,6 +725,7 @@ impl Optimizer<'_> {
                     continue;
                 }
             }
+
             if is_end {
                 exprs.push(take(&mut buf));
             }
@@ -692,11 +734,13 @@ impl Optimizer<'_> {
         if will_terminate {
             buf.push(Mergable::Drop);
         }
+
         exprs.push(buf);
 
         #[cfg(feature = "debug")]
         let _tracing = {
             let buf_len = exprs.iter().map(|v| v.len()).collect::<Vec<_>>();
+
             Some(
                 tracing::span!(
                     Level::TRACE,
@@ -715,8 +759,10 @@ impl Optimizer<'_> {
             if let Some(Stmt::Expr(es)) = stmt.as_stmt_mut() {
                 if let Expr::Seq(e) = &mut *es.expr {
                     e.exprs.retain(|e| !e.is_invalid());
+
                     if e.exprs.len() == 1 {
                         es.expr = e.exprs.pop().unwrap();
+
                         return true;
                     }
                 }
@@ -734,6 +780,7 @@ impl Optimizer<'_> {
 
                     !v.decls.is_empty()
                 }
+
                 Some(Stmt::Decl(Decl::Fn(f))) => !f.ident.is_dummy(),
                 Some(Stmt::Expr(s)) if s.expr.is_invalid() => false,
 
@@ -757,6 +804,7 @@ impl Optimizer<'_> {
                     Expr::Seq(s) => {
                         new.extend(s.exprs);
                     }
+
                     _ => new.push(e),
                 }
             }
@@ -770,6 +818,7 @@ impl Optimizer<'_> {
 
         if self.data.scopes.get(&self.ctx.scope).unwrap().has_eval_call {
             log_abort!("sequences: Eval call");
+
             return;
         }
 
@@ -789,6 +838,7 @@ impl Optimizer<'_> {
 
         if !self.options.sequences() && !self.options.collapse_vars && !e.span.is_dummy() {
             log_abort!("sequences: Disabled && no mark");
+
             return;
         }
 
@@ -853,31 +903,40 @@ impl Optimizer<'_> {
                                                      initializer uses the previous declaration of \
                                                      the variable"
                                                 );
+
                                                 break;
                                             }
 
                                             if let Some(a_init) = av.init.take() {
                                                 let b_seq = b_init.force_seq();
+
                                                 b_seq.exprs.insert(0, a_init);
 
                                                 self.changed = true;
+
                                                 report_change!(
                                                     "Moving initializer sequentially as they have \
                                                      a same name"
                                                 );
+
                                                 av.name.take();
+
                                                 continue;
                                             } else {
                                                 self.changed = true;
+
                                                 report_change!(
                                                     "Dropping the previous var declaration of {} \
                                                      which does not have an initializer",
                                                     an.id
                                                 );
+
                                                 av.name.take();
+
                                                 continue;
                                             }
                                         }
+
                                         None => {
                                             // As variable name is same, we can move initializer
 
@@ -890,12 +949,16 @@ impl Optimizer<'_> {
                                             //
                                             // prints 5
                                             bv.init = av.init.take();
+
                                             self.changed = true;
+
                                             report_change!(
                                                 "Moving initializer to the next variable \
                                                  declaration as they have the same name"
                                             );
+
                                             av.name.take();
+
                                             continue;
                                         }
                                     }
@@ -911,21 +974,26 @@ impl Optimizer<'_> {
                             Some(b) => {
                                 if self.merge_sequential_expr(a, b)? {
                                     did_work = true;
+
                                     break;
                                 }
                             }
+
                             None => continue,
                         },
                         Mergable::Expr(b) => {
                             if self.merge_sequential_expr(a, b)? {
                                 did_work = true;
+
                                 break;
                             }
                         }
+
                         Mergable::FnDecl(..) => continue,
                         Mergable::Drop => {
                             if self.drop_mergable_seq(a)? {
                                 did_work = true;
+
                                 break;
                             }
                         }
@@ -957,6 +1025,7 @@ impl Optimizer<'_> {
                                 break;
                             }
                         }
+
                         Mergable::Expr(Expr::Assign(a)) => {
                             if let Some(a) = a.left.as_simple() {
                                 if !self.is_simple_assign_target_skippable_for_seq(None, a) {
@@ -986,6 +1055,7 @@ impl Optimizer<'_> {
                                 }
                             }
                         }
+
                         Mergable::Expr(e2) => {
                             if !self.is_skippable_for_seq(Some(a), e2) {
                                 break;
@@ -1041,6 +1111,7 @@ impl Optimizer<'_> {
 
                 true
             }
+
             Pat::Rest(p) => {
                 if !self.is_pat_skippable_for_seq(a, &p.arg) {
                     return false;
@@ -1048,6 +1119,7 @@ impl Optimizer<'_> {
 
                 true
             }
+
             Pat::Object(p) => {
                 for prop in &p.props {
                     match prop {
@@ -1062,6 +1134,7 @@ impl Optimizer<'_> {
                                 return false;
                             }
                         }
+
                         ObjectPatProp::Assign(AssignPatProp { .. }) => return false,
                         ObjectPatProp::Rest(RestPat { arg, .. }) => {
                             if !self.is_pat_skippable_for_seq(a, arg) {
@@ -1073,6 +1146,7 @@ impl Optimizer<'_> {
 
                 true
             }
+
             Pat::Assign(..) => false,
             Pat::Expr(e) => self.is_skippable_for_seq(a, e),
         }
@@ -1113,12 +1187,15 @@ impl Optimizer<'_> {
                 Mergable::Var(a) => {
                     if is_ident_used_by(e.to_id(), &a.init) {
                         log_abort!("ident used by a (var)");
+
                         return false;
                     }
                 }
+
                 Mergable::Expr(a) => {
                     if is_ident_used_by(e.to_id(), &**a) {
                         log_abort!("ident used by a (expr)");
+
                         return false;
                     }
                 }
@@ -1128,6 +1205,7 @@ impl Optimizer<'_> {
                     // just to be safe, and we may remove this check in future.
                     if is_ident_used_by(e.to_id(), &**a) {
                         log_abort!("ident used by a (fn)");
+
                         return false;
                     }
                 }
@@ -1219,6 +1297,7 @@ impl Optimizer<'_> {
     fn is_skippable_for_seq(&self, a: Option<&Mergable>, e: &Expr) -> bool {
         if self.ctx.in_try_block {
             log_abort!("try block");
+
             return false;
         }
 
@@ -1260,10 +1339,12 @@ impl Optimizer<'_> {
 
             Expr::Assign(e) => {
                 let left_id = e.left.as_ident();
+
                 let left_id = match left_id {
                     Some(v) => v,
                     _ => {
                         log_abort!("e.left is not ident");
+
                         return false;
                     }
                 };
@@ -1273,22 +1354,28 @@ impl Optimizer<'_> {
                         Mergable::Var(a) => {
                             if is_ident_used_by(left_id.to_id(), &**a) {
                                 log_abort!("e.left is used by a (var)");
+
                                 return false;
                             }
                         }
+
                         Mergable::Expr(a) => {
                             if is_ident_used_by(left_id.to_id(), &**a) {
                                 log_abort!("e.left is used by a (expr)");
+
                                 return false;
                             }
                         }
+
                         Mergable::FnDecl(a) => {
                             // TODO(kdy1): I'm not sure if this check is required.
                             if is_ident_used_by(left_id.to_id(), &**a) {
                                 log_abort!("e.left is used by a ()");
+
                                 return false;
                             }
                         }
+
                         Mergable::Drop => return false,
                     }
                 }
@@ -1303,16 +1390,19 @@ impl Optimizer<'_> {
 
                 if contains_this_expr(&*e.right) {
                     log_abort!("e.right contains this");
+
                     return false;
                 }
 
                 let used_ids = idents_used_by(&*e.right);
+
                 if used_ids.is_empty() {
                     return true;
                 }
 
                 if used_ids.len() != 1 || !used_ids.contains(&left_id.to_id()) {
                     log_abort!("bad used_ids");
+
                     return false;
                 }
 
@@ -1333,6 +1423,7 @@ impl Optimizer<'_> {
                                     return false;
                                 }
                             }
+
                             Prop::KeyValue(kv) => {
                                 if let PropName::Computed(key) = &kv.key {
                                     if !self.is_skippable_for_seq(a, &key.expr) {
@@ -1344,12 +1435,16 @@ impl Optimizer<'_> {
                                     return false;
                                 }
                             }
+
                             Prop::Assign(_) => {
                                 log_abort!("assign property");
+
                                 return false;
                             }
+
                             _ => {
                                 log_abort!("handler is not implemented for this kind of property");
+
                                 return false;
                             }
                         },
@@ -1365,6 +1460,7 @@ impl Optimizer<'_> {
                 for elem in e.elems.iter().flatten() {
                     if !self.is_skippable_for_seq(a, &elem.expr) {
                         log_abort!("array element");
+
                         return false;
                     }
                 }
@@ -1451,6 +1547,7 @@ impl Optimizer<'_> {
 
                     false
                 }
+
                 OptChainBase::Call(e) => {
                     if e.callee.is_pure_callee(&self.ctx.expr_ctx) {
                         if !self.is_skippable_for_seq(a, &e.callee) {
@@ -1492,19 +1589,24 @@ impl Optimizer<'_> {
         } else {
             return false;
         };
+
         match a {
             Mergable::Expr(a) => {
                 let has_side_effect = match a {
                     Expr::Assign(a) if a.is_simple_assign() => {
                         a.right.may_have_side_effects(&self.ctx.expr_ctx)
                     }
+
                     _ => a.may_have_side_effects(&self.ctx.expr_ctx),
                 };
+
                 if has_side_effect && !usgae.is_fn_local && (usgae.exported || usgae.reassigned) {
                     log_abort!("a (expr) has side effect");
+
                     return false;
                 }
             }
+
             Mergable::Var(a) => {
                 if let Some(init) = &a.init {
                     if init.may_have_side_effects(&self.ctx.expr_ctx)
@@ -1512,10 +1614,12 @@ impl Optimizer<'_> {
                         && (usgae.exported || usgae.reassigned)
                     {
                         log_abort!("a (var) init has side effect");
+
                         return false;
                     }
                 }
             }
+
             Mergable::FnDecl(_) => (),
             Mergable::Drop => return false,
         }
@@ -1534,6 +1638,7 @@ impl Optimizer<'_> {
         #[cfg(feature = "debug")]
         let _tracing = {
             let b_str = dump(&*b, false);
+
             let a = match a {
                 Mergable::Expr(e) => dump(*e, false),
                 Mergable::Var(e) => dump(*e, false),
@@ -1596,6 +1701,7 @@ impl Optimizer<'_> {
 
         match a {
             Mergable::Var(..) | Mergable::FnDecl(..) => {}
+
             Mergable::Expr(a) => {
                 if a.is_ident() {
                     return Ok(false);
@@ -1619,6 +1725,7 @@ impl Optimizer<'_> {
                     return Ok(false);
                 }
             }
+
             Mergable::Drop => return Ok(false),
         }
 
@@ -1632,6 +1739,7 @@ impl Optimizer<'_> {
                         return Ok(false);
                     }
                 }
+
                 Mergable::Expr(a) => match a {
                     Expr::Assign(a) => {
                         // We only inline identifiers
@@ -1670,11 +1778,13 @@ impl Optimizer<'_> {
 
             Expr::Cond(b) => {
                 trace_op!("seq: Try test of cond");
+
                 return self.merge_sequential_expr(a, &mut b.test);
             }
 
             Expr::Unary(b) => {
                 trace_op!("seq: Try arg of unary");
+
                 return self.merge_sequential_expr(a, &mut b.arg);
             }
 
@@ -1682,6 +1792,7 @@ impl Optimizer<'_> {
                 op, left, right, ..
             }) => {
                 trace_op!("seq: Try left of bin");
+
                 if self.merge_sequential_expr(a, left)? {
                     return Ok(true);
                 }
@@ -1695,11 +1806,13 @@ impl Optimizer<'_> {
                 }
 
                 trace_op!("seq: Try right of bin");
+
                 return self.merge_sequential_expr(a, right);
             }
 
             Expr::Member(MemberExpr { obj, prop, .. }) if !prop.is_computed() => {
                 trace_op!("seq: Try object of member");
+
                 return self.merge_sequential_expr(a, obj);
             }
 
@@ -1709,6 +1822,7 @@ impl Optimizer<'_> {
                 ..
             }) => {
                 trace_op!("seq: Try object of member (computed)");
+
                 if self.merge_sequential_expr(a, obj)? {
                     return Ok(true);
                 }
@@ -1723,17 +1837,20 @@ impl Optimizer<'_> {
                 // See https://github.com/swc-project/swc/pull/6509
 
                 let obj_ids = idents_used_by_ignoring_nested(obj);
+
                 let a_ids = match a {
                     Mergable::Var(a) => idents_used_by_ignoring_nested(&a.init),
                     Mergable::Expr(a) => idents_used_by_ignoring_nested(&**a),
                     Mergable::FnDecl(a) => idents_used_by_ignoring_nested(&**a),
                     Mergable::Drop => return Ok(false),
                 };
+
                 if !obj_ids.is_disjoint(&a_ids) {
                     return Ok(false);
                 }
 
                 trace_op!("seq: Try prop of member (computed)");
+
                 return self.merge_sequential_expr(a, &mut c.expr);
             }
 
@@ -1742,6 +1859,7 @@ impl Optimizer<'_> {
                 ..
             }) => {
                 trace_op!("seq: Try prop of member (computed)");
+
                 return self.merge_sequential_expr(a, &mut c.expr);
             }
 
@@ -1760,12 +1878,14 @@ impl Optimizer<'_> {
                                 Err(b_left_expr) => {
                                     if is_pure_undefined(&self.ctx.expr_ctx, &b_left_expr) {
                                         *b = *b_assign.right.take();
+
                                         return Ok(true);
                                     }
 
                                     unreachable!("{b_left_expr:#?}")
                                 }
                             };
+
                             if res? {
                                 return Ok(true);
                             }
@@ -1784,6 +1904,7 @@ impl Optimizer<'_> {
                 }
 
                 trace_op!("seq: Try rhs of assign");
+
                 return self.merge_sequential_expr(a, &mut b_assign.right);
             }
 
@@ -1793,6 +1914,7 @@ impl Optimizer<'_> {
                 }
 
                 let b_left = b_assign.left.as_ident();
+
                 let b_left = if let Some(v) = b_left {
                     v.clone()
                 } else {
@@ -1833,8 +1955,10 @@ impl Optimizer<'_> {
                 match b {
                     Expr::Assign(b) => {
                         trace_op!("seq: Try rhs of assign with op");
+
                         return self.merge_sequential_expr(a, &mut b.right);
                     }
+
                     _ => unreachable!(),
                 }
             }
@@ -1842,6 +1966,7 @@ impl Optimizer<'_> {
             Expr::Array(b) => {
                 for elem in b.elems.iter_mut().flatten() {
                     trace_op!("seq: Try element of array");
+
                     if self.merge_sequential_expr(a, &mut elem.expr)? {
                         return Ok(true);
                     }
@@ -1861,6 +1986,7 @@ impl Optimizer<'_> {
                 ..
             }) => {
                 let is_this_undefined = b_callee.is_ident();
+
                 trace_op!("seq: Try callee of call");
 
                 if let Expr::Member(MemberExpr { obj, .. }) = &**b_callee {
@@ -1886,6 +2012,7 @@ impl Optimizer<'_> {
                                 raw: None,
                             })
                             .into();
+
                             report_change!("injecting zero to preserve `this` in call");
 
                             *b_callee = SeqExpr {
@@ -1905,6 +2032,7 @@ impl Optimizer<'_> {
 
                 for arg in b_args {
                     trace_op!("seq: Try arg of call");
+
                     if self.merge_sequential_expr(a, &mut arg.expr)? {
                         return Ok(true);
                     }
@@ -1923,6 +2051,7 @@ impl Optimizer<'_> {
                 ..
             }) => {
                 trace_op!("seq: Try callee of new");
+
                 if self.merge_sequential_expr(a, b_callee)? {
                     return Ok(true);
                 }
@@ -1974,6 +2103,7 @@ impl Optimizer<'_> {
 
                             return Ok(false);
                         }
+
                         PropOrSpread::Prop(prop) => {
                             // Inline into key
                             let computed = match &mut **prop {
@@ -2000,6 +2130,7 @@ impl Optimizer<'_> {
                                     //
                                     // https://github.com/swc-project/swc/issues/6914
                                     let mut new_b = shorthand.clone().into();
+
                                     if self.merge_sequential_expr(a, &mut new_b)? {
                                         *prop = Box::new(Prop::KeyValue(KeyValueProp {
                                             key: Ident::new_no_ctxt(
@@ -2015,6 +2146,7 @@ impl Optimizer<'_> {
                                         return Ok(false);
                                     }
                                 }
+
                                 Prop::KeyValue(prop) => {
                                     if self.merge_sequential_expr(a, &mut prop.value)? {
                                         return Ok(true);
@@ -2024,6 +2156,7 @@ impl Optimizer<'_> {
                                         return Ok(false);
                                     }
                                 }
+
                                 _ => {}
                             }
                         }
@@ -2045,6 +2178,7 @@ impl Optimizer<'_> {
                     crate::debug::dump(&*b, false)
                 );
             }
+
             Mergable::Expr(a) => {
                 trace_op!(
                     "sequences: Trying to merge `{}` => `{}`",
@@ -2060,6 +2194,7 @@ impl Optimizer<'_> {
                     crate::debug::dump(&*b, false)
                 );
             }
+
             Mergable::Drop => return Ok(false),
         }
 
@@ -2111,7 +2246,9 @@ impl Optimizer<'_> {
                             abort: false,
                             in_abort: false,
                         };
+
                         b.visit_with(&mut v);
+
                         if v.expr_usage != 1 || v.pat_usage != 0 || v.abort {
                             log_abort!(
                                 "sequences: Aborting merging of an update expression because of \
@@ -2125,6 +2262,7 @@ impl Optimizer<'_> {
                         }
 
                         let mut replaced = false;
+
                         replace_expr(b, |e| {
                             if replaced {
                                 return;
@@ -2140,6 +2278,7 @@ impl Optimizer<'_> {
                                         arg: orig_expr.clone().into(),
                                     }
                                     .into();
+
                                     return;
                                 }
                             }
@@ -2148,18 +2287,22 @@ impl Optimizer<'_> {
                                 if let Expr::Ident(arg) = &*e.arg {
                                     if *op == e.op && arg.to_id() == a_id.to_id() {
                                         e.prefix = true;
+
                                         replaced = true;
                                     }
                                 }
                             }
                         });
+
                         if replaced {
                             self.changed = true;
+
                             report_change!(
                                 "sequences: Merged update expression into another expression",
                             );
 
                             a.take();
+
                             return Ok(true);
                         }
                     }
@@ -2186,7 +2329,9 @@ impl Optimizer<'_> {
                             abort: false,
                             in_abort: false,
                         };
+
                         b.visit_with(&mut v);
+
                         if v.expr_usage != 1 || v.pat_usage != 0 || v.abort {
                             log_abort!(
                                 "sequences: Aborting merging of an update expression because of \
@@ -2200,6 +2345,7 @@ impl Optimizer<'_> {
                         }
 
                         let mut replaced = false;
+
                         replace_expr(b, |e| {
                             if replaced {
                                 return;
@@ -2215,6 +2361,7 @@ impl Optimizer<'_> {
                                         arg: orig_expr.clone().into(),
                                     }
                                     .into();
+
                                     return;
                                 }
                             }
@@ -2223,19 +2370,23 @@ impl Optimizer<'_> {
                                 if let Expr::Ident(arg) = &*e.arg {
                                     if *op == e.op && arg.to_id() == a_id.to_id() {
                                         e.prefix = true;
+
                                         replaced = true;
                                     }
                                 }
                             }
                         });
+
                         if replaced {
                             self.changed = true;
+
                             report_change!(
                                 "sequences: Merged prefix update expression into another \
                                  expression",
                             );
 
                             a.take();
+
                             return Ok(true);
                         }
                     }
@@ -2251,9 +2402,11 @@ impl Optimizer<'_> {
     /// Handle where a: [Expr::Assign] or [Mergable::Var]
     fn replace_seq_assignment(&mut self, a: &mut Mergable, b: &mut Expr) -> Result<bool, ()> {
         let mut can_remove = false;
+
         let mut can_take_init = false;
 
         let mut right_val;
+
         let (left_id, a_right) = match a {
             Mergable::Expr(a) => {
                 match a {
@@ -2268,6 +2421,7 @@ impl Optimizer<'_> {
                             Some(v) => v.id.clone(),
                             None => {
                                 log_abort!("sequences: Aborting because lhs is not an id");
+
                                 return Ok(false);
                             }
                         };
@@ -2288,6 +2442,7 @@ impl Optimizer<'_> {
                                     left_id.sym,
                                     left_id.ctxt
                                 );
+
                                 return Ok(false);
                             }
 
@@ -2305,6 +2460,7 @@ impl Optimizer<'_> {
 
                         (left_id, Some(right))
                     }
+
                     _ => return Ok(false),
                 }
             }
@@ -2380,6 +2536,7 @@ impl Optimizer<'_> {
             if a_right.is_this() || a_right.is_ident_ref_to("arguments") {
                 return Ok(false);
             }
+
             if contains_arguments(&**a_right) {
                 return Ok(false);
             }
@@ -2394,6 +2551,7 @@ impl Optimizer<'_> {
                             // 0
                             if !force_drop && usage.usage_count == 1 && !usage.reassigned {
                                 report_change!("sequences: Dropping inlined variable");
+
                                 a.name.take();
                             }
                         }
@@ -2414,6 +2572,7 @@ impl Optimizer<'_> {
                     }
                     .unwrap_or_else(|| Expr::undefined(DUMMY_SP))
                 }
+
                 Mergable::Expr(a) => {
                     if can_remove || force_drop {
                         if let Expr::Assign(e) = a {
@@ -2454,9 +2613,11 @@ impl Optimizer<'_> {
                 if let Some(b_left) = b.left.as_ident() {
                     if b_left.to_id() == left_id.to_id() {
                         report_change!("sequences: Merged assignment into another assignment");
+
                         self.changed = true;
 
                         let mut a_expr = take_a(a, true, false);
+
                         let a_expr = self.ignore_return_value(&mut a_expr);
 
                         if let Some(a) = a_expr {
@@ -2466,10 +2627,12 @@ impl Optimizer<'_> {
                             }
                             .into();
                         }
+
                         return Ok(true);
                     }
                 }
             }
+
             Expr::Assign(b) => {
                 if let Some(b_left) = b.left.as_ident() {
                     let a_op = match a {
@@ -2484,9 +2647,11 @@ impl Optimizer<'_> {
                         .vars
                         .get(&left_id.to_id())
                         .and_then(|info| info.merged_var_type);
+
                     let Some(a_type) = a_type else {
                         return Ok(false);
                     };
+
                     let b_type = b.right.get_type();
 
                     if let Some(a_op) = a_op {
@@ -2496,6 +2661,7 @@ impl Optimizer<'_> {
                                     report_change!(
                                         "sequences: Merged assignment into another (op) assignment"
                                     );
+
                                     self.changed = true;
 
                                     b.op = a_op;
@@ -2509,6 +2675,7 @@ impl Optimizer<'_> {
                                         right: b.right.take(),
                                     }
                                     .into();
+
                                     return Ok(true);
                                 }
                             }
@@ -2516,6 +2683,7 @@ impl Optimizer<'_> {
                     }
                 }
             }
+
             _ => {}
         }
 
@@ -2528,7 +2696,9 @@ impl Optimizer<'_> {
                 abort: false,
                 in_abort: false,
             };
+
             b.visit_with(&mut v);
+
             if v.expr_usage != 1 || v.pat_usage != 0 || v.abort {
                 log_abort!(
                     "sequences: Aborting because of usage counts ({}{:?}, ref = {}, pat = {})",
@@ -2543,6 +2713,7 @@ impl Optimizer<'_> {
         }
 
         self.changed = true;
+
         report_change!(
             "sequences: Inlining sequential expressions (`{}{:?}`)",
             left_id.sym,
@@ -2555,6 +2726,7 @@ impl Optimizer<'_> {
 
         if can_remove {
             report_change!("sequences: Removed variable ({})", left_id);
+
             self.vars.removed.insert(left_id.to_id());
         }
 
@@ -2580,12 +2752,15 @@ impl Optimizer<'_> {
         if let Some(a_id) = a.id() {
             match a {
                 Mergable::Expr(Expr::Assign(AssignExpr { op: op!("="), .. })) => {}
+
                 Mergable::Expr(Expr::Assign(..)) => {
                     let used_by_b = idents_used_by(&*b.right);
+
                     if used_by_b.contains(&a_id) {
                         return Ok(true);
                     }
                 }
+
                 _ => {}
             }
         }
@@ -2612,6 +2787,7 @@ impl Visit for UsageCounter<'_> {
         if self.target.sym == i.sym && self.target.ctxt == i.ctxt {
             if self.in_abort {
                 self.abort = true;
+
                 return;
             }
 
@@ -2628,44 +2804,62 @@ impl Visit for UsageCounter<'_> {
 
         if let MemberProp::Computed(c) = &e.prop {
             let old = self.in_lhs;
+
             self.in_lhs = false;
+
             c.expr.visit_with(self);
+
             self.in_lhs = old;
         }
     }
 
     fn visit_update_expr(&mut self, e: &UpdateExpr) {
         let old_in_abort = self.in_abort;
+
         self.in_abort = true;
+
         e.visit_children_with(self);
+
         self.in_abort = old_in_abort;
     }
 
     fn visit_await_expr(&mut self, e: &AwaitExpr) {
         let old_in_abort = self.in_abort;
+
         self.in_abort = true;
+
         e.visit_children_with(self);
+
         self.in_abort = old_in_abort;
     }
 
     fn visit_yield_expr(&mut self, e: &YieldExpr) {
         let old_in_abort = self.in_abort;
+
         self.in_abort = true;
+
         e.visit_children_with(self);
+
         self.in_abort = old_in_abort;
     }
 
     fn visit_pat(&mut self, p: &Pat) {
         let old = self.in_lhs;
+
         self.in_lhs = true;
+
         p.visit_children_with(self);
+
         self.in_lhs = old;
     }
 
     fn visit_assign_target(&mut self, p: &AssignTarget) {
         let old = self.in_lhs;
+
         self.in_lhs = true;
+
         p.visit_children_with(self);
+
         self.in_lhs = old;
     }
 
@@ -2678,8 +2872,11 @@ impl Visit for UsageCounter<'_> {
     fn visit_super_prop_expr(&mut self, e: &SuperPropExpr) {
         if let SuperProp::Computed(c) = &e.prop {
             let old = self.in_lhs;
+
             self.in_lhs = false;
+
             c.expr.visit_with(self);
+
             self.in_lhs = old;
         }
     }

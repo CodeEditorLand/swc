@@ -20,6 +20,7 @@ macro_rules! impl_enum_body {
             $(
                 $E::$v(inner) => {
                     let val = crate::ast::ToCode::to_code(inner, $cx);
+
                     syn::parse_quote!(
                         swc_core::ecma::ast::$E::$v(#val)
                     )
@@ -102,6 +103,7 @@ where
 {
     fn to_code(&self, cx: &Ctx) -> syn::Expr {
         let inner = (**self).to_code(cx);
+
         parse_quote!(Box::new(#inner))
     }
 }
@@ -118,6 +120,7 @@ where
 
                 parse_quote!(Some(#inner))
             }
+
             None => parse_quote!(None),
         }
     }
@@ -187,11 +190,14 @@ where
 {
     fn to_code(&self, cx: &Ctx) -> syn::Expr {
         let len = self.len();
+
         let var_stmt: syn::Stmt = parse_quote!(let mut items = Vec::with_capacity(#len););
+
         let mut stmts = vec![var_stmt];
 
         for item in self {
             let item = item.to_code(cx);
+
             stmts.push(syn::Stmt::Expr(
                 parse_quote!(items.push(#item)),
                 Some(Default::default()),

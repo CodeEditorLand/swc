@@ -10,7 +10,9 @@ where
     #[inline]
     pub(super) fn with_ctx(&mut self, ctx: Ctx) -> WithCtx<W> {
         let orig_ctx = self.ctx;
+
         self.ctx = ctx;
+
         WithCtx {
             orig_ctx,
             inner: self,

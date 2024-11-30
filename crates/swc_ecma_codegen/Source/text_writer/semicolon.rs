@@ -63,6 +63,7 @@ impl<W: WriteJs> WriteJs for OmitTrailingSemi<W> {
 
     fn write_semi(&mut self, span: Option<Span>) -> Result {
         self.pending_semi = Some(span.unwrap_or(DUMMY_SP));
+
         Ok(())
     }
 
@@ -93,8 +94,10 @@ impl<W: WriteJs> WriteJs for OmitTrailingSemi<W> {
     fn commit_pending_semi(&mut self) -> Result {
         if let Some(span) = self.pending_semi {
             self.inner.write_semi(Some(span))?;
+
             self.pending_semi = None;
         }
+
         Ok(())
     }
 

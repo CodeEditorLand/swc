@@ -25,6 +25,7 @@ pub fn at_rule_no_unknown(
         .into_iter()
         .map(NamePattern::try_from)
         .collect::<Result<_, _>>()?;
+
     Ok(visitor_rule(
         ctx.reaction(),
         AtRuleNoUnknown { ctx, ignored },

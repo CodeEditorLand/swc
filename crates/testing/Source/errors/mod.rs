@@ -14,6 +14,7 @@ struct MultiEmitter {
 impl Emitter for MultiEmitter {
     fn emit(&mut self, db: &DiagnosticBuilder<'_>) {
         self.a.emit(db);
+
         self.b.emit(db);
     }
 }

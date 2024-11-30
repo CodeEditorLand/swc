@@ -5,6 +5,7 @@ use wasmer::{Memory, MemoryView, StoreMut, TypedFunction, WasmPtr};
 #[tracing::instrument(level = "info", skip_all)]
 pub fn copy_bytes_into_host(memory: &MemoryView, bytes_ptr: i32, bytes_ptr_len: i32) -> Vec<u8> {
     let ptr: WasmPtr<u8> = WasmPtr::new(bytes_ptr as _);
+
     let values = ptr
         .slice(memory, bytes_ptr_len as u32)
         .expect("Should able to get a slice from memory view");
@@ -28,6 +29,7 @@ where
     let serialized_len = serialized_bytes.as_ptr().1;
 
     let ptr_start = get_allocated_ptr(store, serialized_len);
+
     let ptr_start_size: u64 = ptr_start as u64;
 
     // Note: it's important to get a view from memory _after_ alloc completes

@@ -870,12 +870,15 @@ impl<V: ?Sized + Visit> VisitWith<V> for Child {
             Child::DocumentType { 0: _field_0 } => {
                 <DocumentType as VisitWith<V>>::visit_with(_field_0, visitor);
             }
+
             Child::Element { 0: _field_0 } => {
                 <Element as VisitWith<V>>::visit_with(_field_0, visitor);
             }
+
             Child::Text { 0: _field_0 } => {
                 <Text as VisitWith<V>>::visit_with(_field_0, visitor);
             }
+
             Child::Comment { 0: _field_0 } => {
                 <Comment as VisitWith<V>>::visit_with(_field_0, visitor);
             }
@@ -958,7 +961,9 @@ impl<V: ?Sized + Visit> VisitWith<V> for DocumentMode {
     fn visit_children_with(&self, visitor: &mut V) {
         match self {
             DocumentMode::NoQuirks => {}
+
             DocumentMode::LimitedQuirks => {}
+
             DocumentMode::Quirks => {}
         }
     }
@@ -1045,10 +1050,15 @@ impl<V: ?Sized + Visit> VisitWith<V> for Namespace {
     fn visit_children_with(&self, visitor: &mut V) {
         match self {
             Namespace::HTML => {}
+
             Namespace::MATHML => {}
+
             Namespace::SVG => {}
+
             Namespace::XLINK => {}
+
             Namespace::XML => {}
+
             Namespace::XMLNS => {}
         }
     }
@@ -1062,6 +1072,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Raw {
     fn visit_children_with(&self, visitor: &mut V) {
         match self {
             Raw::Same => {}
+
             Raw::Atom { 0: _field_0 } => {
                 <swc_atoms::Atom as VisitWith<V>>::visit_with(_field_0, visitor);
             }
@@ -1118,6 +1129,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Token {
                     <Option<swc_atoms::Atom> as VisitWith<V>>::visit_with(raw, visitor)
                 };
             }
+
             Token::StartTag {
                 tag_name,
                 raw_tag_name,
@@ -1134,6 +1146,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Token {
                     <Vec<AttributeToken> as VisitWith<V>>::visit_with(attributes, visitor)
                 };
             }
+
             Token::EndTag {
                 tag_name,
                 raw_tag_name,
@@ -1150,6 +1163,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Token {
                     <Vec<AttributeToken> as VisitWith<V>>::visit_with(attributes, visitor)
                 };
             }
+
             Token::Comment { data, raw } => {
                 {
                     <swc_atoms::Atom as VisitWith<V>>::visit_with(data, visitor)
@@ -1158,11 +1172,13 @@ impl<V: ?Sized + Visit> VisitWith<V> for Token {
                     <Option<swc_atoms::Atom> as VisitWith<V>>::visit_with(raw, visitor)
                 };
             }
+
             Token::Character { value, raw } => {
                 {
                     <Option<Raw> as VisitWith<V>>::visit_with(raw, visitor)
                 };
             }
+
             Token::Eof => {}
         }
     }
@@ -1317,12 +1333,14 @@ where
     #[inline]
     fn visit_with(&self, visitor: &mut V) {
         let v = <T as VisitWith<V>>::visit_with(&**self, visitor);
+
         v
     }
 
     #[inline]
     fn visit_children_with(&self, visitor: &mut V) {
         let v = <T as VisitWith<V>>::visit_children_with(&**self, visitor);
+
         v
     }
 }
@@ -1334,12 +1352,14 @@ where
     #[inline]
     fn visit_with(&self, visitor: &mut V) {
         let v = <[T] as VisitWith<V>>::visit_with(self, visitor);
+
         v
     }
 
     #[inline]
     fn visit_children_with(&self, visitor: &mut V) {
         let v = <[T] as VisitWith<V>>::visit_children_with(self, visitor);
+
         v
     }
 }
@@ -2036,6 +2056,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_attribute(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_attribute(visitor, node, __ast_path)
             }
@@ -2052,6 +2073,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_attribute_token(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_attribute_token(visitor, node, __ast_path)
             }
@@ -2068,6 +2090,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_attribute_tokens(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_attribute_tokens(visitor, node, __ast_path)
             }
@@ -2084,6 +2107,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_attributes(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_attributes(visitor, node, __ast_path)
             }
@@ -2096,6 +2120,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_child(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_child(visitor, node, __ast_path)
             }
@@ -2112,6 +2137,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_childs(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_childs(visitor, node, __ast_path)
             }
@@ -2128,6 +2154,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_comment(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_comment(visitor, node, __ast_path)
             }
@@ -2144,6 +2171,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_document(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_document(visitor, node, __ast_path)
             }
@@ -2160,6 +2188,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_document_fragment(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_document_fragment(visitor, node, __ast_path)
             }
@@ -2176,6 +2205,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_document_mode(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_document_mode(visitor, node, __ast_path)
             }
@@ -2192,6 +2222,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_document_type(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_document_type(visitor, node, __ast_path)
             }
@@ -2208,6 +2239,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_element(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_element(visitor, node, __ast_path)
             }
@@ -2224,6 +2256,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_namespace(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_namespace(visitor, node, __ast_path)
             }
@@ -2240,6 +2273,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_opt_atom(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_opt_atom(visitor, node, __ast_path)
             }
@@ -2256,6 +2290,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_opt_document_fragment(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_opt_document_fragment(visitor, node, __ast_path)
             }
@@ -2272,6 +2307,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_opt_namespace(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_opt_namespace(visitor, node, __ast_path)
             }
@@ -2288,6 +2324,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_opt_raw(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_opt_raw(visitor, node, __ast_path)
             }
@@ -2332,6 +2369,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_token(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_token(visitor, node, __ast_path)
             }
@@ -2348,6 +2386,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitAstPath::visit_token_and_span(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitAstPath::visit_token_and_span(visitor, node, __ast_path)
             }
@@ -2858,6 +2897,7 @@ impl<V: ?Sized + VisitAstPath> VisitWithAstPath<V> for Child {
                     &mut *__ast_path,
                 );
             }
+
             Child::Element { 0: _field_0 } => {
                 let mut __ast_path = __ast_path.with_guard(AstParentNodeRef::Child(
                     self,
@@ -2869,6 +2909,7 @@ impl<V: ?Sized + VisitAstPath> VisitWithAstPath<V> for Child {
                     &mut *__ast_path,
                 );
             }
+
             Child::Text { 0: _field_0 } => {
                 let mut __ast_path = __ast_path.with_guard(AstParentNodeRef::Child(
                     self,
@@ -2880,6 +2921,7 @@ impl<V: ?Sized + VisitAstPath> VisitWithAstPath<V> for Child {
                     &mut *__ast_path,
                 );
             }
+
             Child::Comment { 0: _field_0 } => {
                 let mut __ast_path = __ast_path.with_guard(AstParentNodeRef::Child(
                     self,
@@ -3074,7 +3116,9 @@ impl<V: ?Sized + VisitAstPath> VisitWithAstPath<V> for DocumentMode {
     ) {
         match self {
             DocumentMode::NoQuirks => {}
+
             DocumentMode::LimitedQuirks => {}
+
             DocumentMode::Quirks => {}
         }
     }
@@ -3279,10 +3323,15 @@ impl<V: ?Sized + VisitAstPath> VisitWithAstPath<V> for Namespace {
     ) {
         match self {
             Namespace::HTML => {}
+
             Namespace::MATHML => {}
+
             Namespace::SVG => {}
+
             Namespace::XLINK => {}
+
             Namespace::XML => {}
+
             Namespace::XMLNS => {}
         }
     }
@@ -3306,6 +3355,7 @@ impl<V: ?Sized + VisitAstPath> VisitWithAstPath<V> for Raw {
     ) {
         match self {
             Raw::Same => {}
+
             Raw::Atom { 0: _field_0 } => {
                 let mut __ast_path = __ast_path
                     .with_guard(AstParentNodeRef::Raw(self, self::fields::RawField::Atom));
@@ -3440,6 +3490,7 @@ impl<V: ?Sized + VisitAstPath> VisitWithAstPath<V> for Token {
                     )
                 };
             }
+
             Token::StartTag {
                 tag_name,
                 raw_tag_name,
@@ -3484,6 +3535,7 @@ impl<V: ?Sized + VisitAstPath> VisitWithAstPath<V> for Token {
                     )
                 };
             }
+
             Token::EndTag {
                 tag_name,
                 raw_tag_name,
@@ -3528,6 +3580,7 @@ impl<V: ?Sized + VisitAstPath> VisitWithAstPath<V> for Token {
                     )
                 };
             }
+
             Token::Comment { data, raw } => {
                 let mut __ast_path = __ast_path.with_guard(AstParentNodeRef::Token(
                     self,
@@ -3554,6 +3607,7 @@ impl<V: ?Sized + VisitAstPath> VisitWithAstPath<V> for Token {
                     )
                 };
             }
+
             Token::Character { value, raw } => {
                 let mut __ast_path = __ast_path.with_guard(AstParentNodeRef::Token(
                     self,
@@ -3569,6 +3623,7 @@ impl<V: ?Sized + VisitAstPath> VisitWithAstPath<V> for Token {
                     )
                 };
             }
+
             Token::Eof => {}
         }
     }
@@ -3796,6 +3851,7 @@ impl<V: ?Sized + VisitAstPath> VisitWithAstPath<V> for Option<Namespace> {
             Some(inner) => {
                 <Namespace as VisitWithAstPath<V>>::visit_with_ast_path(inner, visitor, __ast_path)
             }
+
             None => {}
         }
     }
@@ -3823,6 +3879,7 @@ impl<V: ?Sized + VisitAstPath> VisitWithAstPath<V> for Option<Raw> {
             Some(inner) => {
                 <Raw as VisitWithAstPath<V>>::visit_with_ast_path(inner, visitor, __ast_path)
             }
+
             None => {}
         }
     }
@@ -3863,6 +3920,7 @@ where
         __ast_path: &mut AstNodePath<'r>,
     ) {
         let v = <T as VisitWithAstPath<V>>::visit_with_ast_path(&**self, visitor, __ast_path);
+
         v
     }
 
@@ -3874,6 +3932,7 @@ where
     ) {
         let v =
             <T as VisitWithAstPath<V>>::visit_children_with_ast_path(&**self, visitor, __ast_path);
+
         v
     }
 }
@@ -3891,6 +3950,7 @@ where
         __ast_path: &mut AstNodePath<'r>,
     ) {
         let v = <[T] as VisitWithAstPath<V>>::visit_with_ast_path(self, visitor, __ast_path);
+
         v
     }
 
@@ -3902,6 +3962,7 @@ where
     ) {
         let v =
             <[T] as VisitWithAstPath<V>>::visit_children_with_ast_path(self, visitor, __ast_path);
+
         v
     }
 }
@@ -4391,6 +4452,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMut::visit_mut_document_fragment(visitor, node)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMut::visit_mut_document_fragment(visitor, node)
             }
@@ -4443,6 +4505,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMut::visit_mut_opt_document_fragment(visitor, node)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMut::visit_mut_opt_document_fragment(visitor, node)
             }
@@ -4787,12 +4850,15 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Child {
             Child::DocumentType { 0: _field_0 } => {
                 <DocumentType as VisitMutWith<V>>::visit_mut_with(_field_0, visitor);
             }
+
             Child::Element { 0: _field_0 } => {
                 <Element as VisitMutWith<V>>::visit_mut_with(_field_0, visitor);
             }
+
             Child::Text { 0: _field_0 } => {
                 <Text as VisitMutWith<V>>::visit_mut_with(_field_0, visitor);
             }
+
             Child::Comment { 0: _field_0 } => {
                 <Comment as VisitMutWith<V>>::visit_mut_with(_field_0, visitor);
             }
@@ -4875,7 +4941,9 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for DocumentMode {
     fn visit_mut_children_with(&mut self, visitor: &mut V) {
         match self {
             DocumentMode::NoQuirks => {}
+
             DocumentMode::LimitedQuirks => {}
+
             DocumentMode::Quirks => {}
         }
     }
@@ -4962,10 +5030,15 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Namespace {
     fn visit_mut_children_with(&mut self, visitor: &mut V) {
         match self {
             Namespace::HTML => {}
+
             Namespace::MATHML => {}
+
             Namespace::SVG => {}
+
             Namespace::XLINK => {}
+
             Namespace::XML => {}
+
             Namespace::XMLNS => {}
         }
     }
@@ -4979,6 +5052,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Raw {
     fn visit_mut_children_with(&mut self, visitor: &mut V) {
         match self {
             Raw::Same => {}
+
             Raw::Atom { 0: _field_0 } => {
                 <swc_atoms::Atom as VisitMutWith<V>>::visit_mut_with(_field_0, visitor);
             }
@@ -5035,6 +5109,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Token {
                     <Option<swc_atoms::Atom> as VisitMutWith<V>>::visit_mut_with(raw, visitor)
                 };
             }
+
             Token::StartTag {
                 tag_name,
                 raw_tag_name,
@@ -5054,6 +5129,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Token {
                     <Vec<AttributeToken> as VisitMutWith<V>>::visit_mut_with(attributes, visitor)
                 };
             }
+
             Token::EndTag {
                 tag_name,
                 raw_tag_name,
@@ -5073,6 +5149,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Token {
                     <Vec<AttributeToken> as VisitMutWith<V>>::visit_mut_with(attributes, visitor)
                 };
             }
+
             Token::Comment { data, raw } => {
                 {
                     <swc_atoms::Atom as VisitMutWith<V>>::visit_mut_with(data, visitor)
@@ -5081,11 +5158,13 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Token {
                     <Option<swc_atoms::Atom> as VisitMutWith<V>>::visit_mut_with(raw, visitor)
                 };
             }
+
             Token::Character { value, raw } => {
                 {
                     <Option<Raw> as VisitMutWith<V>>::visit_mut_with(raw, visitor)
                 };
             }
+
             Token::Eof => {}
         }
     }
@@ -5240,12 +5319,14 @@ where
     #[inline]
     fn visit_mut_with(&mut self, visitor: &mut V) {
         let v = <T as VisitMutWith<V>>::visit_mut_with(&mut **self, visitor);
+
         v
     }
 
     #[inline]
     fn visit_mut_children_with(&mut self, visitor: &mut V) {
         let v = <T as VisitMutWith<V>>::visit_mut_children_with(&mut **self, visitor);
+
         v
     }
 }
@@ -5786,6 +5867,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_atom(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_atom(visitor, node, __ast_path)
             }
@@ -5798,6 +5880,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_attribute(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_attribute(visitor, node, __ast_path)
             }
@@ -5814,6 +5897,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_attribute_token(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_attribute_token(visitor, node, __ast_path)
             }
@@ -5830,6 +5914,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_attribute_tokens(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_attribute_tokens(visitor, node, __ast_path)
             }
@@ -5842,6 +5927,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_attributes(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_attributes(visitor, node, __ast_path)
             }
@@ -5854,6 +5940,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_child(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_child(visitor, node, __ast_path)
             }
@@ -5866,6 +5953,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_childs(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_childs(visitor, node, __ast_path)
             }
@@ -5878,6 +5966,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_comment(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_comment(visitor, node, __ast_path)
             }
@@ -5890,6 +5979,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_document(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_document(visitor, node, __ast_path)
             }
@@ -5906,6 +5996,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_document_fragment(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_document_fragment(visitor, node, __ast_path)
             }
@@ -5918,6 +6009,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_document_mode(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_document_mode(visitor, node, __ast_path)
             }
@@ -5930,6 +6022,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_document_type(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_document_type(visitor, node, __ast_path)
             }
@@ -5942,6 +6035,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_element(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_element(visitor, node, __ast_path)
             }
@@ -5954,6 +6048,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_namespace(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_namespace(visitor, node, __ast_path)
             }
@@ -5970,6 +6065,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_opt_atom(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_opt_atom(visitor, node, __ast_path)
             }
@@ -5986,6 +6082,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_opt_document_fragment(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_opt_document_fragment(visitor, node, __ast_path)
             }
@@ -6002,6 +6099,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_opt_namespace(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_opt_namespace(visitor, node, __ast_path)
             }
@@ -6014,6 +6112,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_opt_raw(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_opt_raw(visitor, node, __ast_path)
             }
@@ -6026,6 +6125,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_raw(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_raw(visitor, node, __ast_path)
             }
@@ -6038,6 +6138,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_span(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_span(visitor, node, __ast_path)
             }
@@ -6050,6 +6151,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_text(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_text(visitor, node, __ast_path)
             }
@@ -6062,6 +6164,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_token(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_token(visitor, node, __ast_path)
             }
@@ -6074,6 +6177,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 VisitMutAstPath::visit_mut_token_and_span(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 VisitMutAstPath::visit_mut_token_and_span(visitor, node, __ast_path)
             }
@@ -6488,6 +6592,7 @@ impl<V: ?Sized + VisitMutAstPath> VisitMutWithAstPath<V> for Child {
                     &mut *__ast_path,
                 );
             }
+
             Child::Element { 0: _field_0 } => {
                 let mut __ast_path =
                     __ast_path.with_guard(AstParentKind::Child(self::fields::ChildField::Element));
@@ -6497,6 +6602,7 @@ impl<V: ?Sized + VisitMutAstPath> VisitMutWithAstPath<V> for Child {
                     &mut *__ast_path,
                 );
             }
+
             Child::Text { 0: _field_0 } => {
                 let mut __ast_path =
                     __ast_path.with_guard(AstParentKind::Child(self::fields::ChildField::Text));
@@ -6506,6 +6612,7 @@ impl<V: ?Sized + VisitMutAstPath> VisitMutWithAstPath<V> for Child {
                     &mut *__ast_path,
                 );
             }
+
             Child::Comment { 0: _field_0 } => {
                 let mut __ast_path =
                     __ast_path.with_guard(AstParentKind::Child(self::fields::ChildField::Comment));
@@ -6653,7 +6760,9 @@ impl<V: ?Sized + VisitMutAstPath> VisitMutWithAstPath<V> for DocumentMode {
     fn visit_mut_children_with_ast_path(&mut self, visitor: &mut V, __ast_path: &mut AstKindPath) {
         match self {
             DocumentMode::NoQuirks => {}
+
             DocumentMode::LimitedQuirks => {}
+
             DocumentMode::Quirks => {}
         }
     }
@@ -6820,10 +6929,15 @@ impl<V: ?Sized + VisitMutAstPath> VisitMutWithAstPath<V> for Namespace {
     fn visit_mut_children_with_ast_path(&mut self, visitor: &mut V, __ast_path: &mut AstKindPath) {
         match self {
             Namespace::HTML => {}
+
             Namespace::MATHML => {}
+
             Namespace::SVG => {}
+
             Namespace::XLINK => {}
+
             Namespace::XML => {}
+
             Namespace::XMLNS => {}
         }
     }
@@ -6839,6 +6953,7 @@ impl<V: ?Sized + VisitMutAstPath> VisitMutWithAstPath<V> for Raw {
     fn visit_mut_children_with_ast_path(&mut self, visitor: &mut V, __ast_path: &mut AstKindPath) {
         match self {
             Raw::Same => {}
+
             Raw::Atom { 0: _field_0 } => {
                 let mut __ast_path =
                     __ast_path.with_guard(AstParentKind::Raw(self::fields::RawField::Atom));
@@ -6949,6 +7064,7 @@ impl<V: ?Sized + VisitMutAstPath> VisitMutWithAstPath<V> for Token {
                     )
                 };
             }
+
             Token::StartTag {
                 tag_name,
                 raw_tag_name,
@@ -6986,6 +7102,7 @@ impl<V: ?Sized + VisitMutAstPath> VisitMutWithAstPath<V> for Token {
                     )
                 };
             }
+
             Token::EndTag {
                 tag_name,
                 raw_tag_name,
@@ -7023,6 +7140,7 @@ impl<V: ?Sized + VisitMutAstPath> VisitMutWithAstPath<V> for Token {
                     )
                 };
             }
+
             Token::Comment { data, raw } => {
                 let mut __ast_path =
                     __ast_path.with_guard(AstParentKind::Token(self::fields::TokenField::Comment));
@@ -7045,6 +7163,7 @@ impl<V: ?Sized + VisitMutAstPath> VisitMutWithAstPath<V> for Token {
                     )
                 };
             }
+
             Token::Character { value, raw } => {
                 let mut __ast_path = __ast_path
                     .with_guard(AstParentKind::Token(self::fields::TokenField::Character));
@@ -7058,6 +7177,7 @@ impl<V: ?Sized + VisitMutAstPath> VisitMutWithAstPath<V> for Token {
                     )
                 };
             }
+
             Token::Eof => {}
         }
     }
@@ -7246,6 +7366,7 @@ impl<V: ?Sized + VisitMutAstPath> VisitMutWithAstPath<V> for Option<Raw> {
             Some(inner) => {
                 <Raw as VisitMutWithAstPath<V>>::visit_mut_with_ast_path(inner, visitor, __ast_path)
             }
+
             None => {}
         }
     }
@@ -7278,6 +7399,7 @@ where
             visitor,
             __ast_path,
         );
+
         v
     }
 
@@ -7288,6 +7410,7 @@ where
             visitor,
             __ast_path,
         );
+
         v
     }
 }
@@ -8125,16 +8248,23 @@ impl<V: ?Sized + Fold> FoldWith<V> for Attribute {
                 raw_value,
             } => {
                 let span = { <swc_common::Span as FoldWith<V>>::fold_with(span, visitor) };
+
                 let namespace =
                     { <Option<Namespace> as FoldWith<V>>::fold_with(namespace, visitor) };
+
                 let prefix =
                     { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(prefix, visitor) };
+
                 let name = { <swc_atoms::Atom as FoldWith<V>>::fold_with(name, visitor) };
+
                 let raw_name =
                     { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(raw_name, visitor) };
+
                 let value = { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(value, visitor) };
+
                 let raw_value =
                     { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(raw_value, visitor) };
+
                 Attribute {
                     span,
                     namespace,
@@ -8164,12 +8294,17 @@ impl<V: ?Sized + Fold> FoldWith<V> for AttributeToken {
                 raw_value,
             } => {
                 let span = { <swc_common::Span as FoldWith<V>>::fold_with(span, visitor) };
+
                 let name = { <swc_atoms::Atom as FoldWith<V>>::fold_with(name, visitor) };
+
                 let raw_name =
                     { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(raw_name, visitor) };
+
                 let value = { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(value, visitor) };
+
                 let raw_value =
                     { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(raw_value, visitor) };
+
                 AttributeToken {
                     span,
                     name,
@@ -8191,18 +8326,25 @@ impl<V: ?Sized + Fold> FoldWith<V> for Child {
         match self {
             Child::DocumentType { 0: _field_0 } => {
                 let _field_0 = <DocumentType as FoldWith<V>>::fold_with(_field_0, visitor);
+
                 Child::DocumentType { 0: _field_0 }
             }
+
             Child::Element { 0: _field_0 } => {
                 let _field_0 = <Element as FoldWith<V>>::fold_with(_field_0, visitor);
+
                 Child::Element { 0: _field_0 }
             }
+
             Child::Text { 0: _field_0 } => {
                 let _field_0 = <Text as FoldWith<V>>::fold_with(_field_0, visitor);
+
                 Child::Text { 0: _field_0 }
             }
+
             Child::Comment { 0: _field_0 } => {
                 let _field_0 = <Comment as FoldWith<V>>::fold_with(_field_0, visitor);
+
                 Child::Comment { 0: _field_0 }
             }
         }
@@ -8218,8 +8360,11 @@ impl<V: ?Sized + Fold> FoldWith<V> for Comment {
         match self {
             Comment { span, data, raw } => {
                 let span = { <swc_common::Span as FoldWith<V>>::fold_with(span, visitor) };
+
                 let data = { <swc_atoms::Atom as FoldWith<V>>::fold_with(data, visitor) };
+
                 let raw = { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(raw, visitor) };
+
                 Comment { span, data, raw }
             }
         }
@@ -8239,8 +8384,11 @@ impl<V: ?Sized + Fold> FoldWith<V> for Document {
                 children,
             } => {
                 let span = { <swc_common::Span as FoldWith<V>>::fold_with(span, visitor) };
+
                 let mode = { <DocumentMode as FoldWith<V>>::fold_with(mode, visitor) };
+
                 let children = { <Vec<Child> as FoldWith<V>>::fold_with(children, visitor) };
+
                 Document {
                     span,
                     mode,
@@ -8260,7 +8408,9 @@ impl<V: ?Sized + Fold> FoldWith<V> for DocumentFragment {
         match self {
             DocumentFragment { span, children } => {
                 let span = { <swc_common::Span as FoldWith<V>>::fold_with(span, visitor) };
+
                 let children = { <Vec<Child> as FoldWith<V>>::fold_with(children, visitor) };
+
                 DocumentFragment { span, children }
             }
         }
@@ -8296,12 +8446,17 @@ impl<V: ?Sized + Fold> FoldWith<V> for DocumentType {
                 raw,
             } => {
                 let span = { <swc_common::Span as FoldWith<V>>::fold_with(span, visitor) };
+
                 let name = { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(name, visitor) };
+
                 let public_id =
                     { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(public_id, visitor) };
+
                 let system_id =
                     { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(system_id, visitor) };
+
                 let raw = { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(raw, visitor) };
+
                 DocumentType {
                     span,
                     name,
@@ -8331,13 +8486,19 @@ impl<V: ?Sized + Fold> FoldWith<V> for Element {
                 is_self_closing,
             } => {
                 let span = { <swc_common::Span as FoldWith<V>>::fold_with(span, visitor) };
+
                 let tag_name = { <swc_atoms::Atom as FoldWith<V>>::fold_with(tag_name, visitor) };
+
                 let namespace = { <Namespace as FoldWith<V>>::fold_with(namespace, visitor) };
+
                 let attributes =
                     { <Vec<Attribute> as FoldWith<V>>::fold_with(attributes, visitor) };
+
                 let children = { <Vec<Child> as FoldWith<V>>::fold_with(children, visitor) };
+
                 let content =
                     { <Option<DocumentFragment> as FoldWith<V>>::fold_with(content, visitor) };
+
                 Element {
                     span,
                     tag_name,
@@ -8379,6 +8540,7 @@ impl<V: ?Sized + Fold> FoldWith<V> for Raw {
             Raw::Same => Raw::Same,
             Raw::Atom { 0: _field_0 } => {
                 let _field_0 = <swc_atoms::Atom as FoldWith<V>>::fold_with(_field_0, visitor);
+
                 Raw::Atom { 0: _field_0 }
             }
         }
@@ -8394,8 +8556,11 @@ impl<V: ?Sized + Fold> FoldWith<V> for Text {
         match self {
             Text { span, data, raw } => {
                 let span = { <swc_common::Span as FoldWith<V>>::fold_with(span, visitor) };
+
                 let data = { <swc_atoms::Atom as FoldWith<V>>::fold_with(data, visitor) };
+
                 let raw = { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(raw, visitor) };
+
                 Text { span, data, raw }
             }
         }
@@ -8417,11 +8582,15 @@ impl<V: ?Sized + Fold> FoldWith<V> for Token {
                 raw,
             } => {
                 let name = { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(name, visitor) };
+
                 let public_id =
                     { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(public_id, visitor) };
+
                 let system_id =
                     { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(system_id, visitor) };
+
                 let raw = { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(raw, visitor) };
+
                 Token::Doctype {
                     name,
                     force_quirks,
@@ -8430,6 +8599,7 @@ impl<V: ?Sized + Fold> FoldWith<V> for Token {
                     raw,
                 }
             }
+
             Token::StartTag {
                 tag_name,
                 raw_tag_name,
@@ -8437,10 +8607,13 @@ impl<V: ?Sized + Fold> FoldWith<V> for Token {
                 attributes,
             } => {
                 let tag_name = { <swc_atoms::Atom as FoldWith<V>>::fold_with(tag_name, visitor) };
+
                 let raw_tag_name =
                     { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(raw_tag_name, visitor) };
+
                 let attributes =
                     { <Vec<AttributeToken> as FoldWith<V>>::fold_with(attributes, visitor) };
+
                 Token::StartTag {
                     tag_name,
                     raw_tag_name,
@@ -8448,6 +8621,7 @@ impl<V: ?Sized + Fold> FoldWith<V> for Token {
                     attributes,
                 }
             }
+
             Token::EndTag {
                 tag_name,
                 raw_tag_name,
@@ -8455,10 +8629,13 @@ impl<V: ?Sized + Fold> FoldWith<V> for Token {
                 attributes,
             } => {
                 let tag_name = { <swc_atoms::Atom as FoldWith<V>>::fold_with(tag_name, visitor) };
+
                 let raw_tag_name =
                     { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(raw_tag_name, visitor) };
+
                 let attributes =
                     { <Vec<AttributeToken> as FoldWith<V>>::fold_with(attributes, visitor) };
+
                 Token::EndTag {
                     tag_name,
                     raw_tag_name,
@@ -8466,15 +8643,21 @@ impl<V: ?Sized + Fold> FoldWith<V> for Token {
                     attributes,
                 }
             }
+
             Token::Comment { data, raw } => {
                 let data = { <swc_atoms::Atom as FoldWith<V>>::fold_with(data, visitor) };
+
                 let raw = { <Option<swc_atoms::Atom> as FoldWith<V>>::fold_with(raw, visitor) };
+
                 Token::Comment { data, raw }
             }
+
             Token::Character { value, raw } => {
                 let raw = { <Option<Raw> as FoldWith<V>>::fold_with(raw, visitor) };
+
                 Token::Character { value, raw }
             }
+
             Token::Eof => Token::Eof,
         }
     }
@@ -8489,7 +8672,9 @@ impl<V: ?Sized + Fold> FoldWith<V> for TokenAndSpan {
         match self {
             TokenAndSpan { span, token } => {
                 let span = { <swc_common::Span as FoldWith<V>>::fold_with(span, visitor) };
+
                 let token = { <Token as FoldWith<V>>::fold_with(token, visitor) };
+
                 TokenAndSpan { span, token }
             }
         }
@@ -9221,6 +9406,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_attribute(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_attribute(visitor, node, __ast_path)
             }
@@ -9237,6 +9423,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_attribute_token(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_attribute_token(visitor, node, __ast_path)
             }
@@ -9253,6 +9440,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_attribute_tokens(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_attribute_tokens(visitor, node, __ast_path)
             }
@@ -9269,6 +9457,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_attributes(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_attributes(visitor, node, __ast_path)
             }
@@ -9299,6 +9488,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_comment(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_comment(visitor, node, __ast_path)
             }
@@ -9311,6 +9501,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_document(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_document(visitor, node, __ast_path)
             }
@@ -9327,6 +9518,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_document_fragment(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_document_fragment(visitor, node, __ast_path)
             }
@@ -9343,6 +9535,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_document_mode(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_document_mode(visitor, node, __ast_path)
             }
@@ -9359,6 +9552,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_document_type(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_document_type(visitor, node, __ast_path)
             }
@@ -9371,6 +9565,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_element(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_element(visitor, node, __ast_path)
             }
@@ -9383,6 +9578,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_namespace(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_namespace(visitor, node, __ast_path)
             }
@@ -9399,6 +9595,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_opt_atom(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_opt_atom(visitor, node, __ast_path)
             }
@@ -9415,6 +9612,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_opt_document_fragment(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_opt_document_fragment(visitor, node, __ast_path)
             }
@@ -9431,6 +9629,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_opt_namespace(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_opt_namespace(visitor, node, __ast_path)
             }
@@ -9443,6 +9642,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_opt_raw(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_opt_raw(visitor, node, __ast_path)
             }
@@ -9495,6 +9695,7 @@ where
             swc_visit::Either::Left(visitor) => {
                 FoldAstPath::fold_token_and_span(visitor, node, __ast_path)
             }
+
             swc_visit::Either::Right(visitor) => {
                 FoldAstPath::fold_token_and_span(visitor, node, __ast_path)
             }
@@ -9799,6 +10000,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Attribute {
                         &mut *__ast_path,
                     )
                 };
+
                 let namespace = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::Attribute(
                         self::fields::AttributeField::Namespace,
@@ -9809,6 +10011,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Attribute {
                         &mut *__ast_path,
                     )
                 };
+
                 let prefix = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::Attribute(
                         self::fields::AttributeField::Prefix,
@@ -9819,6 +10022,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Attribute {
                         &mut *__ast_path,
                     )
                 };
+
                 let name = {
                     let mut __ast_path = __ast_path
                         .with_guard(AstParentKind::Attribute(self::fields::AttributeField::Name));
@@ -9828,6 +10032,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Attribute {
                         &mut *__ast_path,
                     )
                 };
+
                 let raw_name = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::Attribute(
                         self::fields::AttributeField::RawName,
@@ -9838,6 +10043,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Attribute {
                         &mut *__ast_path,
                     )
                 };
+
                 let value = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::Attribute(
                         self::fields::AttributeField::Value,
@@ -9848,6 +10054,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Attribute {
                         &mut *__ast_path,
                     )
                 };
+
                 let raw_value = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::Attribute(
                         self::fields::AttributeField::RawValue,
@@ -9858,6 +10065,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Attribute {
                         &mut *__ast_path,
                     )
                 };
+
                 Attribute {
                     span,
                     namespace,
@@ -9898,6 +10106,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for AttributeToken {
                         &mut *__ast_path,
                     )
                 };
+
                 let name = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::AttributeToken(
                         self::fields::AttributeTokenField::Name,
@@ -9908,6 +10117,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for AttributeToken {
                         &mut *__ast_path,
                     )
                 };
+
                 let raw_name = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::AttributeToken(
                         self::fields::AttributeTokenField::RawName,
@@ -9918,6 +10128,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for AttributeToken {
                         &mut *__ast_path,
                     )
                 };
+
                 let value = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::AttributeToken(
                         self::fields::AttributeTokenField::Value,
@@ -9928,6 +10139,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for AttributeToken {
                         &mut *__ast_path,
                     )
                 };
+
                 let raw_value = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::AttributeToken(
                         self::fields::AttributeTokenField::RawValue,
@@ -9938,6 +10150,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for AttributeToken {
                         &mut *__ast_path,
                     )
                 };
+
                 AttributeToken {
                     span,
                     name,
@@ -9962,41 +10175,52 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Child {
             Child::DocumentType { 0: _field_0 } => {
                 let mut __ast_path = __ast_path
                     .with_guard(AstParentKind::Child(self::fields::ChildField::DocumentType));
+
                 let _field_0 = <DocumentType as FoldWithAstPath<V>>::fold_with_ast_path(
                     _field_0,
                     visitor,
                     &mut *__ast_path,
                 );
+
                 Child::DocumentType { 0: _field_0 }
             }
+
             Child::Element { 0: _field_0 } => {
                 let mut __ast_path =
                     __ast_path.with_guard(AstParentKind::Child(self::fields::ChildField::Element));
+
                 let _field_0 = <Element as FoldWithAstPath<V>>::fold_with_ast_path(
                     _field_0,
                     visitor,
                     &mut *__ast_path,
                 );
+
                 Child::Element { 0: _field_0 }
             }
+
             Child::Text { 0: _field_0 } => {
                 let mut __ast_path =
                     __ast_path.with_guard(AstParentKind::Child(self::fields::ChildField::Text));
+
                 let _field_0 = <Text as FoldWithAstPath<V>>::fold_with_ast_path(
                     _field_0,
                     visitor,
                     &mut *__ast_path,
                 );
+
                 Child::Text { 0: _field_0 }
             }
+
             Child::Comment { 0: _field_0 } => {
                 let mut __ast_path =
                     __ast_path.with_guard(AstParentKind::Child(self::fields::ChildField::Comment));
+
                 let _field_0 = <Comment as FoldWithAstPath<V>>::fold_with_ast_path(
                     _field_0,
                     visitor,
                     &mut *__ast_path,
                 );
+
                 Child::Comment { 0: _field_0 }
             }
         }
@@ -10022,6 +10246,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Comment {
                         &mut *__ast_path,
                     )
                 };
+
                 let data = {
                     let mut __ast_path = __ast_path
                         .with_guard(AstParentKind::Comment(self::fields::CommentField::Data));
@@ -10031,6 +10256,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Comment {
                         &mut *__ast_path,
                     )
                 };
+
                 let raw = {
                     let mut __ast_path = __ast_path
                         .with_guard(AstParentKind::Comment(self::fields::CommentField::Raw));
@@ -10040,6 +10266,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Comment {
                         &mut *__ast_path,
                     )
                 };
+
                 Comment { span, data, raw }
             }
         }
@@ -10069,6 +10296,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Document {
                         &mut *__ast_path,
                     )
                 };
+
                 let mode = {
                     let mut __ast_path = __ast_path
                         .with_guard(AstParentKind::Document(self::fields::DocumentField::Mode));
@@ -10078,6 +10306,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Document {
                         &mut *__ast_path,
                     )
                 };
+
                 let children = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::Document(
                         self::fields::DocumentField::Children(usize::MAX),
@@ -10088,6 +10317,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Document {
                         &mut *__ast_path,
                     )
                 };
+
                 Document {
                     span,
                     mode,
@@ -10118,6 +10348,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for DocumentFragment {
                         &mut *__ast_path,
                     )
                 };
+
                 let children = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::DocumentFragment(
                         self::fields::DocumentFragmentField::Children(usize::MAX),
@@ -10128,6 +10359,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for DocumentFragment {
                         &mut *__ast_path,
                     )
                 };
+
                 DocumentFragment { span, children }
             }
         }
@@ -10176,6 +10408,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for DocumentType {
                         &mut *__ast_path,
                     )
                 };
+
                 let name = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::DocumentType(
                         self::fields::DocumentTypeField::Name,
@@ -10186,6 +10419,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for DocumentType {
                         &mut *__ast_path,
                     )
                 };
+
                 let public_id = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::DocumentType(
                         self::fields::DocumentTypeField::PublicId,
@@ -10196,6 +10430,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for DocumentType {
                         &mut *__ast_path,
                     )
                 };
+
                 let system_id = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::DocumentType(
                         self::fields::DocumentTypeField::SystemId,
@@ -10206,6 +10441,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for DocumentType {
                         &mut *__ast_path,
                     )
                 };
+
                 let raw = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::DocumentType(
                         self::fields::DocumentTypeField::Raw,
@@ -10216,6 +10452,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for DocumentType {
                         &mut *__ast_path,
                     )
                 };
+
                 DocumentType {
                     span,
                     name,
@@ -10255,6 +10492,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Element {
                         &mut *__ast_path,
                     )
                 };
+
                 let tag_name = {
                     let mut __ast_path = __ast_path
                         .with_guard(AstParentKind::Element(self::fields::ElementField::TagName));
@@ -10264,6 +10502,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Element {
                         &mut *__ast_path,
                     )
                 };
+
                 let namespace = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::Element(
                         self::fields::ElementField::Namespace,
@@ -10274,6 +10513,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Element {
                         &mut *__ast_path,
                     )
                 };
+
                 let attributes = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::Element(
                         self::fields::ElementField::Attributes(usize::MAX),
@@ -10284,6 +10524,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Element {
                         &mut *__ast_path,
                     )
                 };
+
                 let children = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::Element(
                         self::fields::ElementField::Children(usize::MAX),
@@ -10294,6 +10535,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Element {
                         &mut *__ast_path,
                     )
                 };
+
                 let content = {
                     let mut __ast_path = __ast_path
                         .with_guard(AstParentKind::Element(self::fields::ElementField::Content));
@@ -10303,6 +10545,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Element {
                         &mut *__ast_path,
                     )
                 };
+
                 Element {
                     span,
                     tag_name,
@@ -10349,11 +10592,13 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Raw {
             Raw::Atom { 0: _field_0 } => {
                 let mut __ast_path =
                     __ast_path.with_guard(AstParentKind::Raw(self::fields::RawField::Atom));
+
                 let _field_0 = <swc_atoms::Atom as FoldWithAstPath<V>>::fold_with_ast_path(
                     _field_0,
                     visitor,
                     &mut *__ast_path,
                 );
+
                 Raw::Atom { 0: _field_0 }
             }
         }
@@ -10379,6 +10624,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Text {
                         &mut *__ast_path,
                     )
                 };
+
                 let data = {
                     let mut __ast_path =
                         __ast_path.with_guard(AstParentKind::Text(self::fields::TextField::Data));
@@ -10388,6 +10634,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Text {
                         &mut *__ast_path,
                     )
                 };
+
                 let raw = {
                     let mut __ast_path =
                         __ast_path.with_guard(AstParentKind::Text(self::fields::TextField::Raw));
@@ -10397,6 +10644,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Text {
                         &mut *__ast_path,
                     )
                 };
+
                 Text { span, data, raw }
             }
         }
@@ -10421,6 +10669,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
             } => {
                 let mut __ast_path =
                     __ast_path.with_guard(AstParentKind::Token(self::fields::TokenField::Doctype));
+
                 let name = {
                     let mut __ast_path =
                         __ast_path.with_guard(AstParentKind::Token(self::fields::TokenField::Name));
@@ -10430,6 +10679,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                         &mut *__ast_path,
                     )
                 };
+
                 let public_id = {
                     let mut __ast_path = __ast_path
                         .with_guard(AstParentKind::Token(self::fields::TokenField::PublicId));
@@ -10439,6 +10689,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                         &mut *__ast_path,
                     )
                 };
+
                 let system_id = {
                     let mut __ast_path = __ast_path
                         .with_guard(AstParentKind::Token(self::fields::TokenField::SystemId));
@@ -10448,6 +10699,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                         &mut *__ast_path,
                     )
                 };
+
                 let raw = {
                     let mut __ast_path =
                         __ast_path.with_guard(AstParentKind::Token(self::fields::TokenField::Raw));
@@ -10457,6 +10709,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                         &mut *__ast_path,
                     )
                 };
+
                 Token::Doctype {
                     name,
                     force_quirks,
@@ -10465,6 +10718,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                     raw,
                 }
             }
+
             Token::StartTag {
                 tag_name,
                 raw_tag_name,
@@ -10473,6 +10727,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
             } => {
                 let mut __ast_path =
                     __ast_path.with_guard(AstParentKind::Token(self::fields::TokenField::StartTag));
+
                 let tag_name = {
                     let mut __ast_path = __ast_path
                         .with_guard(AstParentKind::Token(self::fields::TokenField::TagName));
@@ -10482,6 +10737,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                         &mut *__ast_path,
                     )
                 };
+
                 let raw_tag_name = {
                     let mut __ast_path = __ast_path
                         .with_guard(AstParentKind::Token(self::fields::TokenField::RawTagName));
@@ -10491,6 +10747,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                         &mut *__ast_path,
                     )
                 };
+
                 let attributes = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::Token(
                         self::fields::TokenField::Attributes(usize::MAX),
@@ -10501,6 +10758,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                         &mut *__ast_path,
                     )
                 };
+
                 Token::StartTag {
                     tag_name,
                     raw_tag_name,
@@ -10508,6 +10766,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                     attributes,
                 }
             }
+
             Token::EndTag {
                 tag_name,
                 raw_tag_name,
@@ -10516,6 +10775,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
             } => {
                 let mut __ast_path =
                     __ast_path.with_guard(AstParentKind::Token(self::fields::TokenField::EndTag));
+
                 let tag_name = {
                     let mut __ast_path = __ast_path
                         .with_guard(AstParentKind::Token(self::fields::TokenField::TagName));
@@ -10525,6 +10785,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                         &mut *__ast_path,
                     )
                 };
+
                 let raw_tag_name = {
                     let mut __ast_path = __ast_path
                         .with_guard(AstParentKind::Token(self::fields::TokenField::RawTagName));
@@ -10534,6 +10795,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                         &mut *__ast_path,
                     )
                 };
+
                 let attributes = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::Token(
                         self::fields::TokenField::Attributes(usize::MAX),
@@ -10544,6 +10806,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                         &mut *__ast_path,
                     )
                 };
+
                 Token::EndTag {
                     tag_name,
                     raw_tag_name,
@@ -10551,9 +10814,11 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                     attributes,
                 }
             }
+
             Token::Comment { data, raw } => {
                 let mut __ast_path =
                     __ast_path.with_guard(AstParentKind::Token(self::fields::TokenField::Comment));
+
                 let data = {
                     let mut __ast_path =
                         __ast_path.with_guard(AstParentKind::Token(self::fields::TokenField::Data));
@@ -10563,6 +10828,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                         &mut *__ast_path,
                     )
                 };
+
                 let raw = {
                     let mut __ast_path =
                         __ast_path.with_guard(AstParentKind::Token(self::fields::TokenField::Raw));
@@ -10572,11 +10838,14 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                         &mut *__ast_path,
                     )
                 };
+
                 Token::Comment { data, raw }
             }
+
             Token::Character { value, raw } => {
                 let mut __ast_path = __ast_path
                     .with_guard(AstParentKind::Token(self::fields::TokenField::Character));
+
                 let raw = {
                     let mut __ast_path =
                         __ast_path.with_guard(AstParentKind::Token(self::fields::TokenField::Raw));
@@ -10586,8 +10855,10 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for Token {
                         &mut *__ast_path,
                     )
                 };
+
                 Token::Character { value, raw }
             }
+
             Token::Eof => Token::Eof,
         }
     }
@@ -10613,6 +10884,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for TokenAndSpan {
                         &mut *__ast_path,
                     )
                 };
+
                 let token = {
                     let mut __ast_path = __ast_path.with_guard(AstParentKind::TokenAndSpan(
                         self::fields::TokenAndSpanField::Token,
@@ -10623,6 +10895,7 @@ impl<V: ?Sized + FoldAstPath> FoldWithAstPath<V> for TokenAndSpan {
                         &mut *__ast_path,
                     )
                 };
+
                 TokenAndSpan { span, token }
             }
         }
@@ -10825,6 +11098,7 @@ pub mod fields {
             }
         }
     }
+
     impl AttributeField {
         pub(crate) fn set_index(&mut self, index: usize) {
             match self {
@@ -10850,6 +11124,7 @@ pub mod fields {
         #[doc = "Represents [`Attribute::raw_value`]"]
         RawValue,
     }
+
     impl AttributeTokenField {
         pub(crate) fn set_index(&mut self, index: usize) {
             match self {
@@ -10871,6 +11146,7 @@ pub mod fields {
         #[doc = "Represents [`AttributeToken::raw_value`]"]
         RawValue,
     }
+
     impl ChildField {
         #[inline(always)]
         pub(crate) fn set_index(&mut self, _: usize) {
@@ -10889,6 +11165,7 @@ pub mod fields {
         #[doc = "Represents [`Child::Comment`]"]
         Comment,
     }
+
     impl CommentField {
         pub(crate) fn set_index(&mut self, index: usize) {
             match self {
@@ -10906,6 +11183,7 @@ pub mod fields {
         #[doc = "Represents [`Comment::raw`]"]
         Raw,
     }
+
     impl DocumentField {
         pub(crate) fn set_index(&mut self, index: usize) {
             match self {
@@ -10913,6 +11191,7 @@ pub mod fields {
                     assert_initial_index(*idx, index);
                     *idx = index;
                 }
+
                 _ => swc_visit::wrong_ast_path(),
             }
         }
@@ -10927,6 +11206,7 @@ pub mod fields {
         #[doc = "Represents [`Document::children`]"]
         Children(usize),
     }
+
     impl DocumentFragmentField {
         pub(crate) fn set_index(&mut self, index: usize) {
             match self {
@@ -10934,6 +11214,7 @@ pub mod fields {
                     assert_initial_index(*idx, index);
                     *idx = index;
                 }
+
                 _ => swc_visit::wrong_ast_path(),
             }
         }
@@ -10946,6 +11227,7 @@ pub mod fields {
         #[doc = "Represents [`DocumentFragment::children`]"]
         Children(usize),
     }
+
     impl DocumentModeField {
         #[inline(always)]
         pub(crate) fn set_index(&mut self, _: usize) {
@@ -10962,6 +11244,7 @@ pub mod fields {
         #[doc = "Represents [`DocumentMode::Quirks`]"]
         Quirks,
     }
+
     impl DocumentTypeField {
         pub(crate) fn set_index(&mut self, index: usize) {
             match self {
@@ -10983,6 +11266,7 @@ pub mod fields {
         #[doc = "Represents [`DocumentType::raw`]"]
         Raw,
     }
+
     impl ElementField {
         pub(crate) fn set_index(&mut self, index: usize) {
             match self {
@@ -10990,10 +11274,12 @@ pub mod fields {
                     assert_initial_index(*idx, index);
                     *idx = index;
                 }
+
                 Self::Children(idx) => {
                     assert_initial_index(*idx, index);
                     *idx = index;
                 }
+
                 _ => swc_visit::wrong_ast_path(),
             }
         }
@@ -11016,6 +11302,7 @@ pub mod fields {
         #[doc = "Represents [`Element::is_self_closing`]"]
         IsSelfClosing,
     }
+
     impl NamespaceField {
         #[inline(always)]
         pub(crate) fn set_index(&mut self, _: usize) {
@@ -11038,6 +11325,7 @@ pub mod fields {
         #[doc = "Represents [`Namespace::XMLNS`]"]
         Xmlns,
     }
+
     impl RawField {
         #[inline(always)]
         pub(crate) fn set_index(&mut self, _: usize) {
@@ -11052,6 +11340,7 @@ pub mod fields {
         #[doc = "Represents [`Raw::Atom`]"]
         Atom,
     }
+
     impl TextField {
         pub(crate) fn set_index(&mut self, index: usize) {
             match self {
@@ -11069,6 +11358,7 @@ pub mod fields {
         #[doc = "Represents [`Text::raw`]"]
         Raw,
     }
+
     impl TokenField {
         #[inline(always)]
         pub(crate) fn set_index(&mut self, _: usize) {
@@ -11091,6 +11381,7 @@ pub mod fields {
         #[doc = "Represents [`Token::Eof`]"]
         Eof,
     }
+
     impl TokenAndSpanField {
         pub(crate) fn set_index(&mut self, index: usize) {
             match self {
@@ -11124,6 +11415,7 @@ pub mod fields {
         Token(TokenField),
         TokenAndSpan(TokenAndSpanField),
     }
+
     impl ::swc_visit::ParentKind for AstParentKind {
         #[inline]
         fn set_index(&mut self, index: usize) {
@@ -11162,6 +11454,7 @@ pub mod fields {
         Token(&'ast Token, TokenField),
         TokenAndSpan(&'ast TokenAndSpan, TokenAndSpanField),
     }
+
     impl<'ast> ::swc_visit::NodeRef for AstParentNodeRef<'ast> {
         type ParentKind = AstParentKind;
 
@@ -11198,12 +11491,14 @@ pub mod fields {
                 Self::AttributeToken(_, __field_kind) => {
                     AstParentKind::AttributeToken(*__field_kind)
                 }
+
                 Self::Child(_, __field_kind) => AstParentKind::Child(*__field_kind),
                 Self::Comment(_, __field_kind) => AstParentKind::Comment(*__field_kind),
                 Self::Document(_, __field_kind) => AstParentKind::Document(*__field_kind),
                 Self::DocumentFragment(_, __field_kind) => {
                     AstParentKind::DocumentFragment(*__field_kind)
                 }
+
                 Self::DocumentMode(_, __field_kind) => AstParentKind::DocumentMode(*__field_kind),
                 Self::DocumentType(_, __field_kind) => AstParentKind::DocumentType(*__field_kind),
                 Self::Element(_, __field_kind) => AstParentKind::Element(*__field_kind),
@@ -11314,12 +11609,16 @@ impl<'ast> NodeRef<'ast> {
                         .iter()
                         .flat_map(|item| ::std::iter::once(NodeRef::Namespace(&item))),
                 );
+
                 Box::new(iterator)
             }
+
             NodeRef::AttributeToken(node) => {
                 let iterator = ::std::iter::empty::<NodeRef<'ast>>();
+
                 Box::new(iterator)
             }
+
             NodeRef::Child(node) => match node {
                 Child::DocumentType(v0) => Box::new(::std::iter::once(NodeRef::DocumentType(v0))),
                 Child::Element(v0) => Box::new(::std::iter::once(NodeRef::Element(v0))),
@@ -11329,8 +11628,10 @@ impl<'ast> NodeRef<'ast> {
             },
             NodeRef::Comment(node) => {
                 let iterator = ::std::iter::empty::<NodeRef<'ast>>();
+
                 Box::new(iterator)
             }
+
             NodeRef::Document(node) => {
                 let iterator = ::std::iter::empty::<NodeRef<'ast>>()
                     .chain(::std::iter::once(NodeRef::DocumentMode(&node.mode)))
@@ -11339,23 +11640,29 @@ impl<'ast> NodeRef<'ast> {
                             .iter()
                             .flat_map(|item| ::std::iter::once(NodeRef::Child(&item))),
                     );
+
                 Box::new(iterator)
             }
+
             NodeRef::DocumentFragment(node) => {
                 let iterator = ::std::iter::empty::<NodeRef<'ast>>().chain(
                     node.children
                         .iter()
                         .flat_map(|item| ::std::iter::once(NodeRef::Child(&item))),
                 );
+
                 Box::new(iterator)
             }
+
             NodeRef::DocumentMode(node) => match node {
                 _ => Box::new(::std::iter::empty::<NodeRef<'ast>>()),
             },
             NodeRef::DocumentType(node) => {
                 let iterator = ::std::iter::empty::<NodeRef<'ast>>();
+
                 Box::new(iterator)
             }
+
             NodeRef::Element(node) => {
                 let iterator = ::std::iter::empty::<NodeRef<'ast>>()
                     .chain(::std::iter::once(NodeRef::Namespace(&node.namespace)))
@@ -11374,8 +11681,10 @@ impl<'ast> NodeRef<'ast> {
                             .iter()
                             .flat_map(|item| ::std::iter::once(NodeRef::DocumentFragment(&item))),
                     );
+
                 Box::new(iterator)
             }
+
             NodeRef::Namespace(node) => match node {
                 _ => Box::new(::std::iter::empty::<NodeRef<'ast>>()),
             },
@@ -11384,14 +11693,17 @@ impl<'ast> NodeRef<'ast> {
             },
             NodeRef::Text(node) => {
                 let iterator = ::std::iter::empty::<NodeRef<'ast>>();
+
                 Box::new(iterator)
             }
+
             NodeRef::Token(node) => match node {
                 _ => Box::new(::std::iter::empty::<NodeRef<'ast>>()),
             },
             NodeRef::TokenAndSpan(node) => {
                 let iterator = ::std::iter::empty::<NodeRef<'ast>>()
                     .chain(::std::iter::once(NodeRef::Token(&node.token)));
+
                 Box::new(iterator)
             }
         }
@@ -11404,13 +11716,17 @@ impl<'ast> NodeRef<'ast> {
     #[doc = r" experimental and subject to change."]
     pub fn experimental_traverse(&'ast self) -> Box<dyn 'ast + Iterator<Item = NodeRef<'ast>>> {
         let mut queue = std::collections::VecDeque::<NodeRef<'ast>>::new();
+
         queue.push_back(*self);
+
         Box::new(std::iter::from_fn(move || {
             let node: NodeRef<'ast> = queue.pop_front()?;
             {
                 let children = node.experimental_raw_children();
+
                 queue.extend(children);
             }
+
             Some(node)
         }))
     }

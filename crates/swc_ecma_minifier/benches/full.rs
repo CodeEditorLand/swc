@@ -20,6 +20,7 @@ use swc_ecma_transforms_base::{fixer::fixer, resolver};
 
 pub fn bench_files(c:&mut Criterion) {
 	let mut group = c.benchmark_group("es/minifier/libs");
+
 	group.sample_size(10);
 
 	let mut bench_file = |name:&str| {
@@ -29,6 +30,7 @@ pub fn bench_files(c:&mut Criterion) {
 			b.iter(|| {
 				// We benchmark full time, including time for creating cm, handler
 				let allocator = Allocator::default();
+
 				let _guard = unsafe { allocator.guard() };
 
 				run(&src)
@@ -37,19 +39,31 @@ pub fn bench_files(c:&mut Criterion) {
 	};
 
 	bench_file("antd");
+
 	bench_file("d3");
+
 	bench_file("echarts");
+
 	bench_file("jquery");
+
 	bench_file("lodash");
+
 	bench_file("moment");
+
 	bench_file("react");
+
 	bench_file("terser");
+
 	bench_file("three");
+
 	bench_file("typescript");
+
 	bench_file("victory");
+
 	bench_file("vue");
 pub fn bench_files(c: &mut Criterion) {
     let mut group = c.benchmark_group("es/minifier/libs");
+
     group.sample_size(10);
 
     let mut bench_file = |name: &str| {
@@ -59,6 +73,7 @@ pub fn bench_files(c: &mut Criterion) {
             b.iter(|| {
                 // We benchmark full time, including time for creating cm, handler
                 let allocator = Allocator::default();
+
                 let _guard = unsafe { allocator.guard() };
 
                 run(&src)
@@ -67,16 +82,27 @@ pub fn bench_files(c: &mut Criterion) {
     };
 
     bench_file("antd");
+
     bench_file("d3");
+
     bench_file("echarts");
+
     bench_file("jquery");
+
     bench_file("lodash");
+
     bench_file("moment");
+
     bench_file("react");
+
     bench_file("terser");
+
     bench_file("three");
+
     bench_file("typescript");
+
     bench_file("victory");
+
     bench_file("vue");
 }
 
@@ -89,6 +115,7 @@ fn run(src:&str) {
 			let fm = cm.new_source_file(FileName::Anon.into(), src.into());
 
 			let unresolved_mark = Mark::new();
+
 			let top_level_mark = Mark::new();
 
 			let program = parse_file_as_module(
@@ -133,6 +160,7 @@ fn run(src:&str) {
 			let code = print(cm, &[output], true);
 
 			black_box(code);
+
 			Ok(())
 		})
 	})
@@ -162,6 +190,7 @@ fn run(src: &str) {
             let fm = cm.new_source_file(FileName::Anon.into(), src.into());
 
             let unresolved_mark = Mark::new();
+
             let top_level_mark = Mark::new();
 
             let program = parse_file_as_module(
@@ -210,6 +239,7 @@ fn run(src: &str) {
             let code = print(cm, &[output], true);
 
             black_box(code);
+
             Ok(())
         })
     })

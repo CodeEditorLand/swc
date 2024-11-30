@@ -11,6 +11,7 @@ use swc_html_parser::{parse_file_as_document, parse_file_as_document_fragment};
 
 pub fn bench_files_document(c:&mut Criterion) {
 	let mut group = c.benchmark_group("html/minify/document");
+
 	group.sample_size(10);
 
 	let mut bench_file = |name:&str, path:&Path| {
@@ -25,10 +26,12 @@ pub fn bench_files_document(c:&mut Criterion) {
 	};
 
 	bench_file("css_spec", Path::new("../swc_html_parser/benches/files/css_2021_spec.html"));
+
 	bench_file(
 		"github",
 		Path::new("../swc_html_parser/benches/files/github_com_17_05_2022.html"),
 	);
+
 	bench_file(
 		"stackoverflow",
 		Path::new("../swc_html_parser/benches/files/stackoverflow_com_17_05_2022.html"),
@@ -37,6 +40,7 @@ pub fn bench_files_document(c:&mut Criterion) {
 
 pub fn bench_files_document_fragment(c:&mut Criterion) {
 	let mut group = c.benchmark_group("html/minify/document_fragment");
+
 	group.sample_size(10);
 
 	let mut bench_file = |name:&str, path:&Path| {
@@ -51,16 +55,19 @@ pub fn bench_files_document_fragment(c:&mut Criterion) {
 	};
 
 	bench_file("css_spec", Path::new("../swc_html_parser/benches/files/css_2021_spec.html"));
+
 	bench_file(
 		"github",
 		Path::new("../swc_html_parser/benches/files/github_com_17_05_2022.html"),
 	);
+
 	bench_file(
 		"stackoverflow",
 		Path::new("../swc_html_parser/benches/files/stackoverflow_com_17_05_2022.html"),
 	);
 pub fn bench_files_document(c: &mut Criterion) {
     let mut group = c.benchmark_group("html/minify/document");
+
     group.sample_size(10);
 
     let mut bench_file = |name: &str, path: &Path| {
@@ -78,10 +85,12 @@ pub fn bench_files_document(c: &mut Criterion) {
         "css_spec",
         Path::new("../swc_html_parser/benches/files/css_2021_spec.html"),
     );
+
     bench_file(
         "github",
         Path::new("../swc_html_parser/benches/files/github_com_17_05_2022.html"),
     );
+
     bench_file(
         "stackoverflow",
         Path::new("../swc_html_parser/benches/files/stackoverflow_com_17_05_2022.html"),
@@ -90,6 +99,7 @@ pub fn bench_files_document(c: &mut Criterion) {
 
 pub fn bench_files_document_fragment(c: &mut Criterion) {
     let mut group = c.benchmark_group("html/minify/document_fragment");
+
     group.sample_size(10);
 
     let mut bench_file = |name: &str, path: &Path| {
@@ -107,10 +117,12 @@ pub fn bench_files_document_fragment(c: &mut Criterion) {
         "css_spec",
         Path::new("../swc_html_parser/benches/files/css_2021_spec.html"),
     );
+
     bench_file(
         "github",
         Path::new("../swc_html_parser/benches/files/github_com_17_05_2022.html"),
     );
+
     bench_file(
         "stackoverflow",
         Path::new("../swc_html_parser/benches/files/stackoverflow_com_17_05_2022.html"),
@@ -127,6 +139,7 @@ fn run_document(src:&str) {
 			let fm = cm.new_source_file(FileName::Anon.into(), src.into());
 
 			let mut errors = Vec::new();
+
 			let mut document:Document =
 				parse_file_as_document(&fm, Default::default(), &mut errors).unwrap();
 
@@ -139,6 +152,7 @@ fn run_document(src:&str) {
 			let mut buf = String::new();
 			{
 				let wr = BasicHtmlWriter::new(&mut buf, None, Default::default());
+
 				let mut generator = swc_html_codegen::CodeGenerator::new(
 					wr,
 					swc_html_codegen::CodegenConfig { minify:true, ..Default::default() },
@@ -161,8 +175,11 @@ fn run_document_fragment(src:&str) {
 			let fm = cm.new_source_file(FileName::Anon.into(), src.into());
 
 			let mut errors = Vec::new();
+
 			let context_element_namespace = Namespace::HTML;
+
 			let context_element_tag_name = "template";
+
 			let context_element = Element {
 				span:Default::default(),
 				namespace:context_element_namespace,
@@ -172,6 +189,7 @@ fn run_document_fragment(src:&str) {
 				children:Vec::new(),
 				content:None,
 			};
+
 			let mut document:DocumentFragment = parse_file_as_document_fragment(
 				&fm,
 				&context_element,
@@ -191,6 +209,7 @@ fn run_document_fragment(src:&str) {
 			let mut buf = String::new();
 			{
 				let wr = BasicHtmlWriter::new(&mut buf, None, Default::default());
+
 				let mut generator = swc_html_codegen::CodeGenerator::new(
 					wr,
 					swc_html_codegen::CodegenConfig { minify:true, ..Default::default() },
@@ -211,6 +230,7 @@ fn run_document(src: &str) {
             let fm = cm.new_source_file(FileName::Anon.into(), src.into());
 
             let mut errors = Vec::new();
+
             let mut document: Document =
                 parse_file_as_document(&fm, Default::default(), &mut errors).unwrap();
 
@@ -223,6 +243,7 @@ fn run_document(src: &str) {
             let mut buf = String::new();
             {
                 let wr = BasicHtmlWriter::new(&mut buf, None, Default::default());
+
                 let mut generator = swc_html_codegen::CodeGenerator::new(
                     wr,
                     swc_html_codegen::CodegenConfig {
@@ -248,8 +269,11 @@ fn run_document_fragment(src: &str) {
             let fm = cm.new_source_file(FileName::Anon.into(), src.into());
 
             let mut errors = Vec::new();
+
             let context_element_namespace = Namespace::HTML;
+
             let context_element_tag_name = "template";
+
             let context_element = Element {
                 span: Default::default(),
                 namespace: context_element_namespace,
@@ -259,6 +283,7 @@ fn run_document_fragment(src: &str) {
                 children: Vec::new(),
                 content: None,
             };
+
             let mut document: DocumentFragment = parse_file_as_document_fragment(
                 &fm,
                 &context_element,
@@ -278,6 +303,7 @@ fn run_document_fragment(src: &str) {
             let mut buf = String::new();
             {
                 let wr = BasicHtmlWriter::new(&mut buf, None, Default::default());
+
                 let mut generator = swc_html_codegen::CodeGenerator::new(
                     wr,
                     swc_html_codegen::CodegenConfig {

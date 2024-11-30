@@ -249,6 +249,7 @@ impl From<StyleBlock> for ComponentValue {
             StyleBlock::QualifiedRule(qualified_rule) => {
                 ComponentValue::QualifiedRule(qualified_rule)
             }
+
             StyleBlock::ListOfComponentValues(list_of_component_values) => {
                 ComponentValue::ListOfComponentValues(list_of_component_values)
             }
@@ -263,6 +264,7 @@ impl From<DeclarationOrAtRule> for ComponentValue {
             DeclarationOrAtRule::Declaration(declaration) => {
                 ComponentValue::Declaration(declaration)
             }
+
             DeclarationOrAtRule::AtRule(at_rule) => ComponentValue::AtRule(at_rule),
             DeclarationOrAtRule::ListOfComponentValues(list_of_component_values) => {
                 ComponentValue::ListOfComponentValues(list_of_component_values)

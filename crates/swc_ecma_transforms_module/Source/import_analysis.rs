@@ -71,8 +71,10 @@ impl Visit for ImportAnalyzer {
                 if item.is_stmt() {
                     item.visit_with(self);
                 }
+
                 if self.dynamic_import_found {
                     enable_helper!(interop_require_wildcard);
+
                     break;
                 }
             }
@@ -81,6 +83,7 @@ impl Visit for ImportAnalyzer {
 
     fn visit_import_decl(&mut self, n: &ImportDecl) {
         let flag = self.flag_record.entry(n.src.value.clone()).or_default();
+
         for s in &n.specifiers {
             *flag |= s.into();
         }
@@ -89,6 +92,7 @@ impl Visit for ImportAnalyzer {
     fn visit_named_export(&mut self, n: &NamedExport) {
         if let Some(src) = n.src.clone() {
             let flag = self.flag_record.entry(src.value).or_default();
+
             for s in &n.specifiers {
                 *flag |= s.into();
             }

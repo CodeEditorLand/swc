@@ -46,6 +46,7 @@ impl Optimizer<'_> {
 
         if let Some(usage) = self.data.vars.get(&ident.to_id()) {
             let ref_count = usage.ref_count - u32::from(can_drop && usage.ref_count > 1);
+
             if !usage.var_initialized {
                 return;
             }
@@ -53,9 +54,11 @@ impl Optimizer<'_> {
             if self.data.top.used_arguments && usage.declared_as_fn_param {
                 return;
             }
+
             if usage.declared_as_catch_param {
                 return;
             }
+
             if usage.inline_prevented {
                 return;
             }
@@ -65,11 +68,13 @@ impl Optimizer<'_> {
                     "inline: [x] Preserving non-const variable `{}` because it's top-level",
                     crate::debug::dump(ident, false)
                 );
+
                 return;
             }
 
             if usage.used_above_decl {
                 log_abort!("inline: [x] It's cond init or used before decl",);
+
                 return;
             }
 
@@ -121,6 +126,7 @@ impl Optimizer<'_> {
                             ident.sym,
                             ident.ctxt
                         );
+
                         self.vars
                             .lits_for_array_access
                             .insert(ident.to_id(), Box::new(init.clone()));
@@ -144,11 +150,14 @@ impl Optimizer<'_> {
                         {
                         } else {
                             log_abort!("inline: [x] It's not fn-local");
+
                             return;
                         }
                     }
+
                     _ => {
                         log_abort!("inline: [x] It's not fn-local");
+
                         return;
                     }
                 }
@@ -159,9 +168,11 @@ impl Optimizer<'_> {
                     Expr::Fn(..) | Expr::Arrow(..) | Expr::Class(..) => {
                         self.typeofs.insert(ident.to_id(), "function".into());
                     }
+
                     Expr::Array(..) | Expr::Object(..) => {
                         self.typeofs.insert(ident.to_id(), "object".into());
                     }
+
                     _ => {}
                 }
             }
@@ -236,9 +247,11 @@ impl Optimizer<'_> {
                                 self.vars
                                     .lits_for_cmp
                                     .insert(ident.to_id(), init.clone().into());
+
                                 false
                             }
                         }
+
                         Lit::Bool(_) | Lit::Null(_) | Lit::Num(_) | Lit::BigInt(_) => true,
                         Lit::Regex(_) => self.options.unsafe_regexp,
                         _ => false,
@@ -254,6 +267,7 @@ impl Optimizer<'_> {
                                 || usage.used_as_arg && ref_count > 1)
                             && ref_count - 1 <= usage.callee_count
                     }
+
                     _ => false,
                 }
             {
@@ -273,22 +287,32 @@ impl Optimizer<'_> {
                     no_side_effect_for_member_access,
                     ..
                 } = *usage;
+
                 let mut inc_usage = || {
                     if let Expr::Ident(i) = &*init {
                         if let Some(u) = self.data.vars.get_mut(&i.to_id()) {
                             u.used_as_arg |= used_as_arg;
+
                             u.used_as_ref |= used_as_ref;
+
                             u.indexed_with_dynamic_key |= indexed_with_dynamic_key;
+
                             u.has_property_access |= has_property_access;
+
                             u.property_mutation_count += property_mutation_count;
+
                             u.used_above_decl |= used_above_decl;
+
                             u.executed_multiple_time |= executed_multiple_time;
+
                             u.used_in_cond |= used_in_cond;
+
                             u.used_recursively |= used_recursively;
 
                             u.no_side_effect_for_member_access &= no_side_effect_for_member_access;
 
                             u.ref_count += ref_count;
+
                             u.usage_count += usage_count;
                         }
                     }
@@ -354,6 +378,7 @@ impl Optimizer<'_> {
                     {
                         return
                     }
+
                     Expr::Arrow(ArrowExpr { is_async: true, .. })
                     | Expr::Arrow(ArrowExpr {
                         is_generator: true, ..
@@ -385,6 +410,7 @@ impl Optimizer<'_> {
                             if excluded.contains(&id) {
                                 continue;
                             }
+
                             if let Some(v_usage) = self.data.vars.get(&id) {
                                 if v_usage.reassigned {
                                     return;
@@ -402,6 +428,7 @@ impl Optimizer<'_> {
                             if excluded.contains(&id) {
                                 continue;
                             }
+
                             if let Some(v_usage) = self.data.vars.get(&id) {
                                 if v_usage.reassigned {
                                     return;
@@ -439,6 +466,7 @@ impl Optimizer<'_> {
                                     return;
                                 }
                             }
+
                             if init_usage.declared_as_fn_expr {
                                 if self.options.inline != 3 {
                                     return;
@@ -471,6 +499,7 @@ impl Optimizer<'_> {
                 if usage.executed_multiple_time {
                     match init {
                         Expr::Lit(..) => {}
+
                         Expr::Fn(f) => {
                             // Similar to `_loop` generation of the
                             // block_scoping pass.
@@ -488,6 +517,7 @@ impl Optimizer<'_> {
                                 }
                             }
                         }
+
                         _ => {
                             return;
                         }
@@ -502,6 +532,7 @@ impl Optimizer<'_> {
                     "inline: Decided to inline var '{}' because it's used only once",
                     ident
                 );
+
                 self.changed = true;
 
                 self.vars
@@ -526,6 +557,7 @@ impl Optimizer<'_> {
         } else {
             0
         } as usize;
+
         let cost_limit = 3 + param_cost + func_body_cost;
 
         if body.stmts.len() == 1 {
@@ -561,6 +593,7 @@ impl Optimizer<'_> {
             Decl::Fn(f) => f.ident.clone(),
             _ => return,
         };
+
         if i.sym == *"arguments" {
             return;
         }
@@ -568,10 +601,12 @@ impl Optimizer<'_> {
         if let Some(usage) = self.data.vars.get(&i.to_id()) {
             if !usage.reassigned {
                 trace_op!("typeofs: Storing typeof `{}{:?}`", i.sym, i.ctxt);
+
                 match &*decl {
                     Decl::Fn(..) | Decl::Class(..) => {
                         self.typeofs.insert(i.to_id(), "function".into());
                     }
+
                     _ => {}
                 }
             }
@@ -590,6 +625,7 @@ impl Optimizer<'_> {
 
                 f.ident.clone()
             }
+
             _ => return,
         };
 
@@ -597,23 +633,27 @@ impl Optimizer<'_> {
 
         if self.options.inline == 0 && !self.options.reduce_vars {
             log_abort!("inline: [x] Inline disabled");
+
             return;
         }
 
         if !self.may_remove_ident(&i) {
             log_abort!("inline: [x] Top level");
+
             return;
         }
 
         if let Decl::Fn(f) = decl {
             if self.has_noinline(f.function.ctxt) {
                 log_abort!("inline: [x] Has noinline");
+
                 return;
             }
         }
 
         if self.ctx.is_exported {
             log_abort!("inline: [x] exported");
+
             return;
         }
 
@@ -624,11 +664,13 @@ impl Optimizer<'_> {
         if let Some(usage) = self.data.vars.get(&i.to_id()) {
             if usage.declared_as_catch_param {
                 log_abort!("inline: Declared as a catch parameter");
+
                 return;
             }
 
             if usage.used_as_arg && usage.ref_count > 1 {
                 log_abort!("inline: Used as an arugment");
+
                 return;
             }
 
@@ -638,6 +680,7 @@ impl Optimizer<'_> {
                     usage.reassigned,
                     usage.inline_prevented
                 );
+
                 return;
             }
 
@@ -665,6 +708,7 @@ impl Optimizer<'_> {
                             {
                                 return;
                             }
+
                             trace_op!(
                                 "inline: Decided to inline function '{}{:?}' as it's very simple",
                                 f.ident.sym,
@@ -697,6 +741,7 @@ impl Optimizer<'_> {
                         }
                     }
                 }
+
                 _ => {}
             }
 
@@ -732,31 +777,37 @@ impl Optimizer<'_> {
                             || self.mangle_options.map_or(false, |v| v.keep_class_names)
                         {
                             log_abort!("inline: [x] Keep class names");
+
                             return;
                         }
 
                         self.changed = true;
+
                         report_change!(
                             "inline: Decided to inline class `{}{:?}` as it's used only once",
                             c.ident.sym,
                             c.ident.ctxt
                         );
                     }
+
                     Decl::Fn(f) => {
                         if self.options.keep_fnames
                             || self.mangle_options.map_or(false, |v| v.keep_fn_names)
                         {
                             log_abort!("inline: [x] Keep fn names");
+
                             return;
                         }
 
                         self.changed = true;
+
                         report_change!(
                             "inline: Decided to inline function `{}{:?}` as it's used only once",
                             f.ident.sym,
                             f.ident.ctxt
                         );
                     }
+
                     _ => {}
                 }
 
@@ -798,6 +849,7 @@ impl Optimizer<'_> {
 
                             if let Some(new) = new {
                                 report_change!("inline: Inlined array access");
+
                                 self.changed = true;
 
                                 me.obj.clone_from(new);
@@ -812,8 +864,10 @@ impl Optimizer<'_> {
                     }
                 }
             }
+
             Expr::Ident(i) => {
                 let id = i.to_id();
+
                 if let Some(mut value) = self
                     .vars
                     .lits
@@ -836,8 +890,11 @@ impl Optimizer<'_> {
                     // currently renamer relies on the fact no distinct var has same ctxt, we need
                     // to remap all new bindings.
                     let bindings: AHashSet<Id> = collect_decls(&*value);
+
                     let new_mark = Mark::new();
+
                     let mut cache = FxHashMap::default();
+
                     let mut remap = FxHashMap::default();
 
                     for id in bindings {
@@ -849,6 +906,7 @@ impl Optimizer<'_> {
 
                         if let Some(usage) = self.data.vars.get(&id).cloned() {
                             let new_id = (id.0.clone(), new_ctxt);
+
                             self.data.vars.insert(new_id, usage);
                         }
 
@@ -857,13 +915,16 @@ impl Optimizer<'_> {
 
                     if !remap.is_empty() {
                         let mut remapper = Remapper::new(&remap);
+
                         value.visit_mut_with(&mut remapper);
                     }
 
                     self.changed = true;
+
                     report_change!("inline: Replacing a variable `{}` with cheap expression", i);
 
                     *e = *value;
+
                     return;
                 }
 
@@ -882,6 +943,7 @@ impl Optimizer<'_> {
 
                 if let Some(value) = self.vars.vars_for_inlining.remove(&i.to_id()) {
                     self.changed = true;
+
                     report_change!("inline: Replacing '{}' with an expression", i);
 
                     *e = *value;
@@ -889,6 +951,7 @@ impl Optimizer<'_> {
                     log_abort!("inline: [Change] {}", crate::debug::dump(&*e, false))
                 }
             }
+
             _ => (),
         }
     }
@@ -915,6 +978,7 @@ fn is_arrow_body_simple_enough_for_copy(e: &Expr) -> bool {
             return is_arrow_body_simple_enough_for_copy(&b.left)
                 && is_arrow_body_simple_enough_for_copy(&b.right)
         }
+
         _ => {}
     }
 

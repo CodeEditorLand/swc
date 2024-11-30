@@ -26,6 +26,7 @@ impl Context {
         };
 
         let start = self.locate_line_col(loc.start);
+
         let end = self.locate_line_col(loc.end);
 
         Span::new(start, end)
@@ -57,6 +58,7 @@ impl Context {
     /// This method allocate a new [SourceFile] in the given `cm`.
     pub fn new(cm: Lrc<SourceMap>, comments: SwcComments, filename: FileName, src: String) -> Self {
         let fm = cm.new_source_file(filename.into(), src);
+
         Self::new_without_alloc(cm, comments, fm)
     }
 

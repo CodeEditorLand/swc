@@ -79,7 +79,9 @@ where
         {
             return None;
         }
+
         let path = self.bundler.resolve(self.file_name, src).ok()?;
+
         let (_, local_mark, export_mark) = self.bundler.scope.module_id_gen.gen(&path);
 
         Some((
@@ -99,11 +101,14 @@ where
         {
             return;
         }
+
         let path = self.bundler.resolve(self.file_name, src);
+
         let path = match path {
             Ok(v) => v,
             _ => return,
         };
+
         let (id, _, _) = self.bundler.scope.module_id_gen.gen(&path);
 
         self.bundler.scope.mark_as_wrapping_required(id);
@@ -149,27 +154,33 @@ where
             //                    }));
             //                return ModuleItem::Stmt(Stmt::Empty(EmptyStmt { span: DUMMY_SP }));
             //            }
+
             ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(decl)) => {
                 let v = self.info.items.entry(None).or_default();
+
                 v.push({
                     let i = match decl.decl {
                         Decl::Class(ref c) => &c.ident,
                         Decl::Fn(ref f) => &f.ident,
                         Decl::Var(ref var) => {
                             let ids: Vec<Id> = find_pat_ids(&var.decls);
+
                             for id in ids {
                                 v.push(Specifier::Specific {
                                     local: id,
                                     alias: None,
                                 });
                             }
+
                             return;
                         }
+
                         Decl::TsEnum(ref e) => &e.id,
                         Decl::TsInterface(ref i) => &i.id,
                         Decl::TsTypeAlias(ref a) => &a.id,
                         _ => unreachable!("Decl in ExportDecl: {:?}", decl.decl),
                     };
+
                     Specifier::Specific {
                         local: i.into(),
                         alias: None,
@@ -205,6 +216,7 @@ where
                     .as_ref()
                     .map(|s| &s.value)
                     .and_then(|src| self.ctxt_for(src));
+
                 let mut need_wrapping = false;
 
                 let v = self
@@ -212,6 +224,7 @@ where
                     .items
                     .entry(named.src.clone().map(|v| *v))
                     .or_default();
+
                 for s in &mut named.specifiers {
                     match s {
                         ExportSpecifier::Namespace(n) => {
@@ -220,22 +233,26 @@ where
                                     name.ctxt = self.export_ctxt;
 
                                     need_wrapping = true;
+
                                     v.push(Specifier::Namespace {
                                         local: name.clone().into(),
                                         all: true,
                                     })
                                 }
+
                                 ModuleExportName::Str(..) => {
                                     unimplemented!("module string names unimplemented")
                                 }
                             };
                         }
+
                         ExportSpecifier::Default(d) => {
                             v.push(Specifier::Specific {
                                 local: d.exported.clone().into(),
                                 alias: Some(Id::new("default".into(), SyntaxContext::empty())),
                             });
                         }
+
                         ExportSpecifier::Named(n) => {
                             let orig = match &mut n.orig {
                                 ModuleExportName::Ident(ident) => ident,
@@ -243,6 +260,7 @@ where
                                     unimplemented!("module string names unimplemented")
                                 }
                             };
+
                             if let Some((_, export_ctxt)) = ctxt {
                                 orig.ctxt = export_ctxt;
                             }
@@ -251,12 +269,16 @@ where
                                 Some(ModuleExportName::Ident(exported)) => {
                                     exported.ctxt = self.export_ctxt;
                                 }
+
                                 Some(ModuleExportName::Str(..)) => {
                                     unimplemented!("module string names unimplemented")
                                 }
+
                                 None => {
                                     let mut exported: Ident = orig.clone();
+
                                     exported.ctxt = self.export_ctxt;
+
                                     n.exported = Some(ModuleExportName::Ident(exported));
                                 }
                             }
@@ -268,9 +290,11 @@ where
                                         alias: Some(orig.clone().into()),
                                     });
                                 }
+
                                 Some(ModuleExportName::Str(..)) => {
                                     unimplemented!("module string names unimplemented")
                                 }
+
                                 _ => {
                                     v.push(Specifier::Specific {
                                         local: orig.clone().into(),
@@ -289,6 +313,7 @@ where
 
             ModuleItem::ModuleDecl(ModuleDecl::ExportAll(all)) => {
                 let ctxt = self.ctxt_for(&all.src.value);
+
                 if let Some((_, export_ctxt)) = ctxt {
                     ExportMetadata {
                         export_ctxt: Some(export_ctxt),
@@ -299,6 +324,7 @@ where
 
                 self.info.items.entry(Some(*all.src.clone())).or_default();
             }
+
             _ => {}
         }
     }

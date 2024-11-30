@@ -12,9 +12,11 @@ fn main() {
 	let _log = testing::init();
 
 	let globals = Globals::new();
+
 	let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
 	// This example does not use core modules.
 	let external_modules = Vec::new();
+
 	let mut bundler = Bundler::new(
 		&globals,
 		cm.clone(),
@@ -23,19 +25,25 @@ fn main() {
 		Config { require:true, external_modules, ..Default::default() },
 		Box::new(Noop),
 	);
+
 	let mut entries = HashMap::default();
+
 	entries.insert("main".to_string(), FileName::Real("assets/main.js".into()));
 
 	let mut bundles = bundler.bundle(entries).expect("failed to bundle");
+
 	assert_eq!(
 		bundles.len(),
 		1,
 		"There's no conditional / dynamic imports and we provided only one entry"
 	);
+
 	let bundle = bundles.pop().unwrap();
+
 	assert_eq!(bundle.kind, BundleKind::Named { name:"main".into() }, "We provided it");
 
 	let wr = stdout();
+
 	let mut emitter = Emitter {
 		cfg:swc_ecma_codegen::Config::default(),
 		cm:cm.clone(),
@@ -70,12 +78,15 @@ impl Load for PathLoader {
 
 		Ok(ModuleData { fm, module, helpers:Default::default() })
 	}
+
     let _log = testing::init();
 
     let globals = Globals::new();
+
     let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
     // This example does not use core modules.
     let external_modules = Vec::new();
+
     let mut bundler = Bundler::new(
         &globals,
         cm.clone(),
@@ -88,16 +99,21 @@ impl Load for PathLoader {
         },
         Box::new(Noop),
     );
+
     let mut entries = HashMap::default();
+
     entries.insert("main".to_string(), FileName::Real("assets/main.js".into()));
 
     let mut bundles = bundler.bundle(entries).expect("failed to bundle");
+
     assert_eq!(
         bundles.len(),
         1,
         "There's no conditional / dynamic imports and we provided only one entry"
     );
+
     let bundle = bundles.pop().unwrap();
+
     assert_eq!(
         bundle.kind,
         BundleKind::Named {
@@ -107,6 +123,7 @@ impl Load for PathLoader {
     );
 
     let wr = stdout();
+
     let mut emitter = Emitter {
         cfg: swc_ecma_codegen::Config::default(),
         cm: cm.clone(),
@@ -167,6 +184,7 @@ impl Resolve for PathResolver {
 			slug:None,
 		})
 	}
+
     fn resolve(&self, base: &FileName, module_specifier: &str) -> Result<Resolution, Error> {
         assert!(
             module_specifier.starts_with('.'),
@@ -196,6 +214,7 @@ impl Hook for Noop {
 	fn get_import_meta_props(&self, _:Span, _:&ModuleRecord) -> Result<Vec<KeyValueProp>, Error> {
 		unimplemented!()
 	}
+
     fn get_import_meta_props(&self, _: Span, _: &ModuleRecord) -> Result<Vec<KeyValueProp>, Error> {
         unimplemented!()
     }

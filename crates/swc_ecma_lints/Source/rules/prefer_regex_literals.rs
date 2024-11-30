@@ -80,7 +80,9 @@ impl PreferRegexLiterals {
 
     fn reset_state(&mut self) {
         self.call_span = None;
+
         self.first_arg = None;
+
         self.second_arg = None;
     }
 
@@ -109,9 +111,11 @@ impl PreferRegexLiterals {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, message).emit();
             }
+
             _ => {}
         });
     }
@@ -133,6 +137,7 @@ impl PreferRegexLiterals {
                         self.emit_report(UNEXPECTED_REDUNDANT_REG_EXP_WITH_FLAGS_MESSAGE);
                     }
                 }
+
                 _ => {}
             }
         }
@@ -161,9 +166,11 @@ impl Visit for PreferRegexLiterals {
                     Expr::Ident(_) => {
                         self.set_state(call_expr.span, &call_expr.args);
                     }
+
                     Expr::Member(_) => {
                         self.set_state(call_expr.span, &call_expr.args);
                     }
+
                     _ => {}
                 }
             }
@@ -211,11 +218,13 @@ impl Visit for PreferRegexLiterals {
             MemberProp::Ident(ident) => {
                 self.check(&ident.sym);
             }
+
             MemberProp::Computed(comp) => {
                 if let Expr::Lit(Lit::Str(Str { value, .. })) = comp.expr.as_ref() {
                     self.check(value);
                 }
             }
+
             _ => {}
         }
     }

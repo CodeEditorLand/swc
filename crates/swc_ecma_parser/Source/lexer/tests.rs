@@ -81,6 +81,7 @@ trait WithSpan: Sized {
             span: span.into_span(),
         }
     }
+
     fn into_token(self) -> Token;
 }
 impl WithSpan for Token {
@@ -295,6 +296,7 @@ fn tpl_invalid_unicode_escape() {
             tok!('`'),
         ]
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), r"`\u{`"),
         vec![
@@ -314,6 +316,7 @@ fn tpl_invalid_unicode_escape() {
             tok!('`'),
         ]
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), r"`\xhex`"),
         vec![
@@ -418,6 +421,7 @@ fn regexp_unary_void() {
             BinOp(Div).span(10),
         ]
     );
+
     assert_eq!(
         lex(Syntax::default(), "void (/test/)"),
         vec![
@@ -597,6 +601,7 @@ fn spec_001() {
         ),
         expected
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "a = b / hi / g.exec(c).map(d);"),
         expected
@@ -760,6 +765,7 @@ fn str_lit() {
             raw: "'abcde'".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "\"abcde\""),
         vec![Token::Str {
@@ -767,6 +773,7 @@ fn str_lit() {
             raw: "\"abcde\"".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "'русский'"),
         vec![Token::Str {
@@ -774,6 +781,7 @@ fn str_lit() {
             raw: "'русский'".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "'\\x32'"),
         vec![Token::Str {
@@ -781,6 +789,7 @@ fn str_lit() {
             raw: "'\\x32'".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "'\\u1111'"),
         vec![Token::Str {
@@ -788,6 +797,7 @@ fn str_lit() {
             raw: "'\\u1111'".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "'\\u{1111}'"),
         vec![Token::Str {
@@ -795,6 +805,7 @@ fn str_lit() {
             raw: "'\\u{1111}'".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "'\t'"),
         vec![Token::Str {
@@ -802,6 +813,7 @@ fn str_lit() {
             raw: "'\t'".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "'\\n'"),
         vec![Token::Str {
@@ -809,6 +821,7 @@ fn str_lit() {
             raw: "'\\n'".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "'\\\nabc'"),
         vec![Token::Str {
@@ -816,6 +829,7 @@ fn str_lit() {
             raw: "'\\\nabc'".into(),
         }]
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "''"),
         vec![Token::Str {
@@ -823,6 +837,7 @@ fn str_lit() {
             raw: "''".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "'\\''"),
         vec![Token::Str {
@@ -830,6 +845,7 @@ fn str_lit() {
             raw: "'\\''".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "\"\""),
         vec![Token::Str {
@@ -837,6 +853,7 @@ fn str_lit() {
             raw: "\"\"".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "\"\\\"\""),
         vec![Token::Str {
@@ -844,6 +861,7 @@ fn str_lit() {
             raw: "\"\\\"\"".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "'\\0'"),
         vec![Token::Str {
@@ -851,6 +869,7 @@ fn str_lit() {
             raw: "'\\0'".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "'\\n'"),
         vec![Token::Str {
@@ -858,6 +877,7 @@ fn str_lit() {
             raw: "'\\n'".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "'\\r'"),
         vec![Token::Str {
@@ -865,6 +885,7 @@ fn str_lit() {
             raw: "'\\r'".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "'\\012'"),
         vec![Token::Str {
@@ -872,6 +893,7 @@ fn str_lit() {
             raw: "'\\012'".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "'\\07'"),
         vec![Token::Str {
@@ -879,6 +901,7 @@ fn str_lit() {
             raw: "'\\07'".into(),
         }],
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "'\\08'"),
         vec![Token::Str {
@@ -1672,6 +1695,7 @@ fn lex_colors_js(b: &mut Bencher) {
                 for t in lexer {
                     black_box(t);
                 }
+
                 Ok(())
             },
         );
@@ -1691,6 +1715,7 @@ fn lex_colors_ts(b: &mut Bencher) {
                 for t in lexer {
                     black_box(t);
                 }
+
                 Ok(())
             },
         );
@@ -1711,6 +1736,7 @@ fn bench(b: &mut Bencher, syntax: Syntax, s: &str) {
             for t in lexer {
                 black_box(t);
             }
+
             Ok(())
         });
     });
@@ -1721,14 +1747,23 @@ fn lex_large_number(b: &mut Bencher) {
     bench_simple(
         b,
         "10000000000000000;
+
         571293857289;
+
         32147859245;
+
         129478120974;
+
         238597230957293;
+
         542375984375;
+
         349578395;
+
         34857983412590716249;
+
         1238570129;
+
         123875102935;",
     );
 }
@@ -1843,14 +1878,18 @@ fn lex_semicolons(b: &mut Bencher) {
 #[test]
 fn issue_1272_1_ts() {
     let (tokens, errors) = lex_errors(crate::Syntax::Typescript(Default::default()), "\\u{16}");
+
     assert_eq!(tokens.len(), 1);
+
     assert_ne!(errors, Vec::new());
 }
 
 #[test]
 fn issue_1272_1_js() {
     let (tokens, errors) = lex_errors(crate::Syntax::Es(Default::default()), "\\u{16}");
+
     assert_eq!(tokens.len(), 1);
+
     assert_ne!(errors, Vec::new());
 }
 
@@ -1858,7 +1897,9 @@ fn issue_1272_1_js() {
 fn issue_1272_2_ts() {
     // Not recoverable yet
     let (tokens, errors) = lex_errors(crate::Syntax::Typescript(Default::default()), "\u{16}");
+
     assert_eq!(tokens.len(), 1);
+
     assert_eq!(errors, Vec::new());
 }
 
@@ -1866,7 +1907,9 @@ fn issue_1272_2_ts() {
 fn issue_1272_2_js() {
     // Not recoverable yet
     let (tokens, errors) = lex_errors(crate::Syntax::Es(Default::default()), "\u{16}");
+
     assert_eq!(tokens.len(), 1);
+
     assert_eq!(errors, Vec::new());
 }
 
@@ -1875,6 +1918,7 @@ fn issue_2853_1_js() {
     let (tokens, errors) = lex_errors(crate::Syntax::Es(Default::default()), "const a = \"\\0a\"");
 
     assert_eq!(errors, Vec::new());
+
     assert_eq!(
         tokens,
         vec![
@@ -1897,6 +1941,7 @@ fn issue_2853_2_ts() {
     );
 
     assert_eq!(errors, Vec::new());
+
     assert_eq!(
         tokens,
         vec![
@@ -1919,6 +1964,7 @@ fn issue_2853_3_js() {
     );
 
     assert_eq!(errors, Vec::new());
+
     assert_eq!(
         tokens,
         vec![
@@ -1941,6 +1987,7 @@ fn issue_2853_4_ts() {
     );
 
     assert_eq!(errors, Vec::new());
+
     assert_eq!(
         tokens,
         vec![
@@ -1966,6 +2013,7 @@ fn issue_2853_5_jsx() {
     );
 
     assert_eq!(errors, Vec::new());
+
     assert_eq!(
         tokens,
         vec![
@@ -1991,6 +2039,7 @@ fn issue_2853_6_tsx() {
     );
 
     assert_eq!(errors, Vec::new());
+
     assert_eq!(
         tokens,
         vec![
@@ -2016,6 +2065,7 @@ fn issue_2853_7_jsx() {
     );
 
     assert_eq!(errors, Vec::new());
+
     assert_eq!(
         tokens,
         vec![
@@ -2041,6 +2091,7 @@ fn issue_2853_8_tsx() {
     );
 
     assert_eq!(errors, Vec::new());
+
     assert_eq!(
         tokens,
         vec![
@@ -2062,6 +2113,7 @@ fn normalize_tpl_carriage_return() {
         lex_tokens(Syntax::default(), "`\r\n`"),
         lex_tokens(Syntax::default(), "`\n`")
     );
+
     assert_eq!(
         lex_tokens(Syntax::default(), "`\r`"),
         lex_tokens(Syntax::default(), "`\n`")
@@ -2084,6 +2136,7 @@ class C {
     );
 
     assert_eq!(errors.len(), 3);
+
     assert!(errors.iter().all(|e| e.kind() == &SyntaxError::TS1185));
 }
 
@@ -2108,6 +2161,7 @@ class C {
     );
 
     assert_eq!(errors.len(), 3);
+
     assert!(errors.iter().all(|e| e.kind() == &SyntaxError::TS1185));
 }
 
@@ -2125,6 +2179,7 @@ const x = <div />
     );
 
     assert_eq!(errors.len(), 1);
+
     assert!(errors.iter().all(|e| e.kind() == &SyntaxError::TS1185));
 }
 
@@ -2139,6 +2194,7 @@ const x = <div>
     );
 
     assert_eq!(errors.len(), 1);
+
     assert!(errors.iter().all(|e| e.kind() == &SyntaxError::TS1185));
 }
 
@@ -2160,6 +2216,7 @@ class C {
     );
 
     assert_eq!(errors.len(), 4);
+
     assert!(errors.iter().all(|e| e.kind() == &SyntaxError::TS1185));
 }
 
@@ -2187,6 +2244,7 @@ class C {
     );
 
     assert_eq!(errors.len(), 4);
+
     assert!(errors.iter().all(|e| e.kind() == &SyntaxError::TS1185));
 }
 

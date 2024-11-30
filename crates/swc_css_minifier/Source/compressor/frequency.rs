@@ -13,6 +13,7 @@ impl Compressor {
                     value: new_value,
                     raw: None,
                 };
+
                 frequency.unit = Ident {
                     span: frequency.unit.span,
                     value: "khz".into(),
@@ -30,12 +31,14 @@ impl Compressor {
                     raw: None,
                     span: frequency.span,
                 };
+
                 frequency.unit = Ident {
                     span: frequency.unit.span,
                     value: "hz".into(),
                     raw: None,
                 };
             }
+
             _ => {}
         }
     }

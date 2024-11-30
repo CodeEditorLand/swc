@@ -199,6 +199,7 @@ impl StartsWithAlphaNum for Expr {
             Expr::Bin(BinExpr { ref left, .. }) | Expr::Cond(CondExpr { test: ref left, .. }) => {
                 left.starts_with_alpha_num()
             }
+
             Expr::Call(CallExpr { callee: left, .. }) => left.starts_with_alpha_num(),
             Expr::Member(MemberExpr { obj: ref left, .. }) => left.starts_with_alpha_num(),
 

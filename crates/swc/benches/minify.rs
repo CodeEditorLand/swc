@@ -60,6 +60,7 @@ fn bench_minify(b:&mut Bencher, filename:&str) {
 
 fn files_group(c:&mut Criterion) {
 	let mut group = c.benchmark_group("es/full/minify/libraries");
+
 	group.sample_size(10);
 
 	let mut bench_file = |name:&str| {
@@ -69,18 +70,30 @@ fn files_group(c:&mut Criterion) {
 	};
 
 	bench_file("antd");
+
 	bench_file("d3");
+
 	bench_file("echarts");
+
 	bench_file("jquery");
+
 	bench_file("lodash");
+
 	bench_file("moment");
+
 	bench_file("react");
+
 	bench_file("terser");
+
 	bench_file("three");
+
 	bench_file("typescript");
+
 	bench_file("victory");
+
 	bench_file("vue");
 	// bench_file("large");
+
 	let cm = Arc::new(SourceMap::new(FilePathMapping::empty()));
 
 	swc::Compiler::new(cm)
@@ -132,6 +145,7 @@ fn bench_minify(b:&mut Bencher, filename:&str) {
 
 fn files_group(c:&mut Criterion) {
 	let mut group = c.benchmark_group("es/full/minify/libraries");
+
 	group.sample_size(10);
 
 	let mut bench_file = |name:&str| {
@@ -141,18 +155,30 @@ fn files_group(c:&mut Criterion) {
 	};
 
 	bench_file("antd");
+
 	bench_file("d3");
+
 	bench_file("echarts");
+
 	bench_file("jquery");
+
 	bench_file("lodash");
+
 	bench_file("moment");
+
 	bench_file("react");
+
 	bench_file("terser");
+
 	bench_file("three");
+
 	bench_file("typescript");
+
 	bench_file("victory");
+
 	bench_file("vue");
 	// bench_file("large");
+
     let cm = Arc::new(SourceMap::new(FilePathMapping::empty()));
 
     swc::Compiler::new(cm)
@@ -204,6 +230,7 @@ fn bench_minify(b: &mut Bencher, filename: &str) {
 
 fn files_group(c: &mut Criterion) {
     let mut group = c.benchmark_group("es/full/minify/libraries");
+
     group.sample_size(10);
 
     let mut bench_file = |name: &str| {
@@ -213,16 +240,27 @@ fn files_group(c: &mut Criterion) {
     };
 
     bench_file("antd");
+
     bench_file("d3");
+
     bench_file("echarts");
+
     bench_file("jquery");
+
     bench_file("lodash");
+
     bench_file("moment");
+
     bench_file("react");
+
     bench_file("terser");
+
     bench_file("three");
+
     bench_file("typescript");
+
     bench_file("victory");
+
     bench_file("vue");
     // bench_file("large");
 }

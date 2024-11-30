@@ -71,9 +71,11 @@ impl Pure<'_> {
                 match call.args.len() {
                     0 => {
                         self.changed = true;
+
                         report_change!("evaluate: Dropping array.slice call");
                         *e = *obj.take();
                     }
+
                     1 => {
                         if let Value::Known(start) =
                             call.args[0].expr.as_pure_number(&self.expr_ctx)
@@ -85,6 +87,7 @@ impl Pure<'_> {
                             let start = start.floor() as usize;
 
                             self.changed = true;
+
                             report_change!("evaluate: Reducing array.slice({}) call", start);
 
                             if start >= arr.elems.len() {
@@ -93,6 +96,7 @@ impl Pure<'_> {
                                     elems: Default::default(),
                                 }
                                 .into();
+
                                 return;
                             }
 
@@ -101,9 +105,12 @@ impl Pure<'_> {
                             *e = ArrayLit { span: *span, elems }.into();
                         }
                     }
+
                     _ => {
                         let start = call.args[0].expr.as_pure_number(&self.expr_ctx);
+
                         let end = call.args[1].expr.as_pure_number(&self.expr_ctx);
+
                         if let Value::Known(start) = start {
                             if start.is_sign_negative() {
                                 return;
@@ -117,6 +124,7 @@ impl Pure<'_> {
                                 }
 
                                 let end = end.floor() as usize;
+
                                 let end = end.min(arr.elems.len());
 
                                 if start >= end {
@@ -124,17 +132,20 @@ impl Pure<'_> {
                                 }
 
                                 self.changed = true;
+
                                 report_change!(
                                     "evaluate: Reducing array.slice({}, {}) call",
                                     start,
                                     end
                                 );
+
                                 if start >= arr.elems.len() {
                                     *e = ArrayLit {
                                         span: *span,
                                         elems: Default::default(),
                                     }
                                     .into();
+
                                     return;
                                 }
 
@@ -145,6 +156,7 @@ impl Pure<'_> {
                         }
                     }
                 }
+
                 return;
             }
 
@@ -154,6 +166,7 @@ impl Pure<'_> {
                 && arr.elems[0].is_some()
             {
                 report_change!("evaluate: Reducing array.toString() call");
+
                 self.changed = true;
                 *obj = arr.elems[0]
                     .take()
@@ -211,9 +224,11 @@ impl Pure<'_> {
                 }
 
                 self.changed = true;
+
                 report_change!("evaluate: Reduced `function.valueOf()` into a function expression");
 
                 *e = *obj.take();
+
                 return;
             }
 
@@ -227,6 +242,7 @@ impl Pure<'_> {
                 }
 
                 self.changed = true;
+
                 report_change!("evaluate: Reduced `function.toString()` into a string");
 
                 *e = Str {
@@ -251,7 +267,9 @@ impl Pure<'_> {
 
         match &mut member.prop {
             MemberProp::Ident(_) => {}
+
             MemberProp::PrivateName(_) => {}
+
             MemberProp::Computed(p) => {
                 if let Expr::Lit(Lit::Str(s)) = &*p.expr {
                     if let Ok(value) = s.value.parse::<u32>() {
@@ -280,6 +298,7 @@ impl Pure<'_> {
                 if args.len() == 1 && args[0].spread.is_none() {
                     if callee.is_ident_ref_to("Number") {
                         self.changed = true;
+
                         report_change!(
                             "evaluate: Reducing a call to `Number` into an unary operation"
                         );
@@ -361,9 +380,11 @@ impl Pure<'_> {
                 }
 
                 let mut buffer = ryu_js::Buffer::new();
+
                 let value = buffer.format_to_fixed(num.value, f);
 
                 self.changed = true;
+
                 report_change!(
                     "evaluate: Evaluating `{}.toFixed({})` as `{}`",
                     num,
@@ -390,6 +411,7 @@ impl Pure<'_> {
                 let value = num.value.to_js_string().into();
 
                 self.changed = true;
+
                 report_change!(
                     "evaluate: Evaluating `{}.toPrecision()` as `{}`",
                     num,
@@ -402,6 +424,7 @@ impl Pure<'_> {
                     value,
                 })
                 .into();
+
                 return;
             }
 
@@ -416,7 +439,9 @@ impl Pure<'_> {
                 }
 
                 let value = f64_to_precision(num.value, p);
+
                 self.changed = true;
+
                 report_change!(
                     "evaluate: Evaluating `{}.toPrecision()` as `{}`",
                     num,
@@ -428,6 +453,7 @@ impl Pure<'_> {
                     value: value.into(),
                 })
                 .into();
+
                 return;
             }
         }
@@ -438,6 +464,7 @@ impl Pure<'_> {
                 let value = f64_to_exponential(num.value).into();
 
                 self.changed = true;
+
                 report_change!(
                     "evaluate: Evaluating `{}.toExponential()` as `{}`",
                     num,
@@ -450,6 +477,7 @@ impl Pure<'_> {
                     value,
                 })
                 .into();
+
                 return;
             } else if let Some(precision) = args
                 .first()
@@ -464,6 +492,7 @@ impl Pure<'_> {
                 let value = f64_to_exponential_with_precision(num.value, p).into();
 
                 self.changed = true;
+
                 report_change!(
                     "evaluate: Evaluating `{}.toPrecision({})` as `{}`",
                     num,
@@ -477,6 +506,7 @@ impl Pure<'_> {
                     value,
                 })
                 .into();
+
                 return;
             }
         }
@@ -494,6 +524,7 @@ impl Pure<'_> {
                         value,
                     })
                     .into();
+
                     return;
                 }
 
@@ -504,6 +535,7 @@ impl Pure<'_> {
 
                     let value = {
                         let x = num.value;
+
                         if x < 0. {
                             // I don't know if u128 is really needed, but it works.
                             format!("-{}", Radix::new(-x as u128, base))
@@ -535,6 +567,7 @@ impl Pure<'_> {
                 //
                 if is_pure_undefined_or_null(&self.expr_ctx, obj) {
                     self.changed = true;
+
                     report_change!(
                         "evaluate: Reduced an optional chaining operation because object is \
                          always null or undefined"
@@ -547,6 +580,7 @@ impl Pure<'_> {
             OptChainBase::Call(OptCall { span, callee, .. }) => {
                 if is_pure_undefined_or_null(&self.expr_ctx, callee) {
                     self.changed = true;
+
                     report_change!(
                         "evaluate: Reduced a call expression with optional chaining operation \
                          because object is always null or undefined"
@@ -577,6 +611,7 @@ impl Pure<'_> {
                 // foo || 1 => foo, 1
                 if v {
                     self.changed = true;
+
                     report_change!("evaluate: `foo || true` => `foo, 1`");
 
                     *e = SeqExpr {
@@ -586,16 +621,19 @@ impl Pure<'_> {
                     .into();
                 } else {
                     self.changed = true;
+
                     report_change!("evaluate: `foo || false` => `foo` (bool ctx)");
 
                     *e = *bin_expr.left.take();
                 }
+
                 return;
             }
 
             // 1 || foo => foo
             if let Value::Known(true) = bin_expr.left.as_pure_bool(&self.expr_ctx) {
                 self.changed = true;
+
                 report_change!("evaluate: `true || foo` => `foo`");
 
                 *e = *bin_expr.right.take();
@@ -606,11 +644,13 @@ impl Pure<'_> {
             if let Value::Known(v) = bin_expr.right.as_pure_bool(&self.expr_ctx) {
                 if v {
                     self.changed = true;
+
                     report_change!("evaluate: `foo && true` => `foo` (bool ctx)");
 
                     *e = *bin_expr.left.take();
                 } else {
                     self.changed = true;
+
                     report_change!("evaluate: `foo && false` => `foo, false`");
 
                     *e = SeqExpr {
@@ -619,11 +659,13 @@ impl Pure<'_> {
                     }
                     .into();
                 }
+
                 return;
             }
 
             if let Value::Known(true) = bin_expr.left.as_pure_bool(&self.expr_ctx) {
                 self.changed = true;
+
                 report_change!("evaluate: `true && foo` => `foo`");
 
                 *e = *bin_expr.right.take();
@@ -645,6 +687,7 @@ impl Pure<'_> {
 
                     match &**b {
                         Expr::Ident(..) | Expr::Lit(..) => {}
+
                         _ => break 'outer,
                     }
                 }
@@ -662,7 +705,9 @@ impl Pure<'_> {
             self.optimize_member_expr(&mut member_expr.obj, &member_expr.prop)
         {
             *e = replacement;
+
             self.changed = true;
+
             report_change!(
                 "member_expr: Optimized member expression as {}",
                 dump(&*e, false)
@@ -680,6 +725,7 @@ impl Pure<'_> {
         {
             match &**a_right {
                 Expr::Lit(..) => {}
+
                 _ => return,
             }
 
@@ -688,6 +734,7 @@ impl Pure<'_> {
                     if b_id.to_id() == a_left.id.to_id() {
                         report_change!("evaluate: Trivial: `{}`", a_left.id);
                         *b = *a_right.clone();
+
                         self.changed = true;
                     }
                 }
@@ -735,21 +782,26 @@ impl Pure<'_> {
                 if call.args.len() != 1 {
                     return;
                 }
+
                 if let Expr::Lit(Lit::Num(Number { value, .. })) = &*call.args[0].expr {
                     if value.fract() != 0.0 {
                         return;
                     }
 
                     let idx = value.round() as i64 as usize;
+
                     let c = s.value.chars().nth(idx);
 
                     match c {
                         Some(v) => {
                             let mut b = [0; 2];
+
                             v.encode_utf16(&mut b);
+
                             let v = b[0];
 
                             self.changed = true;
+
                             report_change!(
                                 "evaluate: Evaluated `charCodeAt` of a string literal as `{}`",
                                 v
@@ -761,8 +813,10 @@ impl Pure<'_> {
                             })
                             .into()
                         }
+
                         None => {
                             self.changed = true;
+
                             report_change!(
                                 "evaluate: Evaluated `charCodeAt` of a string literal as `NaN`",
                             );
@@ -770,22 +824,27 @@ impl Pure<'_> {
                         }
                     }
                 }
+
                 return;
             }
             "codePointAt" => {
                 if call.args.len() != 1 {
                     return;
                 }
+
                 if let Expr::Lit(Lit::Num(Number { value, .. })) = &*call.args[0].expr {
                     if value.fract() != 0.0 {
                         return;
                     }
 
                     let idx = value.round() as i64 as usize;
+
                     let c = s.value.chars().nth(idx);
+
                     match c {
                         Some(v) => {
                             self.changed = true;
+
                             report_change!(
                                 "evaluate: Evaluated `codePointAt` of a string literal as `{}`",
                                 v
@@ -797,8 +856,10 @@ impl Pure<'_> {
                             })
                             .into()
                         }
+
                         None => {
                             self.changed = true;
+
                             report_change!(
                                 "evaluate: Evaluated `codePointAt` of a string literal as `NaN`",
                             );
@@ -811,12 +872,15 @@ impl Pure<'_> {
                         }
                     }
                 }
+
                 return;
             }
+
             _ => return,
         };
 
         self.changed = true;
+
         report_change!("evaluate: Evaluated `{method}` of a string literal");
         *e = Lit::Str(Str {
             value: new_val.into(),
@@ -831,17 +895,21 @@ impl Pure<'_> {
 // https://github.com/boa-dev/boa/blob/f8b682085d7fe0bbfcd0333038e93cf2f5aee710/boa_engine/src/builtins/number/mod.rs#L408
 fn f64_to_precision(value: f64, precision: usize) -> String {
     let mut x = value;
+
     let p_i32 = precision as i32;
 
     // 7. Let s be the empty String.
     let mut s = String::new();
+
     let mut m: String;
+
     let mut e: i32;
 
     // 8. If x < 0, then a. Set s to the code unit 0x002D (HYPHEN-MINUS). b. Set x
     //    to -x.
     if x < 0. {
         s.push('-');
+
         x = -x;
     }
 
@@ -849,6 +917,7 @@ fn f64_to_precision(value: f64, precision: usize) -> String {
     //    the code unit 0x0030 (DIGIT ZERO). b. Let e be 0.
     if x == 0.0 {
         m = "0".repeat(precision);
+
         e = 0;
     // 10
     } else {
@@ -872,6 +941,7 @@ fn f64_to_precision(value: f64, precision: usize) -> String {
 
         // c: switching to scientific notation
         let great_exp = e >= p_i32;
+
         if e < -6 || great_exp {
             assert_ne!(e, 0);
 
@@ -894,6 +964,7 @@ fn f64_to_precision(value: f64, precision: usize) -> String {
 
     // 11
     let e_inc = e + 1;
+
     if e_inc == p_i32 {
         return s + &*m;
     }
@@ -904,7 +975,9 @@ fn f64_to_precision(value: f64, precision: usize) -> String {
     // 13
     } else {
         s.push('0');
+
         s.push('.');
+
         s.push_str(&"0".repeat(-e_inc as usize));
     }
 
@@ -914,17 +987,21 @@ fn f64_to_precision(value: f64, precision: usize) -> String {
 
 fn flt_str_to_exp(flt: &str) -> i32 {
     let mut non_zero_encountered = false;
+
     let mut dot_encountered = false;
+
     for (i, c) in flt.chars().enumerate() {
         if c == '.' {
             if non_zero_encountered {
                 return (i as i32) - 1;
             }
+
             dot_encountered = true;
         } else if c != '0' {
             if dot_encountered {
                 return 1 - (i as i32);
             }
+
             non_zero_encountered = true;
         }
     }
@@ -934,10 +1011,12 @@ fn flt_str_to_exp(flt: &str) -> i32 {
 fn round_to_precision(digits: &mut String, precision: usize) -> bool {
     if digits.len() > precision {
         let to_round = digits.split_off(precision);
+
         let mut digit = digits
             .pop()
             .expect("already checked that length is bigger than precision")
             as u8;
+
         if let Some(first) = to_round.chars().next() {
             if first > '4' {
                 digit += 1;
@@ -948,35 +1027,44 @@ fn round_to_precision(digits: &mut String, precision: usize) -> bool {
             // ':' is '9' + 1
             // need to propagate the increment backward
             let mut replacement = String::from("0");
+
             let mut propagated = false;
+
             for c in digits.chars().rev() {
                 let d = match (c, propagated) {
                     ('0'..='8', false) => (c as u8 + 1) as char,
                     (_, false) => '0',
                     (_, true) => c,
                 };
+
                 replacement.push(d);
+
                 if d != '0' {
                     propagated = true;
                 }
             }
+
             digits.clear();
+
             let replacement = if propagated {
                 replacement.as_str()
             } else {
                 digits.push('1');
                 &replacement.as_str()[1..]
             };
+
             for c in replacement.chars().rev() {
                 digits.push(c);
             }
             !propagated
         } else {
             digits.push(digit as char);
+
             false
         }
     } else {
         digits.push_str(&"0".repeat(precision - digits.len()));
+
         false
     }
 }
@@ -998,9 +1086,12 @@ fn f64_to_exponential(n: f64) -> String {
 // we insert the plus sign
 fn f64_to_exponential_with_precision(n: f64, prec: usize) -> String {
     let mut res = format!("{n:.prec$e}");
+
     let idx = res.find('e').expect("'e' not found in exponential string");
+
     if res.as_bytes()[idx + 1] != b'-' {
         res.insert(idx + 1, '+');
     }
+
     res
 }

@@ -126,8 +126,10 @@ impl Tokens for Lexer<'_> {
     fn set_ctx(&mut self, ctx: Context) {
         if ctx.module && !self.module_errors.borrow().is_empty() {
             let mut module_errors = self.module_errors.borrow_mut();
+
             self.errors.borrow_mut().append(&mut *module_errors);
         }
+
         self.ctx = ctx
     }
 
@@ -183,8 +185,10 @@ impl Tokens for Lexer<'_> {
     fn add_module_mode_error(&self, error: Error) {
         if self.ctx.module {
             self.add_error(error);
+
             return;
         }
+
         self.module_errors.borrow_mut().push(error);
     }
 
@@ -210,6 +214,7 @@ impl Lexer<'_> {
     fn consume_pending_comments(&mut self) {
         if let Some(comments) = self.comments.as_mut() {
             let comments_buffer = self.comments_buffer.as_mut().unwrap();
+
             let last = self.state.prev_hi;
 
             // move the pending to the leading or trailing
@@ -238,6 +243,7 @@ impl Lexer<'_> {
                     BufferedCommentKind::Leading => {
                         comments.add_leading(comment.pos, comment.comment);
                     }
+
                     BufferedCommentKind::Trailing => {
                         comments.add_trailing(comment.pos, comment.comment);
                     }
@@ -258,6 +264,7 @@ impl Lexer<'_> {
         }
 
         self.state.had_line_break = self.state.is_first;
+
         self.state.is_first = false;
 
         // skip spaces before getting next character, if we are allowed to.
@@ -291,6 +298,7 @@ impl Lexer<'_> {
             }
 
             let c = self.cur();
+
             if let Some(c) = c {
                 if self.state.context.current() == Some(TokenContext::JSXOpeningTag)
                     || self.state.context.current() == Some(TokenContext::JSXClosingTag)
@@ -304,6 +312,7 @@ impl Lexer<'_> {
                             // Safety: cur() is Some('>')
                             self.input.bump();
                         }
+
                         return Ok(Some(Token::JSXTagEnd));
                     }
 
@@ -316,6 +325,7 @@ impl Lexer<'_> {
 
                 if c == '<' && self.state.is_expr_allowed && self.input.peek() != Some('!') {
                     let had_line_break_before_last = self.had_line_break_before_last();
+
                     let cur_pos = self.input.cur_pos();
 
                     unsafe {
@@ -327,8 +337,11 @@ impl Lexer<'_> {
                         let span = Span::new(cur_pos, cur_pos + BytePos(7));
 
                         self.emit_error_span(span, SyntaxError::TS1185);
+
                         self.skip_line_comment(6);
+
                         self.skip_space::<true>();
+
                         return self.read_token();
                     }
 
@@ -339,6 +352,7 @@ impl Lexer<'_> {
 
         if let Some(TokenContext::Tpl {}) = self.state.context.current() {
             let start = self.state.tpl_start;
+
             return self.read_tmpl_token(start).map(Some);
         }
 
@@ -360,6 +374,7 @@ impl Iterator for Lexer<'_> {
         };
 
         let span = self.span(start);
+
         if let Some(ref token) = token {
             if let Some(comments) = self.comments_buffer.as_mut() {
                 for comment in comments.take_pending_leading() {
@@ -372,7 +387,9 @@ impl Iterator for Lexer<'_> {
             }
 
             self.state.update(start, token.kind());
+
             self.state.prev_hi = self.last_pos();
+
             self.state.had_line_break_before_last = self.had_line_break_before_last();
         }
 
@@ -451,6 +468,7 @@ impl State {
         }
 
         let prev = self.token_type.take();
+
         self.token_type = Some(TokenType::from(next));
 
         self.is_expr_allowed = self.is_expr_allowed_on_next(prev, start, next);
@@ -489,6 +507,7 @@ impl State {
                     let out = context.pop().unwrap();
 
                     // let a = function(){}
+
                     if out == TokenContext::BraceStmt
                         && matches!(
                             context.current(),
@@ -496,6 +515,7 @@ impl State {
                         )
                     {
                         context.pop();
+
                         return false;
                     }
 
@@ -519,6 +539,7 @@ impl State {
                     {
                         context.push(TokenContext::FnExpr);
                     }
+
                     false
                 }
 
@@ -528,6 +549,7 @@ impl State {
                     {
                         context.push(TokenContext::ClassExpr);
                     }
+
                     false
                 }
 
@@ -547,6 +569,7 @@ impl State {
                 }
 
                 // for (a of b) {}
+
                 known_ident_token!("of")
                     if Some(TokenContext::ParenStmt { is_for_loop: true }) == context.current() =>
                 {
@@ -568,6 +591,7 @@ impl State {
                             {
                                 true
                             }
+
                             _ => false,
                         },
                         _ => false,
@@ -576,6 +600,7 @@ impl State {
 
                 TokenKind::LBrace => {
                     let cur = context.current();
+
                     if syntax.jsx() && cur == Some(TokenContext::JSXOpeningTag) {
                         context.push(TokenContext::BraceExpr)
                     } else if syntax.jsx() && cur == Some(TokenContext::JSXExpr) {
@@ -587,8 +612,10 @@ impl State {
                             } else {
                                 TokenContext::BraceExpr
                             };
+
                         context.push(next_ctxt);
                     }
+
                     true
                 }
 
@@ -596,6 +623,7 @@ impl State {
                     if syntax.jsx() && prev == Some(TokenType::JSXTagStart) =>
                 {
                     context.pop();
+
                     context.pop(); // do not consider JSX expr -> JSX open tag -> ... anymore
                     context.push(TokenContext::JSXClosingTag); // reconsider as closing tag context
                     false
@@ -603,6 +631,7 @@ impl State {
 
                 TokenKind::DollarLBrace => {
                     context.push(TokenContext::TplQuasi);
+
                     true
                 }
 
@@ -614,11 +643,13 @@ impl State {
                             Keyword::If | Keyword::With | Keyword::While => {
                                 TokenContext::ParenStmt { is_for_loop: false }
                             }
+
                             Keyword::For => TokenContext::ParenStmt { is_for_loop: true },
                             _ => TokenContext::ParenExpr,
                         },
                         _ => TokenContext::ParenExpr,
                     });
+
                     true
                 }
 
@@ -631,8 +662,10 @@ impl State {
                         context.pop();
                     } else {
                         self.tpl_start = start;
+
                         context.push(TokenContext::Tpl);
                     }
+
                     false
                 }
 
@@ -646,11 +679,13 @@ impl State {
                 // tt.jsxTagEnd.updateContext
                 TokenKind::JSXTagEnd => {
                     let out = context.pop();
+
                     if (out == Some(TokenContext::JSXOpeningTag)
                         && prev == Some(TokenType::BinOp(BinOpToken::Div)))
                         || out == Some(TokenContext::JSXClosingTag)
                     {
                         context.pop();
+
                         context.current() == Some(TokenContext::JSXExpr)
                     } else {
                         true
@@ -695,6 +730,7 @@ impl TokenContexts {
             //          function b(){}
             //      };
             //  }
+
             Some(TokenType::Keyword(Keyword::Return))
             | Some(TokenType::Keyword(Keyword::Yield)) => {
                 return had_line_break;
@@ -713,6 +749,7 @@ impl TokenContexts {
                 // <Blah blah={function (): void {}} />
                 if self.current() == Some(TokenContext::BraceExpr) {
                     let len = self.len();
+
                     if let Some(TokenContext::JSXOpeningTag) = self.0.get(len - 2) {
                         return true;
                     }
@@ -727,6 +764,7 @@ impl TokenContexts {
             }
 
             // () => {}
+
             Some(TokenType::Arrow) => return true,
             _ => {}
         }
@@ -756,9 +794,11 @@ impl TokenContexts {
     #[inline]
     pub fn pop(&mut self) -> Option<TokenContext> {
         let opt = self.0.pop();
+
         if cfg!(feature = "debug") {
             trace!("context.pop({:?}): {:?}", opt, self.0);
         }
+
         opt
     }
 
@@ -832,6 +872,7 @@ where
 {
     crate::with_test_sess(s, |_, fm| {
         let mut l = Lexer::new(syntax, target, fm, None);
+
         let res = f(&mut l);
 
         #[cfg(debug_assertions)]
@@ -853,6 +894,7 @@ pub(crate) fn lex(syntax: Syntax, s: &'static str) -> Vec<TokenAndSpan> {
 pub(crate) fn lex_module_errors(syntax: Syntax, s: &'static str) -> Vec<Error> {
     with_lexer(syntax, Default::default(), s, |l| {
         l.ctx.strict = true;
+
         l.ctx.module = true;
 
         let _: Vec<_> = l.collect();
@@ -876,7 +918,9 @@ pub(crate) fn lex_tokens(syntax: Syntax, s: &'static str) -> Vec<Token> {
 pub(crate) fn lex_errors(syntax: Syntax, s: &'static str) -> (Vec<Token>, Vec<Error>) {
     with_lexer(syntax, EsVersion::Es2020, s, |l| {
         let tokens = l.map(|ts| ts.token).collect();
+
         let errors = l.take_errors();
+
         Ok((tokens, errors))
     })
     .unwrap()

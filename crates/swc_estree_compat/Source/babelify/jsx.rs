@@ -135,6 +135,7 @@ impl Babelify for JSXAttrOrSpread {
                 // For JSX spread elements, babel includes the curly braces, and swc
                 // does not. So we extend the span to include the braces here.
                 let span = extend_spread_span_to_braces(spread.span(), ctx);
+
                 JSXOpeningElAttr::Spread(JSXSpreadAttribute {
                     base: ctx.base(span),
                     argument: Box::alloc().init(spread.expr.babelify(ctx).into()),
@@ -146,10 +147,13 @@ impl Babelify for JSXAttrOrSpread {
 
 fn extend_spread_span_to_braces(sp: Span, ctx: &Context) -> Span {
     let mut span = sp;
+
     let _ = ctx.cm.with_span_to_prev_source(sp, |prev_source| {
         let mut num_chars = 0;
+
         for c in prev_source.chars().rev() {
             num_chars += 1;
+
             if c == '{' {
                 span = span.with_lo(span.lo - BytePos(num_chars));
             } else if !c.is_whitespace() {
@@ -160,8 +164,10 @@ fn extend_spread_span_to_braces(sp: Span, ctx: &Context) -> Span {
 
     let _ = ctx.cm.with_span_to_next_source(sp, |next_source| {
         let mut num_chars = 0;
+
         for c in next_source.chars() {
             num_chars += 1;
+
             if c == '}' {
                 span = span.with_hi(span.hi + BytePos(num_chars));
             } else if !c.is_whitespace() {
@@ -223,6 +229,7 @@ impl Babelify for JSXAttrValue {
                     ),
                 }
             }
+
             JSXAttrValue::JSXExprContainer(e) => JSXAttrVal::Expr(e.babelify(ctx)),
             JSXAttrValue::JSXElement(e) => JSXAttrVal::Element(e.babelify(ctx)),
             JSXAttrValue::JSXFragment(f) => JSXAttrVal::Fragment(f.babelify(ctx)),
@@ -249,6 +256,7 @@ impl Babelify for JSXElement {
             Flavor::Babel => None,
             Flavor::Acorn { .. } => Some(self.closing.is_some()),
         };
+
         BabelJSXElement {
             base: ctx.base(self.span),
             opening_element: self.opening.babelify(ctx),

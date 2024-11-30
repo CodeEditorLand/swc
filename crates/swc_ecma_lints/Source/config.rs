@@ -79,6 +79,7 @@ where
     fn merge(&mut self, other: Self) {
         if let LintRuleLevel::Unspecified = self.0 {
             self.0 = other.0;
+
             self.1 = other.1;
         }
     }

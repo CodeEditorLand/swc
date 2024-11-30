@@ -18,9 +18,12 @@ where
 
             Decl::Var(ref n) => {
                 self.emit_var_decl_inner(n)?;
+
                 formatting_semi!();
+
                 srcmap!(n, false);
             }
+
             Decl::Using(n) => emit!(n),
             Decl::TsEnum(ref n) => emit!(n),
             Decl::TsInterface(ref n) => emit!(n),
@@ -40,10 +43,12 @@ where
 
         if node.is_await {
             keyword!("await");
+
             space!();
         }
 
         keyword!("using");
+
         space!();
 
         self.emit_list(
@@ -64,6 +69,7 @@ where
 
         if node.declare {
             keyword!(self, "declare");
+
             space!(self);
         }
 
@@ -75,12 +81,16 @@ where
 
         if node.class.is_abstract {
             keyword!(self, "abstract");
+
             space!(self);
         }
 
         keyword!(self, "class");
+
         space!(self);
+
         emit!(self, node.ident);
+
         emit!(self, node.class.type_params);
 
         self.emit_class_trailing(&node.class)?;
@@ -98,17 +108,21 @@ where
 
         if node.declare {
             keyword!("declare");
+
             space!();
         }
 
         if node.function.is_async {
             keyword!("async");
+
             space!();
         }
 
         keyword!("function");
+
         if node.function.is_generator {
             punct!("*");
+
             formatting_space!();
         } else {
             space!();
@@ -133,6 +147,7 @@ where
 
         if node.declare {
             keyword!(self, "declare");
+
             space!(self);
         }
 
@@ -145,6 +160,7 @@ where
             }) => false,
             _ => true,
         };
+
         if starts_with_ident {
             space!(self);
         } else {
@@ -170,8 +186,11 @@ where
 
         if let Some(ref init) = node.init {
             formatting_space!();
+
             punct!("=");
+
             formatting_space!();
+
             emit!(init);
         }
     }
@@ -203,6 +222,7 @@ class HogeFuga extends Hoge {};",
     #[test]
     fn single_argument_arrow_expression() {
         assert_min("function* f(){ yield x => x}", "function*f(){yield x=>x}");
+
         assert_min(
             "function* f(){ yield ({x}) => x}",
             "function*f(){yield({x})=>x}",

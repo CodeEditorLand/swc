@@ -80,6 +80,7 @@ pub trait SourceMapperExt {
             }
 
             let first_child = first_child.unwrap();
+
             if parent_node.is_synthesized() || first_child.is_synthesized() {
                 return first_child.starts_on_new_line(format);
             }

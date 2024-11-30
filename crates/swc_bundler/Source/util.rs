@@ -49,6 +49,7 @@ pub(crate) trait ExprExt: Into<Expr> {
         T: IdentLike,
     {
         let init = self.into();
+
         let lhs = lhs.into_id();
 
         if cfg!(debug_assertions) {
@@ -233,6 +234,7 @@ impl ExportMetadata {
             }));
         } else {
             let obj = to.as_mut().unwrap();
+
             obj.props.extend(props);
         }
     }

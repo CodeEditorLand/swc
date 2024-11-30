@@ -33,7 +33,9 @@ impl Modules {
 
     pub fn from(id: ModuleId, module: Module, injected_ctxt: SyntaxContext) -> Self {
         let mut ret = Self::empty(injected_ctxt);
+
         ret.modules.push((id, module));
+
         ret
     }
 
@@ -42,10 +44,12 @@ impl Modules {
             self.prepended_stmts.is_empty(),
             "sort should be called before calling into_items"
         );
+
         debug_assert!(
             self.appended_stmts.is_empty(),
             "sort should be called before calling into_items"
         );
+
         self.modules.into_iter().flat_map(|v| v.1.body).collect()
     }
 
@@ -108,6 +112,7 @@ impl Modules {
         F: FnMut(ModuleId, Vec<ModuleItem>) -> Vec<ModuleItem>,
     {
         let p = take(&mut self.prepended_stmts);
+
         self.prepended_stmts = p
             .into_iter()
             .map(|(id, items)| (id, op(id, items)))
@@ -123,6 +128,7 @@ impl Modules {
             .collect();
 
         let a = take(&mut self.appended_stmts);
+
         self.appended_stmts = a
             .into_iter()
             .map(|(id, items)| (id, op(id, items)))
@@ -169,7 +175,9 @@ impl Modules {
         use rayon::prelude::*;
 
         let pre = &mut self.prepended_stmts;
+
         let modules = &mut self.modules;
+
         let app = &mut self.appended_stmts;
 
         rayon::scope(|s| {
@@ -207,6 +215,7 @@ impl Modules {
             .into_iter()
             .map(|(id, items)| (id, items.fold_with(&mut *v)))
             .collect();
+
         self.modules = self
             .modules
             .into_iter()
@@ -239,6 +248,7 @@ impl Modules {
 
         for module in &mut self.modules {
             let id = module.0;
+
             module.1.body.retain_mut(|item| op(id, item));
         }
 
@@ -262,10 +272,13 @@ impl Modules {
                 if module_span.is_dummy() {
                     return None;
                 }
+
                 Some(format!("{}\n", cm.lookup_source_file(module_span.lo).name))
             })
             .collect::<String>();
+
         let mut cloned = self.clone();
+
         let mut stmts = Vec::new();
 
         for (id, mut module) in cloned.modules {

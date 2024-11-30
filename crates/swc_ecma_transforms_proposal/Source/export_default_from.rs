@@ -60,10 +60,13 @@ impl VisitMut for ExportDefaultFrom {
                                     },
                                 ));
                             }
+
                             ExportSpecifier::Namespace(..) => {
                                 has_namespace = true;
+
                                 origin_specifiers.push(s);
                             }
+
                             ExportSpecifier::Named(..) => {
                                 if has_namespace {
                                     origin_specifiers.push(s);
@@ -98,6 +101,7 @@ impl VisitMut for ExportDefaultFrom {
                         );
                     }
                 }
+
                 _ => {
                     stmts.push(item);
                 }

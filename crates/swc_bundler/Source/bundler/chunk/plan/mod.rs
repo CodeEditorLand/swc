@@ -49,6 +49,7 @@ where
         entries: AHashMap<String, TransformedModule>,
     ) -> Result<(Plan, ModuleGraph, Vec<Vec<ModuleId>>), Error> {
         let mut builder = PlanBuilder::default();
+
         let mut analyzer = GraphAnalyzer::new(&self.scope);
 
         for (name, module) in entries {
@@ -58,6 +59,7 @@ where
 
             analyzer.load(module.id);
         }
+
         let res = analyzer.into_result();
 
         // dbg!(&builder.cycles);

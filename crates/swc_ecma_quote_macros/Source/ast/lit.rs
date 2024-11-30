@@ -18,9 +18,13 @@ impl ToCode for Str {
         }
 
         let mut builder = Builder::new("Str");
+
         builder.add("span", ToCode::to_code(&self.span, cx));
+
         builder.add("value", ToCode::to_code(&self.value, cx));
+
         builder.add("raw", ToCode::to_code(&self.raw, cx));
+
         syn::Expr::Struct(builder.build())
     }
 }
@@ -32,6 +36,7 @@ impl_struct!(Regex, [span, exp, flags]);
 impl ToCode for Atom {
     fn to_code(&self, _: &Ctx) -> syn::Expr {
         let val = &**self;
+
         parse_quote!(swc_core::atoms::atom!(#val))
     }
 }

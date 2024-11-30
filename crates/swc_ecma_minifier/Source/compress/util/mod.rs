@@ -50,20 +50,26 @@ fn negate_inner(
                 op!("==") => {
                     op!("!=")
                 }
+
                 op!("!=") => {
                     op!("==")
                 }
+
                 op!("===") => {
                     op!("!==")
                 }
+
                 op!("!==") => {
                     op!("===")
                 }
+
                 _ => {
                     unreachable!()
                 }
             };
+
             report_change!("negate: binary");
+
             return true;
         }
 
@@ -76,8 +82,10 @@ fn negate_inner(
             trace_op!("negate: a && b => !a || !b");
 
             let a = negate_inner(expr_ctx, left, in_bool_ctx, false);
+
             let b = negate_inner(expr_ctx, right, in_bool_ctx, is_ret_val_ignored);
             *op = op!("||");
+
             return a || b;
         }
 
@@ -90,8 +98,10 @@ fn negate_inner(
             trace_op!("negate: a || b => !a && !b");
 
             let a = negate_inner(expr_ctx, left, in_bool_ctx, false);
+
             let b = negate_inner(expr_ctx, right, in_bool_ctx, is_ret_val_ignored);
             *op = op!("&&");
+
             return a || b;
         }
 
@@ -101,7 +111,9 @@ fn negate_inner(
             trace_op!("negate: cond");
 
             let a = negate_inner(expr_ctx, cons, in_bool_ctx, false);
+
             let b = negate_inner(expr_ctx, alt, in_bool_ctx, is_ret_val_ignored);
+
             return a || b;
         }
 
@@ -126,8 +138,10 @@ fn negate_inner(
             Expr::Unary(UnaryExpr { op: op!("!"), .. }) => {
                 report_change!("negate: !!bool => !bool");
                 *e = *arg.take();
+
                 return true;
             }
+
             Expr::Bin(BinExpr { op: op!("in"), .. })
             | Expr::Bin(BinExpr {
                 op: op!("instanceof"),
@@ -135,18 +149,22 @@ fn negate_inner(
             }) => {
                 report_change!("negate: !bool => bool");
                 *e = *arg.take();
+
                 return true;
             }
+
             _ => {
                 if in_bool_ctx {
                     report_change!("negate: !expr => expr (in bool context)");
                     *e = *arg.take();
+
                     return true;
                 }
 
                 if is_ret_val_ignored {
                     report_change!("negate: !expr => expr (return value ignored)");
                     *e = *arg.take();
+
                     return true;
                 }
             }
@@ -274,9 +292,11 @@ pub(crate) fn negate_cost(
                             op: op!("&&") | op!("||"),
                             ..
                         }) => {}
+
                         _ => {
                             if in_bool_ctx {
                                 let c = -cost(expr_ctx, arg, true, None, is_ret_val_ignored);
+
                                 return c.min(-1);
                             }
                         }
@@ -294,6 +314,7 @@ pub(crate) fn negate_cost(
                         }
                     }
                 }
+
                 Expr::Bin(BinExpr {
                     op: op!("===") | op!("!==") | op!("==") | op!("!="),
                     ..
@@ -310,6 +331,7 @@ pub(crate) fn negate_cost(
                     if !is_ret_val_ignored && !is_ok_to_negate_rhs(expr_ctx, right) {
                         return l_cost + 3;
                     }
+
                     l_cost + cost(expr_ctx, right, in_bool_ctx, Some(*op), is_ret_val_ignored)
                 }
 
@@ -383,6 +405,7 @@ pub(crate) fn is_valid_identifier(s: &str, ascii_only: bool) -> bool {
     if ascii_only && !s.is_ascii() {
         return false;
     }
+
     s.starts_with(Ident::is_valid_start)
         && s.chars().skip(1).all(Ident::is_valid_continue)
         && !s.is_reserved()
@@ -415,6 +438,7 @@ pub(crate) fn eval_as_number(expr_ctx: &ExprCtx, e: &Expr) -> Option<f64> {
             ..
         }) => {
             let l = eval_as_number(expr_ctx, left)?;
+
             let r = eval_as_number(expr_ctx, right)?;
 
             return Some(l - r);
@@ -452,11 +476,14 @@ pub(crate) fn eval_as_number(expr_ctx: &ExprCtx, e: &Expr) -> Option<f64> {
 
                         "max" => {
                             let mut numbers = Vec::new();
+
                             for arg in args {
                                 let v = eval_as_number(expr_ctx, &arg.expr)?;
+
                                 if v.is_infinite() || v.is_nan() {
                                     return None;
                                 }
+
                                 numbers.push(v);
                             }
 
@@ -470,11 +497,14 @@ pub(crate) fn eval_as_number(expr_ctx: &ExprCtx, e: &Expr) -> Option<f64> {
 
                         "min" => {
                             let mut numbers = Vec::new();
+
                             for arg in args {
                                 let v = eval_as_number(expr_ctx, &arg.expr)?;
+
                                 if v.is_infinite() || v.is_nan() {
                                     return None;
                                 }
+
                                 numbers.push(v);
                             }
 
@@ -490,7 +520,9 @@ pub(crate) fn eval_as_number(expr_ctx: &ExprCtx, e: &Expr) -> Option<f64> {
                             if args.len() != 2 {
                                 return None;
                             }
+
                             let base: JsNumber = eval_as_number(expr_ctx, &args[0].expr)?.into();
+
                             let exponent: JsNumber =
                                 eval_as_number(expr_ctx, &args[1].expr)?.into();
 
@@ -581,6 +613,7 @@ pub(super) fn is_fine_for_if_cons(s: &Stmt) -> bool {
         {
             true
         }
+
         Stmt::Decl(Decl::Fn(..)) => true,
         Stmt::Decl(..) => false,
         _ => true,
@@ -622,11 +655,14 @@ impl UnreachableHandler {
         if s.is_empty() {
             return false;
         }
+
         if let Stmt::Decl(Decl::Var(v)) = s {
             let mut changed = false;
+
             for decl in &mut v.decls {
                 if decl.init.is_some() {
                     decl.init = None;
+
                     changed = true;
                 }
             }
@@ -635,7 +671,9 @@ impl UnreachableHandler {
         }
 
         let mut v = Self::default();
+
         s.visit_mut_with(&mut v);
+
         if v.vars.is_empty() {
             *s = EmptyStmt { span: DUMMY_SP }.into();
         } else {
@@ -689,13 +727,17 @@ impl VisitMut for UnreachableHandler {
 
     fn visit_mut_var_decl(&mut self, n: &mut VarDecl) {
         self.in_hoisted_var = n.kind == VarDeclKind::Var;
+
         n.visit_mut_children_with(self);
     }
 
     fn visit_mut_var_declarator(&mut self, n: &mut VarDeclarator) {
         self.in_var_name = true;
+
         n.name.visit_mut_with(self);
+
         self.in_var_name = false;
+
         n.init.visit_mut_with(self);
     }
 }
@@ -706,7 +748,9 @@ where
     N: VisitWith<SuperFinder>,
 {
     let mut visitor = SuperFinder { found: false };
+
     body.visit_with(&mut visitor);
+
     visitor.found
 }
 

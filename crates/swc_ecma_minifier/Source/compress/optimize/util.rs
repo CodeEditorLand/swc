@@ -25,7 +25,9 @@ impl<'b> Optimizer<'b> {
 
                 if seq.exprs.len() == 1 {
                     *e = *seq.exprs.take().into_iter().next().unwrap();
+
                     self.normalize_expr(e);
+
                     return;
                 }
 
@@ -37,6 +39,7 @@ impl<'b> Optimizer<'b> {
                             Expr::Seq(s) => {
                                 new.extend(s.exprs);
                             }
+
                             _ => new.push(e),
                         }
                     }
@@ -47,7 +50,9 @@ impl<'b> Optimizer<'b> {
 
             Expr::Cond(cond) => {
                 self.normalize_expr(&mut cond.test);
+
                 self.normalize_expr(&mut cond.cons);
+
                 self.normalize_expr(&mut cond.alt);
             }
 
@@ -85,6 +90,7 @@ impl<'b> Optimizer<'b> {
             if scope_ctxt.clone().remove_mark() == self.marks.fake_block {
                 scope_ctxt.remove_mark();
             }
+
             ctx.scope = scope_ctxt;
 
             #[cfg(debug_assertions)]
@@ -96,6 +102,7 @@ impl<'b> Optimizer<'b> {
         }
 
         let orig_ctx = std::mem::replace(&mut self.ctx, ctx);
+
         WithCtx {
             reducer: self,
             orig_ctx,
@@ -119,18 +126,24 @@ impl<'b> Optimizer<'b> {
             | Stmt::While(WhileStmt { body, .. })
             | Stmt::DoWhile(DoWhileStmt { body, .. }) => {
                 analyer.top_breakable = true;
+
                 body.visit_mut_with(&mut analyer)
             }
+
             Stmt::Switch(SwitchStmt { cases, .. }) => {
                 analyer.top_breakable = true;
+
                 cases.visit_mut_with(&mut analyer)
             }
+
             _ => s.body.visit_mut_with(&mut analyer),
         };
 
         if analyer.count == 0 {
             let _label = s.label.take();
+
             self.changed = true;
+
             report_change!("Removing label `{}`", _label);
         }
     }
@@ -163,6 +176,7 @@ impl Drop for WithCtx<'_, '_> {
 
 pub(crate) fn extract_class_side_effect(expr_ctx: &ExprCtx, c: Class) -> Vec<Box<Expr>> {
     let mut res = Vec::new();
+
     if let Some(e) = c.super_class {
         if e.may_have_side_effects(expr_ctx) {
             res.push(e);
@@ -193,6 +207,7 @@ pub(crate) fn extract_class_side_effect(expr_ctx: &ExprCtx, c: Class) -> Vec<Box
                     }
                 }
             }
+
             ClassMember::PrivateProp(PrivateProp {
                 value: Some(v),
                 is_static: true,
@@ -245,9 +260,13 @@ impl Finalizer<'_> {
         let mut e = match mode {
             FinalizerMode::Callee => {
                 let mut value = self.simple_functions.get(i).cloned()?;
+
                 let mut cache = FxHashMap::default();
+
                 let mut remap = FxHashMap::default();
+
                 let bindings: AHashSet<Id> = collect_decls(&*value);
+
                 let new_mark = Mark::new();
 
                 // at this point, var usage no longer matter
@@ -263,11 +282,13 @@ impl Finalizer<'_> {
 
                 if !remap.is_empty() {
                     let mut remapper = Remapper::new(&remap);
+
                     value.visit_mut_with(&mut remapper);
                 }
 
                 value
             }
+
             FinalizerMode::ComparisonWithLit => self.lits_for_cmp.get(i).cloned()?,
             FinalizerMode::MemberAccess => self.lits_for_array_access.get(i).cloned()?,
         };
@@ -290,6 +311,7 @@ impl Finalizer<'_> {
         if let Expr::Ident(i) = e {
             if let Some(new) = self.var(&i.to_id(), mode) {
                 debug!("multi-replacer: Replaced `{}`", i);
+
                 self.changed = true;
 
                 *e = *new;
@@ -338,6 +360,7 @@ impl VisitMut for Finalizer<'_> {
                     self.check(&mut e.left, FinalizerMode::ComparisonWithLit);
                 }
             }
+
             _ => {}
         }
     }
@@ -409,9 +432,11 @@ impl VisitMut for Finalizer<'_> {
             Expr::Ident(i) => {
                 if let Some(expr) = self.lits.get(&i.to_id()) {
                     *n = *expr.clone();
+
                     return;
                 }
             }
+
             Expr::Member(e) => {
                 if let Expr::Ident(obj) = &*e.obj {
                     let sym = match &e.prop {
@@ -426,10 +451,12 @@ impl VisitMut for Finalizer<'_> {
                     if let Some(ident) = self.hoisted_props.get(&(obj.to_id(), sym.clone())) {
                         self.changed = true;
                         *n = ident.clone().into();
+
                         return;
                     }
                 }
             }
+
             _ => {}
         }
 
@@ -488,6 +515,7 @@ impl VisitMut for NormalMultiReplacer<'_> {
         if self.vars.is_empty() {
             return;
         }
+
         e.visit_mut_children_with(self);
 
         if self.vars.is_empty() {
@@ -497,6 +525,7 @@ impl VisitMut for NormalMultiReplacer<'_> {
         if let Expr::Ident(i) = e {
             if let Some(new) = self.var(&i.to_id()) {
                 debug!("multi-replacer: Replaced `{}`", i);
+
                 self.changed = true;
 
                 *e = *new;
@@ -508,11 +537,13 @@ impl VisitMut for NormalMultiReplacer<'_> {
         if self.vars.is_empty() {
             return;
         }
+
         items.visit_mut_children_with(self);
 
         #[cfg(feature = "debug")]
         if !self.vars.is_empty() {
             let keys = self.vars.iter().map(|(k, _)| k.clone()).collect::<Vec<_>>();
+
             debug!("Dropping {:?}", keys);
         }
     }
@@ -523,6 +554,7 @@ impl VisitMut for NormalMultiReplacer<'_> {
         if let Prop::Shorthand(i) = p {
             if let Some(value) = self.var(&i.to_id()) {
                 debug!("multi-replacer: Replaced `{}` as shorthand", i);
+
                 self.changed = true;
 
                 *p = Prop::KeyValue(KeyValueProp {
@@ -547,6 +579,7 @@ where
     N: VisitMutWith<ExprReplacer>,
 {
     let mut v = ExprReplacer { from, to: Some(to) };
+
     node.visit_mut_with(&mut v);
 
     v.to
@@ -676,11 +709,13 @@ struct LabelAnalyzer {
 impl LabelAnalyzer {
     fn visit_mut_loop(&mut self, n: &mut impl VisitMutWith<LabelAnalyzer>) {
         self.break_layer += 1;
+
         self.continue_layer += 1;
 
         n.visit_mut_children_with(self);
 
         self.break_layer -= 1;
+
         self.continue_layer -= 1;
     }
 }

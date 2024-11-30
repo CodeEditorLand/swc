@@ -32,7 +32,9 @@ pub extern "C" fn __alloc(size: i32) -> *mut u8 {
 #[inline(always)]
 pub extern "C" fn __free(ptr: *mut u8, size: i32) -> i32 {
     let data = unsafe { Vec::from_raw_parts(ptr, size as usize, size as usize) };
+
     std::mem::drop(data);
+
     0 as _
 }
 
@@ -74,5 +76,6 @@ pub unsafe fn __free(ptr: *mut u8, size: usize) {
     unsafe {
         global_dealloc(ptr, layout);
     }
+
     0 as _
 }

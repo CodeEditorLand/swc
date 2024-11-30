@@ -92,20 +92,26 @@ impl From<EntryConfig> for HashMap<String, FileName> {
         match c {
             EntryConfig::File(f) => {
                 let path = PathBuf::from(f);
+
                 let file_name = path
                     .file_name()
                     .expect("entry must be a file, instead of a directory");
+
                 m.insert(file_name.to_string_lossy().into(), FileName::Real(path));
             }
+
             EntryConfig::Multiple(files) => {
                 for f in files {
                     let path = PathBuf::from(f);
+
                     let file_name = path
                         .file_name()
                         .expect("entry must be a file, instead of a directory");
+
                     m.insert(file_name.to_string_lossy().into(), FileName::Real(path));
                 }
             }
+
             EntryConfig::Files(f) => {
                 return f.into_iter().map(|(k, v)| (k, FileName::Real(v))).collect()
             }

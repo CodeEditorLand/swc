@@ -10,9 +10,13 @@ pub fn analyze_imports(ss: &Stylesheet) -> Vec<JsWord> {
     let mut v = Analyzer {
         imports: Default::default(),
     };
+
     ss.visit_with(&mut v);
+
     v.imports.sort();
+
     v.imports.dedup();
+
     v.imports
 }
 
@@ -31,12 +35,14 @@ impl Visit for Analyzer {
                         UrlValue::Str(s) => {
                             self.imports.push(s.value.clone());
                         }
+
                         UrlValue::Raw(v) => {
                             self.imports.push(v.value.clone());
                         }
                     }
                 }
             }
+
             ImportHref::Str(s) => {
                 self.imports.push(s.value.clone());
             }
@@ -56,6 +62,7 @@ impl Visit for Analyzer {
                         {
                             self.imports.push(s.value.clone());
                         }
+
                         _ => (),
                     }
                 }

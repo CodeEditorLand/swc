@@ -244,7 +244,9 @@ impl Ident {
     /// Preserve syntax context while drop `span.lo` and `span.hi`.
     pub fn without_loc(mut self) -> Ident {
         self.span.lo = BytePos::DUMMY;
+
         self.span.hi = BytePos::DUMMY;
+
         self
     }
 
@@ -303,8 +305,11 @@ impl Ident {
 
         if is_reserved_symbol(s) {
             let mut buf = String::with_capacity(s.len() + 1);
+
             buf.push('_');
+
             buf.push_str(s);
+
             return Err(buf);
         }
 
@@ -319,12 +324,15 @@ impl Ident {
         }
 
         let mut buf = String::with_capacity(s.len() + 2);
+
         let mut has_start = false;
 
         for c in s.chars() {
             if !has_start && Self::is_valid_start(c) {
                 has_start = true;
+
                 buf.push(c);
+
                 continue;
             }
 
@@ -339,8 +347,11 @@ impl Ident {
 
         if is_reserved_symbol(&buf) {
             let mut new_buf = String::with_capacity(buf.len() + 1);
+
             new_buf.push('_');
+
             new_buf.push_str(&buf);
+
             buf = new_buf;
         }
 
@@ -374,6 +385,7 @@ impl Ident {
     /// Create a new identifier with the given position.
     pub fn with_pos(mut self, lo: BytePos, hi: BytePos) -> Ident {
         self.span = Span::new(lo, hi);
+
         self
     }
 }
@@ -493,6 +505,7 @@ impl Display for BindingIdent {
 impl<'a> arbitrary::Arbitrary<'a> for Ident {
     fn arbitrary(u: &mut arbitrary::Unstructured<'_>) -> arbitrary::Result<Self> {
         let span = u.arbitrary()?;
+
         let sym = u.arbitrary::<Atom>()?;
 
         let optional = u.arbitrary()?;
@@ -623,6 +636,7 @@ pub trait EsReserved: AsRef<str> {
         if is_module && self.as_ref() == "await" {
             return true;
         }
+
         RESSERVED_IN_STRICT_MODE.contains(self.as_ref())
     }
 

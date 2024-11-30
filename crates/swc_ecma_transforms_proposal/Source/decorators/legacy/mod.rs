@@ -56,7 +56,9 @@ impl TscDecorator {
         T: StmtLike + VisitMutWith<Self>,
     {
         let old_vars = self.vars.take();
+
         let old_appended_exprs = self.appended_exprs.take();
+
         let old_prepended_exprs = self.prepended_exprs.take();
 
         let mut new = Vec::new();
@@ -111,7 +113,9 @@ impl TscDecorator {
         *stmts = new;
 
         self.prepended_exprs = old_prepended_exprs;
+
         self.appended_exprs = old_appended_exprs;
+
         self.vars = old_vars;
     }
 
@@ -143,6 +147,7 @@ impl TscDecorator {
 
                 return var_name.into();
             }
+
             PropName::Ident(i) => {
                 return Lit::Str(Str {
                     span: DUMMY_SP,
@@ -151,6 +156,7 @@ impl TscDecorator {
                 })
                 .into()
             }
+
             _ => {}
         }
 
@@ -162,6 +168,7 @@ impl TscDecorator {
             if prop.is_private_name() {
                 return true;
             }
+
             expr = obj;
         }
 
@@ -177,6 +184,7 @@ impl TscDecorator {
         mut desc: ExprOrSpread,
     ) {
         let mut has_private_access = false;
+
         let decorators = ArrayLit {
             span: DUMMY_SP,
             elems: decorators
@@ -185,6 +193,7 @@ impl TscDecorator {
                     if has_private_access {
                         return;
                     }
+
                     has_private_access = Self::has_private_access(e);
                 })
                 .map(|mut v| {
@@ -198,6 +207,7 @@ impl TscDecorator {
         .as_arg();
 
         remove_span(&mut target.expr);
+
         remove_span(&mut desc.expr);
 
         let expr = CallExpr {
@@ -244,12 +254,14 @@ impl Visit for TscDecorator {
                     Some(v) => v,
                     None => return Some(item),
                 };
+
                 if a == b {
                     Some(a)
                 } else {
                     Some(EnumKind::Mixed)
                 }
             });
+
         if let Some(kind) = enum_kind {
             self.enums.insert(e.id.sym.clone(), kind);
         }
@@ -327,6 +339,7 @@ impl VisitMut for TscDecorator {
                     ..Default::default()
                 }
                 .into();
+
                 self.appended_exprs.push(
                     AssignExpr {
                         span: DUMMY_SP,
@@ -350,7 +363,9 @@ impl VisitMut for TscDecorator {
 
     fn visit_mut_expr(&mut self, e: &mut Expr) {
         let appended_exprs = mem::take(&mut self.appended_exprs);
+
         e.visit_mut_children_with(self);
+
         let appended_exprs = mem::replace(&mut self.appended_exprs, appended_exprs);
 
         if let Some(var_name) = self.assign_class_expr_to.take() {

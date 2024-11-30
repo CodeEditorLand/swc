@@ -27,6 +27,7 @@ impl Optimizer<'_> {
             is_ret_val_ignored,
             is_ret_val_ignored,
         );
+
         if cost >= 0 {
             return false;
         }
@@ -38,6 +39,7 @@ impl Optimizer<'_> {
 
         match e.op {
             op!("&&") | op!("||") => {}
+
             _ => return false,
         }
 
@@ -81,6 +83,7 @@ impl Optimizer<'_> {
         };
 
         self.with_ctx(ctx.clone()).negate(&mut e.left, false);
+
         self.with_ctx(ctx.clone())
             .negate(&mut e.right, is_ret_val_ignored);
 
@@ -102,6 +105,7 @@ impl Optimizer<'_> {
         if stmt.alt.is_none() {
             if let Stmt::Expr(cons) = &mut *stmt.cons {
                 self.changed = true;
+
                 report_change!("conditionals: `if (foo) bar;` => `foo && bar`");
                 *s = ExprStmt {
                     span: stmt.span,
@@ -142,14 +146,17 @@ impl Optimizer<'_> {
 
                     *l = *Expr::undefined(l.span());
                     *r = *arg.take();
+
                     true
                 }
+
                 _ => false,
             }
         }
 
         match e.op {
             op!("==") | op!("!=") | op!("===") | op!("!==") => {}
+
             _ => return,
         }
 
@@ -158,9 +165,11 @@ impl Optimizer<'_> {
                 op!("==") => {
                     op!("===")
                 }
+
                 op!("!=") => {
                     op!("!==")
                 }
+
                 _ => e.op,
             };
         }
@@ -177,10 +186,13 @@ impl Optimizer<'_> {
                     &mut e.left,
                     &mut e.right,
                 );
+
                 if let Some(res) = res {
                     self.changed = true;
+
                     report_change!("bools: Optimizing `=== null || === undefined` to `== null`");
                     *e = res;
+
                     return;
                 }
             }
@@ -193,8 +205,10 @@ impl Optimizer<'_> {
                         &mut left.right,
                         &mut *right,
                     );
+
                     if let Some(res) = res {
                         self.changed = true;
+
                         report_change!(
                             "bools: Optimizing `=== null || === undefined` to `== null`"
                         );
@@ -226,12 +240,14 @@ impl Optimizer<'_> {
                 if top_op == op!("&&") && left_bin.op == op!("===") {
                     return None;
                 }
+
                 if top_op == op!("||") && left_bin.op == op!("!==") {
                     return None;
                 }
 
                 match &*left_bin.right {
                     Expr::Ident(..) | Expr::Lit(..) => {}
+
                     Expr::Member(MemberExpr {
                         obj,
                         prop: MemberProp::Ident(..),
@@ -247,6 +263,7 @@ impl Optimizer<'_> {
                             return None;
                         }
                     }
+
                     _ => {
                         return None;
                     }
@@ -264,6 +281,7 @@ impl Optimizer<'_> {
 
                         &mut *right_bin.left
                     }
+
                     _ => return None,
                 };
 
@@ -274,11 +292,14 @@ impl Optimizer<'_> {
                     &mut *right,
                 )
             }
+
             _ => return None,
         };
 
         let lt = left.get_type();
+
         let rt = right.get_type();
+
         if let Value::Known(lt) = lt {
             if let Value::Known(rt) = rt {
                 match (lt, rt) {
@@ -287,6 +308,7 @@ impl Optimizer<'_> {
                             report_change!(
                                 "Reducing `!== null || !== undefined` check to `!= null`"
                             );
+
                             return Some(BinExpr {
                                 span,
                                 op: op!("=="),
@@ -297,6 +319,7 @@ impl Optimizer<'_> {
                             report_change!(
                                 "Reducing `=== null || === undefined` check to `== null`"
                             );
+
                             return Some(BinExpr {
                                 span,
                                 op: op!("!="),
@@ -305,6 +328,7 @@ impl Optimizer<'_> {
                             });
                         }
                     }
+
                     _ => {}
                 }
             }

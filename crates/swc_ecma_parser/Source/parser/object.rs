@@ -15,11 +15,14 @@ impl<I: Tokens> Parser<I> {
             will_expect_colon_for_cond: false,
             ..self.ctx()
         };
+
         self.with_ctx(ctx).parse_with(|p| {
             trace_cur!(p, parse_object);
 
             let start = cur_pos!(p);
+
             let mut trailing_comma = None;
+
             assert_and_bump!(p, '{');
 
             let mut props = Vec::new();
@@ -29,6 +32,7 @@ impl<I: Tokens> Parser<I> {
 
                 if !is!(p, '}') {
                     expect!(p, ',');
+
                     if is!(p, '}') {
                         trailing_comma = Some(p.input.prev_span());
                     }
@@ -44,6 +48,7 @@ impl<I: Tokens> Parser<I> {
         trace_cur!(self, parse_prop_name);
 
         let ctx = self.ctx();
+
         self.with_ctx(Context {
             in_property_name: true,
             ..ctx
@@ -82,6 +87,7 @@ impl<I: Tokens> Parser<I> {
                 },
                 tok!('[') => {
                     bump!(p);
+
                     let inner_start = cur_pos!(p);
 
                     let mut expr = p.include_in_expr(true).parse_assignment_expr()?;
@@ -111,6 +117,7 @@ impl<I: Tokens> Parser<I> {
                         expr,
                     })
                 }
+
                 _ => unexpected!(
                     p,
                     "identifier, string literal, numeric literal or [ for the computed key"
@@ -134,6 +141,7 @@ impl<I: Tokens> ParseObject<Box<Expr>> for Parser<I> {
         if let Some(trailing_comma) = trailing_comma {
             self.state.trailing_commas.insert(span.lo, trailing_comma);
         }
+
         Ok(ObjectLit { span, props }.into())
     }
 
@@ -155,6 +163,7 @@ impl<I: Tokens> ParseObject<Box<Expr>> for Parser<I> {
 
         if eat!(self, '*') {
             let name = self.parse_prop_name()?;
+
             return self
                 .with_ctx(Context {
                     allow_direct_super: true,
@@ -178,6 +187,7 @@ impl<I: Tokens> ParseObject<Box<Expr>> for Parser<I> {
         }
 
         let has_modifiers = self.eat_any_ts_modifier()?;
+
         let modifiers_span = self.input.prev_span();
 
         let key = self.parse_prop_name()?;
@@ -190,6 +200,7 @@ impl<I: Tokens> ParseObject<Box<Expr>> for Parser<I> {
             trace_cur!(self, parse_object_prop_error);
 
             self.emit_err(self.input.cur_span(), SyntaxError::TS1005);
+
             return Ok(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
                 key,
                 value: Invalid {
@@ -203,8 +214,10 @@ impl<I: Tokens> ParseObject<Box<Expr>> for Parser<I> {
         // { 'a': a, }
         // { 0: 1, }
         // { a: expr, }
+
         if eat!(self, ':') {
             let value = self.include_in_expr(true).parse_assignment_expr()?;
+
             return Ok(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
                 key,
                 value,
@@ -243,15 +256,19 @@ impl<I: Tokens> ParseObject<Box<Expr>> for Parser<I> {
 
         // `ident` from parse_prop_name is parsed as 'IdentifierName'
         // It means we should check for invalid expressions like { for, }
+
         if is_one_of!(self, '=', ',', '}') {
             let is_reserved_word = { self.ctx().is_reserved_word(&ident.sym) };
+
             if is_reserved_word {
                 self.emit_err(ident.span, SyntaxError::ReservedWordInObjShorthandOrPat);
             }
 
             if eat!(self, '=') {
                 let value = self.include_in_expr(true).parse_assignment_expr()?;
+
                 let span = span!(self, start);
+
                 return Ok(PropOrSpread::Prop(Box::new(Prop::Assign(AssignProp {
                     span,
                     key: ident.into(),
@@ -275,8 +292,11 @@ impl<I: Tokens> ParseObject<Box<Expr>> for Parser<I> {
                 }
 
                 let is_generator = ident.sym == "async" && eat!(self, '*');
+
                 let key = self.parse_prop_name()?;
+
                 let key_span = key.span();
+
                 self.with_ctx(Context {
                     allow_direct_super: true,
                     in_class_field: false,
@@ -359,6 +379,7 @@ impl<I: Tokens> ParseObject<Box<Expr>> for Parser<I> {
                                          mut params, body, ..
                                      }| {
                                         let mut this = None;
+
                                         if params.len() >= 2 {
                                             this = Some(params.remove(0).pat);
                                         }
@@ -379,6 +400,7 @@ impl<I: Tokens> ParseObject<Box<Expr>> for Parser<I> {
                                         );
 
                                         // debug_assert_eq!(params.len(), 1);
+
                                         PropOrSpread::Prop(Box::new(Prop::Setter(SetterProp {
                                             span: span!(parser, start),
                                             key,
@@ -408,6 +430,7 @@ impl<I: Tokens> ParseObject<Box<Expr>> for Parser<I> {
                     }
                 })
             }
+
             _ => {
                 if self.input.syntax().typescript() {
                     unexpected!(
@@ -433,6 +456,7 @@ impl<I: Tokens> ParseObject<Pat> for Parser<I> {
         trailing_comma: Option<Span>,
     ) -> PResult<Pat> {
         let len = props.len();
+
         for (i, p) in props.iter().enumerate() {
             if i == len - 1 {
                 if let ObjectPatProp::Rest(ref rest) = p {
@@ -442,9 +466,11 @@ impl<I: Tokens> ParseObject<Pat> for Parser<I> {
                                 self.emit_err(trailing_comma, SyntaxError::CommaAfterRestElement);
                             }
                         }
+
                         _ => syntax_error!(self, p.span(), SyntaxError::DotsWithoutIdentifier),
                     }
                 }
+
                 continue;
             }
 
@@ -483,11 +509,13 @@ impl<I: Tokens> ParseObject<Pat> for Parser<I> {
         }
 
         let key = self.parse_prop_name()?;
+
         if eat!(self, ':') {
             let value = Box::new(self.parse_binding_element()?);
 
             return Ok(ObjectPatProp::KeyValue(KeyValuePatProp { key, value }));
         }
+
         let key = match key {
             PropName::Ident(ident) => ident,
             _ => unexpected!(self, "an identifier"),

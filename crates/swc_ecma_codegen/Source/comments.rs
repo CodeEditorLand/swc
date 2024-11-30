@@ -25,6 +25,7 @@ macro_rules! write_comments {
 
                     $e.wr.write_line()?;
                 }
+
                 CommentKind::Block => {
                     if $prefix_space && !$e.cfg.minify {
                         $e.wr.write_comment(" ")?;
@@ -37,6 +38,7 @@ macro_rules! write_comments {
 
                     {
                         let hi = cmt.span_hi();
+
                         if !hi.is_dummy() && hi.0 > 2 {
                             $e.wr.add_srcmap(hi - swc_common::BytePos(2))?;
                         }
@@ -111,6 +113,7 @@ where
     #[inline(always)]
     pub(super) fn emit_leading_comments_of_span(&mut self, span: Span, is_hi: bool) -> Result {
         let pos = if is_hi { span.hi } else { span.lo };
+
         self.emit_leading_comments(pos, is_hi)
     }
 }

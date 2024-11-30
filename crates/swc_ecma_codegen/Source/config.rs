@@ -57,21 +57,25 @@ impl Default for Config {
 impl Config {
     pub fn with_target(mut self, target: EsVersion) -> Self {
         self.target = target;
+
         self
     }
 
     pub fn with_minify(mut self, minify: bool) -> Self {
         self.minify = minify;
+
         self
     }
 
     pub fn with_ascii_only(mut self, ascii_only: bool) -> Self {
         self.ascii_only = ascii_only;
+
         self
     }
 
     pub fn with_omit_last_semi(mut self, omit_last_semi: bool) -> Self {
         self.omit_last_semi = omit_last_semi;
+
         self
     }
 
@@ -80,11 +84,13 @@ impl Config {
         emit_assert_for_import_attributes: bool,
     ) -> Self {
         self.emit_assert_for_import_attributes = emit_assert_for_import_attributes;
+
         self
     }
 
     pub fn with_inline_script(mut self, inline_script: bool) -> Self {
         self.inline_script = inline_script;
+
         self
     }
 }

@@ -37,7 +37,9 @@ pub fn acquire_global_lock(name: &str) -> Box<dyn Any> {
     type DWORD = u32;
 
     const INFINITE: DWORD = !0;
+
     const WAIT_OBJECT_0: DWORD = 0;
+
     const WAIT_ABANDONED: DWORD = 0x00000080;
 
     extern "system" {
@@ -46,8 +48,11 @@ pub fn acquire_global_lock(name: &str) -> Box<dyn Any> {
             bInitialOwner: BOOL,
             lpName: LPCSTR,
         ) -> HANDLE;
+
         fn WaitForSingleObject(hHandle: HANDLE, dwMilliseconds: DWORD) -> DWORD;
+
         fn ReleaseMutex(hMutex: HANDLE) -> BOOL;
+
         fn CloseHandle(hObject: HANDLE) -> BOOL;
     }
 
@@ -72,6 +77,7 @@ pub fn acquire_global_lock(name: &str) -> Box<dyn Any> {
     }
 
     let cname = CString::new(name).unwrap();
+
     unsafe {
         // Create a named mutex, with no security attributes and also not
         // acquired when we create it.
@@ -79,6 +85,7 @@ pub fn acquire_global_lock(name: &str) -> Box<dyn Any> {
         // This will silently create one if it doesn't already exist, or it'll
         // open up a handle to one if it already exists.
         let mutex = CreateMutexA(std::ptr::null_mut(), 0, cname.as_ptr() as *const u8);
+
         if mutex.is_null() {
             panic!(
                 "failed to create global mutex named `{}`: {}",
@@ -86,6 +93,7 @@ pub fn acquire_global_lock(name: &str) -> Box<dyn Any> {
                 io::Error::last_os_error()
             );
         }
+
         let mutex = Handle(mutex);
 
         // Acquire the lock through `WaitForSingleObject`.
@@ -101,6 +109,7 @@ pub fn acquire_global_lock(name: &str) -> Box<dyn Any> {
         // If an error happens.. well... that's surprising!
         match WaitForSingleObject(mutex.0, INFINITE) {
             WAIT_OBJECT_0 | WAIT_ABANDONED => {}
+
             code => {
                 panic!(
                     "WaitForSingleObject failed on global mutex named `{}`: {} (ret={:x})",

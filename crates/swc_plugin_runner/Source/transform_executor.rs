@@ -93,12 +93,14 @@ impl PluginTransformState {
         // Copy guest's memory into host, construct serialized struct from raw
         // bytes.
         let transformed_result = &(*self.transform_result.lock());
+
         let ret = PluginSerializedBytes::from_slice(&transformed_result[..]);
 
         let ret = if returned_ptr_result == 0 {
             Ok(ret)
         } else {
             let err: PluginError = ret.deserialize()?.into_inner();
+
             match err {
                 PluginError::SizeInteropFailure(msg) => Err(anyhow!(
                     "Failed to convert pointer size to calculate: {}",
@@ -107,6 +109,7 @@ impl PluginTransformState {
                 PluginError::Deserialize(msg) | PluginError::Serialize(msg) => {
                     Err(anyhow!("{}", msg))
                 }
+
                 _ => Err(anyhow!(
                     "Unexpected error occurred while running plugin transform"
                 )),
@@ -222,6 +225,7 @@ impl TransformExecutor {
         let (mut store, module) = self.module_bytes.compile_module()?;
 
         let context_key_buffer = Arc::new(Mutex::new(Vec::new()));
+
         let metadata_env = FunctionEnv::new(
             &mut store,
             MetadataContextHostEnvironment::new(
@@ -232,6 +236,7 @@ impl TransformExecutor {
         );
 
         let transform_result: Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(Vec::new()));
+
         let transform_env = FunctionEnv::new(
             &mut store,
             TransformResultHostEnvironment::new(&transform_result),
@@ -245,6 +250,7 @@ impl TransformExecutor {
             FunctionEnv::new(&mut store, CommentHostEnvironment::new(&comment_buffer));
 
         let source_map_buffer = Arc::new(Mutex::new(Vec::new()));
+
         let source_map = Arc::new(Mutex::new(self.source_map.clone()));
 
         let source_map_host_env = FunctionEnv::new(
@@ -253,6 +259,7 @@ impl TransformExecutor {
         );
 
         let diagnostics_buffer: Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(Vec::new()));
+
         let diagnostics_env = FunctionEnv::new(
             &mut store,
             DiagnosticContextHostEnvironment::new(&diagnostics_buffer),
@@ -274,6 +281,7 @@ impl TransformExecutor {
         // first'
         let (instance, wasi_env) = if is_wasi_module(&module) {
             let builder = WasiEnv::builder(self.module_bytes.get_module_name());
+
             let builder = if let Some(runtime) = &self.runtime {
                 builder.runtime(runtime.clone())
             } else {
@@ -304,6 +312,7 @@ impl TransformExecutor {
             // overwrite into imported_object
             // and attach it to the Wasm instance.
             let wasi_env_import_object = wasi_env.import_object(&mut store, &module)?;
+
             import_object.extend(&wasi_env_import_object);
 
             let instance = Instance::new(&mut store, &module, &import_object)?;
@@ -317,6 +326,7 @@ impl TransformExecutor {
 
         // Attach the memory export
         let memory = instance.exports.get_memory("memory")?;
+
         import_object.define("env", "memory", memory.clone());
 
         let alloc = instance.exports.get_typed_function(&store, "__alloc")?;
@@ -324,6 +334,7 @@ impl TransformExecutor {
         // Unlike wasmer@2, have to manually `import` memory / necessary functions from
         // the guest into env.
         metadata_env.as_mut(&mut store).memory = Some(memory.clone());
+
         metadata_env.as_mut(&mut store).alloc_guest_memory = Some(alloc.clone());
 
         transform_env.as_mut(&mut store).memory = Some(memory.clone());
@@ -331,9 +342,11 @@ impl TransformExecutor {
         base_env.as_mut(&mut store).memory = Some(memory.clone());
 
         comments_env.as_mut(&mut store).memory = Some(memory.clone());
+
         comments_env.as_mut(&mut store).alloc_guest_memory = Some(alloc.clone());
 
         source_map_host_env.as_mut(&mut store).memory = Some(memory.clone());
+
         source_map_host_env.as_mut(&mut store).alloc_guest_memory = Some(alloc);
 
         diagnostics_env.as_mut(&mut store).memory = Some(memory.clone());
@@ -388,7 +401,9 @@ impl TransformExecutor {
         should_enable_comments_proxy: Option<bool>,
     ) -> Result<PluginSerializedBytes, Error> {
         let mut transform_state = self.setup_plugin_env_exports()?;
+
         transform_state.is_transform_schema_compatible()?;
+
         transform_state
             .run(program, self.unresolved_mark, should_enable_comments_proxy)
             .with_context(|| {
@@ -407,10 +422,12 @@ impl TransformExecutor {
                  
                 Build info: 
                     Date: {BUILD_DATE}
+
                     Timestamp: {BUILD_TIMESTAMP}
                     
                 Version info: 
                     swc_plugin_runner: {PKG_VERSION}
+
                     Dependencies: {PKG_DEPS}
                 "
                 )

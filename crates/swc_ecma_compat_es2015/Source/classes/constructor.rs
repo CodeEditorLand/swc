@@ -19,13 +19,16 @@ pub(super) fn fold_constructor(
     config: Config,
 ) -> FnDecl {
     let is_derived = class_super_name.is_some();
+
     let mut constructor =
         constructor.unwrap_or_else(|| default_constructor_with_span(is_derived, class_span));
 
     // Black magic to detect injected constructor.
     let is_constructor_default = constructor.span.is_dummy();
+
     if is_constructor_default {
         debug!("Dropping constructor parameters because the constructor is injected");
+
         constructor.params.take();
     }
 
@@ -55,11 +58,14 @@ pub(super) fn fold_constructor(
 
     // handle super prop by default
     let mut has_super_prop = true;
+
     let mut this_mark = None;
 
     let mut body = constructor.body.take().unwrap();
+
     if let Some(class_super_name) = class_super_name {
         let is_last_super = (&*body.stmts).is_super_last_call();
+
         let is_last_return = body.stmts.last().map_or(false, Stmt::is_return_stmt);
 
         let mut constructor_folder = ConstructorFolder {
@@ -86,10 +92,12 @@ pub(super) fn fold_constructor(
             if let Some(stmt) = body.stmts.last_mut() {
                 if let Some(expr_stmt) = stmt.as_mut_expr() {
                     let span = expr_stmt.span;
+
                     match expr_stmt.expr.as_mut() {
                         Expr::Assign(assign) => {
                             let arg = if constructor_folder.this_ref_count == 1 {
                                 constructor_folder.this_ref_count = 0;
+
                                 assign.right.take()
                             } else {
                                 assign.take().into()
@@ -100,6 +108,7 @@ pub(super) fn fold_constructor(
                             }
                             .into();
                         }
+
                         arg @ Expr::Seq(..) | arg @ Expr::Paren(..) => {
                             *stmt = ReturnStmt {
                                 span,
@@ -152,6 +161,7 @@ pub(super) fn fold_constructor(
                 span: DUMMY_SP,
                 arg: Some(this.into()),
             };
+
             body.stmts.push(return_this.into());
         }
     }
@@ -253,78 +263,114 @@ impl VisitMut for ConstructorFolder {
 
     fn visit_mut_if_stmt(&mut self, node: &mut IfStmt) {
         node.test.visit_mut_with(self);
+
         let super_found = self.super_found;
+
         node.cons.visit_mut_with(self);
+
         node.alt.visit_mut_with(self);
+
         self.super_found = super_found;
     }
 
     fn visit_mut_while_stmt(&mut self, node: &mut WhileStmt) {
         node.test.visit_mut_with(self);
+
         let super_found = self.super_found;
+
         node.body.visit_mut_with(self);
+
         self.super_found = super_found;
     }
 
     fn visit_mut_do_while_stmt(&mut self, node: &mut DoWhileStmt) {
         node.test.visit_mut_with(self);
+
         let super_found = self.super_found;
+
         node.body.visit_mut_with(self);
+
         self.super_found = super_found;
     }
 
     fn visit_mut_for_stmt(&mut self, node: &mut ForStmt) {
         node.init.visit_mut_with(self);
+
         node.test.visit_mut_with(self);
+
         let super_found = self.super_found;
+
         node.body.visit_mut_with(self);
+
         node.update.visit_mut_with(self);
+
         self.super_found = super_found;
     }
 
     fn visit_mut_for_of_stmt(&mut self, node: &mut ForOfStmt) {
         node.left.visit_mut_with(self);
+
         node.right.visit_mut_with(self);
+
         let super_found = self.super_found;
+
         node.body.visit_mut_with(self);
+
         self.super_found = super_found;
     }
 
     fn visit_mut_for_in_stmt(&mut self, node: &mut ForInStmt) {
         node.left.visit_mut_with(self);
+
         node.right.visit_mut_with(self);
+
         let super_found = self.super_found;
+
         node.body.visit_mut_with(self);
+
         self.super_found = super_found;
     }
 
     fn visit_mut_cond_expr(&mut self, node: &mut CondExpr) {
         node.test.visit_mut_with(self);
+
         let super_found = self.super_found;
+
         node.cons.visit_mut_with(self);
+
         node.alt.visit_mut_with(self);
+
         self.super_found = super_found;
     }
 
     fn visit_mut_switch_stmt(&mut self, node: &mut SwitchStmt) {
         node.discriminant.visit_mut_with(self);
+
         let super_found = self.super_found;
+
         node.cases.visit_mut_with(self);
+
         self.super_found = super_found;
     }
 
     fn visit_mut_try_stmt(&mut self, node: &mut TryStmt) {
         let super_found = self.super_found;
+
         node.block.visit_mut_with(self);
+
         node.handler.visit_mut_with(self);
+
         self.super_found = super_found;
+
         node.finalizer.visit_mut_with(self);
     }
 
     fn visit_mut_labeled_stmt(&mut self, node: &mut LabeledStmt) {
         if node.body.is_block() {
             let super_found = self.super_found;
+
             node.body.visit_mut_with(self);
+
             self.super_found = super_found;
         } else {
             node.body.visit_mut_with(self);
@@ -335,10 +381,14 @@ impl VisitMut for ConstructorFolder {
         match node.op {
             op!("&&") | op!("||") => {
                 node.left.visit_mut_with(self);
+
                 let super_found = self.super_found;
+
                 node.right.visit_mut_with(self);
+
                 self.super_found = super_found;
             }
+
             _ => {
                 node.visit_mut_children_with(self);
             }
@@ -347,25 +397,34 @@ impl VisitMut for ConstructorFolder {
 
     fn visit_mut_class(&mut self, node: &mut Class) {
         let in_nested_class = mem::replace(&mut self.in_nested_class, true);
+
         node.visit_mut_children_with(self);
+
         self.in_nested_class = in_nested_class;
     }
 
     fn visit_mut_arrow_expr(&mut self, node: &mut ArrowExpr) {
         let in_arrow = mem::replace(&mut self.in_arrow, true);
+
         let super_found = self.super_found;
+
         node.visit_mut_children_with(self);
+
         self.super_found = super_found;
+
         self.in_arrow = in_arrow;
     }
 
     fn visit_mut_stmts(&mut self, node: &mut Vec<Stmt>) {
         for mut stmt in node.take().drain(..) {
             stmt.visit_mut_with(self);
+
             let class_key_init = self.class_key_init.take();
+
             if !class_key_init.is_empty() {
                 node.extend(class_key_init);
             }
+
             node.push(stmt);
         }
     }
@@ -378,6 +437,7 @@ impl VisitMut for ConstructorFolder {
             } else {
                 *node = self.get_this().clone().into();
             }
+
             return;
         }
 
@@ -387,6 +447,7 @@ impl VisitMut for ConstructorFolder {
             self.super_found = true;
 
             let this = self.get_this().clone();
+
             let assign_expr = node.take().make_assign_to(op!("="), this.clone().into());
 
             if self.in_nested_class {
@@ -403,8 +464,11 @@ impl VisitMut for ConstructorFolder {
 
         if !self.in_arrow {
             let arg = node.arg.take().map(ExprFactory::as_arg);
+
             let mut args = vec![self.get_this().clone().as_arg()];
+
             args.extend(arg);
+
             node.arg = Some(
                 helper_expr!(possible_constructor_return)
                     .as_call(DUMMY_SP, args)
@@ -424,6 +488,7 @@ impl VisitMut for ConstructorFolder {
 impl ConstructorFolder {
     fn get_this(&mut self) -> &Ident {
         self.this_ref_count += 1;
+
         self.this.get_or_insert_with(|| private_ident!("_this"))
     }
 
@@ -462,6 +527,7 @@ impl ConstructorFolder {
                     .clone()
                     .make_member(quote_ident!("call"))
                     .as_callee();
+
                 origin_args.insert(0, ThisExpr { span: DUMMY_SP }.as_arg());
             }
 
@@ -564,6 +630,7 @@ impl SuperLastCall for &Expr {
             Expr::Seq(SeqExpr { exprs, .. }) => {
                 exprs.last().map_or(false, |e| (&**e).is_super_last_call())
             }
+
             _ => false,
         }
     }

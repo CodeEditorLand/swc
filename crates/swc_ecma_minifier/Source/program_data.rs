@@ -191,6 +191,7 @@ impl VarUsageInfo {
 
 impl Storage for ProgramData {
     type ScopeData = ScopeData;
+
     type VarData = VarUsageInfo;
 
     fn scope(&mut self, ctxt: swc_common::SyntaxContext) -> &mut Self::ScopeData {
@@ -210,6 +211,7 @@ impl Storage for ProgramData {
 
         for (ctxt, scope) in child.scopes {
             let to = self.scopes.entry(ctxt).or_default();
+
             self.top.merge(scope.clone(), true);
 
             to.merge(scope, false);
@@ -219,10 +221,13 @@ impl Storage for ProgramData {
 
         for (id, mut var_info) in child.vars {
             // trace!("merge({:?},{}{:?})", kind, id.0, id.1);
+
             let inited = self.initialized_vars.contains(&id);
+
             match self.vars.entry(id.clone()) {
                 Entry::Occupied(mut e) => {
                     e.get_mut().inline_prevented |= var_info.inline_prevented;
+
                     let var_assigned = var_info.assign_count > 0
                         || (var_info.var_initialized && !e.get().var_initialized);
 
@@ -247,6 +252,7 @@ impl Storage for ProgramData {
                         // current child scope
                         if !inited && e.get().var_initialized && var_info.ref_count > 0 {
                             e.get_mut().var_initialized = false;
+
                             e.get_mut().reassigned = true
                         }
                     }
@@ -258,23 +264,34 @@ impl Storage for ProgramData {
                     e.get_mut().reassigned |= var_info.reassigned;
 
                     e.get_mut().has_property_access |= var_info.has_property_access;
+
                     e.get_mut().property_mutation_count |= var_info.property_mutation_count;
+
                     e.get_mut().exported |= var_info.exported;
 
                     e.get_mut().declared |= var_info.declared;
+
                     e.get_mut().declared_count += var_info.declared_count;
+
                     e.get_mut().declared_as_fn_param |= var_info.declared_as_fn_param;
+
                     e.get_mut().declared_as_fn_decl |= var_info.declared_as_fn_decl;
+
                     e.get_mut().declared_as_fn_expr |= var_info.declared_as_fn_expr;
+
                     e.get_mut().declared_as_catch_param |= var_info.declared_as_catch_param;
 
                     // If a var is registered at a parent scope, it means that it's delcared before
                     // usages.
                     //
                     // e.get_mut().used_above_decl |= var_info.used_above_decl;
+
                     e.get_mut().executed_multiple_time |= var_info.executed_multiple_time;
+
                     e.get_mut().used_in_cond |= var_info.used_in_cond;
+
                     e.get_mut().assign_count += var_info.assign_count;
+
                     e.get_mut().usage_count += var_info.usage_count;
 
                     e.get_mut().infects_to.extend(var_info.infects_to);
@@ -284,8 +301,11 @@ impl Storage for ProgramData {
                             && var_info.no_side_effect_for_member_access;
 
                     e.get_mut().callee_count += var_info.callee_count;
+
                     e.get_mut().used_as_arg |= var_info.used_as_arg;
+
                     e.get_mut().used_as_ref |= var_info.used_as_ref;
+
                     e.get_mut().indexed_with_dynamic_key |= var_info.indexed_with_dynamic_key;
 
                     e.get_mut().pure_fn |= var_info.pure_fn;
@@ -293,6 +313,7 @@ impl Storage for ProgramData {
                     e.get_mut().used_recursively |= var_info.used_recursively;
 
                     e.get_mut().is_fn_local &= var_info.is_fn_local;
+
                     e.get_mut().used_in_non_child_fn |= var_info.used_in_non_child_fn;
 
                     e.get_mut().assigned_fn_local &= var_info.assigned_fn_local;
@@ -304,6 +325,7 @@ impl Storage for ProgramData {
                     match kind {
                         ScopeKind::Fn => {
                             e.get_mut().is_fn_local = false;
+
                             if !var_info.used_recursively {
                                 e.get_mut().used_in_non_child_fn = true
                             }
@@ -312,14 +334,17 @@ impl Storage for ProgramData {
                                 e.get_mut().assigned_fn_local = false
                             }
                         }
+
                         ScopeKind::Block => {
                             if e.get().used_in_non_child_fn {
                                 e.get_mut().is_fn_local = false;
+
                                 e.get_mut().used_in_non_child_fn = true;
                             }
                         }
                     }
                 }
+
                 Entry::Vacant(e) => {
                     match kind {
                         ScopeKind::Fn => {
@@ -327,8 +352,10 @@ impl Storage for ProgramData {
                                 var_info.used_in_non_child_fn = true
                             }
                         }
+
                         ScopeKind::Block => {}
                     }
+
                     e.insert(var_info);
                 }
             }
@@ -344,16 +371,21 @@ impl Storage for ProgramData {
         });
 
         e.used_as_ref |= ctx.is_id_ref;
+
         e.ref_count += 1;
+
         e.usage_count += 1;
         // If it is inited in some child scope, but referenced in current scope
         if !inited && e.var_initialized {
             e.reassigned = true;
+
             e.var_initialized = false;
         }
 
         e.inline_prevented |= ctx.inline_prevented;
+
         e.executed_multiple_time |= ctx.executed_multiple_time;
+
         e.used_in_cond |= ctx.in_cond;
     }
 
@@ -367,10 +399,12 @@ impl Storage for ProgramData {
         }
 
         e.merged_var_type.merge(Some(ty));
+
         e.assign_count += 1;
 
         if !is_op {
             self.initialized_vars.insert(i.clone());
+
             if e.ref_count == 1 && e.var_kind != Some(VarDeclKind::Const) && !inited {
                 e.var_initialized = true;
             } else {
@@ -394,7 +428,9 @@ impl Storage for ProgramData {
 
             if let Some(usage) = self.vars.get_mut(curr) {
                 usage.inline_prevented |= ctx.inline_prevented;
+
                 usage.executed_multiple_time |= ctx.executed_multiple_time;
+
                 usage.used_in_cond |= ctx.in_cond;
 
                 if is_op {
@@ -420,6 +456,7 @@ impl Storage for ProgramData {
         // }
 
         let v = self.vars.entry(i.to_id()).or_default();
+
         v.is_top_level |= ctx.is_top_level;
 
         // assigned or declared before this declaration
@@ -439,6 +476,7 @@ impl Storage for ProgramData {
         // This is not delcared yet, so this is the first declaration.
         if !v.declared {
             v.var_kind = kind;
+
             v.no_side_effect_for_member_access = ctx.in_decl_with_no_side_effect_for_member_access;
         }
 
@@ -447,14 +485,17 @@ impl Storage for ProgramData {
         }
 
         v.var_initialized |= init_type.is_some();
+
         v.merged_var_type.merge(init_type);
 
         v.declared_count += 1;
+
         v.declared = true;
         // not a VarDecl, thus always inited
         if init_type.is_some() || kind.is_none() {
             self.initialized_vars.insert(i.to_id());
         }
+
         v.declared_as_catch_param |= ctx.in_catch_param;
 
         v
@@ -470,9 +511,11 @@ impl Storage for ProgramData {
 
     fn mark_property_mutation(&mut self, id: Id) {
         let e = self.vars.entry(id).or_default();
+
         e.property_mutation_count += 1;
 
         let mut to_mark_mutate = Vec::new();
+
         for (other, kind) in &e.infects_to {
             if *kind == AccessKind::Reference {
                 to_mark_mutate.push(other.clone())
@@ -492,7 +535,9 @@ impl ScopeDataLike for ScopeData {
 
     fn merge(&mut self, other: Self, _: bool) {
         self.has_with_stmt |= other.has_with_stmt;
+
         self.has_eval_call |= other.has_eval_call;
+
         self.used_arguments |= other.used_arguments;
     }
 
@@ -536,6 +581,7 @@ impl VarDataLike for VarUsageInfo {
 
     fn mark_used_as_arg(&mut self) {
         self.used_as_ref = true;
+
         self.used_as_arg = true
     }
 
@@ -612,9 +658,11 @@ impl ProgramData {
 
                 false
             }
+
             Expr::Bin(BinExpr { left, right, .. }) => {
                 self.contains_unresolved(left) || self.contains_unresolved(right)
             }
+
             Expr::Unary(UnaryExpr { arg, .. }) => self.contains_unresolved(arg),
             Expr::Update(UpdateExpr { arg, .. }) => self.contains_unresolved(arg),
             Expr::Seq(SeqExpr { exprs, .. }) => exprs.iter().any(|e| self.contains_unresolved(e)),
@@ -624,9 +672,11 @@ impl ProgramData {
                     AssignTarget::Simple(left) => {
                         self.simple_assign_target_contains_unresolved(left)
                     }
+
                     AssignTarget::Pat(_) => false,
                 }) || self.contains_unresolved(right)
             }
+
             Expr::Cond(CondExpr {
                 test, cons, alt, ..
             }) => {
@@ -634,6 +684,7 @@ impl ProgramData {
                     || self.contains_unresolved(cons)
                     || self.contains_unresolved(alt)
             }
+
             Expr::New(NewExpr { args, .. }) => args.iter().flatten().any(|arg| match arg.spread {
                 Some(..) => self.contains_unresolved(&arg.expr),
                 None => false,
@@ -641,6 +692,7 @@ impl ProgramData {
             Expr::Yield(YieldExpr { arg, .. }) => {
                 matches!(arg, Some(arg) if self.contains_unresolved(arg))
             }
+
             Expr::Tpl(Tpl { exprs, .. }) => exprs.iter().any(|e| self.contains_unresolved(e)),
             Expr::Paren(ParenExpr { expr, .. }) => self.contains_unresolved(expr),
             Expr::Await(AwaitExpr { arg, .. }) => self.contains_unresolved(arg),
@@ -715,6 +767,7 @@ impl ProgramData {
 
                 true
             }
+
             SimpleAssignTarget::Member(me) => self.member_expr_contains_unresolved(me),
             SimpleAssignTarget::SuperProp(n) => {
                 if let SuperProp::Computed(prop) = &n.prop {
@@ -725,6 +778,7 @@ impl ProgramData {
 
                 false
             }
+
             SimpleAssignTarget::Paren(n) => self.contains_unresolved(&n.expr),
             SimpleAssignTarget::OptChain(n) => self.opt_chain_expr_contains_unresolved(n),
             SimpleAssignTarget::TsAs(..)

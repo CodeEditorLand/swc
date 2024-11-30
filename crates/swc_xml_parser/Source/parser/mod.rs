@@ -73,7 +73,9 @@ where
         self.run()?;
 
         let document = &mut self.document.take().unwrap();
+
         let nodes = document.children.take();
+
         let mut children = Vec::with_capacity(nodes.len());
 
         for node in nodes {
@@ -103,6 +105,7 @@ where
 
                 Some(*span)
             }
+
             Some(Child::Comment(Comment { span, .. })) => Some(*span),
             Some(Child::Text(Text { span, .. })) => Some(*span),
             _ => None,
@@ -130,6 +133,7 @@ where
                 attributes,
             } => {
                 let nodes = node.children.take();
+
                 let mut new_children = Vec::with_capacity(nodes.len());
 
                 for node in nodes {
@@ -159,6 +163,7 @@ where
                     children: new_children,
                 })
             }
+
             Data::Text { data, raw } => {
                 let span = if let Some(end_span) = node.end_span.take() {
                     swc_common::Span::new(start_span.lo(), end_span.hi())
@@ -172,6 +177,7 @@ where
                     raw: Some(raw.take().into()),
                 })
             }
+
             Data::Comment { data, raw } => Child::Comment(Comment {
                 span: start_span,
                 data,
@@ -184,6 +190,7 @@ where
                     data,
                 })
             }
+
             Data::CdataSection { data, raw } => Child::CdataSection(CdataSection {
                 span: start_span,
                 data,
@@ -200,6 +207,7 @@ where
             let mut token_and_info = match self.input.cur()? {
                 Some(_) => {
                     let span = self.input.cur_span()?;
+
                     let token = bump!(self);
 
                     TokenAndInfo {
@@ -208,8 +216,10 @@ where
                         token,
                     }
                 }
+
                 None => {
                     let start_pos = self.input.start_pos()?;
+
                     let last_pos = self.input.last_pos()?;
 
                     TokenAndInfo {
@@ -253,21 +263,28 @@ where
                     let element = self.create_element_for_token(token_and_info.clone());
 
                     self.append_node(self.document.as_ref().unwrap(), element.clone());
+
                     self.open_elements_stack.items.push(element);
+
                     self.phase = Phase::MainPhase;
                 }
+
                 Token::EmptyTag { .. } => {
                     let element = self.create_element_for_token(token_and_info.clone());
 
                     self.append_node(self.document.as_ref().unwrap(), element);
+
                     self.phase = Phase::EndPhase;
                 }
+
                 Token::Comment { .. } => {
                     self.append_comment_to_doc(token_and_info)?;
                 }
+
                 Token::ProcessingInstruction { .. } => {
                     self.append_processing_instruction_to_doc(token_and_info)?;
                 }
+
                 Token::Cdata { .. } => {
                     self.errors.push(Error::new(
                         token_and_info.span,
@@ -276,6 +293,7 @@ where
 
                     self.append_cdata_to_doc(token_and_info)?;
                 }
+
                 Token::Character { value, .. } => {
                     if !is_whitespace(*value) {
                         self.errors.push(Error::new(
@@ -284,6 +302,7 @@ where
                         ));
                     }
                 }
+
                 Token::Eof => {
                     self.errors.push(Error::new(
                         token_and_info.span,
@@ -292,11 +311,13 @@ where
 
                     self.process_token(token_and_info, Some(Phase::EndPhase))?;
                 }
+
                 Token::Doctype { .. } => {
                     let document_type = self.create_document_type_for_token(token_and_info);
 
                     self.append_node(self.document.as_ref().unwrap(), document_type);
                 }
+
                 _ => {
                     self.errors.push(Error::new(
                         token_and_info.span,
@@ -308,17 +329,21 @@ where
                 Token::Character { .. } => {
                     self.append_character_to_current_element(token_and_info)?;
                 }
+
                 Token::StartTag { .. } => {
                     let element = self.create_element_for_token(token_and_info.clone());
 
                     self.append_node(self.get_current_element(), element.clone());
+
                     self.open_elements_stack.items.push(element);
                 }
+
                 Token::EmptyTag { .. } => {
                     let element = self.create_element_for_token(token_and_info.clone());
 
                     self.append_node(self.get_current_element(), element);
                 }
+
                 Token::EndTag { tag_name, .. } => {
                     if get_tag_name!(self.get_current_element()) != tag_name {
                         self.errors.push(Error::new(
@@ -346,21 +371,25 @@ where
                         self.phase = Phase::EndPhase;
                     }
                 }
+
                 Token::Comment { .. } => {
                     let comment = self.create_comment(token_and_info);
 
                     self.append_node(self.get_current_element(), comment);
                 }
+
                 Token::ProcessingInstruction { .. } => {
                     let processing_instruction = self.create_processing_instruction(token_and_info);
 
                     self.append_node(self.get_current_element(), processing_instruction);
                 }
+
                 Token::Cdata { .. } => {
                     let cdata = self.create_cdata_section(token_and_info);
 
                     self.append_node(self.get_current_element(), cdata);
                 }
+
                 Token::Eof => {
                     self.errors.push(Error::new(
                         token_and_info.span,
@@ -369,6 +398,7 @@ where
 
                     self.process_token(token_and_info, Some(Phase::EndPhase))?;
                 }
+
                 _ => {
                     self.errors.push(Error::new(
                         token_and_info.span,
@@ -380,9 +410,11 @@ where
                 Token::Comment { .. } => {
                     self.append_comment_to_doc(token_and_info)?;
                 }
+
                 Token::ProcessingInstruction { .. } => {
                     self.append_processing_instruction_to_doc(token_and_info)?;
                 }
+
                 Token::Cdata { .. } => {
                     self.errors.push(Error::new(
                         token_and_info.span,
@@ -391,6 +423,7 @@ where
 
                     self.append_cdata_to_doc(token_and_info)?;
                 }
+
                 Token::Character { value, .. } => {
                     if !is_whitespace(*value) {
                         self.errors.push(Error::new(
@@ -399,9 +432,11 @@ where
                         ));
                     }
                 }
+
                 Token::Eof => {
                     self.stopped = true;
                 }
+
                 _ => {
                     self.errors.push(Error::new(
                         token_and_info.span,
@@ -494,6 +529,7 @@ where
                     attributes: RefCell::new(attributes),
                 }
             }
+
             _ => {
                 unreachable!();
             }
@@ -526,6 +562,7 @@ where
                                 raw_data.borrow_mut().push_str(raw_c);
                             }
                         }
+
                         _ => {
                             unreachable!();
                         }
@@ -557,6 +594,7 @@ where
 
                 (RefCell::new(data), RefCell::new(raw))
             }
+
             _ => {
                 unreachable!()
             }

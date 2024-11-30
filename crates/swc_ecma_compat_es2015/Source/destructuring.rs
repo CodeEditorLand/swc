@@ -65,7 +65,9 @@ macro_rules! impl_for_for_stmt {
                     if !has_complex {
                         return;
                     }
+
                     let ref_ident = make_ref_ident_for_for_stmt();
+
                     let left = VarDecl {
                         decls: vec![VarDeclarator {
                             span: DUMMY_SP,
@@ -90,6 +92,7 @@ macro_rules! impl_for_for_stmt {
                             ..decl
                         })
                         .collect::<Vec<_>>();
+
                     decls.visit_mut_children_with(self);
 
                     // Unpack variables
@@ -102,12 +105,15 @@ macro_rules! impl_for_for_stmt {
                     .into();
                     (left, stmt)
                 }
+
                 ForHead::Pat(pat) => match **pat {
                     Pat::Ident(..) => {
                         return;
                     }
+
                     _ => {
                         let left_ident = make_ref_ident_for_for_stmt();
+
                         let left = ForHead::Pat(left_ident.clone().into());
                         // Unpack variables
                         let stmt = AssignExpr {
@@ -172,6 +178,7 @@ impl AssignFolder {
                                     || (elems.len() < arr.elems.len() && has_rest_pat(&elems))) =>
                         {
                             let mut arr_elems = Some(arr.elems.into_iter());
+
                             elems.into_iter().for_each(|p| match p {
                                 Some(Pat::Rest(p)) => {
                                     self.visit_mut_var_decl(
@@ -193,18 +200,21 @@ impl AssignFolder {
                                         },
                                     );
                                 }
+
                                 Some(p) => {
                                     let e = arr_elems
                                         .as_mut()
                                         .expect("pattern after rest element?")
                                         .next()
                                         .unwrap();
+
                                     self.visit_mut_var_decl(
                                         decls,
                                         VarDeclarator {
                                             span: p.span(),
                                             init: e.map(|e| {
                                                 debug_assert_eq!(e.spread, None);
+
                                                 e.expr
                                             }),
                                             name: p,
@@ -220,8 +230,10 @@ impl AssignFolder {
                                         .next();
                                 }
                             });
+
                             return;
                         }
+
                         _ => {}
                     }
                 }
@@ -283,10 +295,13 @@ impl AssignFolder {
                     };
 
                     let mut var_decls = vec![var_decl];
+
                     var_decls.visit_mut_with(self);
+
                     decls.extend(var_decls);
                 }
             }
+
             Pat::Object(ObjectPat { span, props, .. }) if props.is_empty() => {
                 // We should convert
                 //
@@ -331,6 +346,7 @@ impl AssignFolder {
                             init: Some(decl.init.unwrap().make_member(p.key.clone().into()).into()),
                             definite: false,
                         });
+
                         return;
                     }
                 }
@@ -347,6 +363,7 @@ impl AssignFolder {
 
                 let ref_ident = if can_be_null {
                     let init = ref_ident.into();
+
                     make_ref_ident(self.c, ref_decls, Some(init))
                 } else {
                     ref_ident
@@ -371,9 +388,12 @@ impl AssignFolder {
                             };
 
                             let mut var_decls = vec![var_decl];
+
                             var_decls.visit_mut_with(self);
+
                             decls.extend(var_decls);
                         }
+
                         ObjectPatProp::Assign(AssignPatProp { key, value, .. }) => {
                             let computed = false;
 
@@ -395,10 +415,14 @@ impl AssignFolder {
                                         init: Some(Box::new(make_cond_expr(ref_ident, value))),
                                         definite: false,
                                     };
+
                                     let mut var_decls = vec![var_decl];
+
                                     var_decls.visit_mut_with(self);
+
                                     decls.extend(var_decls);
                                 }
+
                                 None => {
                                     let var_decl = VarDeclarator {
                                         span: prop_span,
@@ -410,12 +434,16 @@ impl AssignFolder {
                                         ))),
                                         definite: false,
                                     };
+
                                     let mut var_decls = vec![var_decl];
+
                                     var_decls.visit_mut_with(self);
+
                                     decls.extend(var_decls);
                                 }
                             }
                         }
+
                         ObjectPatProp::Rest(..) => unreachable!(
                             "Object rest pattern should be removed by es2018::object_rest_spread \
                              pass"
@@ -423,6 +451,7 @@ impl AssignFolder {
                     }
                 }
             }
+
             Pat::Assign(AssignPat {
                 span,
                 left,
@@ -435,6 +464,7 @@ impl AssignFolder {
 
                         _ => {
                             let tmp_ident = private_ident!(span, "tmp");
+
                             decls.push(VarDeclarator {
                                 span: DUMMY_SP,
                                 name: tmp_ident.clone().into(),
@@ -460,7 +490,9 @@ impl AssignFolder {
                 };
 
                 let mut var_decls = vec![var_decl];
+
                 var_decls.visit_mut_with(self);
+
                 decls.extend(var_decls);
             }
 
@@ -497,10 +529,12 @@ impl Destructuring {
         body: &mut BlockStmt,
     ) -> (Vec<Param>, BlockStmt) {
         let mut params = Vec::new();
+
         let mut decls = Vec::new();
 
         for param in ps.drain(..) {
             let span = param.span();
+
             match param.pat {
                 Pat::Ident(..) => params.push(param),
                 Pat::Array(..) | Pat::Object(..) | Pat::Assign(..) => {
@@ -511,6 +545,7 @@ impl Destructuring {
                         decorators: Default::default(),
                         pat: ref_ident.clone().into(),
                     });
+
                     decls.push(VarDeclarator {
                         span,
                         name: param.pat,
@@ -518,6 +553,7 @@ impl Destructuring {
                         definite: false,
                     })
                 }
+
                 Pat::Rest(..) | Pat::Expr(..) => params.push(param),
                 Pat::Invalid(..) => {}
             }
@@ -586,6 +622,7 @@ impl AssignFolder {
         .into();
 
         assign_cond_expr.visit_mut_with(self);
+
         exprs.push(Box::new(assign_cond_expr));
 
         SeqExpr {
@@ -603,32 +640,43 @@ impl VisitMut for AssignFolder {
 
     fn visit_mut_export_decl(&mut self, decl: &mut ExportDecl) {
         let old = self.exporting;
+
         self.exporting = true;
+
         decl.visit_mut_children_with(self);
+
         self.exporting = old;
     }
 
     fn visit_mut_function(&mut self, f: &mut Function) {
         let exporting = mem::replace(&mut self.exporting, false);
+
         f.visit_mut_children_with(self);
+
         self.exporting = exporting;
     }
 
     fn visit_mut_class(&mut self, f: &mut Class) {
         let exporting = mem::replace(&mut self.exporting, false);
+
         f.visit_mut_children_with(self);
+
         self.exporting = exporting;
     }
 
     fn visit_mut_object_lit(&mut self, f: &mut ObjectLit) {
         let exporting = mem::replace(&mut self.exporting, false);
+
         f.visit_mut_children_with(self);
+
         self.exporting = exporting;
     }
 
     fn visit_mut_arrow_expr(&mut self, f: &mut ArrowExpr) {
         let exporting = mem::replace(&mut self.exporting, false);
+
         f.visit_mut_children_with(self);
+
         self.exporting = exporting;
     }
 
@@ -640,6 +688,7 @@ impl VisitMut for AssignFolder {
             Expr::Fn(..) | Expr::Object(..) => {
                 expr.visit_mut_with(&mut Destructuring { c: self.c })
             }
+
             _ => expr.visit_mut_children_with(self),
         };
 
@@ -659,6 +708,7 @@ impl VisitMut for AssignFolder {
                 //         right: right.take(),
                 //     });
                 // }
+
                 AssignTargetPat::Array(ArrayPat { elems, .. }) => {
                     let mut exprs = Vec::with_capacity(elems.len() + 1);
 
@@ -669,6 +719,7 @@ impl VisitMut for AssignFolder {
                                     || (elems.len() < arr.elems.len() && has_rest_pat(elems)) =>
                             {
                                 let mut arr_elems = Some(arr.elems.take().into_iter());
+
                                 elems.iter_mut().for_each(|p| match p {
                                     Some(Pat::Rest(p)) => {
                                         exprs.push(
@@ -690,20 +741,24 @@ impl VisitMut for AssignFolder {
                                             .into(),
                                         );
                                     }
+
                                     Some(p) => {
                                         let e = arr_elems
                                             .as_mut()
                                             .expect("pattern after rest element?")
                                             .next()
                                             .and_then(|v| v);
+
                                         let mut right = e
                                             .map(|e| {
                                                 debug_assert_eq!(e.spread, None);
+
                                                 e.expr
                                             })
                                             .unwrap_or_else(|| Expr::undefined(p.span()));
 
                                         let p = p.take();
+
                                         let mut expr = if let Pat::Assign(pat) = p {
                                             self.handle_assign_pat(*span, pat, &mut right)
                                         } else {
@@ -729,8 +784,10 @@ impl VisitMut for AssignFolder {
                                     }
                                 });
                                 *expr = SeqExpr { span: *span, exprs }.into();
+
                                 return;
                             }
+
                             _ => {}
                         }
                     }
@@ -746,6 +803,7 @@ impl VisitMut for AssignFolder {
                             elems.len()
                         }),
                     );
+
                     exprs.push(
                         AssignExpr {
                             span: DUMMY_SP,
@@ -771,6 +829,7 @@ impl VisitMut for AssignFolder {
                                             .into(),
                                         )
                                     }
+
                                     Expr::Array(..) => right.take(),
                                     _ => {
                                         // if left has rest then need `_to_array`
@@ -814,6 +873,7 @@ impl VisitMut for AssignFolder {
                             Some(elem) => elem,
                             None => continue,
                         };
+
                         let elem_span = elem.span();
 
                         match elem {
@@ -822,6 +882,7 @@ impl VisitMut for AssignFolder {
                             }) => {
                                 // initialized by sequence expression.
                                 let assign_ref_ident = make_ref_ident(self.c, &mut self.vars, None);
+
                                 exprs.push(
                                     AssignExpr {
                                         span: DUMMY_SP,
@@ -839,10 +900,12 @@ impl VisitMut for AssignFolder {
                                     right: Box::new(make_cond_expr(assign_ref_ident, right.take())),
                                 }
                                 .into();
+
                                 assign_expr.visit_mut_with(self);
 
                                 exprs.push(Box::new(assign_expr));
                             }
+
                             Pat::Rest(RestPat { arg, .. }) => {
                                 let mut assign_expr: Expr = AssignExpr {
                                     span: elem_span,
@@ -862,8 +925,10 @@ impl VisitMut for AssignFolder {
                                 .into();
 
                                 assign_expr.visit_mut_with(self);
+
                                 exprs.push(Box::new(assign_expr));
                             }
+
                             _ => {
                                 let mut assign_expr: Expr = AssignExpr {
                                     span: elem_span,
@@ -874,6 +939,7 @@ impl VisitMut for AssignFolder {
                                 .into();
 
                                 assign_expr.visit_mut_with(self);
+
                                 exprs.push(Box::new(assign_expr))
                             }
                         }
@@ -888,13 +954,16 @@ impl VisitMut for AssignFolder {
                     }
                     .into()
                 }
+
                 AssignTargetPat::Object(ObjectPat { props, .. }) if props.is_empty() => {
                     let mut right = right.take();
+
                     right.visit_mut_with(self);
 
                     *expr = helper_expr!(object_destructuring_empty)
                         .as_call(DUMMY_SP, vec![right.as_arg()]);
                 }
+
                 AssignTargetPat::Object(ObjectPat { span, props, .. }) => {
                     if props.len() == 1 {
                         if let ObjectPatProp::Assign(p @ AssignPatProp { value: None, .. }) =
@@ -907,6 +976,7 @@ impl VisitMut for AssignFolder {
                                 right: right.take().make_member(p.key.clone().into()).into(),
                             }
                             .into();
+
                             return;
                         }
                     }
@@ -922,6 +992,7 @@ impl VisitMut for AssignFolder {
 
                     for prop in props {
                         let span = prop.span();
+
                         match prop {
                             ObjectPatProp::KeyValue(KeyValuePatProp { key, value }) => {
                                 let computed = matches!(key, PropName::Computed(..));
@@ -931,6 +1002,7 @@ impl VisitMut for AssignFolder {
                                     Box::new(prop_name_to_expr(key.take())),
                                     computed,
                                 ));
+
                                 let value = value.take();
 
                                 let mut expr = if let Pat::Assign(pat) = *value {
@@ -946,8 +1018,10 @@ impl VisitMut for AssignFolder {
                                 };
 
                                 expr.visit_mut_with(self);
+
                                 exprs.push(Box::new(expr));
                             }
+
                             ObjectPatProp::Assign(AssignPatProp { key, value, .. }) => {
                                 let computed = false;
 
@@ -983,6 +1057,7 @@ impl VisitMut for AssignFolder {
                                             .into(),
                                         );
                                     }
+
                                     None => {
                                         exprs.push(
                                             AssignExpr {
@@ -1000,6 +1075,7 @@ impl VisitMut for AssignFolder {
                                     }
                                 }
                             }
+
                             ObjectPatProp::Rest(_) => unreachable!(
                                 "object rest pattern should be removed by \
                                  es2018::object_rest_spread pass"
@@ -1026,9 +1102,12 @@ impl VisitMut for AssignFolder {
         match s {
             Stmt::Expr(e) => {
                 self.ignore_return_value = Some(());
+
                 e.visit_mut_with(self);
+
                 assert_eq!(self.ignore_return_value, None);
             }
+
             _ => s.visit_mut_children_with(self),
         };
     }
@@ -1039,11 +1118,13 @@ impl VisitMut for AssignFolder {
         let is_complex = declarators
             .iter()
             .any(|d| !matches!(d.name, Pat::Ident(..)));
+
         if !is_complex {
             return;
         }
 
         let mut decls = Vec::with_capacity(declarators.len());
+
         for decl in declarators.drain(..) {
             self.visit_mut_var_decl(&mut decls, decl);
         }
@@ -1103,6 +1184,7 @@ impl Destructuring {
 
                     stmts_updated.push(item);
                 }
+
                 Ok(mut stmt) => {
                     stmt.visit_mut_with(&mut folder);
 
@@ -1274,6 +1356,7 @@ fn can_be_null(e: &Expr) -> bool {
         Expr::Seq(SeqExpr { ref exprs, .. }) => {
             exprs.last().map(|e| can_be_null(e)).unwrap_or(true)
         }
+
         Expr::Assign(AssignExpr { ref right, .. }) => can_be_null(right),
         Expr::Cond(CondExpr {
             ref cons, ref alt, ..
@@ -1312,8 +1395,10 @@ impl Visit for DestructuringVisitor {
 
     fn visit_pat(&mut self, node: &Pat) {
         node.visit_children_with(self);
+
         match *node {
             Pat::Ident(..) => {}
+
             _ => self.found = true,
         }
     }

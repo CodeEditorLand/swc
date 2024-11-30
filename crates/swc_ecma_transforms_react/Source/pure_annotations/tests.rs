@@ -15,12 +15,16 @@ fn parse(
         jsx: true,
         ..Default::default()
     });
+
     let source_map = Lrc::new(SourceMap::default());
+
     let source_file = source_map.new_source_file(FileName::Anon.into(), src.into());
 
     let comments = Lrc::new(SingleThreadedComments::default());
+
     let program = {
         let mut p = Parser::new(syntax, StringInput::from(&*source_file), Some(&comments));
+
         let res = p
             .parse_module()
             .map_err(|e| e.into_diagnostic(tester.handler).emit());
@@ -41,6 +45,7 @@ fn emit(
     program: &Program,
 ) -> String {
     let mut src_map_buf = Vec::new();
+
     let mut buf = std::vec::Vec::new();
     {
         let writer = Box::new(JsWriter::new(
@@ -49,12 +54,14 @@ fn emit(
             &mut buf,
             Some(&mut src_map_buf),
         ));
+
         let mut emitter = Emitter {
             cfg: Default::default(),
             comments: Some(&comments),
             cm: source_map,
             wr: writer,
         };
+
         emitter.emit_program(program).unwrap();
     }
 
@@ -64,9 +71,11 @@ fn emit(
 fn run_test(input: &str, expected: &str) {
     Tester::run(|tester| {
         let unresolved_mark = Mark::new();
+
         let top_level_mark = Mark::new();
 
         let (actual, actual_sm, actual_comments) = parse(tester, input)?;
+
         let actual = actual
             .apply(&mut resolver(unresolved_mark, top_level_mark, false))
             .apply(&mut crate::react(
@@ -80,11 +89,14 @@ fn run_test(input: &str, expected: &str) {
         let actual_src = emit(actual_sm, actual_comments, &actual);
 
         let (expected, expected_sm, expected_comments) = parse(tester, expected)?;
+
         let expected_src = emit(expected_sm, expected_comments, &expected);
 
         if actual_src != expected_src {
             println!(">>>>> Orig <<<<<\n{}", input);
+
             println!(">>>>> Code <<<<<\n{}", actual_src);
+
             panic!(
                 r#"assertion failed: `(left == right)`
     {}"#,

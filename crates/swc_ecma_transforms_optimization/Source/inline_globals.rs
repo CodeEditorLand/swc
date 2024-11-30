@@ -76,7 +76,9 @@ impl VisitMut for InlineGlobals {
             Ident::within_ignored_ctxt(|| self.global_exprs.get(&NodeIgnoringSpan::borrowed(expr)))
         {
             *expr = value.clone();
+
             expr.visit_mut_with(self);
+
             return;
         }
 
@@ -87,6 +89,7 @@ impl VisitMut for InlineGlobals {
                 // It's ok because we don't recurse into member expressions.
                 if let Some(value) = self.globals.get(sym) {
                     let mut value = value.clone();
+
                     value.visit_mut_with(self);
                     *expr = value;
                 }
@@ -141,10 +144,12 @@ impl VisitMut for InlineGlobals {
                                     *expr = env.clone();
                                 }
                             }
+
                             _ => {}
                         }
                     }
                 }
+
                 _ => (),
             },
             _ => {}
@@ -202,6 +207,7 @@ impl VisitMut for InlineGlobals {
 #[cfg(test)]
 mod tests {
     use swc_ecma_transforms_testing::{test, Tester};
+
     use swc_ecma_utils::{DropSpan, StmtOrModuleItem};
 
     use super::*;
@@ -234,7 +240,9 @@ mod tests {
                 Program::Module(mut m) => m.body.pop().and_then(|x| x.into_stmt().ok()),
                 Program::Script(mut s) => s.body.pop(),
             };
+
             assert!(v.is_some());
+
             let v = match v.unwrap() {
                 Stmt::Expr(ExprStmt { expr, .. }) => *expr,
                 _ => unreachable!(),

@@ -82,12 +82,14 @@ impl DecoratorPass {
         }
 
         let ident = private_ident!("_dec");
+
         self.extra_vars.push(VarDeclarator {
             span: DUMMY_SP,
             name: ident.clone().into(),
             init: None,
             definite: false,
         });
+
         self.pre_class_inits.push(
             AssignExpr {
                 span: DUMMY_SP,
@@ -113,6 +115,7 @@ impl DecoratorPass {
         }
 
         let mut e_lhs = Vec::new();
+
         let mut combined_args = vec![ThisExpr { span: DUMMY_SP }.as_arg()];
 
         for id in self
@@ -279,6 +282,7 @@ impl DecoratorPass {
             },
             _ => {
                 let key_ident = private_ident!(name.span(), "_computedKey");
+
                 self.extra_vars.push(VarDeclarator {
                     span: DUMMY_SP,
                     name: key_ident.clone().into(),
@@ -313,6 +317,7 @@ impl DecoratorPass {
 
     fn ensure_constructor<'a>(&mut self, c: &'a mut Class) -> &'a mut Constructor {
         let mut insert_index = 0;
+
         for (i, member) in c.body.iter().enumerate() {
             if let ClassMember::Constructor(constructor) = member {
                 // decorators occur before typescript's type strip, so skip ctor overloads
@@ -342,6 +347,7 @@ impl DecoratorPass {
 
     fn ensure_identity_constructor<'a>(&mut self, c: &'a mut Class) -> &'a mut Constructor {
         let mut insert_index = 0;
+
         for (i, member) in c.body.iter().enumerate() {
             if let ClassMember::Constructor(constructor) = member {
                 // decorators occur before typescript's type strip, so skip ctor overloads
@@ -382,6 +388,7 @@ impl DecoratorPass {
     fn handle_super_class(&mut self, class: &mut Class) {
         if let Some(super_class) = class.super_class.take() {
             let id = alias_ident_for(&super_class, "_super");
+
             self.extra_vars.push(VarDeclarator {
                 span: DUMMY_SP,
                 name: id.clone().into(),
@@ -430,6 +437,7 @@ impl DecoratorPass {
         self.state
             .class_lhs
             .push(Some(new_class_name.clone().into()));
+
         self.state.class_lhs.push(Some(init_class.clone().into()));
 
         self.extra_vars.push(VarDeclarator {
@@ -440,7 +448,9 @@ impl DecoratorPass {
         });
 
         let decorators = self.preserve_side_effect_of_decorators(class.decorators.take());
+
         self.state.class_decorators.extend(decorators);
+
         self.handle_super_class(class);
 
         {
@@ -481,6 +491,7 @@ impl DecoratorPass {
         });
 
         let preserved_class_name = c.ident.clone().into_private();
+
         let new_class_name = private_ident!(format!("_{}", c.ident.sym));
 
         self.extra_lets.push(VarDeclarator {
@@ -496,9 +507,11 @@ impl DecoratorPass {
         self.state
             .class_lhs
             .push(Some(new_class_name.clone().into()));
+
         self.state.class_lhs.push(Some(init_class.clone().into()));
 
         self.state.class_decorators.extend(decorators);
+
         self.handle_super_class(&mut c.class);
 
         let mut body = c.class.body.take();
@@ -555,10 +568,12 @@ impl DecoratorPass {
                             }
                         }
                     }
+
                     ClassMember::StaticBlock(s) => match &mut last_static_block {
                         None => {
                             last_static_block = Some(s.body.stmts.take());
                         }
+
                         Some(v) => {
                             v.append(&mut s.body.stmts);
                         }
@@ -603,12 +618,15 @@ impl DecoratorPass {
                     ClassMember::PrivateProp(p) => {
                         if p.is_static {
                             should_move = true;
+
                             p.is_static = false;
                         }
                     }
+
                     ClassMember::PrivateMethod(p) => {
                         if p.is_static {
                             should_move = true;
+
                             p.is_static = false;
                         }
                     }
@@ -616,9 +634,11 @@ impl DecoratorPass {
                     ClassMember::AutoAccessor(p) => {
                         if p.is_static {
                             should_move = true;
+
                             p.is_static = false;
                         }
                     }
+
                     _ => (),
                 }
 
@@ -651,6 +671,7 @@ impl DecoratorPass {
                     ..Default::default()
                 }
                 .into();
+
                 let static_call = last_static_block.map(|last| {
                     CallExpr {
                         span: DUMMY_SP,
@@ -712,16 +733,23 @@ impl DecoratorPass {
             }
             .into_stmt();
         }
+
         for m in body.iter_mut() {
             if let ClassMember::Constructor(..) = m {
                 c.class.body.push(m.take());
             }
         }
+
         body.visit_mut_with(self);
+
         c.visit_mut_with(self);
+
         c.ident = preserved_class_name.clone();
+
         replace_ident(&mut c.class, c.ident.to_id(), &preserved_class_name);
+
         c.class.body.extend(body);
+
         c.class.body.push(ClassMember::StaticBlock(StaticBlock {
             span: DUMMY_SP,
             body: BlockStmt {
@@ -736,6 +764,7 @@ impl DecoratorPass {
                 ..Default::default()
             },
         }));
+
         self.state = old_state;
 
         c.take().into()
@@ -752,9 +781,12 @@ impl DecoratorPass {
     fn process_prop_name(&mut self, name: &mut PropName) {
         match name {
             PropName::Ident(..) => {}
+
             PropName::Computed(c) if c.expr.is_ident() => {}
+
             _ => {
                 let ident = private_ident!("_computedKey");
+
                 self.extra_vars.push(VarDeclarator {
                     span: DUMMY_SP,
                     name: ident.clone().into(),
@@ -784,18 +816,24 @@ impl DecoratorPass {
             match &mut m {
                 ClassMember::Method(m) if m.function.body.is_some() => {
                     self.process_decorators(&mut m.function.decorators);
+
                     self.process_prop_name(&mut m.key);
                 }
+
                 ClassMember::PrivateMethod(m) if m.function.body.is_some() => {
                     self.process_decorators(&mut m.function.decorators);
                 }
+
                 ClassMember::ClassProp(m) if !m.declare => {
                     self.process_decorators(&mut m.decorators);
+
                     self.process_prop_name(&mut m.key);
                 }
+
                 ClassMember::PrivateProp(m) => {
                     self.process_decorators(&mut m.decorators);
                 }
+
                 ClassMember::AutoAccessor(m) => {
                     self.process_decorators(&mut m.decorators);
                 }
@@ -847,6 +885,7 @@ impl VisitMut for DecoratorPass {
         }
 
         self.state.init_proto = None;
+
         self.state.is_init_proto_called = false;
 
         self.state.extra_stmts = old_stmts;
@@ -861,6 +900,7 @@ impl VisitMut for DecoratorPass {
             }
 
             let decorators = self.preserve_side_effect_of_decorators(p.function.decorators.take());
+
             let dec = merge_decorators(decorators);
 
             let init = private_ident!(format!("_call_{}", p.key.name));
@@ -914,6 +954,7 @@ impl VisitMut for DecoratorPass {
                 }
                 .as_arg(),
             );
+
             if p.is_static {
                 self.state.init_static_args.push(arg);
             } else {
@@ -935,12 +976,14 @@ impl VisitMut for DecoratorPass {
                     .into();
 
                     p.kind = MethodKind::Getter;
+
                     p.function.body = Some(BlockStmt {
                         span: DUMMY_SP,
                         stmts: vec![call_stmt],
                         ..Default::default()
                     });
                 }
+
                 MethodKind::Getter => {
                     let call_stmt = ReturnStmt {
                         span: DUMMY_SP,
@@ -962,6 +1005,7 @@ impl VisitMut for DecoratorPass {
                         ..Default::default()
                     });
                 }
+
                 MethodKind::Setter => {
                     let call_stmt = ReturnStmt {
                         span: DUMMY_SP,
@@ -1002,8 +1046,11 @@ impl VisitMut for DecoratorPass {
                     accessor.value.visit_mut_with(self);
 
                     let name;
+
                     let init;
+
                     let field_name_like: JsWord;
+
                     let private_field = PrivateProp {
                         span: DUMMY_SP,
                         key: match &mut accessor.key {
@@ -1014,18 +1061,23 @@ impl VisitMut for DecoratorPass {
                                     raw: None,
                                 })
                                 .into();
+
                                 init = private_ident!(format!("_init_{}", k.name));
+
                                 field_name_like = format!("__{}", k.name).into();
 
                                 self.state.private_id_index += 1;
+
                                 PrivateName {
                                     span: k.span,
                                     name: format!("__{}_{}", k.name, self.state.private_id_index)
                                         .into(),
                                 }
                             }
+
                             Key::Public(k) => {
                                 (name, init) = self.initializer_name(k, "init");
+
                                 field_name_like = format!("__{}", init.sym)
                                     .replacen("init", "private", 1)
                                     .into();
@@ -1113,6 +1165,7 @@ impl VisitMut for DecoratorPass {
                         is_async: false,
                         ..Default::default()
                     });
+
                     let mut setter_function = {
                         let param = private_ident!("_v");
 
@@ -1153,6 +1206,7 @@ impl VisitMut for DecoratorPass {
                     if !accessor.decorators.is_empty() {
                         let decorators =
                             self.preserve_side_effect_of_decorators(accessor.decorators.take());
+
                         let dec = merge_decorators(decorators);
 
                         self.extra_vars.push(VarDeclarator {
@@ -1205,6 +1259,7 @@ impl VisitMut for DecoratorPass {
                                             init: None,
                                             definite: false,
                                         });
+
                                         self.extra_vars.push(VarDeclarator {
                                             span: DUMMY_SP,
                                             name: setter_var.clone().unwrap().into(),
@@ -1274,6 +1329,7 @@ impl VisitMut for DecoratorPass {
 
                                         data
                                     }
+
                                     Key::Public(_) => {
                                         vec![
                                             dec,
@@ -1292,13 +1348,17 @@ impl VisitMut for DecoratorPass {
 
                         if accessor.is_static {
                             self.state.static_lhs.push(init);
+
                             self.state.init_static_args.push(Some(initialize_init));
+
                             self.state
                                 .static_lhs
                                 .extend(getter_var.into_iter().chain(setter_var));
                         } else {
                             self.state.proto_lhs.push(init);
+
                             self.state.init_proto_args.push(Some(initialize_init));
+
                             self.state
                                 .proto_lhs
                                 .extend(getter_var.into_iter().chain(setter_var));
@@ -1328,6 +1388,7 @@ impl VisitMut for DecoratorPass {
                                 is_optional: false,
                                 is_override: false,
                             };
+
                             let setter = PrivateMethod {
                                 span: DUMMY_SP,
                                 key: key.clone(),
@@ -1341,9 +1402,12 @@ impl VisitMut for DecoratorPass {
                             };
 
                             new.push(ClassMember::PrivateProp(private_field));
+
                             new.push(ClassMember::PrivateMethod(getter));
+
                             new.push(ClassMember::PrivateMethod(setter));
                         }
+
                         Key::Public(key) => {
                             let getter = ClassMethod {
                                 span: DUMMY_SP,
@@ -1356,6 +1420,7 @@ impl VisitMut for DecoratorPass {
                                 is_optional: false,
                                 is_override: false,
                             };
+
                             let setter = ClassMethod {
                                 span: DUMMY_SP,
                                 key: key.clone(),
@@ -1369,7 +1434,9 @@ impl VisitMut for DecoratorPass {
                             };
 
                             new.push(ClassMember::PrivateProp(private_field));
+
                             new.push(ClassMember::Method(getter));
+
                             new.push(ClassMember::Method(setter));
                         }
                     }
@@ -1419,6 +1486,7 @@ impl VisitMut for DecoratorPass {
         }
 
         let decorators = self.preserve_side_effect_of_decorators(n.function.decorators.take());
+
         let dec = merge_decorators(decorators);
 
         let (name, _init) = self.initializer_name(&mut n.key, "call");
@@ -1454,6 +1522,7 @@ impl VisitMut for DecoratorPass {
             }
             .as_arg(),
         );
+
         if n.is_static {
             self.state.init_static_args.push(arg);
         } else {
@@ -1473,6 +1542,7 @@ impl VisitMut for DecoratorPass {
         }
 
         let decorators = self.preserve_side_effect_of_decorators(p.decorators.take());
+
         let dec = merge_decorators(decorators);
 
         let (name, init) = self.initializer_name(&mut p.key, "init");
@@ -1513,9 +1583,11 @@ impl VisitMut for DecoratorPass {
 
         if p.is_static {
             self.state.static_lhs.push(init);
+
             self.state.init_static_args.push(initialize_init);
         } else {
             self.state.proto_lhs.push(init);
+
             self.state.init_proto_args.push(initialize_init);
         }
     }
@@ -1547,10 +1619,13 @@ impl VisitMut for DecoratorPass {
                 decl: Decl::Class(c),
             })) if !c.class.decorators.is_empty() => {
                 let ident = c.ident.clone();
+
                 let span = *span;
+
                 let new_stmt = self.handle_class_decl(c);
 
                 *s = new_stmt.into();
+
                 self.extra_exports
                     .push(ExportSpecifier::Named(ExportNamedSpecifier {
                         span,
@@ -1559,6 +1634,7 @@ impl VisitMut for DecoratorPass {
                         is_type_only: false,
                     }));
             }
+
             ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultDecl(ExportDefaultDecl {
                 span,
                 decl: DefaultDecl::Class(c),
@@ -1569,6 +1645,7 @@ impl VisitMut for DecoratorPass {
                     .clone();
 
                 let mut class_decl = c.take().as_class_decl().unwrap();
+
                 let new_stmt = self.handle_class_decl(&mut class_decl);
 
                 self.extra_exports
@@ -1581,6 +1658,7 @@ impl VisitMut for DecoratorPass {
 
                 *s = new_stmt.into();
             }
+
             _ => {
                 s.visit_mut_children_with(self);
             }
@@ -1589,14 +1667,18 @@ impl VisitMut for DecoratorPass {
 
     fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
         let extra_vars = self.extra_vars.take();
+
         let extra_lets = self.extra_lets.take();
+
         let pre_class_inits = self.pre_class_inits.take();
+
         let extra_exports = self.extra_exports.take();
 
         let mut insert_builder = InsertPassBuilder::new();
 
         for (index, n) in n.iter_mut().enumerate() {
             n.visit_mut_with(self);
+
             if !self.extra_lets.is_empty() {
                 insert_builder.push_back(
                     index,
@@ -1610,6 +1692,7 @@ impl VisitMut for DecoratorPass {
                     .into(),
                 );
             }
+
             if !self.pre_class_inits.is_empty() {
                 insert_builder.push_back(
                     index,
@@ -1630,6 +1713,7 @@ impl VisitMut for DecoratorPass {
                     ModuleItem::ModuleDecl(_) => true,
                 })
                 .unwrap_or(0);
+
             insert_builder.push_front(
                 insert_pos,
                 VarDecl {
@@ -1664,8 +1748,11 @@ impl VisitMut for DecoratorPass {
         }
 
         self.extra_vars = extra_vars;
+
         self.extra_lets = extra_lets;
+
         self.pre_class_inits = pre_class_inits;
+
         self.extra_exports = extra_exports;
     }
 
@@ -1677,6 +1764,7 @@ impl VisitMut for DecoratorPass {
         }
 
         let decorators = self.preserve_side_effect_of_decorators(p.decorators.take());
+
         let dec = merge_decorators(decorators);
 
         let init = private_ident!(format!("_init_{}", p.key.name));
@@ -1721,7 +1809,9 @@ impl VisitMut for DecoratorPass {
                 is_generator: false,
                 ..Default::default()
             });
+
             let settter_arg = private_ident!("value");
+
             let setter = Box::new(Function {
                 span: DUMMY_SP,
                 body: Some(BlockStmt {
@@ -1775,9 +1865,11 @@ impl VisitMut for DecoratorPass {
 
         if p.is_static {
             self.state.static_lhs.push(init);
+
             self.state.init_static_args.push(Some(initialize_init));
         } else {
             self.state.proto_lhs.push(init);
+
             self.state.init_proto_args.push(Some(initialize_init));
         }
     }
@@ -1787,6 +1879,7 @@ impl VisitMut for DecoratorPass {
             Stmt::Decl(Decl::Class(c)) if !c.class.decorators.is_empty() => {
                 *s = self.handle_class_decl(c);
             }
+
             _ => {
                 s.visit_mut_children_with(self);
             }
@@ -1795,13 +1888,18 @@ impl VisitMut for DecoratorPass {
 
     fn visit_mut_stmts(&mut self, n: &mut Vec<Stmt>) {
         let old_state = take(&mut self.state);
+
         let old_pre_class_inits = self.pre_class_inits.take();
+
         let old_extra_lets = self.extra_lets.take();
+
         let old_extra_vars = self.extra_vars.take();
 
         let mut insert_builder = InsertPassBuilder::new();
+
         for (index, n) in n.iter_mut().enumerate() {
             n.visit_mut_with(self);
+
             if !self.extra_lets.is_empty() {
                 insert_builder.push_back(
                     index,
@@ -1815,6 +1913,7 @@ impl VisitMut for DecoratorPass {
                     .into(),
                 );
             }
+
             if !self.pre_class_inits.is_empty() {
                 insert_builder.push_back(
                     index,
@@ -1832,6 +1931,7 @@ impl VisitMut for DecoratorPass {
                 .iter()
                 .position(|stmt| !is_maybe_branch_directive(stmt))
                 .unwrap_or(0);
+
             insert_builder.push_front(
                 insert_pos,
                 VarDecl {
@@ -1848,8 +1948,11 @@ impl VisitMut for DecoratorPass {
         *n = insert_builder.build(n.take());
 
         self.extra_vars = old_extra_vars;
+
         self.extra_lets = old_extra_lets;
+
         self.pre_class_inits = old_pre_class_inits;
+
         self.state = old_state;
     }
 }
@@ -1875,6 +1978,7 @@ impl<T> InsertPassBuilder<T> {
                 debug_assert!(past.0 >= index, "{} {}", past.0, index);
             }
         }
+
         self.inserts.push_front((index, item));
     }
 
@@ -1884,12 +1988,15 @@ impl<T> InsertPassBuilder<T> {
                 debug_assert!(past.0 <= index, "{} {}", past.0, index);
             }
         }
+
         self.inserts.push_back((index, item));
     }
 
     pub fn build(mut self, original: Vec<T>) -> Vec<T> {
         let capacity = original.len() + self.inserts.len();
+
         let mut new = Vec::with_capacity(capacity);
+
         for (index, item) in original.into_iter().enumerate() {
             while self
                 .inserts
@@ -1899,11 +2006,14 @@ impl<T> InsertPassBuilder<T> {
             {
                 new.push(self.inserts.pop_front().unwrap().1);
             }
+
             new.push(item);
         }
+
         new.extend(self.inserts.into_iter().map(|v| v.1));
 
         debug_assert!(new.len() == capacity, "len: {} / {}", new.len(), capacity);
+
         new
     }
 }

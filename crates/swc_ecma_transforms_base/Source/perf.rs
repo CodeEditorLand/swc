@@ -19,7 +19,9 @@ where
     T: VisitWith<C>,
 {
     let mut checker = C::default();
+
     n.visit_with(&mut checker);
+
     checker.should_handle()
 }
 
@@ -67,6 +69,7 @@ where
                                     HELPERS.set(&helpers, || {
                                         HANDLER.set(handler, || {
                                             let mut visitor = Parallel::create(&*self);
+
                                             node.visit_with(&mut visitor);
 
                                             visitor
@@ -116,6 +119,7 @@ where
             GLOBALS.with(|globals| {
                 HELPERS.with(|helpers| {
                     let helpers = helpers.data();
+
                     HANDLER.with(|handler| {
                         use rayon::prelude::*;
 
@@ -123,10 +127,12 @@ where
                             .into_par_iter()
                             .map(|node| {
                                 let helpers = Helpers::from_data(helpers);
+
                                 GLOBALS.set(globals, || {
                                     HELPERS.set(&helpers, || {
                                         HANDLER.set(handler, || {
                                             let mut visitor = Parallel::create(&*self);
+
                                             node.visit_mut_with(&mut visitor);
 
                                             visitor
@@ -178,15 +184,18 @@ where
             let (visitor, nodes) = GLOBALS.with(|globals| {
                 HELPERS.with(|helpers| {
                     let helpers = helpers.data();
+
                     HANDLER.with(|handler| {
                         nodes
                             .into_par_iter()
                             .map(|node| {
                                 let helpers = Helpers::from_data(helpers);
+
                                 GLOBALS.set(globals, || {
                                     HELPERS.set(&helpers, || {
                                         HANDLER.set(handler, || {
                                             let mut visitor = Parallel::create(&*self);
+
                                             let node = node.fold_with(&mut visitor);
 
                                             (visitor, node)

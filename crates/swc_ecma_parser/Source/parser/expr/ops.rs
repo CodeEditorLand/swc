@@ -26,12 +26,14 @@ impl<I: Tokens> Parser<I> {
 
                         Invalid { span: err.span() }.into()
                     }
+
                     _ => return Err(err),
                 }
             }
         };
 
         return_if_arrow!(self, left);
+
         self.parse_bin_op_recursively(left, 0)
     }
 
@@ -67,6 +69,7 @@ impl<I: Tokens> Parser<I> {
                         self.emit_err(*span, SyntaxError::NullishCoalescingWithLogicalOp);
                     }
                 }
+
                 _ => {}
             }
 
@@ -93,10 +96,13 @@ impl<I: Tokens> Parser<I> {
             && is!(self, "as")
         {
             let start = left.span_lo();
+
             let expr = left;
+
             let node = if peeked_is!(self, "const") {
                 bump!(self); // as
                 let _ = cur!(self, false);
+
                 bump!(self); // const
                 TsConstAssertion {
                     span: span!(self, start),
@@ -105,6 +111,7 @@ impl<I: Tokens> Parser<I> {
                 .into()
             } else {
                 let type_ann = self.next_then_parse_ts_type()?;
+
                 TsAsExpr {
                     span: span!(self, start),
                     expr,
@@ -115,14 +122,18 @@ impl<I: Tokens> Parser<I> {
 
             return self.parse_bin_op_recursively_inner(node, min_prec);
         }
+
         if self.input.syntax().typescript()
             && !self.input.had_line_break_before_cur()
             && is!(self, "satisfies")
         {
             let start = left.span_lo();
+
             let expr = left;
+
             let node = {
                 let type_ann = self.next_then_parse_ts_type()?;
+
                 TsSatisfiesExpr {
                     span: span!(self, start),
                     expr,
@@ -140,6 +151,7 @@ impl<I: Tokens> Parser<I> {
             Ok(cur) => cur,
             Err(..) => return Ok((left, None)),
         };
+
         let op = match *word {
             tok!("in") if ctx.include_in_expr => op!("in"),
             tok!("instanceof") => op!("instanceof"),
@@ -162,7 +174,9 @@ impl<I: Tokens> Parser<I> {
 
             return Ok((left, None));
         }
+
         bump!(self);
+
         if cfg!(feature = "debug") {
             trace!(
                 "parsing binary op {:?} min_prec={}, prec={}",
@@ -171,6 +185,7 @@ impl<I: Tokens> Parser<I> {
                 op.precedence()
             );
         }
+
         match *left {
             // This is invalid syntax.
             Expr::Unary { .. } | Expr::Await(..) if op == op!("**") => {
@@ -187,11 +202,13 @@ impl<I: Tokens> Parser<I> {
                     }
                 )
             }
+
             _ => {}
         }
 
         let right = {
             let left_of_right = self.parse_unary_expr()?;
+
             self.parse_bin_op_recursively(
                 left_of_right,
                 if op == op!("**") {
@@ -219,6 +236,7 @@ impl<I: Tokens> Parser<I> {
                 Expr::Bin(BinExpr { span, op, .. }) if op == op!("&&") || op == op!("||") => {
                     self.emit_err(span, SyntaxError::NullishCoalescingWithLogicalOp);
                 }
+
                 _ => {}
             }
 
@@ -226,6 +244,7 @@ impl<I: Tokens> Parser<I> {
                 Expr::Bin(BinExpr { span, op, .. }) if op == op!("&&") || op == op!("||") => {
                     self.emit_err(span, SyntaxError::NullishCoalescingWithLogicalOp);
                 }
+
                 _ => {}
             }
         }
@@ -246,12 +265,15 @@ impl<I: Tokens> Parser<I> {
     /// spec: 'UnaryExpression'
     pub(in crate::parser) fn parse_unary_expr(&mut self) -> PResult<Box<Expr>> {
         trace_cur!(self, parse_unary_expr);
+
         let start = cur_pos!(self);
 
         if !self.input.syntax().jsx() && self.input.syntax().typescript() && eat!(self, '<') {
             if eat!(self, "const") {
                 expect!(self, '>');
+
                 let expr = self.parse_unary_expr()?;
+
                 return Ok(TsConstAssertion {
                     span: span!(self, start),
                     expr,
@@ -274,7 +296,9 @@ impl<I: Tokens> Parser<I> {
             };
 
             let arg = self.parse_unary_expr()?;
+
             let span = Span::new(start, arg.span_hi());
+
             self.check_assign_target(&arg, false);
 
             return Ok(UpdateExpr {
@@ -298,11 +322,14 @@ impl<I: Tokens> Parser<I> {
                 tok!('!') => op!("!"),
                 _ => unreachable!(),
             };
+
             let arg_start = cur_pos!(self) - BytePos(1);
+
             let arg = match self.parse_unary_expr() {
                 Ok(expr) => expr,
                 Err(err) => {
                     self.emit_error(err);
+
                     Invalid {
                         span: Span::new(arg_start, arg_start),
                     }
@@ -319,6 +346,7 @@ impl<I: Tokens> Parser<I> {
             if self.input.syntax().typescript() && op == op!("delete") {
                 match arg.unwrap_parens() {
                     Expr::Member(..) => {}
+
                     Expr::OptChain(OptChainExpr { base, .. })
                         if matches!(&**base, OptChainBase::Member(..)) => {}
 
@@ -342,6 +370,7 @@ impl<I: Tokens> Parser<I> {
 
         // UpdateExpression
         let expr = self.parse_lhs_expr()?;
+
         return_if_arrow!(self, expr);
 
         // Line terminator isn't allowed here.
@@ -366,6 +395,7 @@ impl<I: Tokens> Parser<I> {
             }
             .into());
         }
+
         Ok(expr)
     }
 
@@ -404,6 +434,7 @@ impl<I: Tokens> Parser<I> {
         }
 
         let arg = self.parse_unary_expr()?;
+
         Ok(AwaitExpr {
             span: span!(self, start),
             arg,
@@ -415,6 +446,7 @@ impl<I: Tokens> Parser<I> {
 #[cfg(test)]
 mod tests {
     use swc_common::DUMMY_SP as span;
+
     use swc_ecma_visit::assert_eq_ignore_span;
 
     use super::*;

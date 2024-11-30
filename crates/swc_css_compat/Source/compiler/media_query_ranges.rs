@@ -24,13 +24,16 @@ impl Compiler {
                         MediaFeatureRangeComparison::Lt | MediaFeatureRangeComparison::Le => {
                             self.get_right_media_feature_name(name)
                         }
+
                         MediaFeatureRangeComparison::Eq => {
                             Some(MediaFeatureName::Ident(name.clone()))
                         }
+
                         _ => self.get_left_media_feature_name(name),
                     }?;
 
                     let original_value = (**right).clone();
+
                     let value = match comparison {
                         MediaFeatureRangeComparison::Lt => self.get_lt_value(original_value),
                         MediaFeatureRangeComparison::Gt => self.get_gt_value(original_value),
@@ -50,13 +53,16 @@ impl Compiler {
                         MediaFeatureRangeComparison::Lt | MediaFeatureRangeComparison::Le => {
                             self.get_left_media_feature_name(name)
                         }
+
                         MediaFeatureRangeComparison::Eq => {
                             Some(MediaFeatureName::Ident(name.clone()))
                         }
+
                         _ => self.get_right_media_feature_name(name),
                     }?;
 
                     let original_value = (**left).clone();
+
                     let value = match comparison {
                         MediaFeatureRangeComparison::Lt => self.get_gt_value(original_value),
                         MediaFeatureRangeComparison::Gt => self.get_lt_value(original_value),
@@ -73,6 +79,7 @@ impl Compiler {
                     ));
                 }
             }
+
             MediaFeature::RangeInterval(MediaFeatureRangeInterval {
                 span,
                 left,
@@ -86,6 +93,7 @@ impl Compiler {
                     MediaFeatureRangeComparison::Gt | MediaFeatureRangeComparison::Ge => {
                         self.get_right_media_feature_name(name)
                     }
+
                     _ => self.get_left_media_feature_name(name),
                 }?;
 
@@ -105,6 +113,7 @@ impl Compiler {
                     MediaFeatureRangeComparison::Gt | MediaFeatureRangeComparison::Ge => {
                         self.get_left_media_feature_name(name)
                     }
+
                     _ => self.get_right_media_feature_name(name),
                 }?;
 
@@ -122,6 +131,7 @@ impl Compiler {
 
                 return Some((left, Some(right)));
             }
+
             _ => {}
         }
 
@@ -176,16 +186,20 @@ impl Compiler {
         match &mut value {
             MediaFeatureValue::Number(number) => {
                 number.value -= 1.0;
+
                 number.raw = None;
 
                 Some(value)
             }
+
             MediaFeatureValue::Dimension(dimension) => {
                 match dimension {
                     Dimension::Length(length) => {
                         length.value.value -= 0.001;
+
                         length.value.raw = None;
                     }
+
                     _ => {
                         return None;
                     }
@@ -193,12 +207,15 @@ impl Compiler {
 
                 Some(value)
             }
+
             MediaFeatureValue::Ratio(ration) => {
                 ration.left.value -= 0.001;
+
                 ration.left.raw = None;
 
                 Some(value)
             }
+
             _ => None,
         }
     }
@@ -207,16 +224,20 @@ impl Compiler {
         match &mut value {
             MediaFeatureValue::Number(number) => {
                 number.value += 1.0;
+
                 number.raw = None;
 
                 Some(value)
             }
+
             MediaFeatureValue::Dimension(dimension) => {
                 match dimension {
                     Dimension::Length(length) => {
                         length.value.value += 0.001;
+
                         length.value.raw = None;
                     }
+
                     _ => {
                         return None;
                     }
@@ -224,12 +245,15 @@ impl Compiler {
 
                 Some(value)
             }
+
             MediaFeatureValue::Ratio(ration) => {
                 ration.left.value += 0.001;
+
                 ration.left.raw = None;
 
                 Some(value)
             }
+
             _ => None,
         }
     }

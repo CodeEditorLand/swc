@@ -77,6 +77,7 @@ macro_rules! define_known_ident {
                 }
             }
         }
+
         impl From<KnownIdent> for &'static str {
 
             fn from(s: KnownIdent) -> Self {
@@ -689,6 +690,7 @@ impl Debug for Word {
             Word::Ident(ref s) => Display::fmt(s, f),
             _ => {
                 let s: Atom = self.clone().into();
+
                 Display::fmt(&s, f)
             }
         }
@@ -887,6 +889,7 @@ impl Debug for Keyword {
 impl From<BinOpToken> for BinaryOp {
     fn from(t: BinOpToken) -> Self {
         use self::BinaryOp::*;
+
         match t {
             BinOpToken::EqEq => EqEq,
             BinOpToken::NotEq => NotEq,

@@ -20,6 +20,7 @@ impl fmt::Display for ModuleId {
 impl fmt::Debug for ModuleId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "ModuleId({})", self.0)?;
+
         Ok(())
     }
 }
@@ -34,14 +35,19 @@ pub(crate) struct ModuleIdGenerator {
 impl ModuleIdGenerator {
     pub fn gen(&self, file_name: &FileName) -> (ModuleId, Mark, Mark) {
         let mut w = self.cache.lock();
+
         if let Some(v) = w.get(file_name) {
             return *v;
         }
 
         let id = ModuleId(self.v.fetch_add(1, SeqCst));
+
         let local_mark = Mark::fresh(Mark::root());
+
         let export_mark = Mark::fresh(Mark::root());
+
         let v = (id, local_mark, export_mark);
+
         w.insert(file_name.clone(), v);
         (id, local_mark, export_mark)
     }
@@ -75,6 +81,7 @@ impl Id {
 
     pub fn with_ctxt(mut self, ctxt: SyntaxContext) -> Self {
         self.1 = ctxt;
+
         self
     }
 }

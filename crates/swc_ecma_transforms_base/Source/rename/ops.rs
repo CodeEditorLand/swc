@@ -33,6 +33,7 @@ where
         }
 
         let mut orig_name = ident.clone();
+
         orig_name.ctxt = SyntaxContext::empty();
 
         {
@@ -51,6 +52,7 @@ where
         }
 
         let _ = self.rename_ident(ident);
+
         class.visit_mut_with(self);
 
         let class_expr = ClassExpr {
@@ -111,6 +113,7 @@ where
         if let Some(ident) = &mut n.ident {
             if let Some(expr) = self.keep_class_name(ident, &mut n.class) {
                 *n = expr;
+
                 return;
             }
         }
@@ -126,6 +129,7 @@ where
                 let span = cls.class.span;
 
                 let expr = self.keep_class_name(&mut cls.ident, &mut cls.class);
+
                 if let Some(expr) = expr {
                     let var = VarDeclarator {
                         span,
@@ -140,11 +144,13 @@ where
                         ..Default::default()
                     }
                     .into();
+
                     return;
                 }
 
                 return;
             }
+
             _ => {}
         }
 
@@ -154,6 +160,7 @@ where
     fn visit_mut_export_named_specifier(&mut self, s: &mut ExportNamedSpecifier) {
         if s.exported.is_some() {
             s.orig.visit_mut_with(self);
+
             return;
         }
 
@@ -167,6 +174,7 @@ where
                             return;
                         }
                     }
+
                     ModuleExportName::Str(_) => {}
                 }
 
@@ -200,10 +208,12 @@ where
     fn visit_mut_import_named_specifier(&mut self, s: &mut ImportNamedSpecifier) {
         if s.imported.is_some() {
             s.local.visit_mut_with(self);
+
             return;
         }
 
         let imported = s.local.clone();
+
         let local = self.rename_ident(&mut s.local);
 
         if local.is_ok() {
@@ -218,16 +228,19 @@ where
     /// Preserve key of properties.
     fn visit_mut_key_value_pat_prop(&mut self, p: &mut KeyValuePatProp) {
         p.key.visit_mut_with(self);
+
         p.value.visit_mut_with(self);
     }
 
     fn visit_mut_key_value_prop(&mut self, p: &mut KeyValueProp) {
         p.key.visit_mut_with(self);
+
         p.value.visit_mut_with(self);
     }
 
     fn visit_mut_member_expr(&mut self, expr: &mut MemberExpr) {
         expr.span.visit_mut_with(self);
+
         expr.obj.visit_mut_with(self);
 
         if let MemberProp::Computed(c) = &mut expr.prop {
@@ -269,10 +282,13 @@ where
                     }),
             })) => {
                 let mut ident = ident.take();
+
                 let mut class = class.take();
 
                 class.visit_mut_with(self);
+
                 let orig_ident = ident.clone();
+
                 match self.rename_ident(&mut ident) {
                     Ok(..) => {
                         *item = ClassDecl {
@@ -281,11 +297,13 @@ where
                             declare: *declare,
                         }
                         .into();
+
                         export!(
                             ModuleExportName::Ident(orig_ident),
                             ModuleExportName::Ident(ident.take())
                         );
                     }
+
                     Err(..) => {
                         *item = ExportDecl {
                             span: *span,
@@ -300,6 +318,7 @@ where
                     }
                 }
             }
+
             ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
                 span,
                 decl:
@@ -310,10 +329,13 @@ where
                     }),
             })) => {
                 let mut ident = ident.take();
+
                 let mut function = function.take();
 
                 function.visit_mut_with(self);
+
                 let orig_ident = ident.clone();
+
                 match self.rename_ident(&mut ident) {
                     Ok(..) => {
                         *item = FnDecl {
@@ -322,11 +344,13 @@ where
                             declare: *declare,
                         }
                         .into();
+
                         export!(
                             ModuleExportName::Ident(orig_ident),
                             ModuleExportName::Ident(ident)
                         );
                     }
+
                     Err(..) => {
                         *item = ExportDecl {
                             span: *span,
@@ -341,6 +365,7 @@ where
                     }
                 }
             }
+
             ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
                 decl: Decl::Var(var),
                 ..
@@ -348,12 +373,15 @@ where
                 let decls = var.decls.take();
 
                 let mut renamed: Vec<ExportSpecifier> = Vec::new();
+
                 let decls = decls.move_map(|mut decl| {
                     decl.name.visit_mut_with(&mut VarFolder {
                         orig: self,
                         renamed: &mut renamed,
                     });
+
                     decl.init.visit_mut_with(self);
+
                     decl
                 });
 
@@ -367,6 +395,7 @@ where
                         .into(),
                     }
                     .into();
+
                     return;
                 }
                 *item = VarDecl {
@@ -374,6 +403,7 @@ where
                     ..*var.take()
                 }
                 .into();
+
                 self.extra.push(
                     NamedExport {
                         span,
@@ -385,6 +415,7 @@ where
                     .into(),
                 );
             }
+
             _ => {
                 item.visit_mut_children_with(self);
             }
@@ -404,6 +435,7 @@ where
                     .map(|mut node| {
                         ::swc_common::GLOBALS.set(globals, || {
                             let mut visitor = Parallel::create(&*self);
+
                             node.visit_mut_with(&mut visitor);
 
                             let mut nodes = Vec::with_capacity(4);
@@ -442,8 +474,11 @@ where
 
         for mut node in take(nodes) {
             let mut visitor = Parallel::create(&*self);
+
             node.visit_mut_with(&mut visitor);
+
             buf.push(node);
+
             visitor.after_one_module_item(&mut buf);
         }
 
@@ -465,6 +500,7 @@ where
 
         if let ObjectPatProp::Assign(p) = n {
             let mut renamed = Ident::from(&p.key);
+
             if self.rename_ident(&mut renamed).is_ok() {
                 if renamed.sym == p.key.sym {
                     return;
@@ -497,6 +533,7 @@ where
         match prop {
             Prop::Shorthand(i) => {
                 let mut renamed = i.clone();
+
                 if self.rename_ident(&mut renamed).is_ok() {
                     if renamed.sym == i.sym {
                         return;
@@ -512,6 +549,7 @@ where
                     })
                 }
             }
+
             _ => prop.visit_mut_children_with(self),
         }
     }
@@ -541,6 +579,7 @@ where
                     .map(|mut node| {
                         ::swc_common::GLOBALS.set(globals, || {
                             let mut visitor = Parallel::create(&*self);
+
                             node.visit_mut_with(&mut visitor);
 
                             let mut nodes = Vec::with_capacity(4);
@@ -579,8 +618,11 @@ where
 
         for mut node in take(nodes) {
             let mut visitor = Parallel::create(&*self);
+
             node.visit_mut_with(&mut visitor);
+
             buf.push(node);
+
             visitor.after_one_stmt(&mut buf);
         }
 
@@ -591,6 +633,7 @@ where
 
     fn visit_mut_super_prop_expr(&mut self, expr: &mut SuperPropExpr) {
         expr.span.visit_mut_with(self);
+
         if let SuperProp::Computed(c) = &mut expr.prop {
             c.visit_mut_with(self);
         }
@@ -625,6 +668,7 @@ where
 
     fn visit_mut_ident(&mut self, i: &mut Ident) {
         let orig = i.clone();
+
         if self.orig.rename_ident(i).is_ok() {
             self.renamed
                 .push(ExportSpecifier::Named(ExportNamedSpecifier {
@@ -651,7 +695,9 @@ where
             }
 
             ident.ctxt = new_ctxt;
+
             ident.sym = new_sym;
+
             return Ok(());
         }
 

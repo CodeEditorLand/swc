@@ -23,6 +23,7 @@ impl CleanCmd {
                 .join("tests"),
         ) {
             let entry = entry?;
+
             if entry.file_name().to_string_lossy() == "Cargo.tomm" {
                 run_cargo_clean(entry.path().parent().unwrap())?;
             }

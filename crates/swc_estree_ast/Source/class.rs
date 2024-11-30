@@ -176,8 +176,10 @@ impl Serialize for ClassMethod {
                     return_type: self.return_type.as_deref(),
                     type_parameters: self.type_parameters.as_ref(),
                 };
+
                 actual.serialize(serializer)
             }
+
             Flavor::Acorn { .. } => {
                 let mut s = serializer.serialize_map(None)?;
 
@@ -188,10 +190,15 @@ impl Serialize for ClassMethod {
                 }
 
                 s.serialize_entry("type", "MethodDefinition")?;
+
                 s.serialize_entry("computed", &self.computed.unwrap_or(false))?;
+
                 s.serialize_entry("key", &self.key)?;
+
                 s.serialize_entry("kind", &self.kind)?;
+
                 s.serialize_entry("static", &self.is_static.unwrap_or(false))?;
+
                 s.serialize_entry(
                     "value",
                     &AcornClassMethodValue {
@@ -343,8 +350,10 @@ impl Serialize for ClassProperty {
                     optional: self.optional,
                     readonly: self.readonly,
                 };
+
                 actual.serialize(serializer)
             }
+
             Flavor::Acorn { .. } => {
                 let mut s = serializer.serialize_map(None)?;
 
@@ -355,15 +364,21 @@ impl Serialize for ClassProperty {
                 }
 
                 s.serialize_entry("type", "PropertyDefinition")?;
+
                 s.serialize_entry("static", &self.is_static)?;
+
                 s.serialize_entry("key", &self.key)?;
+
                 s.serialize_entry("value", &self.value)?;
+
                 s.serialize_entry("computed", &self.computed)?;
+
                 if let Some(decorators) = &self.decorators {
                     if !decorators.is_empty() {
                         s.serialize_entry("decorators", decorators)?;
                     }
                 }
+
                 s.serialize_entry("computed", &self.computed)?;
 
                 s.end()

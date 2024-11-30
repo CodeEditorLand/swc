@@ -50,10 +50,12 @@ fn run_bump(workspace_dir: &Path, dry_run: bool) -> Result<()> {
 
     if changeset.releases.is_empty() {
         eprintln!("No changeset found");
+
         return Ok(());
     }
 
     let (versions, graph) = get_data()?;
+
     let mut new_versions = VersionMap::new();
 
     let mut worker = Bump {
@@ -79,6 +81,7 @@ fn run_bump(workspace_dir: &Path, dry_run: bool) -> Result<()> {
 
     {
         eprintln!("Removing changeset files... ");
+
         if !dry_run {
             std::fs::remove_dir_all(&changeset_dir).context("failed to remove changeset files")?;
         }
@@ -91,6 +94,7 @@ fn run_bump(workspace_dir: &Path, dry_run: bool) -> Result<()> {
     }
 
     git_commit(dry_run).context("failed to commit")?;
+
     git_tag_core(dry_run).context("failed to tag core")?;
 
     Ok(())
@@ -98,6 +102,7 @@ fn run_bump(workspace_dir: &Path, dry_run: bool) -> Result<()> {
 
 fn run_cargo_set_version(pkg_name: &str, version: &Version, dry_run: bool) -> Result<()> {
     let mut cmd = Command::new("cargo");
+
     cmd.arg("set-version")
         .arg("-p")
         .arg(pkg_name)
@@ -131,6 +136,7 @@ fn git_commit(dry_run: bool) -> Result<()> {
     let core_ver = get_swc_core_version()?;
 
     let mut cmd = Command::new("git");
+
     cmd.arg("commit").arg("-am").arg(format!(
         "chore: Publish crates with `swc_core` `v{}`",
         core_ver
@@ -151,6 +157,7 @@ fn git_tag_core(dry_run: bool) -> Result<()> {
     let core_ver = get_swc_core_version()?;
 
     let mut cmd = Command::new("git");
+
     cmd.arg("tag").arg(format!("swc_core@v{}", core_ver));
 
     eprintln!("Running {:?}", cmd);
@@ -191,6 +198,7 @@ impl Bump<'_> {
                     panic!("unknown custom change type: {}", label)
                 }
             }
+
             None => false,
         })
     }
@@ -214,37 +222,50 @@ impl Bump<'_> {
             Some(ChangeType::Patch) => {
                 new_version.patch += 1;
             }
+
             Some(ChangeType::Minor) => {
                 new_version.minor += 1;
+
                 new_version.patch = 0;
             }
+
             Some(ChangeType::Major) => {
                 new_version.major += 1;
+
                 new_version.minor = 0;
+
                 new_version.patch = 0;
             }
+
             Some(ChangeType::Custom(label)) => {
                 if label == "breaking" {
                     if original_version.major == 0 {
                         new_version.minor += 1;
+
                         new_version.patch = 0;
                     } else {
                         new_version.major += 1;
+
                         new_version.minor = 0;
+
                         new_version.patch = 0;
                     }
                 } else {
                     panic!("unknown custom change type: {}", label)
                 }
             }
+
             None => {
                 if is_breaking {
                     if original_version.major == 0 {
                         new_version.minor += 1;
+
                         new_version.patch = 0;
                     } else {
                         new_version.major += 1;
+
                         new_version.minor = 0;
+
                         new_version.patch = 0;
                     }
                 } else {
@@ -257,6 +278,7 @@ impl Bump<'_> {
             Entry::Vacant(v) => {
                 v.insert(new_version);
             }
+
             Entry::Occupied(mut o) => {
                 o.insert(new_version.max(o.get().clone()));
             }
@@ -266,9 +288,12 @@ impl Bump<'_> {
             // Iterate over dependants
 
             let a = self.graph.node(pkg_name);
+
             for dep in self.graph.g.neighbors_directed(a, Direction::Incoming) {
                 let dep_name = &*self.graph.ix[dep];
+
                 eprintln!("Bumping dependant crate: {}", dep_name);
+
                 self.bump_crate(dep_name, None, true)?;
             }
         }
@@ -280,6 +305,7 @@ impl Bump<'_> {
 fn update_changelog() -> Result<()> {
     // Run `yarn changelog`
     let mut cmd = Command::new("yarn");
+
     cmd.arg("changelog");
 
     eprintln!("Running {:?}", cmd);
@@ -301,7 +327,9 @@ impl InternedGraph {
     fn add_node(&mut self, name: String) -> usize {
         self.ix.get_index_of(&name).unwrap_or_else(|| {
             let ix = self.ix.len();
+
             self.ix.insert_full(name);
+
             ix
         }) as _
     }
@@ -324,7 +352,9 @@ fn get_data() -> Result<(VersionMap, InternedGraph)> {
         .filter(|p| p.publish != Some(vec![]))
         .map(|p| p.name.clone())
         .collect::<Vec<_>>();
+
     let mut graph = InternedGraph::default();
+
     let mut versions = VersionMap::new();
 
     for pkg in md.workspace_packages() {
@@ -339,6 +369,7 @@ fn get_data() -> Result<(VersionMap, InternedGraph)> {
 
             if workspace_packages.contains(&dep.name) {
                 let from = graph.add_node(pkg.name.clone());
+
                 let to = graph.add_node(dep.name.clone());
 
                 if from == to {

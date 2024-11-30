@@ -25,10 +25,12 @@ pub fn print(attr: &'static str, tokens: proc_macro2::TokenStream) -> proc_macro
 
     match env::var("PRINT_GENERATED") {
         Ok(ref s) if s == "1" || attr == s => {}
+
         _ => return tokens.into(),
     }
 
     println!("\n\tOutput of #[{}]:\n\t {}", attr, tokens);
+
     tokens.into()
 }
 

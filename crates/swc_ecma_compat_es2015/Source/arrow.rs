@@ -80,7 +80,9 @@ impl VisitMut for Arrow {
         if c.super_class.is_some() {
             self.in_subclass = true;
         }
+
         c.visit_mut_children_with(self);
+
         self.in_subclass = old;
     }
 
@@ -100,6 +102,7 @@ impl VisitMut for Arrow {
                     if let Some(this_id) = this_id {
                         init_this(stmts, &this_id)
                     }
+
                     prepend_stmt(stmts, stmt);
                 }
             } else {
@@ -123,6 +126,7 @@ impl VisitMut for Arrow {
                 ..
             }) => {
                 params.visit_mut_with(self);
+
                 params.visit_mut_with(&mut self.hoister);
 
                 let params: Vec<Param> = params
@@ -153,6 +157,7 @@ impl VisitMut for Arrow {
                                 // this is needed so
                                 // () => /* 123 */ 1 would become
                                 // function { return /*123 */ 123 }
+
                                 span: DUMMY_SP,
                                 arg: Some(expr.take()),
                             })],
@@ -165,6 +170,7 @@ impl VisitMut for Arrow {
 
                 *expr = fn_expr;
             }
+
             _ => {
                 expr.visit_mut_children_with(self);
             }
@@ -221,6 +227,7 @@ impl VisitMut for Arrow {
 
     fn visit_mut_setter_prop(&mut self, f: &mut SetterProp) {
         f.key.visit_mut_with(self);
+
         f.param.visit_mut_with(self);
 
         if let Some(body) = &mut f.body {

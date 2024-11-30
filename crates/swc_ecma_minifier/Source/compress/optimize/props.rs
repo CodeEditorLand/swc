@@ -13,14 +13,19 @@ impl Optimizer<'_> {
     ) -> Option<Vec<VarDeclarator>> {
         if !self.options.hoist_props {
             log_abort!("hoist_props: option is disabled");
+
             return None;
         }
+
         if self.ctx.is_exported {
             log_abort!("hoist_props: Exported variable is not hoisted");
+
             return None;
         }
+
         if self.ctx.in_top_level() && !self.options.top_level() {
             log_abort!("hoist_props: Top-level variable is not hoisted");
+
             return None;
         }
 
@@ -29,6 +34,7 @@ impl Optimizer<'_> {
                 && self.options.top_retain.contains(&name.id.sym)
             {
                 log_abort!("hoist_props: Variable `{}` is retained", name.id.sym);
+
                 return None;
             }
 
@@ -39,6 +45,7 @@ impl Optimizer<'_> {
             // If a variable is initialized multiple time, we currently don't do anything
             // smart.
             let usage = self.data.vars.get(&name.to_id())?;
+
             if usage.mutated()
                 || usage.used_in_cond
                 || usage.used_above_decl
@@ -48,6 +55,7 @@ impl Optimizer<'_> {
                 || usage.used_recursively
             {
                 log_abort!("hoist_props: Variable `{}` is not a candidate", name.id);
+
                 return None;
             }
 
@@ -56,6 +64,7 @@ impl Optimizer<'_> {
                     "hoist_props: Variable `{}` is not accessed with known keys",
                     name.id
                 );
+
                 return None;
             }
 
@@ -86,19 +95,23 @@ impl Optimizer<'_> {
                                         *v = 0;
                                     }
                                 }
+
                                 PropName::Ident(i) => {
                                     if let Some(v) = unknown_used_props.get_mut(&i.sym) {
                                         *v = 0;
                                     }
                                 }
+
                                 _ => return None,
                             }
                         }
+
                         Prop::Shorthand(p) => {
                             if let Some(v) = unknown_used_props.get_mut(&p.sym) {
                                 *v = 0;
                             }
                         }
+
                         _ => return None,
                     }
                 }
@@ -110,6 +123,7 @@ impl Optimizer<'_> {
 
             if !unknown_used_props.iter().all(|(_, v)| *v == 0) {
                 log_abort!("[x] unknown used props: {:?}", unknown_used_props);
+
                 return None;
             }
 
@@ -122,6 +136,7 @@ impl Optimizer<'_> {
             let object = n.init.as_mut()?.as_mut_object()?;
 
             self.changed = true;
+
             report_change!(
                 "hoist_props: Hoisting properties of a variable `{}`",
                 name.id.sym
@@ -188,6 +203,7 @@ impl Optimizer<'_> {
             },
             _ => return,
         };
+
         if let Expr::Ident(obj) = &*member.obj {
             let sym = match &member.prop {
                 MemberProp::Ident(i) => &i.sym,
@@ -205,6 +221,7 @@ impl Optimizer<'_> {
                 .cloned()
             {
                 report_change!("hoist_props: Inlining `{}.{}`", obj.sym, sym);
+
                 self.changed = true;
                 *e = value.into();
             }
@@ -283,6 +300,7 @@ impl Optimizer<'_> {
             })
             .count()
             != 1;
+
         if duplicate_prop {
             return;
         }
@@ -302,38 +320,49 @@ impl Optimizer<'_> {
                         || p.value.may_have_side_effects(&self.ctx.expr_ctx)
                         || deeply_contains_this_expr(&p.value)
                 }
+
                 Prop::Assign(p) => {
                     p.value.may_have_side_effects(&self.ctx.expr_ctx)
                         || deeply_contains_this_expr(&p.value)
                 }
+
                 Prop::Getter(p) => p.key.is_computed(),
                 Prop::Setter(p) => p.key.is_computed(),
                 Prop::Method(p) => p.key.is_computed(),
             },
         }) {
             log_abort!("Property accesses should not be inlined to preserve side effects");
+
             return;
         }
 
         for prop in &obj.props {
             match prop {
                 PropOrSpread::Spread(_) => {}
+
                 PropOrSpread::Prop(p) => match &**p {
                     Prop::Shorthand(_) => {}
+
                     Prop::KeyValue(p) => {
                         if prop_name_eq(&p.key, &key.sym) {
                             report_change!(
                                 "properties: Inlining a key-value property `{}`",
                                 key.sym
                             );
+
                             self.changed = true;
                             *e = *p.value.clone();
+
                             return;
                         }
                     }
+
                     Prop::Assign(_) => {}
+
                     Prop::Getter(_) => {}
+
                     Prop::Setter(_) => {}
+
                     Prop::Method(_) => {}
                 },
             }

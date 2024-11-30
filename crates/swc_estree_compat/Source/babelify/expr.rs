@@ -37,20 +37,25 @@ impl Babelify for Expr {
             Expr::Array(a) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::Array(a.babelify(ctx))))
             }
+
             Expr::Object(o) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::Object(o.babelify(ctx))))
             }
+
             Expr::Fn(f) => ExprOutput::Expr(Box::alloc().init(Expression::Func(f.babelify(ctx)))),
             Expr::Unary(u) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::Unary(u.babelify(ctx))))
             }
+
             Expr::Update(u) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::Update(u.babelify(ctx))))
             }
+
             Expr::Bin(b) => match b.babelify(ctx) {
                 BinaryOrLogicalExpr::Binary(bin) => {
                     ExprOutput::Expr(Box::alloc().init(Expression::Binary(bin)))
                 }
+
                 BinaryOrLogicalExpr::Logical(log) => {
                     ExprOutput::Expr(Box::alloc().init(Expression::Logical(log)))
                 }
@@ -58,20 +63,25 @@ impl Babelify for Expr {
             Expr::Assign(a) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::Assignment(a.babelify(ctx))))
             }
+
             Expr::Member(m) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::Member(m.babelify(ctx))))
             }
+
             Expr::SuperProp(m) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::Member(m.babelify(ctx))))
             }
+
             Expr::Cond(c) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::Conditional(c.babelify(ctx))))
             }
+
             Expr::Call(c) => ExprOutput::Expr(Box::alloc().init(Expression::Call(c.babelify(ctx)))),
             Expr::New(n) => ExprOutput::Expr(Box::alloc().init(Expression::New(n.babelify(ctx)))),
             Expr::Seq(s) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::Sequence(s.babelify(ctx))))
             }
+
             Expr::Ident(i) => ExprOutput::Expr(Box::alloc().init(Expression::Id(i.babelify(ctx)))),
             Expr::Lit(lit) => {
                 match lit {
@@ -99,42 +109,55 @@ impl Babelify for Expr {
                     ), // TODO(dwoznicki): is this really illegal?
                 }
             }
+
             Expr::Tpl(t) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::TemplateLiteral(t.babelify(ctx))))
             }
+
             Expr::TaggedTpl(t) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::TaggedTemplate(t.babelify(ctx))))
             }
+
             Expr::Arrow(a) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::ArrowFunc(a.babelify(ctx))))
             }
+
             Expr::Class(c) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::Class(c.babelify(ctx))))
             }
+
             Expr::Yield(y) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::Yield(y.babelify(ctx))))
             }
+
             Expr::MetaProp(m) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::MetaProp(m.babelify(ctx))))
             }
+
             Expr::Await(a) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::Await(a.babelify(ctx))))
             }
+
             Expr::Paren(p) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::Parenthesized(p.babelify(ctx))))
             }
+
             Expr::JSXElement(e) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::JSXElement(e.babelify(ctx))))
             }
+
             Expr::JSXFragment(f) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::JSXFragment(f.babelify(ctx))))
             }
+
             Expr::TsTypeAssertion(a) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::TSTypeAssertion(a.babelify(ctx))))
             }
+
             Expr::TsNonNull(n) => {
                 ExprOutput::Expr(Box::alloc().init(Expression::TSNonNull(n.babelify(ctx))))
             }
+
             Expr::TsAs(a) => ExprOutput::Expr(Box::alloc().init(Expression::TSAs(a.babelify(ctx)))),
             Expr::TsInstantiation(..) => unimplemented!("Babel doesn't support this right now."),
             Expr::PrivateName(p) => ExprOutput::Private(p.babelify(ctx)),
@@ -262,6 +285,7 @@ impl Babelify for PropOrSpread {
             PropOrSpread::Spread(s) => ObjectExprProp::Spread(s.babelify(ctx)),
             PropOrSpread::Prop(prop) => {
                 let member = prop.babelify(ctx);
+
                 match member {
                     ObjectMember::Method(m) => ObjectExprProp::Method(m),
                     ObjectMember::Prop(p) => ObjectExprProp::Prop(p),
@@ -327,6 +351,7 @@ impl Babelify for BinExpr {
                     right: Box::alloc().init(self.right.babelify(ctx).into()),
                 })
             }
+
             _ => BinaryOrLogicalExpr::Binary(BinaryExpression {
                 base: ctx.base(self.span),
                 operator: self.op.babelify(ctx).into(),
@@ -586,6 +611,7 @@ impl Babelify for MetaPropExpr {
                 .babelify(ctx),
             ),
         };
+
         MetaProperty {
             base: ctx.base(self.span()),
             meta,

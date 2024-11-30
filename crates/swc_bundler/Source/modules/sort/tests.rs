@@ -12,25 +12,33 @@ fn assert_sorted(src: &[&str], res: &str) {
 
 fn assert_sorted_with_free(src: &[&str], free: &str, res: &str) {
     let mut s = suite();
+
     for (i, src) in src.iter().enumerate() {
         s = s.file(&format!("{}.js", i), src);
     }
+
     s.run(|t| {
         let mut modules = Vec::new();
+
         let mut entry = None;
 
         let mut free: Module = drop_span(t.parse(free));
+
         for item in free.body.iter_mut() {
             mark(item, t.bundler.injected_ctxt);
         }
+
         modules.push(free.body);
 
         for (i, _) in src.iter().enumerate() {
             let info = t.module(&format!("{}.js", i));
+
             if entry.is_none() {
                 entry = Some(info.id);
             }
+
             let actual: Module = drop_span((*info.module).clone());
+
             modules.push(actual.body);
         }
 
@@ -49,8 +57,11 @@ fn assert_sorted_with_free(src: &[&str], free: &str, res: &str) {
         }
 
         print_hygiene("actual", &t.cm, &actual);
+
         print_hygiene("expected", &t.cm, &expected);
+
         assert_eq!(actual, expected);
+
         panic!()
     });
 }
@@ -62,6 +73,7 @@ fn sort_001() {
         &["_9[0] = 133;", "const _9 = new ByteArray(32);"],
         "
         const _9 = new ByteArray(32);
+
         _9[0] = 133;
         ",
     )
@@ -81,6 +93,7 @@ fn sort_002() {
         ],
         "
         const v = 5;
+
         const mod = (function(){
             const A = v;
         }());
@@ -98,6 +111,7 @@ fn sort_003() {
         ],
         "
         const serialization = {};
+
         class Constraint extends serialization.Serializable {
         }
         ",
@@ -111,6 +125,7 @@ fn sort_004() {
         &["use(global);", "const global = getGlobal();"],
         "
         const global = getGlobal();
+
         use(global);
         ",
     );
@@ -124,19 +139,25 @@ fn sort_005() {
             "use(a);",
             "
             const a = new A();
+
             const b = 1;
             ",
             "
             use(b);
+
             class A {}
             ",
         ],
         "
         class A {
         }
+
         const a = new A();
+
         const b = 1;
+
         use(b);
+
         use(a);
         ",
     );
@@ -150,12 +171,15 @@ fn deno_jszip_01() {
             "use(a);",
             "
             const a = {};
+
             a.foo = 1;
             ",
         ],
         "
         const a = {};
+
         a.foo = 1;
+
         use(a)
         ",
     );
@@ -180,9 +204,11 @@ fn deno_jszip_02() {
         "
         const Q = 'undefined' != typeof globalThis ? globalThis : 'undefined' != typeof self ? \
          self : global;
+
         function X() {
             console.log(Q.A)
         }
+
         X()
         ",
     );
@@ -197,6 +223,7 @@ fn deno_jszip_03() {
             "
             const Q = 'undefined' != typeof globalThis ? globalThis : 'undefined' != typeof self ? \
              self : global;
+
             function X() {
                 console.log(Q.A)
             }
@@ -205,9 +232,11 @@ fn deno_jszip_03() {
         "
         const Q = 'undefined' != typeof globalThis ? globalThis : 'undefined' != typeof self ? \
          self : global;
+
         function X() {
             console.log(Q.A)
         }
+
         const v = X()
         ",
     );
@@ -221,12 +250,15 @@ fn sort_006() {
             "use(b)",
             "
             const b, a = b = {};
+
             a.env = {};
             ",
         ],
         "
         const b, a = b = {};
+
         a.env = {};
+
         use(b);
         ",
     );
@@ -239,7 +271,9 @@ fn sort_007() {
         &[
             "
             var e, o = e = {};
+
             var T = e;
+
             e.env = {};
             ",
             "
@@ -249,15 +283,21 @@ fn sort_007() {
         ],
         "
         const h325 = T;
+
         const h$1 = h325;
         ",
         "
         var e, o = e = {};
+
         var T = e;
+
         e.env = {
         };
+
         const h325 = T;
+
         const h$1 = h325;
+
         if (h$1.env.NODE_DEBUG) {
         }
         ",
@@ -271,7 +311,9 @@ fn sort_008() {
         &[
             "
             var e, o = e = {};
+
             o.env = {}
+
             var T = e;
             ",
             "
@@ -283,9 +325,13 @@ fn sort_008() {
         ",
         "
         var e, o = e = {};
+
         o.env = {}
+
         var T = e;
+
         const h = T;
+
         use(h);
         ",
     );
@@ -301,7 +347,9 @@ fn sort_009() {
             ",
             "
             var e, o = e = {};
+
             o.env = {}
+
             var T = e;
             ",
         ],
@@ -310,9 +358,13 @@ fn sort_009() {
         ",
         "
         var e, o = e = {};
+
         o.env = {}
+
         var T = e;
+
         const h = T;
+
         use(h);
         ",
     );
@@ -324,10 +376,12 @@ fn sort_010() {
     assert_sorted(
         &["
             class AbstractBufBase {}
+
             class BufWriter extends AbstractBufBase {}
             "],
         "
         class AbstractBufBase {}
+
         class BufWriter extends AbstractBufBase {}
         ",
     );
@@ -342,18 +396,24 @@ fn sort_011() {
             "use(BufWriterSync)",
             "
             class AbstractBufBase {}
+
             class BufWriter extends AbstractBufBase {}
+
             class BufWriterSync extends AbstractBufBase { }
             ",
         ],
         "
         class AbstractBufBase {
         }
+
         class BufWriter extends AbstractBufBase {
         }
+
         class BufWriterSync extends AbstractBufBase {
         }
+
         use(BufWriter);
+
         use(BufWriterSync);
         ",
     );
@@ -368,25 +428,33 @@ fn sort_012() {
             "use(NATIVE_OS)",
             "
             let NATIVE_OS = 'linux';
+
             const navigator = globalThis.navigator;
+
             if (globalThis.Deno != null) {
                 NATIVE_OS = Deno.build.os;
             } else if (navigator?.appVersion?.includes?.('Win') ?? false) {
                 NATIVE_OS = 'windows';
             }
+
             const isWindows = NATIVE_OS == 'windows';
             ",
         ],
         "
         let NATIVE_OS = 'linux';
+
         const navigator = globalThis.navigator;
+
         if (globalThis.Deno != null) {
             NATIVE_OS = Deno.build.os;
         } else if (navigator?.appVersion?.includes?.('Win') ?? false) {
             NATIVE_OS = 'windows';
         }
+
         const isWindows = NATIVE_OS == 'windows';
+
         use(isWindows);
+
         use(NATIVE_OS);
         ",
     );
@@ -400,24 +468,31 @@ fn sort_013() {
             "use(isWindows)",
             "
             let NATIVE_OS = 'linux';
+
             const navigator = globalThis.navigator;
+
             if (globalThis.Deno != null) {
                 NATIVE_OS = Deno.build.os;
             } else if (navigator?.appVersion?.includes?.('Win') ?? false) {
                 NATIVE_OS = 'windows';
             }
+
             const isWindows = NATIVE_OS == 'windows';
             ",
         ],
         "
         let NATIVE_OS = 'linux';
+
         const navigator = globalThis.navigator;
+
         if (globalThis.Deno != null) {
             NATIVE_OS = Deno.build.os;
         } else if (navigator?.appVersion?.includes?.('Win') ?? false) {
             NATIVE_OS = 'windows';
         }
+
         const isWindows = NATIVE_OS == 'windows';
+
         use(isWindows);
         ",
     );
@@ -431,24 +506,31 @@ fn sort_014() {
             "use(NATIVE_OS)",
             "
             let NATIVE_OS = 'linux';
+
             const navigator = globalThis.navigator;
+
             if (globalThis.Deno != null) {
                 NATIVE_OS = Deno.build.os;
             } else if (navigator?.appVersion?.includes?.('Win') ?? false) {
                 NATIVE_OS = 'windows';
             }
+
             const isWindows = NATIVE_OS == 'windows';
             ",
         ],
         "
         let NATIVE_OS = 'linux';
+
         const navigator = globalThis.navigator;
+
         if (globalThis.Deno != null) {
             NATIVE_OS = Deno.build.os;
         } else if (navigator?.appVersion?.includes?.('Win') ?? false) {
             NATIVE_OS = 'windows';
         }
+
         const isWindows = NATIVE_OS == 'windows';
+
         use(NATIVE_OS)
         ",
     );
@@ -465,25 +547,33 @@ fn sort_015() {
             ",
             "
             let NATIVE_OS = 'linux';
+
             const navigator = globalThis.navigator;
+
             if (globalThis.Deno != null) {
                 NATIVE_OS = Deno.build.os;
             } else if (navigator?.appVersion?.includes?.('Win') ?? false) {
                 NATIVE_OS = 'windows';
             }
+
             const isWindows = NATIVE_OS == 'windows';
             ",
         ],
         "
         let NATIVE_OS = 'linux';
+
         const navigator = globalThis.navigator;
+
         if (globalThis.Deno != null) {
             NATIVE_OS = Deno.build.os;
         } else if (navigator?.appVersion?.includes?.('Win') ?? false) {
             NATIVE_OS = 'windows';
         }
+
         const isWindows = NATIVE_OS == 'windows';
+
         use(isWindows);
+
         use(NATIVE_OS);
         ",
     );
@@ -498,21 +588,26 @@ fn sort_016() {
             function f1() {
 
             }
+
             f2();
             ",
             "
             function f2() {
 
             }
+
             f1();
             ",
         ],
         "
         function f1() {
         }
+
         function f2() {
         }
+
         f2();
+
         f1();
         ",
     );

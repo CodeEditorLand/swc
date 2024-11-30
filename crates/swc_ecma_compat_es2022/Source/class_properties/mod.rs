@@ -149,6 +149,7 @@ impl VisitMut for ClassProperties {
 
     fn visit_mut_stmts(&mut self, n: &mut Vec<Stmt>) {
         let old = self.extra.take();
+
         self.visit_mut_stmt_like(n);
 
         self.extra.take().prepend_with(n);
@@ -162,7 +163,9 @@ impl VisitMut for ClassProperties {
                 let ClassExpr { ident, class } = expr.take().class().unwrap();
 
                 let mut stmts = Vec::new();
+
                 let ident = ident.unwrap_or_else(|| private_ident!("_class"));
+
                 let (decl, extra) = self.visit_mut_class_as_decl(ident.clone(), class);
 
                 extra.merge_with(&mut stmts, decl.into());
@@ -181,6 +184,7 @@ impl VisitMut for ClassProperties {
                     ..Default::default()
                 });
             }
+
             _ => body.visit_mut_children_with(self),
         };
     }
@@ -195,6 +199,7 @@ impl VisitMut for ClassProperties {
                 .clone()
                 .map(|id| format!("_{}", id.sym))
                 .unwrap_or_else(|| "_class".into()));
+
             let (decl, ClassExtra { lets, vars, stmts }) =
                 self.visit_mut_class_as_decl(ident.clone(), class.take());
 
@@ -203,8 +208,10 @@ impl VisitMut for ClassProperties {
                 class: decl.class,
             }
             .into();
+
             if vars.is_empty() && lets.is_empty() && stmts.is_empty() {
                 *expr = class;
+
                 return;
             }
 
@@ -212,6 +219,7 @@ impl VisitMut for ClassProperties {
 
             for mut var in vars {
                 let init = var.init.take();
+
                 if let Some(init) = init {
                     exprs.push(
                         AssignExpr {
@@ -223,11 +231,13 @@ impl VisitMut for ClassProperties {
                         .into(),
                     )
                 }
+
                 self.extra.vars.push(var);
             }
 
             for mut var in lets {
                 let init = var.init.take();
+
                 if let Some(init) = init {
                     exprs.push(
                         AssignExpr {
@@ -239,18 +249,22 @@ impl VisitMut for ClassProperties {
                         .into(),
                     )
                 }
+
                 self.extra.lets.push(var);
             }
 
             let mut extra_value = false;
+
             if !stmts.is_empty() {
                 extra_value = true;
+
                 self.extra.vars.push(VarDeclarator {
                     span: DUMMY_SP,
                     name: ident.clone().into(),
                     init: None,
                     definite: false,
                 });
+
                 exprs.push(
                     AssignExpr {
                         span: DUMMY_SP,
@@ -268,6 +282,7 @@ impl VisitMut for ClassProperties {
                 if let Some(orig_ident) = orig_ident {
                     replace_ident(&mut stmt, orig_ident.clone().into(), &ident);
                 }
+
                 match stmt {
                     Stmt::Expr(e) => exprs.push(e.expr),
                     Stmt::Decl(Decl::Var(v)) => {
@@ -289,6 +304,7 @@ impl VisitMut for ClassProperties {
                             self.extra.vars.push(decl)
                         }
                     }
+
                     _ => self.extra.stmts.push(stmt),
                 }
             }
@@ -357,6 +373,7 @@ impl ClassProperties {
                                     },
                                 );
                             }
+
                             ModuleDecl::ExportDecl(ExportDecl {
                                 span,
                                 decl:
@@ -368,6 +385,7 @@ impl ClassProperties {
                                 ..
                             }) => {
                                 let (decl, extra) = self.visit_mut_class_as_decl(ident, class);
+
                                 extra.merge_with(
                                     &mut buf,
                                     match T::try_from_module_decl(
@@ -382,8 +400,10 @@ impl ClassProperties {
                                     },
                                 )
                             }
+
                             _ => {
                                 decl.visit_mut_children_with(self);
+
                                 buf.push(match T::try_from_module_decl(decl) {
                                     Ok(t) => t,
                                     Err(..) => unreachable!(),
@@ -391,6 +411,7 @@ impl ClassProperties {
                             }
                         };
                     }
+
                     Err(..) => unreachable!(),
                 },
                 Ok(mut stmt) => {
@@ -402,10 +423,13 @@ impl ClassProperties {
                             declare: false,
                         })) => {
                             let (decl, extra) = self.visit_mut_class_as_decl(ident, class);
+
                             extra.merge_with(&mut buf, T::from(decl.into()))
                         }
+
                         _ => {
                             stmt.visit_mut_children_with(self);
+
                             buf.push(T::from(stmt))
                         }
                     }
@@ -438,6 +462,7 @@ impl ClassProperties {
                                 if dup_private_method(kind, method) {
                                     let error =
                                         format!("duplicate private name #{}.", method.key.name);
+
                                     HANDLER.with(|handler| {
                                         handler.struct_span_err(method.key.span, &error).emit()
                                     });
@@ -464,6 +489,7 @@ impl ClassProperties {
                         ClassMember::PrivateProp(prop) => {
                             if private_map.contains_key(&prop.key.name) {
                                 let error = format!("duplicate private name #{}.", prop.key.name);
+
                                 HANDLER.with(|handler| {
                                     handler.struct_span_err(prop.key.span, &error).emit()
                                 });
@@ -496,14 +522,23 @@ impl ClassProperties {
         let has_super = class.super_class.is_some();
 
         let mut constructor_inits = MemberInitRecord::new(self.c);
+
         let mut vars = Vec::new();
+
         let mut lets = Vec::new();
+
         let mut extra_inits = MemberInitRecord::new(self.c);
+
         let mut private_method_fn_decls = Vec::new();
+
         let mut members = Vec::new();
+
         let mut constructor = None;
+
         let mut used_names = Vec::new();
+
         let mut used_key_names = Vec::new();
+
         let mut super_ident = None;
 
         class.body.visit_mut_with(&mut BrandCheckHandler {
@@ -545,6 +580,7 @@ impl ClassProperties {
                             expr.visit_mut_with(&mut ClassNameTdzFolder {
                                 class_name: &class_ident,
                             });
+
                             let ident = alias_ident_for(&expr, "tmp");
                             // Handle computed property
                             lets.push(VarDeclarator {
@@ -560,13 +596,16 @@ impl ClassProperties {
                                 expr: ident.into(),
                             })
                         }
+
                         _ => method.key,
                     };
+
                     members.push(ClassMember::Method(ClassMethod { key, ..method }))
                 }
 
                 ClassMember::ClassProp(mut prop) => {
                     let prop_span = prop.span();
+
                     prop.key.visit_mut_with(&mut ClassNameTdzFolder {
                         class_name: &class_ident,
                     });
@@ -589,6 +628,7 @@ impl ClassProperties {
                                 self.c,
                                 self.unresolved_mark,
                             ));
+
                             let (ident, aliased) = if let Expr::Ident(i) = &*key.expr {
                                 if used_key_names.contains(&i.sym) {
                                     (alias_ident_for(&key.expr, "_ref"), true)
@@ -598,6 +638,7 @@ impl ClassProperties {
                             } else {
                                 alias_if_required(&key.expr, "_ref")
                             };
+
                             if aliased {
                                 // Handle computed property
                                 lets.push(VarDeclarator {
@@ -609,6 +650,7 @@ impl ClassProperties {
                             }
                             *key.expr = ident.into();
                         }
+
                         _ => (),
                     };
 
@@ -626,6 +668,7 @@ impl ClassProperties {
                     if prop.is_static {
                         if let (Some(super_class), None) = (&mut class.super_class, &super_ident) {
                             let (ident, aliased) = alias_if_required(&*super_class, "_ref");
+
                             super_ident = Some(ident.clone());
 
                             if aliased {
@@ -635,6 +678,7 @@ impl ClassProperties {
                                     init: None,
                                     definite: false,
                                 });
+
                                 let span = super_class.span();
                                 **super_class = AssignExpr {
                                     span,
@@ -658,6 +702,7 @@ impl ClassProperties {
                             super_class: &super_ident,
                             in_pat: false,
                         });
+
                         value.visit_mut_with(&mut ThisInStaticFolder {
                             ident: class_ident.clone(),
                         });
@@ -668,12 +713,14 @@ impl ClassProperties {
                         name: prop.key,
                         value,
                     });
+
                     if prop.is_static {
                         extra_inits.push(init);
                     } else {
                         constructor_inits.push(init);
                     }
                 }
+
                 ClassMember::PrivateProp(mut prop) => {
                     let prop_span = prop.span();
 
@@ -701,6 +748,7 @@ impl ClassProperties {
                                 in_pat: false,
                             });
                         }
+
                         vars.extend(visit_private_in_expr(
                             &mut *value,
                             &self.private,
@@ -712,6 +760,7 @@ impl ClassProperties {
                     prop.value.visit_with(&mut UsedNameCollector {
                         used_names: &mut used_names,
                     });
+
                     if prop.is_static {
                         prop.value.visit_mut_with(&mut ThisInStaticFolder {
                             ident: class_ident.clone(),
@@ -722,7 +771,9 @@ impl ClassProperties {
 
                     if prop.is_static && prop.key.span.is_placeholder() {
                         let init = MemberInit::StaticBlock(value);
+
                         extra_inits.push(init);
+
                         continue;
                     }
 
@@ -731,7 +782,9 @@ impl ClassProperties {
                         name: ident.clone(),
                         value,
                     });
+
                     let span = PURE_SP;
+
                     if self.c.private_as_properties {
                         vars.push(VarDeclarator {
                             span: DUMMY_SP,
@@ -763,6 +816,7 @@ impl ClassProperties {
                             ),
                         });
                     };
+
                     if prop.is_static {
                         extra_inits.push(init);
                     } else {
@@ -776,6 +830,7 @@ impl ClassProperties {
 
                 ClassMember::PrivateMethod(mut method) => {
                     let is_static = method.is_static;
+
                     let prop_span = method.span;
 
                     let fn_name = Ident::new(
@@ -800,6 +855,7 @@ impl ClassProperties {
                         method.key.span,
                         SyntaxContext::empty().apply_mark(self.private.cur_mark()),
                     );
+
                     method.function.visit_with(&mut UsedNameCollector {
                         used_names: &mut used_names,
                     });
@@ -807,6 +863,7 @@ impl ClassProperties {
                     let extra_collect = match (method.kind, is_static) {
                         (MethodKind::Getter | MethodKind::Setter, false) => {
                             let is_getter = method.kind == MethodKind::Getter;
+
                             let inserted =
                                 constructor_inits.push(MemberInit::PrivAccessor(PrivAccessor {
                                     span: prop_span,
@@ -831,6 +888,7 @@ impl ClassProperties {
                         }
                         (MethodKind::Getter | MethodKind::Setter, true) => {
                             let is_getter = method.kind == MethodKind::Getter;
+
                             let inserted =
                                 extra_inits.push(MemberInit::PrivAccessor(PrivAccessor {
                                     span: prop_span,
@@ -846,6 +904,7 @@ impl ClassProperties {
                                         None
                                     },
                                 }));
+
                             if inserted && self.c.private_as_properties {
                                 Some(IdentName::default())
                             } else {
@@ -863,6 +922,7 @@ impl ClassProperties {
                                     Ident::dummy()
                                 },
                             }));
+
                             Some(quote_ident!("WeakSet"))
                         }
                         (MethodKind::Method, true) => {
@@ -872,6 +932,7 @@ impl ClassProperties {
                                     name: weak_coll_var.clone(),
                                     fn_name: fn_name.clone(),
                                 }));
+
                                 Some(Default::default())
                             } else {
                                 None
@@ -881,6 +942,7 @@ impl ClassProperties {
 
                     if let Some(extra) = extra_collect {
                         let span = PURE_SP;
+
                         vars.push(VarDeclarator {
                             span: DUMMY_SP,
                             definite: false,
@@ -940,6 +1002,7 @@ impl ClassProperties {
 
         let constructor =
             self.process_constructor(class.span, constructor, has_super, constructor_inits);
+
         if let Some(c) = constructor {
             members.push(ClassMember::Constructor(c));
         }
@@ -1033,6 +1096,7 @@ impl ClassProperties {
             let constructor_exprs = constructor_exprs.into_init();
             // Prepend properties
             inject_after_super(&mut c, constructor_exprs);
+
             Some(c)
         } else {
             None
@@ -1104,12 +1168,14 @@ impl Visit for SuperVisitor {
     /// Don't recurse into fn
     fn visit_method_prop(&mut self, n: &MethodProp) {
         n.key.visit_with(self);
+
         n.function.visit_with(self);
     }
 
     /// Don't recurse into fn
     fn visit_setter_prop(&mut self, n: &SetterProp) {
         n.key.visit_with(self);
+
         n.param.visit_with(self);
     }
 
@@ -1123,6 +1189,8 @@ where
     N: VisitWith<SuperVisitor>,
 {
     let mut visitor = SuperVisitor { found: false };
+
     body.visit_with(&mut visitor);
+
     visitor.found
 }

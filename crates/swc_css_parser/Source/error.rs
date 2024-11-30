@@ -42,6 +42,7 @@ impl Error {
             ErrorKind::EofButExpected(s) => {
                 format!("Unexpected end of file, but expected {}", s).into()
             }
+
             ErrorKind::Ignore => "Not an error".into(),
             ErrorKind::UnexpectedChar(c) => format!("Unexpected character `{:?}`", c).into(),
             ErrorKind::Expected(s) => format!("Expected {}", s).into(),
@@ -71,6 +72,7 @@ impl Error {
             ErrorKind::InvalidKeyframesName(s) => {
                 format!("{} is not valid name for keyframes", s).into()
             }
+
             ErrorKind::InvalidScopeAtRule => "Invalid @scope at-rule".into(),
             ErrorKind::ValueAtRule => "@value at-rule is deprecated".into(),
         }

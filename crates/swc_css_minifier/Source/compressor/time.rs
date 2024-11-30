@@ -13,6 +13,7 @@ impl Compressor {
                     value: new_value,
                     raw: None,
                 };
+
                 time.unit = Ident {
                     span: time.unit.span,
                     value: "s".into(),
@@ -27,12 +28,14 @@ impl Compressor {
                     raw: None,
                     span: time.span,
                 };
+
                 time.unit = Ident {
                     span: time.unit.span,
                     value: "ms".into(),
                     raw: None,
                 };
             }
+
             _ => {}
         }
     }

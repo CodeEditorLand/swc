@@ -20,7 +20,9 @@ impl Pure<'_> {
             {
                 if label.sym == ls.label.sym {
                     self.changed = true;
+
                     report_change!("Dropping instant break `{}`", label);
+
                     s.take();
                 }
             }
@@ -66,15 +68,18 @@ impl Pure<'_> {
                     {
                         if ls.label.sym == label.sym {
                             self.changed = true;
+
                             report_change!(
                                 "Optimizing labeled stmt with a break to if statement: `{}`",
                                 label
                             );
 
                             self.negate(test, true, false);
+
                             let test = test.take();
 
                             let mut cons = bs.take();
+
                             cons.stmts.remove(0);
 
                             ls.body = Box::new(
@@ -86,6 +91,7 @@ impl Pure<'_> {
                                 }
                                 .into(),
                             );
+
                             return None;
                         }
                     }
@@ -104,15 +110,18 @@ impl Pure<'_> {
                     {
                         if ls.label.sym == label.sym {
                             self.changed = true;
+
                             report_change!(
                                 "Optimizing labeled stmt with a break in alt to if statement: {}",
                                 ls.label
                             );
 
                             let test = test.take();
+
                             let cons = *cons.take();
 
                             let mut new_cons = bs.take();
+
                             new_cons.stmts[0] = cons;
 
                             ls.body = Box::new(
@@ -124,6 +133,7 @@ impl Pure<'_> {
                                 }
                                 .into(),
                             );
+
                             return None;
                         }
                     }
@@ -139,6 +149,7 @@ impl Pure<'_> {
         match s {
             Stmt::Labeled(ls) => {
                 let new = self.drop_useless_continue_inner(Some(ls.label.clone()), &mut ls.body);
+
                 if let Some(new) = new {
                     *s = new;
                 }
@@ -146,6 +157,7 @@ impl Pure<'_> {
 
             _ => {
                 let new = self.drop_useless_continue_inner(None, s);
+
                 if let Some(new) = new {
                     *s = new;
                 }
@@ -180,8 +192,11 @@ impl Pure<'_> {
             } else {
                 return None;
             }
+
             self.changed = true;
+
             report_change!("Remove useless continue (last stmt of a loop)");
+
             b.stmts.remove(b.stmts.len() - 1);
 
             if let Some(label) = &label {
@@ -248,6 +263,7 @@ impl Pure<'_> {
                         Ok(Stmt::Decl(Decl::Fn(f))) => {
                             hoisted_fns.push(T::from(Stmt::from(f)));
                         }
+
                         Ok(t) => {
                             let ids = extract_var_ids(&t).into_iter().map(|i| VarDeclarator {
                                 span: i.span,
@@ -255,8 +271,10 @@ impl Pure<'_> {
                                 init: None,
                                 definite: false,
                             });
+
                             decls.extend(ids);
                         }
+
                         Err(item) => new_stmts.push(item),
                     };
                     (decls, hoisted_fns, new_stmts)
@@ -301,16 +319,22 @@ impl Pure<'_> {
                     } else {
                         s.take();
                     }
+
                     true
                 }
+
                 Some(Stmt::If(i)) => {
                     let mut changed = false;
+
                     changed |= drop(&mut *i.cons, last, need_break, ctx);
+
                     if let Some(alt) = i.alt.as_mut() {
                         changed |= drop(&mut **alt, last, need_break, ctx);
                     }
+
                     changed
                 }
+
                 Some(Stmt::Try(t)) => {
                     let mut changed = false;
                     // TODO: let chain
@@ -321,27 +345,34 @@ impl Pure<'_> {
                             Stmt::Return(ReturnStmt { arg: Some(arg), .. }) => {
                                 arg.may_have_side_effects(ctx)
                             }
+
                             Stmt::Throw(_) => true,
                             _ => unreachable!(),
                         };
+
                         if t.finalizer.is_none() && !side_effect {
                             changed |= drop(stmt, last, need_break, ctx)
                         }
                     }
+
                     if let Some(h) = t.handler.as_mut() {
                         if let Some(stmt) = h.body.stmts.last_mut() {
                             changed |= drop(stmt, last, need_break, ctx);
                         }
                     }
+
                     if let Some(f) = t.finalizer.as_mut() {
                         if let Some(stmt) = f.stmts.last_mut() {
                             changed |= drop(stmt, last, need_break, ctx);
                         }
                     }
+
                     changed
                 }
+
                 Some(Stmt::Switch(s)) if !last.is_break_stmt() && !need_break => {
                     let mut changed = false;
+
                     for case in s.cases.iter_mut() {
                         for stmt in case.cons.iter_mut() {
                             changed |= drop(stmt, last, true, ctx);
@@ -350,6 +381,7 @@ impl Pure<'_> {
 
                     changed
                 }
+
                 Some(
                     Stmt::For(ForStmt { body, .. })
                     | Stmt::ForIn(ForInStmt { body, .. })
@@ -359,14 +391,17 @@ impl Pure<'_> {
                 ) if !last.is_break_stmt() && !last.is_continue_stmt() && !need_break => {
                     if let Stmt::Block(b) = &mut **body {
                         let mut changed = false;
+
                         for stmt in b.stmts.iter_mut() {
                             changed |= drop(stmt, last, true, ctx);
                         }
+
                         changed
                     } else {
                         drop(&mut **body, last, true, ctx)
                     }
                 }
+
                 Some(Stmt::Block(b)) => {
                     if let Some(stmt) = b.stmts.last_mut() {
                         drop(stmt, last, need_break, ctx)
@@ -374,6 +409,7 @@ impl Pure<'_> {
                         false
                     }
                 }
+
                 _ => false,
             }
         }
@@ -408,6 +444,7 @@ impl Pure<'_> {
         }
 
         self.changed = true;
+
         report_change!("Dropping useless block");
 
         let old_stmts = stmts.take();
@@ -421,11 +458,13 @@ impl Pure<'_> {
                         Ok(v) => match v {
                             Stmt::Block(v) if is_ok(&v) => {
                                 let stmts = v.stmts;
+
                                 maybe_par!(
                                     stmts.into_iter().map(T::from).collect(),
                                     *crate::LIGHT_TASK_PARALLELS
                                 )
                             }
+
                             _ => vec![T::from(v)],
                         },
                         Err(v) => vec![v],
@@ -440,11 +479,13 @@ impl Pure<'_> {
                         Ok(v) => match v {
                             Stmt::Block(v) if is_ok(&v) => {
                                 let stmts = v.stmts;
+
                                 maybe_par!(
                                     stmts.into_iter().map(T::from).collect(),
                                     *crate::LIGHT_TASK_PARALLELS
                                 )
                             }
+
                             _ => vec![T::from(v)],
                         },
                         Err(v) => vec![v],
@@ -453,6 +494,7 @@ impl Pure<'_> {
             }
         } else {
             let mut new = Vec::with_capacity(old_stmts.len() * 2);
+
             old_stmts
                 .into_iter()
                 .for_each(|stmt| match stmt.try_into_stmt() {
@@ -460,10 +502,12 @@ impl Pure<'_> {
                         Stmt::Block(v) if is_ok(&v) => {
                             new.extend(v.stmts.into_iter().map(T::from));
                         }
+
                         _ => new.push(T::from(v)),
                     },
                     Err(v) => new.push(v),
                 });
+
             new
         };
         *stmts = new;
@@ -478,6 +522,7 @@ impl Pure<'_> {
             })) = r.arg.as_deref_mut()
             {
                 report_change!("unused: Removing `return void` in end of a function");
+
                 self.changed = true;
                 *s = ExprStmt {
                     span: *span,
@@ -507,9 +552,11 @@ impl Pure<'_> {
         }
 
         self.changed = true;
+
         report_change!("dead_code: Removing dead codes");
 
         let mut new = Vec::with_capacity(stmts.len());
+
         stmts
             .take()
             .into_iter()
@@ -518,6 +565,7 @@ impl Pure<'_> {
                     Stmt::If(mut s) => {
                         if let Value::Known(v) = s.test.cast_to_bool(&self.expr_ctx).1 {
                             let mut var_ids = Vec::new();
+
                             new.push(T::from(
                                 ExprStmt {
                                     span: DUMMY_SP,
@@ -539,6 +587,7 @@ impl Pure<'_> {
                                         })
                                         .collect();
                                 }
+
                                 if !var_ids.is_empty() {
                                     new.push(T::from(
                                         VarDecl {
@@ -551,6 +600,7 @@ impl Pure<'_> {
                                         .into(),
                                     ))
                                 }
+
                                 new.push(T::from(*s.cons.take()));
                             } else {
                                 var_ids = s
@@ -564,6 +614,7 @@ impl Pure<'_> {
                                         definite: Default::default(),
                                     })
                                     .collect();
+
                                 if !var_ids.is_empty() {
                                     new.push(T::from(
                                         VarDecl {
@@ -576,6 +627,7 @@ impl Pure<'_> {
                                         .into(),
                                     ))
                                 }
+
                                 if let Some(alt) = s.alt.take() {
                                     new.push(T::from(*alt));
                                 }
@@ -584,6 +636,7 @@ impl Pure<'_> {
                             new.push(T::from(s.into()));
                         }
                     }
+
                     _ => new.push(T::from(stmt)),
                 },
                 Err(stmt) => new.push(stmt),
@@ -601,7 +654,9 @@ where
         label,
         found: false,
     };
+
     node.visit_with(&mut v);
+
     v.found
 }
 

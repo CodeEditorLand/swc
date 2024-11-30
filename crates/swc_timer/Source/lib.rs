@@ -29,6 +29,7 @@ impl Timer {
 impl Drop for Timer {
     fn drop(&mut self) {
         let dur = self.start.elapsed();
+
         info!(kind = "perf", "Done in {:?}", dur);
     }
 }

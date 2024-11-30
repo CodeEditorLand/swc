@@ -13,6 +13,7 @@ macro_rules! enable_helper {
     ($i:ident) => {{
         $crate::helpers::HELPERS.with(|helpers| {
             helpers.$i();
+
             helpers.mark()
         })
     }};
@@ -25,6 +26,7 @@ fn parse(code: &str) -> Vec<Stmt> {
         FileName::Custom(stringify!($name).into()).into(),
         code.into(),
     );
+
     swc_ecma_parser::parse_file_as_script(
         &fm,
         Default::default(),
@@ -34,6 +36,7 @@ fn parse(code: &str) -> Vec<Stmt> {
     )
     .map(|mut script| {
         script.body.visit_mut_with(&mut DropSpan);
+
         script.body
     })
     .map_err(|e| {
@@ -46,10 +49,12 @@ macro_rules! add_to {
     ($buf:expr, $name:ident, $b:expr, $mark:expr) => {{
         static STMTS: Lazy<Vec<Stmt>> = Lazy::new(|| {
             let code = include_str!(concat!("./_", stringify!($name), ".js"));
+
             parse(&code)
         });
 
         let enable = $b;
+
         if enable {
             $buf.extend(STMTS.iter().cloned().map(|mut stmt| {
                 stmt.visit_mut_with(&mut Marker {
@@ -58,6 +63,7 @@ macro_rules! add_to {
 
                     decl_ctxt: SyntaxContext::empty().apply_mark(Mark::new()),
                 });
+
                 stmt
             }))
         }
@@ -67,8 +73,10 @@ macro_rules! add_to {
 macro_rules! add_import_to {
     ($buf:expr, $name:ident, $b:expr, $mark:expr) => {{
         let enable = $b;
+
         if enable {
             let ctxt = SyntaxContext::empty().apply_mark($mark);
+
             let s = ImportSpecifier::Named(ImportNamedSpecifier {
                 span: DUMMY_SP,
                 local: Ident::new(concat!("_", stringify!($name)).into(), DUMMY_SP, ctxt),
@@ -183,6 +191,7 @@ macro_rules! define_helpers {
         impl Helpers {
             pub fn extend_from(&self, other: &Self) {
                 let other = other.inner.borrow();
+
                 let mut me = self.inner.borrow_mut();
                 $(
                     if other.$name {
@@ -197,6 +206,7 @@ macro_rules! define_helpers {
 
                 HELPERS.with(|helpers|{
                     let inner = helpers.inner.borrow();
+
                     false $(
                       || inner.$name
                     )*
@@ -208,6 +218,7 @@ macro_rules! define_helpers {
 
                 HELPERS.with(|helpers|{
                     debug_assert!(!helpers.external);
+
                     let inner = helpers.inner.borrow();
                     $(
                             add_to!(buf, $name, inner.$name, helpers.mark.0);
@@ -222,6 +233,7 @@ macro_rules! define_helpers {
 
                 HELPERS.with(|helpers|{
                     let inner = helpers.inner.borrow();
+
                     debug_assert!(helpers.external);
                     $(
                             add_import_to!(buf, $name, inner.$name, helpers.mark.0);
@@ -233,17 +245,21 @@ macro_rules! define_helpers {
 
             fn build_requires(&self) -> Vec<Stmt>{
                 let mut buf = Vec::new();
+
                 HELPERS.with(|helpers|{
                     debug_assert!(helpers.external);
+
                     let inner = helpers.inner.borrow();
                     $(
                         let enable = inner.$name;
+
                         if enable {
                             buf.push(self.build_reqire(stringify!($name), helpers.mark.0))
                         }
                         // add_require_to!(buf, $name, helpers.inner.$name, helpers.mark.0, self.global_mark);
                     )*
                 });
+
                 buf
             }
         }
@@ -435,9 +451,11 @@ struct InjectHelpers {
 impl InjectHelpers {
     fn make_helpers_for_module(&mut self) -> Vec<ModuleItem> {
         let (helper_mark, external) = HELPERS.with(|helper| (helper.mark(), helper.external()));
+
         if external {
             if self.is_helper_used() {
                 self.helper_ctxt = Some(SyntaxContext::empty().apply_mark(helper_mark));
+
                 self.build_imports()
             } else {
                 Vec::new()
@@ -456,6 +474,7 @@ impl InjectHelpers {
         if external {
             if self.is_helper_used() {
                 self.helper_ctxt = Some(SyntaxContext::empty().apply_mark(helper_mark));
+
                 self.build_requires()
             } else {
                 Default::default()
@@ -483,7 +502,9 @@ impl InjectHelpers {
             .as_arg()],
             ..Default::default()
         };
+
         let ctxt = SyntaxContext::empty().apply_mark(mark);
+
         VarDecl {
             kind: VarDeclKind::Var,
             decls: vec![VarDeclarator {
@@ -524,6 +545,7 @@ impl VisitMut for InjectHelpers {
 
     fn visit_mut_script(&mut self, script: &mut Script) {
         let helpers = self.make_helpers_for_script();
+
         let helpers_is_empty = helpers.is_empty();
 
         prepend_stmts(&mut script.body, helpers.into_iter());
@@ -561,11 +583,13 @@ impl VisitMut for Marker {
             &mut self.decl_ctxt,
             SyntaxContext::empty().apply_mark(Mark::new()),
         );
+
         let old_decls = self.decls.clone();
 
         n.visit_mut_children_with(self);
 
         self.decls = old_decls;
+
         self.decl_ctxt = old_decl_ctxt;
     }
 
@@ -574,11 +598,13 @@ impl VisitMut for Marker {
             &mut self.decl_ctxt,
             SyntaxContext::empty().apply_mark(Mark::new()),
         );
+
         let old_decls = self.decls.clone();
 
         n.visit_mut_children_with(self);
 
         self.decls = old_decls;
+
         self.decl_ctxt = old_decl_ctxt;
     }
 
@@ -616,7 +642,9 @@ impl VisitMut for Marker {
         if let Pat::Ident(i) = &mut v.name {
             if &*i.sym == "id" || &*i.sym == "resource" {
                 i.ctxt = self.base;
+
                 self.decls.insert(i.sym.clone(), self.base);
+
                 return;
             }
 
@@ -638,6 +666,7 @@ mod tests {
     #[test]
     fn external_helper() {
         let input = "_throw()";
+
         crate::tests::Tester::run(|tester| {
             HELPERS.set(&Helpers::new(true), || {
                 let expected = tester.apply_transform(
@@ -647,11 +676,13 @@ mod tests {
                     "import { _ as _throw } from \"@swc/helpers/_/_throw\";
 _throw();",
                 )?;
+
                 enable_helper!(throw);
 
                 eprintln!("----- Actual -----");
 
                 let tr = inject_helpers(Mark::new());
+
                 let actual = tester
                     .apply_transform(tr, "input.js", Default::default(), input)?
                     .apply(crate::hygiene::hygiene())
@@ -668,11 +699,14 @@ _throw();",
                 }
 
                 println!(">>>>> Orig <<<<<\n{}", input);
+
                 println!(">>>>> Code <<<<<\n{}", actual_src);
+
                 assert_eq!(
                     DebugUsingDisplay(&actual_src),
                     DebugUsingDisplay(&expected_src)
                 );
+
                 Err(())
             })
         });
@@ -684,6 +718,7 @@ _throw();",
             Default::default(),
             |_| {
                 enable_helper!(throw);
+
                 inject_helpers(Mark::new())
             },
             "'use strict'",
@@ -703,6 +738,7 @@ function _throw(e) {
             Default::default(),
             |_| {
                 enable_helper!(throw);
+
                 inject_helpers(Mark::new())
             },
             "let _throw = null",
@@ -738,6 +774,7 @@ let x = 4;",
             Default::default(),
             |_| {
                 enable_helper!(using_ctx);
+
                 inject_helpers(Mark::new())
             },
             "let _throw = null",
@@ -745,25 +782,34 @@ let x = 4;",
             function _using_ctx() {
                 var _disposeSuppressedError = typeof SuppressedError === "function" ? SuppressedError : function(error, suppressed) {
                     var err = new Error();
+
                     err.name = "SuppressedError";
+
                     err.suppressed = suppressed;
+
                     err.error = error;
+
                     return err;
                 }, empty = {}, stack = [];
+
                 function using(isAwait, value) {
                     if (value != null) {
                         if (Object(value) !== value) {
                             throw new TypeError("using declarations can only be used with objects, functions, null, or undefined.");
                         }
+
                         if (isAwait) {
                             var dispose = value[Symbol.asyncDispose || Symbol.for("Symbol.asyncDispose")];
                         }
+
                         if (dispose == null) {
                             dispose = value[Symbol.dispose || Symbol.for("Symbol.dispose")];
                         }
+
                         if (typeof dispose !== "function") {
                             throw new TypeError(`Property [Symbol.dispose] is not a function.`);
                         }
+
                         stack.push({
                             v: value,
                             d: dispose,
@@ -775,18 +821,22 @@ let x = 4;",
                             a: isAwait
                         });
                     }
+
                     return value;
                 }
+
                 return {
                     e: empty,
                     u: using.bind(null, false),
                     a: using.bind(null, true),
                     d: function() {
                         var error = this.e;
+
                         function next() {
                             while(resource = stack.pop()){
                                 try {
                                     var resource, disposalResult = resource.d && resource.d.call(resource.v);
+
                                     if (resource.a) {
                                         return Promise.resolve(disposalResult).then(next, err);
                                     }
@@ -794,12 +844,16 @@ let x = 4;",
                                     return err(e);
                                 }
                             }
+
                             if (error !== empty) throw error;
                         }
+
                         function err(e) {
                             error = error !== empty ? new _disposeSuppressedError(error, e) : e;
+
                             return next();
                         }
+
                         return next();
                     }
                 };

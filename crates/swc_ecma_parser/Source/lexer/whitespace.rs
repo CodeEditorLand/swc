@@ -78,6 +78,7 @@ impl SkipWhitespace<'_> {
     #[inline(always)]
     pub fn scan(&mut self) {
         let mut byte;
+
         loop {
             byte = match self.input.as_bytes().get(self.offset as usize).copied() {
                 Some(v) => v,
@@ -88,9 +89,11 @@ impl SkipWhitespace<'_> {
 
             if let Some(handler) = handler {
                 let delta = handler(self);
+
                 if delta == 0 {
                     return;
                 }
+
                 self.offset += delta;
             } else {
                 return;

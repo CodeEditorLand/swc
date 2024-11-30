@@ -461,21 +461,25 @@ pub struct SimpleMangleCache {
 impl MangleCache for SimpleMangleCache {
     fn vars_cache(&self, op: &mut dyn FnMut(&FxHashMap<Id, Atom>)) {
         let vars = self.vars.read();
+
         op(&vars);
     }
 
     fn props_cache(&self, op: &mut dyn FnMut(&FxHashMap<Atom, Atom>)) {
         let props = self.props.read();
+
         op(&props);
     }
 
     fn update_vars_cache(&self, new_data: &FxHashMap<Id, JsWord>) {
         let mut vars = self.vars.write();
+
         vars.extend(new_data.iter().map(|(k, v)| (k.clone(), v.clone())));
     }
 
     fn update_props_cache(&self, new_data: &FxHashMap<JsWord, JsWord>) {
         let mut props = self.props.write();
+
         props.extend(new_data.iter().map(|(k, v)| (k.clone(), v.clone())));
     }
 }

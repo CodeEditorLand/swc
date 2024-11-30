@@ -52,10 +52,12 @@ const ERR: ByteHandler = Some(|lexer| {
     };
 
     let start = lexer.cur_pos();
+
     unsafe {
         // Safety: Byte handler is only called for non-last chracters
         lexer.input.bump();
     }
+
     lexer.error_span(pos_span(start), SyntaxError::UnexpectedChar { c })?
 });
 
@@ -310,10 +312,12 @@ const UNI: ByteHandler = Some(|lexer| {
     }
 
     let start = lexer.cur_pos();
+
     unsafe {
         // Safety: Byte handler is only called for non-last chracters
         lexer.input.bump();
     }
+
     lexer.error_span(pos_span(start), SyntaxError::UnexpectedChar { c })?
 });
 
@@ -339,6 +343,7 @@ macro_rules! single_char {
     ($name:ident, $c:literal, $token:ident) => {
         const $name: ByteHandler = Some(|lexer| {
             lexer.input.bump_bytes(1);
+
             Ok(Some(Token::$token))
         });
     };
@@ -363,8 +368,10 @@ single_char!(BEC, b'}', RBrace);
 const CRT: ByteHandler = Some(|lexer| {
     // Bitwise xor
     lexer.input.bump_bytes(1);
+
     Ok(Some(if lexer.input.cur_as_ascii() == Some(b'=') {
         lexer.input.bump_bytes(1);
+
         Token::AssignOp(AssignOp::BitXorAssign)
     } else {
         Token::BinOp(BinOpToken::BitXor)

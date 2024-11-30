@@ -7,7 +7,9 @@ use crate::lexer::TokenContext;
 impl<I: Tokens> Parser<I> {
     pub(super) fn parse_async_fn_expr(&mut self) -> PResult<Box<Expr>> {
         let start = cur_pos!(self);
+
         expect!(self, "async");
+
         self.parse_fn(None, Some(start), Vec::new())
     }
 
@@ -18,7 +20,9 @@ impl<I: Tokens> Parser<I> {
 
     pub(super) fn parse_async_fn_decl(&mut self, decorators: Vec<Decorator>) -> PResult<Decl> {
         let start = cur_pos!(self);
+
         expect!(self, "async");
+
         self.parse_fn(None, Some(start), decorators)
     }
 
@@ -32,7 +36,9 @@ impl<I: Tokens> Parser<I> {
         decorators: Vec<Decorator>,
     ) -> PResult<ExportDefaultDecl> {
         let start_of_async = cur_pos!(self);
+
         expect!(self, "async");
+
         self.parse_fn(Some(start), Some(start_of_async), decorators)
     }
 
@@ -86,6 +92,7 @@ impl<I: Tokens> Parser<I> {
             let ident = p
                 .parse_maybe_opt_binding_ident(is_ident_required, true)?
                 .map(Ident::from);
+
             if p.input.syntax().typescript() {
                 if let Some(span) = ident.invalid_class_name() {
                     p.emit_err(span, SyntaxError::TS2414);
@@ -144,6 +151,7 @@ impl<I: Tokens> Parser<I> {
 
                 if super_class.is_none() {
                     super_class = Some(sc);
+
                     if type_params.is_some() {
                         super_type_params = type_params;
                     }
@@ -151,6 +159,7 @@ impl<I: Tokens> Parser<I> {
             }
 
             expect!(p, '{');
+
             let body = p
                 .with_ctx(Context {
                     has_super_class: super_class.is_some(),
@@ -160,6 +169,7 @@ impl<I: Tokens> Parser<I> {
 
             if p.input.cur().is_none() {
                 let eof_text = p.input.dump_cur();
+
                 p.emit_err(
                     p.input.cur_span(),
                     SyntaxError::Expected(&Token::RBrace, eof_text),
@@ -167,6 +177,7 @@ impl<I: Tokens> Parser<I> {
             } else {
                 expect!(p, '}');
             }
+
             let end = last_pos!(p);
 
             Ok((
@@ -231,6 +242,7 @@ impl<I: Tokens> Parser<I> {
 
     fn parse_super_class(&mut self) -> PResult<(Box<Expr>, Option<Box<TsTypeParamInstantiation>>)> {
         let super_class = self.parse_lhs_expr()?;
+
         match *super_class {
             Expr::TsInstantiation(TsInstantiation {
                 expr, type_args, ..
@@ -253,14 +265,17 @@ impl<I: Tokens> Parser<I> {
         if !self.syntax().decorators() {
             return Ok(Vec::new());
         }
+
         trace_cur!(self, parse_decorators);
 
         let mut decorators = Vec::new();
+
         let start = cur_pos!(self);
 
         while is!(self, '@') {
             decorators.push(self.parse_decorator()?);
         }
+
         if decorators.is_empty() {
             return Ok(decorators);
         }
@@ -286,13 +301,16 @@ impl<I: Tokens> Parser<I> {
 
     fn parse_decorator(&mut self) -> PResult<Decorator> {
         let start = cur_pos!(self);
+
         trace_cur!(self, parse_decorator);
 
         assert_and_bump!(self, '@');
 
         let expr = if eat!(self, '(') {
             let expr = self.parse_expr()?;
+
             expect!(self, ')');
+
             expr
         } else {
             let expr = self
@@ -323,6 +341,7 @@ impl<I: Tokens> Parser<I> {
         }
 
         let args = self.parse_args(false)?;
+
         Ok(CallExpr {
             span: span!(self, expr.span_lo()),
             callee: Callee::Expr(expr),
@@ -334,19 +353,25 @@ impl<I: Tokens> Parser<I> {
 
     fn parse_class_body(&mut self) -> PResult<Vec<ClassMember>> {
         let mut elems = Vec::new();
+
         let mut has_constructor_with_body = false;
+
         while !eof!(self) && !is!(self, '}') {
             if eat_exact!(self, ';') {
                 let span = self.input.prev_span();
+
                 elems.push(ClassMember::Empty(EmptyStmt {
                     span: Span::new(span.lo, span.hi),
                 }));
+
                 continue;
             }
+
             let mut p = self.with_ctx(Context {
                 allow_direct_super: true,
                 ..self.ctx()
             });
+
             let elem = p.parse_class_member()?;
 
             if !p.ctx().in_declare {
@@ -359,11 +384,14 @@ impl<I: Tokens> Parser<I> {
                     if has_constructor_with_body {
                         p.emit_err(span, SyntaxError::DuplicateConstructor);
                     }
+
                     has_constructor_with_body = true;
                 }
             }
+
             elems.push(elem);
         }
+
         Ok(elems)
     }
 
@@ -376,6 +404,7 @@ impl<I: Tokens> Parser<I> {
                 "private" => Some(Accessibility::Private),
                 other => {
                     self.emit_err(self.input.prev_span(), SyntaxError::TS1274(other.into()));
+
                     None
                 }
             }))
@@ -385,8 +414,11 @@ impl<I: Tokens> Parser<I> {
         trace_cur!(self, parse_class_member);
 
         let start = cur_pos!(self);
+
         let decorators = self.parse_decorators(false)?;
+
         let declare = self.syntax().typescript() && eat!(self, "declare");
+
         let accessibility = if self.input.syntax().typescript() {
             self.parse_access_modifier()?
         } else {
@@ -397,12 +429,15 @@ impl<I: Tokens> Parser<I> {
 
         let declare_token = if declare {
             // Handle declare(){}
+
             if self.is_class_method() {
                 let key = Key::Public(PropName::Ident(IdentName::new(
                     "declare".into(),
                     span!(self, start),
                 )));
+
                 let is_optional = self.input.syntax().typescript() && eat!(self, '?');
+
                 return self.make_method(
                     |p| p.parse_unique_formal_params(),
                     MakeMethodArgs {
@@ -428,7 +463,9 @@ impl<I: Tokens> Parser<I> {
                     "declare".into(),
                     span!(self, start),
                 )));
+
                 let is_optional = self.input.syntax().typescript() && eat!(self, '?');
+
                 return self.make_property(
                     start,
                     decorators,
@@ -451,6 +488,7 @@ impl<I: Tokens> Parser<I> {
 
         let static_token = {
             let start = cur_pos!(self);
+
             if eat!(self, "static") {
                 Some(span!(self, start))
             } else {
@@ -460,6 +498,7 @@ impl<I: Tokens> Parser<I> {
 
         let accessor_token = if self.syntax().auto_accessors() {
             let start = cur_pos!(self);
+
             if eat!(self, "accessor") {
                 Some(span!(self, start))
             } else {
@@ -471,12 +510,15 @@ impl<I: Tokens> Parser<I> {
 
         if let Some(accessor_token) = accessor_token {
             // Handle accessor(){}
+
             if self.is_class_method() {
                 let key = Key::Public(PropName::Ident(IdentName::new(
                     "accessor".into(),
                     accessor_token,
                 )));
+
                 let is_optional = self.input.syntax().typescript() && eat!(self, '?');
+
                 return self.make_method(
                     |p| p.parse_unique_formal_params(),
                     MakeMethodArgs {
@@ -502,8 +544,11 @@ impl<I: Tokens> Parser<I> {
                     "accessor".into(),
                     accessor_token,
                 )));
+
                 let is_optional = self.input.syntax().typescript() && eat!(self, '?');
+
                 let is_static = static_token.is_some();
+
                 return self.make_property(
                     start,
                     decorators,
@@ -522,12 +567,15 @@ impl<I: Tokens> Parser<I> {
 
         if let Some(static_token) = static_token {
             // Handle static(){}
+
             if self.is_class_method() {
                 let key = Key::Public(PropName::Ident(IdentName::new(
                     "static".into(),
                     static_token,
                 )));
+
                 let is_optional = self.input.syntax().typescript() && eat!(self, '?');
+
                 return self.make_method(
                     |p| p.parse_unique_formal_params(),
                     MakeMethodArgs {
@@ -552,13 +600,17 @@ impl<I: Tokens> Parser<I> {
                 // Avoid to parse
                 //   static
                 //   {}
+
                 let is_parsing_static_blocks = is!(self, '{');
+
                 if !is_parsing_static_blocks {
                     let key = Key::Public(PropName::Ident(IdentName::new(
                         "static".into(),
                         static_token,
                     )));
+
                     let is_optional = self.input.syntax().typescript() && eat!(self, '?');
+
                     return self.make_property(
                         start,
                         decorators,
@@ -599,6 +651,7 @@ impl<I: Tokens> Parser<I> {
             .parse_block(false)?;
 
         let span = span!(self, start);
+
         Ok(StaticBlock { span, body }.into())
     }
 
@@ -614,14 +667,20 @@ impl<I: Tokens> Parser<I> {
         let mut is_static = static_token.is_some();
 
         let mut is_abstract = false;
+
         let mut is_override = false;
+
         let mut readonly = None;
+
         let mut modifier_span = None;
+
         let declare = declare_token.is_some();
+
         while let Some(modifier) =
             self.parse_ts_modifier(&["abstract", "readonly", "override", "static"], true)?
         {
             modifier_span = Some(self.input.prev_span());
+
             match modifier {
                 "abstract" => {
                     if is_abstract {
@@ -635,6 +694,7 @@ impl<I: Tokens> Parser<I> {
                             SyntaxError::TS1029("abstract".into(), "override".into()),
                         );
                     }
+
                     is_abstract = true;
                 }
                 "override" => {
@@ -656,10 +716,12 @@ impl<I: Tokens> Parser<I> {
                     } else if !self.ctx().has_super_class {
                         self.emit_err(self.input.prev_span(), SyntaxError::TS4112);
                     }
+
                     is_override = true;
                 }
                 "readonly" => {
                     let readonly_span = self.input.prev_span();
+
                     if readonly.is_some() {
                         self.emit_err(readonly_span, SyntaxError::TS1030("readonly".into()));
                     } else {
@@ -676,6 +738,7 @@ impl<I: Tokens> Parser<I> {
 
                     is_static = true;
                 }
+
                 _ => {}
             }
         }
@@ -683,6 +746,7 @@ impl<I: Tokens> Parser<I> {
         let accessor_token = accessor_token.or_else(|| {
             if self.syntax().auto_accessors() && readonly.is_none() {
                 let start = cur_pos!(self);
+
                 if eat!(self, "accessor") {
                     Some(span!(self, start))
                 } else {
@@ -697,19 +761,24 @@ impl<I: Tokens> Parser<I> {
             if let Some(span) = declare_token {
                 self.emit_err(span, SyntaxError::TS1184);
             }
+
             if accessibility.is_some() {
                 self.emit_err(self.input.cur_span(), SyntaxError::TS1184);
             }
+
             return self.parse_static_block(start);
         }
+
         if is!(self, "static") && peeked_is!(self, '{') {
             // For "readonly", "abstract" and "override"
             if let Some(span) = modifier_span {
                 self.emit_err(span, SyntaxError::TS1184);
             }
+
             if let Some(span) = static_token {
                 self.emit_err(span, SyntaxError::TS1184);
             }
+
             bump!(self); // consume "static"
             return self.parse_static_block(start);
         }
@@ -720,6 +789,7 @@ impl<I: Tokens> Parser<I> {
             && accessibility.is_none()
         {
             let idx = self.try_parse_ts_index_signature(start, readonly.is_some(), is_static)?;
+
             if let Some(idx) = idx {
                 return Ok(idx.into());
             }
@@ -728,9 +798,11 @@ impl<I: Tokens> Parser<I> {
         if eat!(self, '*') {
             // generator method
             let key = self.parse_class_prop_name()?;
+
             if readonly.is_some() {
                 self.emit_err(span!(self, start), SyntaxError::ReadOnlyMethod);
             }
+
             if is_constructor(&key) {
                 self.emit_err(span!(self, start), SyntaxError::GeneratorConstructor);
             }
@@ -754,6 +826,7 @@ impl<I: Tokens> Parser<I> {
         }
 
         trace_cur!(self, parse_class_member_with_is_static__normal_class_member);
+
         let key = if readonly.is_some() && is_one_of!(self, '!', ':') {
             Key::Public(PropName::Ident(IdentName::new(
                 "readonly".into(),
@@ -762,6 +835,7 @@ impl<I: Tokens> Parser<I> {
         } else {
             self.parse_class_prop_name()?
         };
+
         let is_optional = self.input.syntax().typescript() && eat!(self, '?');
 
         if self.is_class_method() {
@@ -776,6 +850,7 @@ impl<I: Tokens> Parser<I> {
             if readonly.is_some() {
                 syntax_error!(self, span!(self, start), SyntaxError::ReadOnlyMethod);
             }
+
             let is_constructor = is_constructor(&key);
 
             if is_constructor {
@@ -785,12 +860,16 @@ impl<I: Tokens> Parser<I> {
 
                 if self.syntax().typescript() && is!(self, '<') {
                     let start = cur_pos!(self);
+
                     if peeked_is!(self, '>') {
                         assert_and_bump!(self, '<');
+
                         let start2 = cur_pos!(self);
+
                         assert_and_bump!(self, '>');
 
                         self.emit_err(span!(self, start), SyntaxError::TS1098);
+
                         self.emit_err(span!(self, start2), SyntaxError::TS1092);
                     } else {
                         let type_params = self.try_parse_ts_type_params(false, true)?;
@@ -804,11 +883,14 @@ impl<I: Tokens> Parser<I> {
                 }
 
                 expect!(self, '(');
+
                 let params = self.parse_constructor_params()?;
+
                 expect!(self, ')');
 
                 if self.syntax().typescript() && is!(self, ':') {
                     let start = cur_pos!(self);
+
                     let type_ann = self.parse_ts_type_ann(true, start)?;
 
                     self.emit_err(type_ann.type_ann.span(), SyntaxError::TS1093);
@@ -891,6 +973,7 @@ impl<I: Tokens> Parser<I> {
         }
 
         let is_next_line_generator = self.input.had_line_break_before_cur() && is!(self, '*');
+
         let getter_or_setter_ident = match key {
             // `get\n*` is an uninitialized property named 'get' followed by a generator.
             Key::Public(PropName::Ident(ref i))
@@ -900,6 +983,7 @@ impl<I: Tokens> Parser<I> {
             {
                 Some(i)
             }
+
             _ => None,
         };
 
@@ -928,6 +1012,7 @@ impl<I: Tokens> Parser<I> {
 
             if self.parse_ts_modifier(&["override"], false)?.is_some() {
                 is_override = true;
+
                 self.emit_err(
                     self.input.prev_span(),
                     SyntaxError::TS1029("override".into(), "async".into()),
@@ -935,16 +1020,21 @@ impl<I: Tokens> Parser<I> {
             }
 
             let is_generator = eat!(self, '*');
+
             let key = self.parse_class_prop_name()?;
+
             if is_constructor(&key) {
                 syntax_error!(self, key.span(), SyntaxError::AsyncConstructor)
             }
+
             if readonly.is_some() {
                 syntax_error!(self, span!(self, start), SyntaxError::ReadOnlyMethod);
             }
 
             // handle async foo(){}
+
             let is_optional = is_optional || self.input.syntax().typescript() && eat!(self, '?');
+
             return self.make_method(
                 |p| p.parse_unique_formal_params(),
                 MakeMethodArgs {
@@ -967,6 +1057,7 @@ impl<I: Tokens> Parser<I> {
             let key_span = key.span();
 
             // handle get foo(){} / set foo(v){}
+
             let key = self.parse_class_prop_name()?;
 
             if readonly.is_some() {
@@ -1056,6 +1147,7 @@ impl<I: Tokens> Parser<I> {
         if is_constructor(&key) {
             syntax_error!(self, key.span(), SyntaxError::PropertyNamedConstructor);
         }
+
         if key.is_private() {
             if declare {
                 self.emit_err(
@@ -1063,6 +1155,7 @@ impl<I: Tokens> Parser<I> {
                     SyntaxError::PrivateNameModifier("declare".into()),
                 )
             }
+
             if is_abstract {
                 self.emit_err(
                     key.span(),
@@ -1070,6 +1163,7 @@ impl<I: Tokens> Parser<I> {
                 )
             }
         }
+
         let definite = self.input.syntax().typescript() && !is_optional && eat!(self, '!');
 
         let type_ann = self.try_parse_ts_type_ann()?;
@@ -1079,9 +1173,11 @@ impl<I: Tokens> Parser<I> {
             in_class_field: true,
             ..self.ctx()
         };
+
         self.with_ctx(ctx).parse_with(|p| {
             let value = if is!(p, '=') {
                 assert_and_bump!(p, '=');
+
                 Some(p.parse_assignment_expr()?)
             } else {
                 None
@@ -1109,6 +1205,7 @@ impl<I: Tokens> Parser<I> {
             Ok(match key {
                 Key::Private(key) => {
                     let span = span!(p, start);
+
                     if accessibility.is_some() {
                         p.emit_err(span.with_hi(key.span_hi()), SyntaxError::TS18010);
                     }
@@ -1129,11 +1226,14 @@ impl<I: Tokens> Parser<I> {
                     }
                     .into()
                 }
+
                 Key::Public(key) => {
                     let span = span!(p, start);
+
                     if is_abstract && value.is_some() {
                         p.emit_err(span, SyntaxError::TS1267)
                     }
+
                     ClassProp {
                         span,
                         key,
@@ -1180,7 +1280,9 @@ impl<I: Tokens> Parser<I> {
         is_ident_required: bool,
     ) -> PResult<(Option<Ident>, Box<Function>)> {
         let start = start_of_async.unwrap_or_else(|| cur_pos!(self));
+
         assert_and_bump!(self, "function");
+
         let is_async = start_of_async.is_some();
 
         let is_generator = eat!(self, '*');
@@ -1239,6 +1341,7 @@ impl<I: Tokens> Parser<I> {
         T: OutputType,
     {
         let start = start_of_async.unwrap_or_else(|| cur_pos!(self));
+
         let (ident, f) = self.parse_fn_inner(
             start_of_output_type,
             start_of_async,
@@ -1283,6 +1386,7 @@ impl<I: Tokens> Parser<I> {
     {
         trace_cur!(self, parse_fn_args_body);
         // let prev_in_generator = self.ctx().in_generator;
+
         let ctx = Context {
             in_async: is_async,
             in_generator: is_generator,
@@ -1301,11 +1405,14 @@ impl<I: Tokens> Parser<I> {
                             p.input.token_context().current(),
                             Some(TokenContext::JSXOpeningTag)
                         );
+
                         p.input.token_context_mut().pop();
+
                         debug_assert_eq!(
                             p.input.token_context().current(),
                             Some(TokenContext::JSXExpr)
                         );
+
                         p.input.token_context_mut().pop();
 
                         Some(p.parse_ts_type_params(false, true)?)
@@ -1326,6 +1433,7 @@ impl<I: Tokens> Parser<I> {
                 in_generator: is_generator,
                 ..p.ctx()
             };
+
             let params = p.with_ctx(arg_ctx).parse_with(|p| parse_args(p))?;
 
             expect!(p, ')');
@@ -1378,9 +1486,11 @@ impl<I: Tokens> Parser<I> {
     fn parse_class_prop_name(&mut self) -> PResult<Key> {
         if is!(self, '#') {
             let name = self.parse_private_name()?;
+
             if name.name == "constructor" {
                 self.emit_err(name.span, SyntaxError::PrivateConstructor);
             }
+
             Ok(Key::Private(name))
         } else {
             self.parse_prop_name().map(Key::Public)
@@ -1402,6 +1512,7 @@ impl<I: Tokens> Parser<I> {
             //                self.ctx().span_of_fn_name.expect("we are not in function"),
             //                SyntaxError::TS1183,
             //            );
+
             self.emit_err(self.input.cur_span(), SyntaxError::TS1183);
         }
 
@@ -1419,10 +1530,12 @@ impl<I: Tokens> Parser<I> {
             is_continue_allowed: false,
             ..self.ctx()
         };
+
         let state = State {
             labels: Vec::new(),
             ..Default::default()
         };
+
         self.with_ctx(ctx)
             .with_state(state)
             .parse_fn_body_inner(is_simple_parameter_list)
@@ -1453,6 +1566,7 @@ impl<I: Tokens> Parser<I> {
         trace_cur!(self, make_method);
 
         let is_static = static_token.is_some();
+
         let function = self
             .with_ctx(Context {
                 allow_direct_super: true,
@@ -1469,12 +1583,14 @@ impl<I: Tokens> Parser<I> {
             {
                 self.emit_err(key.span(), SyntaxError::TS1056);
             }
+
             _ => {}
         }
 
         match key {
             Key::Private(key) => {
                 let span = span!(self, start);
+
                 if accessibility.is_some() {
                     self.emit_err(span.with_hi(key.span_hi()), SyntaxError::TS18010);
                 }
@@ -1494,11 +1610,14 @@ impl<I: Tokens> Parser<I> {
                 }
                 .into())
             }
+
             Key::Public(key) => {
                 let span = span!(self, start);
+
                 if is_abstract && function.body.is_some() {
                     self.emit_err(span, SyntaxError::TS1245)
                 }
+
                 Ok(ClassMethod {
                     span,
 
@@ -1676,6 +1795,7 @@ impl<I: Tokens> FnBodyParser<Box<BlockStmtOrExpr>> for Parser<I> {
                             self.emit_err(span, SyntaxError::IllegalLanguageModeDirective);
                         }
                     }
+
                     BlockStmtOrExpr::BlockStmt(block_stmt)
                 })
                 .map(Box::new)
@@ -1696,13 +1816,16 @@ impl<I: Tokens> FnBodyParser<Option<BlockStmt>> for Parser<I> {
         if self.input.syntax().typescript() && !is!(self, '{') && eat!(self, ';') {
             return Ok(None);
         }
+
         let block = self.include_in_expr(true).parse_block(true);
+
         block.map(|block_stmt| {
             if !is_simple_parameter_list {
                 if let Some(span) = has_use_strict(&block_stmt) {
                     self.emit_err(span, SyntaxError::IllegalLanguageModeDirective);
                 }
             }
+
             Some(block_stmt)
         })
     }
@@ -1778,6 +1901,7 @@ struct MakeMethodArgs {
 mod tests {
 
     use swc_common::DUMMY_SP as span;
+
     use swc_ecma_visit::assert_eq_ignore_span;
 
     use super::*;

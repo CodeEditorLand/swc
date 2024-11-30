@@ -55,6 +55,7 @@ impl Optimizer<'_> {
                                 raw: None,
                             })
                             .into();
+
                             self.changed = true;
                         }
 
@@ -67,6 +68,7 @@ impl Optimizer<'_> {
                                 raw: None,
                             })
                             .into();
+
                             self.changed = true;
                         }
 
@@ -108,12 +110,14 @@ impl Optimizer<'_> {
         match e {
             Expr::Ident(Ident { span, sym, .. }) if &**sym == "undefined" => {
                 report_change!("evaluate: `undefined` -> `void 0`");
+
                 self.changed = true;
                 *e = *Expr::undefined(*span);
             }
 
             Expr::Ident(Ident { span, sym, .. }) if &**sym == "Infinity" => {
                 report_change!("evaluate: `Infinity` -> `1 / 0`");
+
                 self.changed = true;
                 *e = BinExpr {
                     span: *span,
@@ -158,6 +162,7 @@ impl Optimizer<'_> {
             }) => (span, callee, args),
             _ => return,
         };
+
         let span = *span;
 
         //
@@ -173,6 +178,7 @@ impl Optimizer<'_> {
                 if !args.is_empty() {
                     self.optimize_expr_in_str_ctx(&mut args[0].expr);
                 }
+
                 if args.len() >= 2 {
                     self.optimize_expr_in_str_ctx(&mut args[1].expr);
                 }
@@ -184,9 +190,11 @@ impl Optimizer<'_> {
 
                 match args.len() {
                     0 => {}
+
                     1 => {
                         if let Expr::Lit(Lit::Str(exp)) = &*args[0].expr {
                             self.changed = true;
+
                             report_change!(
                                 "evaluate: Converting RegExpr call into a regexp literal `/{}/`",
                                 exp.value
@@ -200,11 +208,13 @@ impl Optimizer<'_> {
                             .into();
                         }
                     }
+
                     _ => {
                         if let (Expr::Lit(Lit::Str(exp)), Expr::Lit(Lit::Str(flags))) =
                             (&*args[0].expr, &*args[1].expr)
                         {
                             self.changed = true;
+
                             report_change!(
                                 "evaluate: Converting RegExpr call into a regexp literal `/{}/{}`",
                                 exp.value,
@@ -240,7 +250,9 @@ impl Optimizer<'_> {
                                 if !v.is_ascii() {
                                     return;
                                 }
+
                                 self.changed = true;
+
                                 report_change!(
                                     "evaluate: Evaluated `String.charCodeAt({})` as `{}`",
                                     char_code,
@@ -288,6 +300,7 @@ impl Optimizer<'_> {
                                             .into(),
                                         }));
                                     }
+
                                     Prop::KeyValue(p) => match &p.key {
                                         PropName::Ident(key) => {
                                             keys.push(Some(ExprOrSpread {
@@ -300,12 +313,14 @@ impl Optimizer<'_> {
                                                 .into(),
                                             }));
                                         }
+
                                         PropName::Str(key) => {
                                             keys.push(Some(ExprOrSpread {
                                                 spread: None,
                                                 expr: Lit::Str(key.clone()).into(),
                                             }));
                                         }
+
                                         _ => return,
                                     },
                                     _ => return,
@@ -343,6 +358,7 @@ impl Optimizer<'_> {
         if let Expr::Call(..) = e {
             if let Some(value) = eval_as_number(&self.ctx.expr_ctx, e) {
                 self.changed = true;
+
                 report_change!("evaluate: Evaluated an expression as `{}`", value);
 
                 if value.is_nan() {
@@ -352,6 +368,7 @@ impl Optimizer<'_> {
                         SyntaxContext::empty().apply_mark(self.marks.unresolved_mark),
                     )
                     .into();
+
                     return;
                 }
 
@@ -361,6 +378,7 @@ impl Optimizer<'_> {
                     raw: None,
                 })
                 .into();
+
                 return;
             }
         }
@@ -368,11 +386,13 @@ impl Optimizer<'_> {
         match e {
             Expr::Bin(bin @ BinExpr { op: op!("**"), .. }) => {
                 let l = bin.left.as_pure_number(&self.ctx.expr_ctx);
+
                 let r = bin.right.as_pure_number(&self.ctx.expr_ctx);
 
                 if let Known(l) = l {
                     if let Known(r) = r {
                         self.changed = true;
+
                         report_change!("evaluate: Evaluated `{:?} ** {:?}`", l, r);
 
                         if l.is_nan() || r.is_nan() {
@@ -398,6 +418,7 @@ impl Optimizer<'_> {
                 let ln = bin.left.as_pure_number(&self.ctx.expr_ctx);
 
                 let rn = bin.right.as_pure_number(&self.ctx.expr_ctx);
+
                 if let (Known(ln), Known(rn)) = (ln, rn) {
                     // Prefer `0/0` over NaN.
                     if ln == 0.0 && rn == 0.0 {
@@ -413,6 +434,7 @@ impl Optimizer<'_> {
                         (FpCategory::Zero, FpCategory::Zero) => {
                             // If a variable named `NaN` is in scope, don't convert e into NaN.
                             let data = &self.data.vars;
+
                             if maybe_par!(
                                 data.iter().any(|(name, v)| v.declared && name.0 == "NaN"),
                                 *crate::LIGHT_TASK_PARALLELS
@@ -421,6 +443,7 @@ impl Optimizer<'_> {
                             }
 
                             self.changed = true;
+
                             report_change!("evaluate: `0 / 0` => `NaN`");
 
                             // Sign does not matter for NaN
@@ -433,6 +456,7 @@ impl Optimizer<'_> {
                         }
                         (FpCategory::Normal, FpCategory::Zero) => {
                             self.changed = true;
+
                             report_change!("evaluate: `{} / 0` => `Infinity`", ln);
 
                             // Sign does not matter for NaN
@@ -447,6 +471,7 @@ impl Optimizer<'_> {
                                 .into()
                             };
                         }
+
                         _ => {}
                     }
                 }
@@ -462,12 +487,14 @@ impl Optimizer<'_> {
         if !self.options.evaluate {
             return;
         }
+
         if e.left.is_invalid() || e.right.is_invalid() {
             return;
         }
 
         match e.op {
             op!("&&") | op!("||") => {}
+
             _ => return,
         }
 
@@ -478,18 +505,22 @@ impl Optimizer<'_> {
             // Remove rhs of lhs if possible.
 
             let v = left.right.as_pure_bool(&self.ctx.expr_ctx);
+
             if let Known(v) = v {
                 // As we used as_pure_bool, we can drop it.
                 if v && e.op == op!("&&") {
                     self.changed = true;
+
                     report_change!("Removing `b` from `a && b && c` because b is always truthy");
 
                     left.right.take();
+
                     return;
                 }
 
                 if !v && e.op == op!("||") {
                     self.changed = true;
+
                     report_change!("Removing `b` from `a || b || c` because b is always falsy");
 
                     left.right.take();

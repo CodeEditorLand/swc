@@ -30,17 +30,27 @@ use crate::{
 /// unless required.
 pub trait Comments {
     fn add_leading(&self, pos: BytePos, cmt: Comment);
+
     fn add_leading_comments(&self, pos: BytePos, comments: Vec<Comment>);
+
     fn has_leading(&self, pos: BytePos) -> bool;
+
     fn move_leading(&self, from: BytePos, to: BytePos);
+
     fn take_leading(&self, pos: BytePos) -> Option<Vec<Comment>>;
+
     fn get_leading(&self, pos: BytePos) -> Option<Vec<Comment>>;
 
     fn add_trailing(&self, pos: BytePos, cmt: Comment);
+
     fn add_trailing_comments(&self, pos: BytePos, comments: Vec<Comment>);
+
     fn has_trailing(&self, pos: BytePos) -> bool;
+
     fn move_trailing(&self, from: BytePos, to: BytePos);
+
     fn take_trailing(&self, pos: BytePos) -> Option<Vec<Comment>>;
+
     fn get_trailing(&self, pos: BytePos) -> Option<Vec<Comment>>;
 
     fn add_pure_comment(&self, pos: BytePos);
@@ -99,6 +109,7 @@ pub trait Comments {
                         for line in c.text.lines() {
                             // jsdoc
                             let line = line.trim_start_matches(['*', ' ']);
+
                             let line = line.trim();
 
                             //
@@ -503,7 +514,9 @@ impl Comments for SingleThreadedComments {
         assert_ne!(pos, BytePos(0), "cannot add pure comment to zero position");
 
         let mut leading_map = self.leading.borrow_mut();
+
         let leading = leading_map.entry(pos).or_default();
+
         let pure_comment = Comment {
             kind: CommentKind::Block,
             span: DUMMY_SP,
@@ -521,6 +534,7 @@ impl Comments for SingleThreadedComments {
         F: FnOnce(&[Comment]) -> Ret,
     {
         let b = self.leading.borrow();
+
         let cmts = b.get(&pos);
 
         if let Some(cmts) = &cmts {
@@ -536,6 +550,7 @@ impl Comments for SingleThreadedComments {
         F: FnOnce(&[Comment]) -> Ret,
     {
         let b = self.trailing.borrow();
+
         let cmts = b.get(&pos);
 
         if let Some(cmts) = &cmts {
@@ -552,6 +567,7 @@ impl Comments for SingleThreadedComments {
                     for line in c.text.lines() {
                         // jsdoc
                         let line = line.trim_start_matches(['*', ' ']);
+
                         let line = line.trim();
 
                         //

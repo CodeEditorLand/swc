@@ -58,6 +58,7 @@ where
         let visited = state.visited.contains(&module_id);
         // dbg!(visited);
         // dbg!(&path);
+
         let cycle_rpos = if visited {
             path.iter().rposition(|v| *v == module_id)
         } else {
@@ -66,7 +67,9 @@ where
 
         if let Some(rpos) = cycle_rpos {
             let cycle = path[rpos..].to_vec();
+
             tracing::debug!("Found cycle: {:?}", cycle);
+
             self.data.cycles.push(cycle);
         }
 
@@ -81,9 +84,11 @@ where
         if !visited {
             state.visited.push(module_id);
         }
+
         if !self.data.all.contains(&module_id) {
             self.data.all.push(module_id);
         }
+
         self.data.graph.add_node(module_id);
 
         for dep_module_id in self.dep_graph.deps_of(module_id) {
@@ -95,6 +100,7 @@ where
         }
 
         let res = path.pop();
+
         debug_assert_eq!(res, Some(module_id));
     }
 

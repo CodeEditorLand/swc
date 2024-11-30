@@ -34,9 +34,11 @@ impl NoThrowLiteral {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, message).emit();
             }
+
             _ => {}
         });
     }
@@ -73,6 +75,7 @@ impl NoThrowLiteral {
                         false
                     }
                 }
+
                 _ => false,
             },
 

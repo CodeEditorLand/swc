@@ -17,9 +17,11 @@ impl Compiler {
 
                 if name.value.eq_ignore_ascii_case("rgb") {
                     name.value = "rgba".into();
+
                     name.raw = None;
                 } else if name.value.eq_ignore_ascii_case("hsl") {
                     name.value = "hsla".into();
+
                     name.raw = None;
                 }
             } else {
@@ -32,9 +34,11 @@ impl Compiler {
 
                 if name.value.eq_ignore_ascii_case("rgba") {
                     name.value = "rgb".into();
+
                     name.raw = None;
                 } else if name.value.eq_ignore_ascii_case("hsla") {
                     name.value = "hsl".into();
+
                     name.raw = None;
                 }
             }

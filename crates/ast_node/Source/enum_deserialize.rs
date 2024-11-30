@@ -33,6 +33,7 @@ pub fn expand(
 
     let deserialize = {
         let mut all_tags: Punctuated<_, token::Comma> = Default::default();
+
         let tag_match_arms = data
             .variants
             .iter()
@@ -47,10 +48,12 @@ pub fn expand(
 
                         fields.unnamed.last().unwrap().ty.clone()
                     }
+
                     _ => {
                         unreachable!("#[ast_node] enum cannot contain named fields or unit variant")
                     }
                 };
+
                 let tags = variant
                     .attrs
                     .iter()
@@ -58,12 +61,14 @@ pub fn expand(
                         if !is_attr_name(attr, "tag") {
                             return None;
                         }
+
                         let tokens = match &attr.meta {
                             Meta::List(meta) => meta.tokens.clone(),
                             _ => {
                                 panic!("#[tag] attribute must be in form of #[tag(..)]")
                             }
                         };
+
                         let tags = parse2(tokens).expect("failed to parse #[tag] attribute");
 
                         Some(tags)
@@ -114,6 +119,7 @@ pub fn expand(
 
         let tag_expr: Expr = {
             let mut visit_str_arms = Vec::new();
+
             let mut visit_bytes_arms = Vec::new();
 
             for variant in &data.variants {
@@ -124,12 +130,14 @@ pub fn expand(
                         if !is_attr_name(attr, "tag") {
                             return None;
                         }
+
                         let tokens = match &attr.meta {
                             Meta::List(meta) => meta.tokens.clone(),
                             _ => {
                                 panic!("#[tag] attribute must be in form of #[tag(..)]")
                             }
                         };
+
                         let tags = parse2(tokens).expect("failed to parse #[tag] attribute");
 
                         Some(tags)
@@ -141,6 +149,7 @@ pub fn expand(
                     !tags.is_empty(),
                     "All #[ast_node] enum variants have one or more tag"
                 );
+
                 let (str_pat, bytes_pat) = {
                     if tags.len() == 1
                         && match tags.first() {
@@ -177,15 +186,19 @@ pub fn expand(
                                 }),
                             )
                         }
+
                         if tags.len() == 1 {
                             make_pat(tags.first().unwrap().clone())
                         } else {
                             let mut str_cases = Punctuated::new();
+
                             let mut bytes_cases = Punctuated::new();
 
                             for tag in tags {
                                 let (str_pat, bytes_pat) = make_pat(tag.clone());
+
                                 str_cases.push(str_pat);
+
                                 bytes_cases.push(bytes_pat);
                             }
 
@@ -204,6 +217,7 @@ pub fn expand(
                         }
                     }
                 };
+
                 visit_str_arms.push(Arm {
                     attrs: Default::default(),
                     pat: str_pat,
@@ -216,6 +230,7 @@ pub fn expand(
                     },
                     comma: Some(Token![,](variant.ident.span())),
                 });
+
                 visit_bytes_arms.push(Arm {
                     attrs: Default::default(),
                     pat: bytes_pat,
@@ -244,6 +259,7 @@ pub fn expand(
                     )),
                     comma: Some(Token![,](ident.span())),
                 });
+
                 visit_bytes_arms.push(Arm {
                     attrs: Default::default(),
                     pat: Pat::Wild(PatWild {
@@ -254,6 +270,7 @@ pub fn expand(
                     fat_arrow_token: Token![=>](ident.span()),
                     body: parse_quote!({
                         let __value = &swc_common::private::serde::from_utf8_lossy(__value);
+
                         swc_common::private::serde::Err(serde::de::Error::unknown_variant(
                             __value, VARIANTS,
                         ))
@@ -269,6 +286,7 @@ pub fn expand(
                 brace_token: Default::default(),
                 arms: visit_str_arms,
             });
+
             let visit_bytes_body = Expr::Match(ExprMatch {
                 attrs: Default::default(),
                 match_token: Default::default(),
@@ -366,6 +384,7 @@ pub fn expand(
                 })
                 .collect()
         };
+
         let item: ItemImpl = parse_quote!(
             #[cfg(feature = "serde-impl")]
             impl<'de> serde::Deserialize<'de> for #ident {

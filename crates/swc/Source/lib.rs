@@ -174,6 +174,7 @@ pub mod resolver {
     use std::path::PathBuf;
 
     use swc_common::collections::AHashMap;
+
     use swc_ecma_loader::{
         resolvers::{lru::CachingResolver, node::NodeModulesResolver, tsc::TsConfigResolver},
         TargetEnv,
@@ -195,6 +196,7 @@ pub mod resolver {
             base_url,
             paths,
         );
+
         CachingResolver::new(40, r)
     }
 
@@ -293,6 +295,7 @@ impl Compiler {
                             let map_path = match data_url {
                                 Some(data_url) => {
                                     let mut map_path = dir.join(data_url);
+
                                     if !map_path.exists() {
                                         // Old behavior. This check would prevent
                                         // regressions.
@@ -303,6 +306,7 @@ impl Compiler {
                                         // convenience.
                                         let fallback_map_path =
                                             PathBuf::from(format!("{}.map", filename.display()));
+
                                         if fallback_map_path.exists() {
                                             map_path = fallback_map_path;
                                         } else {
@@ -318,10 +322,12 @@ impl Compiler {
 
                                     Some(map_path)
                                 }
+
                                 None => {
                                     // Old behavior.
                                     let map_path =
                                         PathBuf::from(format!("{}.map", filename.display()));
+
                                     if map_path.exists() {
                                         Some(map_path)
                                     } else {
@@ -333,6 +339,7 @@ impl Compiler {
                             match map_path {
                                 Some(map_path) => {
                                     let path = map_path.display().to_string();
+
                                     let file = File::open(&path);
 
                                     // If file is not found, we should return None.
@@ -349,6 +356,7 @@ impl Compiler {
                                              there's no source map at `{}`",
                                             path
                                         );
+
                                         return Ok(None);
                                     }
 
@@ -372,9 +380,11 @@ impl Compiler {
                                         },
                                     )?))
                                 }
+
                                 None => Ok(None),
                             }
                         }
+
                         _ => Ok(None),
                     }
                 };
@@ -384,6 +394,7 @@ impl Compiler {
 
                 let text = comments.iter().rev().find_map(|c| {
                     let idx = c.text.rfind(s)?;
+
                     let (_, url) = c.text.split_at(idx + s.len());
 
                     Some(url.trim())
@@ -394,10 +405,12 @@ impl Compiler {
                     Some(text) if text.starts_with("data:") => read_inline_sourcemap(text),
                     _ => read_file_sourcemap(text),
                 };
+
                 match result {
                     Ok(r) => r,
                     Err(err) => {
                         tracing::error!("failed to read input source map: {:?}", err);
+
                         None
                     }
                 }
@@ -507,6 +520,7 @@ impl Compiler {
                 Some(s) => Some(load_swcrc(s)?),
                 _ => None,
             };
+
             let filename_path = match name {
                 FileName::Real(p) => Some(&**p),
                 _ => None,
@@ -526,6 +540,7 @@ impl Compiler {
                     if let Some(c) = &mut config {
                         if c.jsc.base_url != PathBuf::new() {
                             let joined = dir.join(&c.jsc.base_url);
+
                             c.jsc.base_url = if cfg!(target_os = "windows")
                                 && c.jsc.base_url.as_os_str() == "."
                             {
@@ -554,6 +569,7 @@ impl Compiler {
                 }
 
                 let config_file = config_file.unwrap_or_default();
+
                 let config = config_file.into_config(Some(filename_path))?;
 
                 return Ok(config);
@@ -603,6 +619,7 @@ impl Compiler {
             }
 
             let config = self.read_config(opts, name)?;
+
             let config = match config {
                 Some(v) => v,
                 None => return Ok(None),
@@ -630,6 +647,7 @@ impl Compiler {
                 comments,
                 before_pass,
             )?;
+
             Ok(Some(built))
         })
     }
@@ -698,6 +716,7 @@ impl Compiler {
                     |program| custom_before_pass(program),
                 )
             })?;
+
             let config = match config {
                 Some(v) => v,
                 None => {
@@ -802,6 +821,7 @@ impl Compiler {
                 if let Some(opts) = &mut min_opts.compress {
                     opts.keep_fnames = true;
                 }
+
                 if let Some(opts) = &mut min_opts.mangle {
                     opts.keep_fn_names = true;
                 }
@@ -853,6 +873,7 @@ impl Compiler {
             };
 
             let unresolved_mark = Mark::new();
+
             let top_level_mark = Mark::new();
 
             let is_mangler_enabled = min_opts.mangle.is_some();
@@ -878,7 +899,9 @@ impl Compiler {
                 if !is_mangler_enabled {
                     program.visit_mut_with(&mut hygiene())
                 }
+
                 program.mutate(&mut fixer(Some(&comments as &dyn Comments)));
+
                 program
             });
 
@@ -888,6 +911,7 @@ impl Compiler {
                 .clone()
                 .into_inner()
                 .unwrap_or(BoolOr::Data(JsMinifyCommentOption::PreserveSomeComments));
+
             swc_compiler_base::minify_file_comments(&comments, preserve_comments);
 
             self.print(
@@ -928,6 +952,7 @@ impl Compiler {
         opts: &Options,
     ) -> Result<TransformOutput, Error> {
         let loc = self.cm.lookup_char_pos(program.span().lo());
+
         let fm = loc.file;
 
         self.process_js_with_custom_pass(
@@ -960,6 +985,7 @@ impl Compiler {
             }
 
             let emit_dts = config.syntax.typescript() && config.emit_isolated_dts;
+
             let source_map_names = if config.source_maps.enabled() {
                 let mut v = swc_compiler_base::IdentCollector {
                     names: Default::default(),
@@ -976,10 +1002,13 @@ impl Compiler {
                 let (leading, trailing) = comments.borrow_all();
 
                 let leading = std::rc::Rc::new(RefCell::new(leading.clone()));
+
                 let trailing = std::rc::Rc::new(RefCell::new(trailing.clone()));
 
                 let comments = SingleThreadedComments::from_leading_and_trailing(leading, trailing);
+
                 let mut checker = FastDts::new(fm.name.clone());
+
                 let mut program = program.clone();
 
                 if let Some((base, resolver)) = config.resolver {
@@ -997,12 +1026,14 @@ impl Compiler {
                 }
 
                 let dts_code = to_code_with_comments(Some(&comments), &program);
+
                 Some(dts_code)
             } else {
                 None
             };
 
             let pass = config.pass;
+
             let (program, output) = swc_transform_common::output::capture(|| {
                 if let Some(dts_code) = dts_code {
                     emit(
@@ -1073,12 +1104,14 @@ impl JsMinifyExtras {
         mangle_name_cache: Option<Arc<dyn MangleCache>>,
     ) -> Self {
         self.mangle_name_cache = mangle_name_cache;
+
         self
     }
 }
 
 fn find_swcrc(path: &Path, root: &Path, root_mode: RootMode) -> Option<PathBuf> {
     let mut parent = path.parent();
+
     while let Some(dir) = parent {
         let swcrc = dir.join(".swcrc");
 
@@ -1089,6 +1122,7 @@ fn find_swcrc(path: &Path, root: &Path, root_mode: RootMode) -> Option<PathBuf> 
         if dir == root && root_mode == RootMode::Root {
             break;
         }
+
         parent = dir.parent();
     }
 
@@ -1105,6 +1139,7 @@ fn load_swcrc(path: &Path) -> Result<Rc, Error> {
 fn parse_swcrc(s: &str) -> Result<Rc, Error> {
     fn convert_json_err(e: serde_json::Error) -> Error {
         let line = e.line();
+
         let column = e.column();
 
         let msg = match e.classify() {
@@ -1113,6 +1148,7 @@ fn parse_swcrc(s: &str) -> Result<Rc, Error> {
             Category::Data => "unmatched data",
             Category::Eof => "unexpected eof",
         };
+
         Error::new(e).context(format!(
             "failed to deserialize .swcrc (json) file: {}: {}:{}",
             msg, line, column

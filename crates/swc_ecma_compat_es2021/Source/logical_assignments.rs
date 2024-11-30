@@ -19,6 +19,7 @@ struct Operators {
 impl Operators {
     fn memorize_prop(&mut self, c: ComputedPropName) -> (ComputedPropName, ComputedPropName) {
         let alias = alias_ident_for(&c.expr, "_ref");
+
         self.vars.push(VarDeclarator {
             span: DUMMY_SP,
             name: alias.clone().into(),
@@ -97,12 +98,14 @@ impl VisitMut for Operators {
                         ),
                     )
                 }
+
                 SimpleAssignTarget::Member(m) => {
                     let (left_obj, right_obj) = match *m.obj.take() {
                         // TODO: local vars
                         obj @ Expr::This(_) => (obj.clone().into(), obj.into()),
                         obj => {
                             let alias = alias_ident_for(&obj, "_ref");
+
                             self.vars.push(VarDeclarator {
                                 span: DUMMY_SP,
                                 name: alias.clone().into(),
@@ -128,6 +131,7 @@ impl VisitMut for Operators {
                             let (left, right) = self.memorize_prop(c);
                             (left.into(), right.into())
                         }
+
                         prop => (prop.clone(), prop),
                     };
 
@@ -146,6 +150,7 @@ impl VisitMut for Operators {
                         .into(),
                     )
                 }
+
                 _ => {
                     let expr: Box<Expr> = left.take().into();
                     (expr.clone(), expr)
@@ -185,9 +190,11 @@ impl VisitMut for Operators {
     /// [module-expressions]: https://github.com/tc39/proposal-module-expressions
     fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
         let vars = self.vars.take();
+
         n.visit_mut_children_with(self);
 
         let vars = mem::replace(&mut self.vars, vars);
+
         if !vars.is_empty() {
             prepend_stmt(
                 n,
@@ -203,9 +210,11 @@ impl VisitMut for Operators {
 
     fn visit_mut_stmts(&mut self, n: &mut Vec<Stmt>) {
         let vars = self.vars.take();
+
         n.visit_mut_children_with(self);
 
         let vars = mem::replace(&mut self.vars, vars);
+
         if !vars.is_empty() {
             prepend_stmt(
                 n,

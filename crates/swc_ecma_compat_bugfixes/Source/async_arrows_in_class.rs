@@ -32,20 +32,27 @@ impl Fold for AsyncArrowsInClass {
 
     fn fold_class_method(&mut self, n: ClassMethod) -> ClassMethod {
         self.in_class_method = true;
+
         let res = n.fold_children_with(self);
+
         self.in_class_method = false;
+
         res
     }
 
     fn fold_constructor(&mut self, n: Constructor) -> Constructor {
         self.in_class_method = true;
+
         let res = n.fold_children_with(self);
+
         self.in_class_method = false;
+
         res
     }
 
     fn fold_expr(&mut self, n: Expr) -> Expr {
         let mut n = n.fold_children_with(self);
+
         if !self.in_class_method {
             return n;
         }
@@ -54,19 +61,24 @@ impl Fold for AsyncArrowsInClass {
             Expr::Arrow(ref a) => {
                 if a.is_async {
                     let mut v = arrow(self.unresolved_mark);
+
                     n.visit_mut_with(&mut v);
+
                     self.vars.extend(v.take_vars());
+
                     n
                 } else {
                     n
                 }
             }
+
             _ => n,
         }
     }
 
     fn fold_module_items(&mut self, stmts: Vec<ModuleItem>) -> Vec<ModuleItem> {
         let mut stmts = stmts.fold_children_with(self);
+
         if !self.vars.is_empty() {
             prepend_stmt(
                 &mut stmts,
@@ -86,6 +98,7 @@ impl Fold for AsyncArrowsInClass {
 
     fn fold_stmts(&mut self, stmts: Vec<Stmt>) -> Vec<Stmt> {
         let mut stmts = stmts.fold_children_with(self);
+
         if !self.vars.is_empty() {
             prepend_stmt(
                 &mut stmts,
@@ -107,6 +120,7 @@ impl Fold for AsyncArrowsInClass {
 #[cfg(test)]
 mod tests {
     use swc_ecma_transforms_base::resolver;
+
     use swc_ecma_transforms_testing::test;
 
     use super::*;
@@ -128,6 +142,7 @@ mod tests {
             constructor() {
                 this.x = async () => await 1;
             }
+
             bar() {
                 (async () => { })();
             }

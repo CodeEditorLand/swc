@@ -74,6 +74,7 @@ struct HygieneRenamer;
 
 impl Renamer for HygieneRenamer {
     const MANGLE: bool = false;
+
     const RESET_N: bool = true;
 
     fn new_name_for(&self, orig: &Id, n: &mut usize) -> swc_atoms::JsWord {
@@ -83,6 +84,7 @@ impl Renamer for HygieneRenamer {
             format!("{}{}", orig.0, n).into()
         };
         *n += 1;
+
         res
     }
 }

@@ -22,6 +22,7 @@ pub fn inject_after_super(c: &mut Constructor, exprs: Vec<Box<Expr>>) {
 
     if !injector.injected {
         let exprs = injector.exprs.take();
+
         body.stmts
             .splice(0..0, exprs.into_iter().map(|e| e.into_stmt()));
     }
@@ -56,26 +57,35 @@ impl VisitMut for Injector {
 
     fn visit_mut_expr_stmt(&mut self, node: &mut ExprStmt) {
         let ignore_return_value = mem::replace(&mut self.ignore_return_value, true);
+
         node.visit_mut_children_with(self);
+
         self.ignore_return_value = ignore_return_value;
     }
 
     fn visit_mut_seq_expr(&mut self, node: &mut SeqExpr) {
         if let Some(mut tail) = node.exprs.pop() {
             let ignore_return_value = mem::replace(&mut self.ignore_return_value, true);
+
             node.visit_mut_children_with(self);
+
             self.ignore_return_value = ignore_return_value;
+
             tail.visit_mut_with(self);
+
             node.exprs.push(tail);
         }
     }
 
     fn visit_mut_expr(&mut self, node: &mut Expr) {
         let ignore_return_value = self.ignore_return_value;
+
         if !matches!(node, Expr::Paren(..) | Expr::Seq(..)) {
             self.ignore_return_value = false;
         }
+
         node.visit_mut_children_with(self);
+
         self.ignore_return_value = ignore_return_value;
 
         if let Expr::Call(CallExpr {
@@ -86,6 +96,7 @@ impl VisitMut for Injector {
             self.injected = true;
 
             let super_call = node.take();
+
             let exprs = self.exprs.clone();
 
             let exprs = iter::once(Box::new(super_call)).chain(exprs);

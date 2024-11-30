@@ -51,6 +51,7 @@ impl RustPlugins {
     #[cfg(feature = "plugin")]
     fn apply(&mut self, n: Program) -> Result<Program, anyhow::Error> {
         use anyhow::Context;
+
         if self.plugins.is_none() || self.plugins.as_ref().unwrap().is_empty() {
             return Ok(n);
         }
@@ -61,6 +62,7 @@ impl RustPlugins {
             self.apply_inner(n)
         } else {
             let fut = async move { self.apply_inner(n) };
+
             if let Ok(handle) = tokio::runtime::Handle::try_current() {
                 handle.block_on(fut)
             } else {
@@ -74,6 +76,7 @@ impl RustPlugins {
     #[cfg(all(feature = "plugin", not(target_arch = "wasm32")))]
     fn apply_inner(&mut self, n: Program) -> Result<Program, anyhow::Error> {
         use anyhow::Context;
+
         use swc_common::plugin::serialized::PluginSerializedBytes;
 
         // swc_plugin_macro will not inject proxy to the comments if comments is empty
@@ -86,8 +89,11 @@ impl RustPlugins {
             },
             || {
                 let span = tracing::span!(tracing::Level::INFO, "serialize_program").entered();
+
                 let program = swc_common::plugin::serialized::VersionedSerializable::new(n);
+
                 let mut serialized = PluginSerializedBytes::try_serialize(&program)?;
+
                 drop(span);
 
                 // Run plugin transformation against current program.
@@ -107,6 +113,7 @@ impl RustPlugins {
                             .expect("plugin module should be loaded");
 
                         let plugin_name = plugin_module_bytes.get_module_name().to_string();
+
                         let runtime = swc_plugin_runner::wasix_runtime::build_wasi_runtime(
                             crate::config::PLUGIN_MODULE_CACHE
                                 .inner
@@ -116,6 +123,7 @@ impl RustPlugins {
                                 .get_fs_cache_root()
                                 .map(|v| std::path::PathBuf::from(v)),
                         );
+
                         let mut transform_plugin_executor =
                             swc_plugin_runner::create_plugin_transform_executor(
                                 &self.source_map,
@@ -141,6 +149,7 @@ impl RustPlugins {
                                     &p.0, plugin_name
                                 )
                             })?;
+
                         drop(span);
                     }
                 }

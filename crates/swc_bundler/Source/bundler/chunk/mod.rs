@@ -31,6 +31,7 @@ where
     ) -> Result<Vec<Bundle>, Error> {
         #[cfg(not(target_arch = "wasm32"))]
         let start = Instant::now();
+
         let (plan, graph, cycles) = self.determine_entries(entries).context("failed to plan")?;
         #[cfg(not(target_arch = "wasm32"))]
         let dur = Instant::now() - start;
@@ -62,12 +63,14 @@ where
 
         #[cfg(not(target_arch = "wasm32"))]
         let start = Instant::now();
+
         let mut all = (&*plan.all)
             .into_par_iter()
             .map(|id| -> Result<_, Error> {
                 self.run(|| {
                     // TODO: is_entry should be false if it's dep of other entry.
                     let is_entry = plan.entries.contains_key(id);
+
                     let module = self.get_for_merging(&ctx, *id, is_entry)?;
 
                     Ok((*id, module))
@@ -86,6 +89,7 @@ where
                 if plan.entries.contains_key(id) {
                     return Some((*id, module.clone()));
                 }
+
                 None
             })
             .collect::<Vec<_>>();
@@ -108,6 +112,7 @@ where
                             unreachable!("Plan does not contain bundle kind for {:?}", id)
                         })
                         .clone();
+
                     Bundle {
                         kind,
                         id,
@@ -120,6 +125,7 @@ where
                 .into_iter()
                 .map(|(id, mut entry)| {
                     let mut a = all.clone();
+
                     self.merge_into_entry(&ctx, id, &mut entry, &mut a);
 
                     tracing::debug!("Merged `{}` and it's dep into an entry", id);
@@ -134,6 +140,7 @@ where
                             unreachable!("Plan does not contain bundle kind for {:?}", id)
                         })
                         .clone();
+
                     Bundle {
                         kind,
                         id,
@@ -152,6 +159,7 @@ mod tests {
     use swc_common::FileName;
 
     use super::*;
+
     use crate::bundler::tests::suite;
 
     #[test]
@@ -161,6 +169,7 @@ mod tests {
                 "main.js",
                 "
                 require('./a');
+
                 require('./b');
                 ",
             )
@@ -172,10 +181,13 @@ mod tests {
                     .bundler
                     .load_transformed(&FileName::Real("main.js".into()))?
                     .unwrap();
+
                 let mut entries = AHashMap::default();
+
                 entries.insert("main.js".to_string(), module);
 
                 let chunked = t.bundler.chunk(entries)?;
+
                 assert_eq!(chunked.len(), 1);
 
                 Ok(())

@@ -32,6 +32,7 @@ impl Optimizer<'_> {
 
                 if let Expr::Lit(Lit::Str(..)) = &*args[0].expr {
                     self.changed = true;
+
                     report_change!("strings: Unsafely reduced `RegExp` call in a string context");
 
                     *e = *args[0].expr.take();
@@ -46,22 +47,28 @@ impl Optimizer<'_> {
             Expr::Lit(Lit::Str(..)) => return,
             Expr::Paren(e) => {
                 self.optimize_expr_in_str_ctx(&mut e.expr);
+
                 if let Expr::Lit(Lit::Str(..)) = &*e.expr {
                     *n = *e.expr.take();
+
                     self.changed = true;
+
                     report_change!("string: Removed a paren in a string context");
                 }
 
                 return;
             }
+
             _ => {}
         }
 
         let value = n.as_pure_string(&self.ctx.expr_ctx);
+
         if let Known(value) = value {
             let span = n.span();
 
             self.changed = true;
+
             report_change!(
                 "strings: Converted an expression into a string literal (in string context)"
             );
@@ -71,12 +78,14 @@ impl Optimizer<'_> {
                 value: value.into(),
             })
             .into();
+
             return;
         }
 
         match n {
             Expr::Lit(Lit::Num(v)) => {
                 self.changed = true;
+
                 report_change!(
                     "strings: Converted a numeric literal ({}) into a string literal (in string \
                      context)",
@@ -97,7 +106,9 @@ impl Optimizer<'_> {
                 if !self.options.evaluate {
                     return;
                 }
+
                 self.changed = true;
+
                 report_change!(
                     "strings: Converted a regex (/{}/{}) into a string literal (in string context)",
                     v.exp,
@@ -128,7 +139,9 @@ impl Optimizer<'_> {
                             SyntaxContext::empty().apply_mark(self.marks.unresolved_mark),
                         )
                         .into();
+
                         self.changed = true;
+
                         report_change!("strings: Evaluated 0 / 0 => NaN in string context");
                     }
                 }

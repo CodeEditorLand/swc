@@ -15,6 +15,7 @@ use swc_ecma_visit::{Visit, VisitWith};
 #[auto_impl(Box, &mut)]
 pub trait Rule: Debug + Send + Sync {
     fn lint_module(&mut self, program: &Module);
+
     fn lint_script(&mut self, program: &Script);
 }
 
@@ -25,6 +26,7 @@ macro_rules! for_vec {
         }
 
         let program = $program;
+
         if cfg!(target_arch = "wasm32") {
             for rule in $s {
                 rule.$name(program);
@@ -36,6 +38,7 @@ macro_rules! for_vec {
                     let emitter = Capturing::default();
                     {
                         let handler = Handler::with_emitter(true, false, Box::new(emitter.clone()));
+
                         HANDLER.set(&handler, || {
                             rule.$name(program);
                         });

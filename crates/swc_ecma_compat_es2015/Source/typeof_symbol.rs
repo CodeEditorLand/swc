@@ -28,8 +28,10 @@ impl VisitMut for TypeOfSymbol {
     fn visit_mut_bin_expr(&mut self, expr: &mut BinExpr) {
         match expr.op {
             op!("==") | op!("!=") | op!("===") | op!("!==") => {}
+
             _ => {
                 expr.visit_mut_children_with(self);
+
                 return;
             }
         }
@@ -42,6 +44,7 @@ impl VisitMut for TypeOfSymbol {
                 return;
             }
         }
+
         if let Expr::Unary(UnaryExpr {
             op: op!("typeof"), ..
         }) = *expr.right
@@ -98,6 +101,7 @@ impl VisitMut for TypeOfSymbol {
                     }
                     .into();
                 }
+
                 _ => {
                     let call = CallExpr {
                         span: *span,
@@ -152,6 +156,7 @@ fn is_non_symbol_literal(e: &Expr) -> bool {
 #[cfg(test)]
 mod tests {
     use swc_ecma_parser::Syntax;
+
     use swc_ecma_transforms_testing::test;
 
     use super::*;
@@ -180,10 +185,15 @@ mod tests {
         }
 
         var isWeb = !isUndef(typeof window) && 'onload' in window;
+
         exports.isWeb = isWeb;
+
         var isNode = !isUndef(typeof process) && !!(process.versions && process.versions.node);
+
         exports.isNode = isNode;
+
         var isWeex = !isUndef(typeof WXEnvironment) && WXEnvironment.platform !== 'Web';
+
         exports.isWeex = isWeex;
         "
     );

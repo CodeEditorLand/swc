@@ -41,6 +41,7 @@ where
         module: Modules,
     ) -> Result<Modules, Error> {
         let span = DUMMY_SP;
+
         let module_var_name = match self.scope.wrapped_esm_id(id) {
             Some(v) => v,
             None => bail!("{:?} should not be wrapped with a function", id),
@@ -73,6 +74,7 @@ where
                                     unimplemented!("module string names unimplemented")
                                 }
                             };
+
                             if ctx.transitive_remap.get(&exported.ctxt).is_some() {
                                 let specifier = ExportSpecifier::Named(ExportNamedSpecifier {
                                     span: DUMMY_SP,
@@ -80,6 +82,7 @@ where
                                     exported: Some(ModuleExportName::Ident(exported.clone())),
                                     is_type_only: false,
                                 });
+
                                 additional_items.push((
                                     module_id,
                                     NamedExport {
@@ -101,6 +104,7 @@ where
                         }
                     }
                 }
+
                 _ => {}
             }
         });
@@ -109,6 +113,7 @@ where
             synthesized_ctxt: self.synthesized_ctxt,
             return_props: Default::default(),
         };
+
         let mut module = module.fold_with(&mut export_visitor);
 
         module.append_all(additional_items);
@@ -129,7 +134,9 @@ where
             if let ModuleItem::ModuleDecl(ModuleDecl::ExportAll(ref export)) = v {
                 // We handle this later.
                 let mut map = ctx.export_stars_in_wrapped.lock();
+
                 let data = ExportMetadata::decode(export.with.as_deref());
+
                 if let Some(export_ctxt) = data.export_ctxt {
                     map.entry(id).or_default().push(export_ctxt);
                 }
@@ -205,6 +212,7 @@ struct ExportToReturn {
 impl ExportToReturn {
     fn export_id(&mut self, mut i: Ident) {
         i.ctxt = SyntaxContext::empty();
+
         self.return_props
             .push(PropOrSpread::Prop(Box::new(Prop::Shorthand(i))));
     }
@@ -238,10 +246,13 @@ impl Fold for ExportToReturn {
                     Decl::Class(ClassDecl { ident, .. }) | Decl::Fn(FnDecl { ident, .. }) => {
                         self.export_id(ident.clone());
                     }
+
                     Decl::Var(decl) => {
                         let ids: Vec<Ident> = find_pat_ids(decl);
+
                         ids.into_iter().for_each(|id| self.export_id(id));
                     }
+
                     _ => unreachable!(),
                 }
 
@@ -251,6 +262,7 @@ impl Fold for ExportToReturn {
             ModuleDecl::ExportDefaultDecl(export) => match export.decl {
                 DefaultDecl::Class(expr) => {
                     let ident = expr.ident;
+
                     let ident = ident.unwrap_or_else(|| private_ident!("_default_decl"));
 
                     self.export_key_value(
@@ -267,8 +279,10 @@ impl Fold for ExportToReturn {
                         .into(),
                     )
                 }
+
                 DefaultDecl::Fn(expr) => {
                     let ident = expr.ident;
+
                     let ident = ident.unwrap_or_else(|| private_ident!("_default_decl"));
 
                     self.export_key_value(
@@ -285,6 +299,7 @@ impl Fold for ExportToReturn {
                         .into(),
                     )
                 }
+
                 DefaultDecl::TsInterfaceDecl(_) => None,
             },
             ModuleDecl::ExportDefaultExpr(_) => None,
@@ -293,7 +308,9 @@ impl Fold for ExportToReturn {
                 for specifier in &export.specifiers {
                     match specifier {
                         ExportSpecifier::Namespace(_) => {}
+
                         ExportSpecifier::Default(_) => {}
+
                         ExportSpecifier::Named(named) => match &named.exported {
                             Some(ModuleExportName::Ident(exported)) => {
                                 // As injected named exports are converted to variables by other
@@ -304,9 +321,11 @@ impl Fold for ExportToReturn {
                                     unimplemented!("module string names unimplemented")
                                 }
                             }
+
                             Some(ModuleExportName::Str(..)) => {
                                 unimplemented!("module string names unimplemented")
                             }
+
                             None => {
                                 if let ModuleExportName::Ident(orig) = &named.orig {
                                     self.export_id(orig.clone());
@@ -328,6 +347,7 @@ impl Fold for ExportToReturn {
                     return export.into();
                 }
             }
+
             ModuleDecl::TsImportEquals(_) => None,
             ModuleDecl::TsExportAssignment(_) => None,
             ModuleDecl::TsNamespaceExport(_) => None,

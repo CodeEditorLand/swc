@@ -161,6 +161,7 @@ fn do_work(
             if let Some(opts) = &mut min_opts.compress {
                 opts.keep_fnames = true;
             }
+
             if let Some(opts) = &mut min_opts.mangle {
                 opts.keep_fn_names = true;
             }
@@ -179,6 +180,7 @@ fn do_work(
         };
 
         let unresolved_mark = Mark::new();
+
         let top_level_mark = Mark::new();
 
         let is_mangler_enabled = min_opts.mangle.is_some();
@@ -202,7 +204,9 @@ fn do_work(
             if !is_mangler_enabled {
                 module.visit_mut_with(&mut hygiene())
             }
+
             module.visit_mut_with(&mut fixer(Some(&comments as &dyn Comments)));
+
             module
         };
 
@@ -212,6 +216,7 @@ fn do_work(
             .clone()
             .into_inner()
             .unwrap_or(BoolOr::Data(JsMinifyCommentOption::PreserveSomeComments));
+
         minify_file_comments(&comments, preserve_comments);
 
         swc_compiler_base::print(
@@ -244,10 +249,12 @@ fn do_work(
 #[napi]
 impl Task for MinifyTask {
     type JsValue = TransformOutput;
+
     type Output = TransformOutput;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
         let input: MinifyTarget = deserialize_json(&self.code)?;
+
         let options: JsMinifyOptions = deserialize_json(&self.options)?;
 
         do_work(input, options, self.extras.clone())
@@ -263,6 +270,7 @@ type NameMangleCache = External<Arc<dyn MangleCache>>;
 #[napi(ts_return_type = "object")]
 fn new_mangle_name_cache() -> NameMangleCache {
     let cache = Arc::new(SimpleMangleCache::default());
+
     External::new(cache)
 }
 
@@ -274,8 +282,11 @@ fn minify(
     signal: Option<AbortSignal>,
 ) -> AsyncTask<MinifyTask> {
     crate::util::init_default_trace_subscriber();
+
     let code = String::from_utf8_lossy(code.as_ref()).to_string();
+
     let options = String::from_utf8_lossy(opts.as_ref()).to_string();
+
     let extras = JsMinifyExtras::default()
         .with_mangle_name_cache(extras.mangle_name_cache.as_deref().cloned());
 
@@ -295,8 +306,11 @@ pub fn minify_sync(
     extras: NapiMinifyExtra,
 ) -> napi::Result<TransformOutput> {
     crate::util::init_default_trace_subscriber();
+
     let input: MinifyTarget = get_deserialized(code)?;
+
     let options = get_deserialized(opts)?;
+
     let extras = JsMinifyExtras::default()
         .with_mangle_name_cache(extras.mangle_name_cache.as_deref().cloned());
 

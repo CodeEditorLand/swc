@@ -37,9 +37,11 @@ impl NoAwaitInLoop {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, MESSAGE).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, MESSAGE).emit();
             }
+
             _ => {}
         });
     }
@@ -54,7 +56,9 @@ impl Visit for NoAwaitInLoop {
         self.await_restricted = true;
 
         for_stmt.test.visit_children_with(self);
+
         for_stmt.update.visit_children_with(self);
+
         for_stmt.body.visit_children_with(self);
 
         self.await_restricted = prev_await_restriction;
@@ -66,6 +70,7 @@ impl Visit for NoAwaitInLoop {
         self.await_restricted = true;
 
         do_while_stmt.body.visit_children_with(self);
+
         do_while_stmt.test.visit_children_with(self);
 
         self.await_restricted = prev_await_restriction;
@@ -75,6 +80,7 @@ impl Visit for NoAwaitInLoop {
         let prev_await_restriction = self.await_restricted;
 
         for_in_stmt.left.visit_children_with(self);
+
         for_in_stmt.right.visit_children_with(self);
 
         self.await_restricted = true;
@@ -92,6 +98,7 @@ impl Visit for NoAwaitInLoop {
         }
 
         for_of_stmt.left.visit_children_with(self);
+
         for_of_stmt.right.visit_children_with(self);
 
         self.await_restricted = !for_of_stmt.is_await;
@@ -103,9 +110,11 @@ impl Visit for NoAwaitInLoop {
 
     fn visit_while_stmt(&mut self, while_stmt: &WhileStmt) {
         let prev_await_restriction = self.await_restricted;
+
         self.await_restricted = true;
 
         while_stmt.test.visit_children_with(self);
+
         while_stmt.body.visit_children_with(self);
 
         self.await_restricted = prev_await_restriction;
@@ -121,6 +130,7 @@ impl Visit for NoAwaitInLoop {
 
     fn visit_function(&mut self, function: &Function) {
         let prev_await_restriction = self.await_restricted;
+
         self.await_restricted = false;
 
         function.visit_children_with(self);
@@ -130,6 +140,7 @@ impl Visit for NoAwaitInLoop {
 
     fn visit_arrow_expr(&mut self, arrow_expr: &ArrowExpr) {
         let prev_await_restriction = self.await_restricted;
+
         self.await_restricted = false;
 
         arrow_expr.visit_children_with(self);

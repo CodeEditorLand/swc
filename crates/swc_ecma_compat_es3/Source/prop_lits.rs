@@ -53,8 +53,10 @@ impl Fold for PropertyLiteral {
                     PropName::Ident(IdentName::new(value, span))
                 }
             }
+
             PropName::Ident(i) => {
                 let IdentName { sym, span, .. } = i;
+
                 if sym.is_reserved() || sym.contains('-') || sym.contains('.') {
                     PropName::Str(Str {
                         span,
@@ -65,6 +67,7 @@ impl Fold for PropertyLiteral {
                     PropName::Ident(IdentName { span, sym })
                 }
             }
+
             _ => n,
         }
     }

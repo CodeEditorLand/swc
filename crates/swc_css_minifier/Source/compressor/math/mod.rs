@@ -28,6 +28,7 @@ pub fn transform_calc_value_into_component_value(calc_value: &CalcValue) -> Opti
                 unit: t.unit.clone(),
             }))))
         }
+
         CalcValue::Dimension(Dimension::Frequency(f)) => Some(ComponentValue::Dimension(Box::new(
             Dimension::Frequency(Frequency {
                 span: f.span,
@@ -49,6 +50,7 @@ pub fn transform_calc_value_into_component_value(calc_value: &CalcValue) -> Opti
                 unit: f.unit.clone(),
             }))))
         }
+
         CalcValue::Dimension(Dimension::UnknownDimension(u)) => Some(ComponentValue::Dimension(
             Box::new(Dimension::UnknownDimension(UnknownDimension {
                 span: u.span,
@@ -71,6 +73,7 @@ pub fn transform_calc_value_into_component_value(calc_value: &CalcValue) -> Opti
             // "If used outside of a calculation, they’re treated like any other keyword"
             None
         }
+
         CalcValue::Sum(_) => {
             // Do nothing, we cannot transform a CalcSum into a ComponentValue
             None

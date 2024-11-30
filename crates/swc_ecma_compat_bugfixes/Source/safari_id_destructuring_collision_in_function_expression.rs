@@ -45,40 +45,59 @@ impl VisitMut for SafariIdDestructuringCollisionInFunctionExpression {
 
     fn visit_mut_fn_expr(&mut self, n: &mut FnExpr) {
         let old_in_body = self.in_body;
+
         if let Some(ident) = &n.ident {
             let old_span = self.destructured_id_span.take();
+
             let old_fn_expr_name = self.fn_expr_name.clone();
 
             self.fn_expr_name = ident.sym.clone();
+
             self.in_body = false;
+
             n.function.params.visit_mut_children_with(self);
+
             self.in_body = true;
+
             n.function.body.visit_mut_children_with(self);
 
             if let Some(id_ctxt) = self.destructured_id_span.take() {
                 let mut rename_map = HashMap::default();
+
                 let new_id: JsWord = {
                     let mut id_value: JsWord = format!("_{}", self.fn_expr_name).into();
+
                     let mut count = 0;
+
                     while self.other_ident_symbols.contains(&id_value) {
                         count += 1;
+
                         id_value = format!("_{}{}", self.fn_expr_name, count).into();
                     }
+
                     id_value
                 };
+
                 let id = (self.fn_expr_name.clone(), id_ctxt);
+
                 rename_map.insert(id, new_id);
+
                 n.function.visit_mut_children_with(&mut rename(&rename_map));
             }
 
             self.fn_expr_name = old_fn_expr_name;
+
             self.destructured_id_span = old_span;
         } else {
             self.in_body = false;
+
             n.function.params.visit_mut_children_with(self);
+
             self.in_body = true;
+
             n.function.body.visit_mut_children_with(self);
         }
+
         self.in_body = old_in_body;
     }
 
@@ -104,9 +123,13 @@ impl VisitMut for SafariIdDestructuringCollisionInFunctionExpression {
 #[cfg(test)]
 mod tests {
     use swc_common::Mark;
+
     use swc_ecma_parser::Syntax;
+
     use swc_ecma_transforms_base::resolver;
+
     use swc_ecma_transforms_testing::{test, HygieneTester};
+
     use swc_ecma_visit::fold_pass;
 
     use super::*;

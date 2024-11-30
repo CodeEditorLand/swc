@@ -31,6 +31,7 @@ impl VisitMut for ObjectSpread {
 
         if let Expr::Object(ObjectLit { span, props }) = expr {
             let has_spread = props.iter().any(|p| matches!(p, PropOrSpread::Spread(..)));
+
             if !has_spread {
                 return;
             }
@@ -44,11 +45,14 @@ impl VisitMut for ObjectSpread {
             // { foo, ...x } => ({ foo }, x)
             let args = {
                 let mut buf = Vec::new();
+
                 let mut obj = ObjectLit {
                     span: DUMMY_SP,
                     props: Vec::new(),
                 };
+
                 let mut first = true;
+
                 for prop in props.take() {
                     match prop {
                         PropOrSpread::Prop(..) => {
@@ -62,12 +66,15 @@ impl VisitMut for ObjectSpread {
                                 })
                                 .as_arg()];
                             }
+
                             obj.props.push(prop)
                         }
+
                         PropOrSpread::Spread(SpreadElement { expr, .. }) => {
                             // Push object if it's not empty
                             if first || !obj.props.is_empty() {
                                 buf.push(obj.take().as_arg());
+
                                 if !first && !self.config.pure_getters {
                                     buf = vec![Expr::Call(CallExpr {
                                         span: DUMMY_SP,
@@ -77,6 +84,7 @@ impl VisitMut for ObjectSpread {
                                     })
                                     .as_arg()];
                                 }
+
                                 first = false;
                             }
 
@@ -89,6 +97,7 @@ impl VisitMut for ObjectSpread {
                     if !self.config.pure_getters {
                         callee = helper!(object_spread_props);
                     }
+
                     buf.push(obj.as_arg());
                 }
 

@@ -113,10 +113,14 @@ impl BrowserData<Option<Version>> {
         }
 
         let mut data: Versions = BrowserData::default();
+
         for dist in distribs {
             let browser = dist.name();
+
             let browser = remap(browser);
+
             let version = dist.version();
+
             match browser {
                 "and_qq" | "and_uc" | "baidu" | "bb" | "kaios" | "op_mini" => continue,
 

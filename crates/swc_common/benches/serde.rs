@@ -58,12 +58,14 @@ fn bench_serde(c:&mut Criterion) {
 	c.bench_function("serialization of serde", |b| {
 		b.iter(|| black_box(serde_json::to_string(&src).unwrap()));
 	});
+
 	c.bench_function("deserialization of serde", |b| {
 		let src = serde_json::to_string(&Serde::String(SerdeStr {
 			span:DUMMY_SP,
 			value:String::from("perf-diff"),
 		}))
 		.unwrap();
+
 		println!("{}", src);
 
 		b.iter(|| black_box(serde_json::to_string(&src).unwrap()));
@@ -83,12 +85,14 @@ fn bench_serde(c: &mut Criterion) {
     c.bench_function("serialization of serde", |b| {
         b.iter(|| black_box(serde_json::to_string(&src).unwrap()));
     });
+
     c.bench_function("deserialization of serde", |b| {
         let src = serde_json::to_string(&Serde::String(SerdeStr {
             span: DUMMY_SP,
             value: String::from("perf-diff"),
         }))
         .unwrap();
+
         println!("{}", src);
 
         b.iter(|| black_box(serde_json::to_string(&src).unwrap()));

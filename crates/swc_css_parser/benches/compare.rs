@@ -17,11 +17,14 @@ where
 		let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
 		let lexer = Lexer::new(StringInput::from(&*fm), Some(&comments), Default::default());
+
 		let mut parser = Parser::new(lexer, Default::default());
+
 		let stylesheet:Stylesheet = parser.parse_all().unwrap();
 
 		b.iter(|| {
 			let stylesheet = stylesheet.clone();
+
 			let stylesheet = op(stylesheet);
 
 			black_box(stylesheet)
@@ -93,11 +96,14 @@ where
         let fm = cm.new_source_file(FileName::Anon.into(), SOURCE.into());
 
         let lexer = Lexer::new(StringInput::from(&*fm), Some(&comments), Default::default());
+
         let mut parser = Parser::new(lexer, Default::default());
+
         let stylesheet: Stylesheet = parser.parse_all().unwrap();
 
         b.iter(|| {
             let stylesheet = stylesheet.clone();
+
             let stylesheet = op(stylesheet);
 
             black_box(stylesheet)

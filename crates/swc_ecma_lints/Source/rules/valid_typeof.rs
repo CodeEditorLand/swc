@@ -55,9 +55,11 @@ impl ValidTypeof {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, MESSAGE).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, MESSAGE).emit();
             }
+
             _ => {}
         });
     }
@@ -122,6 +124,7 @@ impl Visit for ValidTypeof {
                         self.emit_report(bin_expr.span);
                     }
                 }
+
                 _ => {}
             }
         }

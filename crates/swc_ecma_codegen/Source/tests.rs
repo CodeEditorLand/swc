@@ -22,6 +22,7 @@ impl Builder {
         Ret: 'static,
     {
         let writer = text_writer::JsWriter::new(self.cm.clone(), "\n", s, None);
+
         let writer: Box<dyn WriteJs> = if self.cfg.minify {
             Box::new(omit_trailing_semi(writer))
         } else {
@@ -55,14 +56,17 @@ impl Builder {
 fn parse_then_emit(from: &str, cfg: Config, syntax: Syntax) -> String {
     ::testing::run_test(false, |cm, handler| {
         let src = cm.new_source_file(FileName::Real("custom.js".into()).into(), from.to_string());
+
         println!(
             "--------------------\nSource: \n{}\nPos: {:?} ~ {:?}\n",
             from, src.start_pos, src.end_pos
         );
 
         let comments = Default::default();
+
         let res = {
             let mut parser = Parser::new(syntax, StringInput::from(&*src), Some(&comments));
+
             let res = parser
                 .parse_module()
                 .map_err(|e| e.into_diagnostic(handler).emit());
@@ -75,6 +79,7 @@ fn parse_then_emit(from: &str, cfg: Config, syntax: Syntax) -> String {
         };
 
         let out = Builder { cfg, cm, comments }.text(from, |e| e.emit_module(&res).unwrap());
+
         Ok(out)
     })
     .unwrap()
@@ -141,7 +146,9 @@ pub(crate) fn assert_pretty(from: &str, to: &str) {
     );
 
     println!("Expected: {:?}", to);
+
     println!("Actual:   {:?}", out);
+
     assert_eq!(DebugUsingDisplay(out.trim()), DebugUsingDisplay(to),);
 }
 
@@ -157,6 +164,7 @@ fn test_from_to(from: &str, expected: &str) {
     );
 
     dbg!(&out);
+
     dbg!(&expected);
 
     assert_eq!(
@@ -462,12 +470,17 @@ fn tpl_escape_5() {
 fn tpl_escape_6() {
     let from = r#"export class MultipartReader {
     newLine = encoder.encode("\r\n");
+
     newLineDashBoundary = encoder.encode(`\r\n--${this.boundary}`);
+
     dashBoundaryDash = encoder.encode(`--${this.boundary}--`);
 }"#;
+
     let to = r#"export class MultipartReader {
     newLine = encoder.encode("\r\n");
+
     newLineDashBoundary = encoder.encode(`\r\n--${this.boundary}`);
+
     dashBoundaryDash = encoder.encode(`--${this.boundary}--`);
 }"#;
 
@@ -479,6 +492,7 @@ fn tpl_escape_6() {
         },
         Syntax::Typescript(Default::default()),
     );
+
     assert_eq!(DebugUsingDisplay(out.trim()), DebugUsingDisplay(to.trim()),);
 }
 
@@ -606,32 +620,44 @@ fn test_get_quoted_utf16() {
     }
 
     es2020("abcde", "\"abcde\"");
+
     es2020(
         "\x00\r\n\u{85}\u{2028}\u{2029};",
         "\"\\0\\r\\n\\x85\\u2028\\u2029;\"",
     );
 
     es2020("\n", "\"\\n\"");
+
     es2020("\t", "\"\t\"");
 
     es2020("'string'", "\"'string'\"");
 
     es2020("\u{0}", "\"\\0\"");
+
     es2020("\u{1}", "\"\\x01\"");
 
     es2020("\u{1000}", "\"\\u1000\"");
+
     es2020("\u{ff}", "\"\\xff\"");
+
     es2020("\u{10ffff}", "\"\\u{10FFFF}\"");
+
     es2020("😀", "\"\\u{1F600}\"");
+
     es2020("ퟻ", "\"\\uD7FB\"");
 
     es2020_nonascii("\u{FEFF}abc", "\"\\uFEFFabc\"");
+
     es2020_nonascii("\u{10ffff}", "\"\\u{10FFFF}\"");
 
     es5("\u{FEFF}abc", "\"\\uFEFFabc\"");
+
     es5("\u{10ffff}", "\"\\uDBFF\\uDFFF\"");
+
     es5("\u{FFFF}", "\"\\uFFFF\"");
+
     es5("😀", "\"\\uD83D\\uDE00\"");
+
     es5("ퟻ", "\"\\uD7FB\"");
 }
 
@@ -684,6 +710,7 @@ fn check_latest(src: &str, expected: &str) {
         },
         Default::default(),
     );
+
     assert_eq!(expected, actual.trim());
 }
 
@@ -695,6 +722,7 @@ fn invalid_unicode_in_ident() {
 #[test]
 fn test_escape_with_source_str() {
     check_latest("'\\ud83d'", "'\\ud83d';");
+
     check_latest(
         "'\\ud83d\\ud83d\\ud83d\\ud83d\\ud83d'",
         "'\\ud83d\\ud83d\\ud83d\\ud83d\\ud83d';",
@@ -712,6 +740,7 @@ fn issue_3617() {
     let from = r"// a string of all valid unicode whitespaces
     module.exports = '\u0009\u000A\u000B\u000C\u000D\u0020\u00A0\u1680\u2000\u2001\u2002' +
       '\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF' + '\u{a0}';";
+
     let expected = "// a string of all valid unicode whitespaces\nmodule.exports = \
                     '\\u0009\\u000A\\u000B\\u000C\\u000D\\u0020\\u00A0\\u1680\\u2000\\u2001\\\
                     u2002' + '\\u2003\\u2004\\u2005\\u2006\\u2007\\u2008\\u2009\\u200A\\u202F\\\
@@ -728,6 +757,7 @@ fn issue_3617() {
     );
 
     dbg!(&out);
+
     dbg!(&expected);
 
     assert_eq!(
@@ -742,6 +772,7 @@ fn issue_3617_1() {
     let from = r"// a string of all valid unicode whitespaces
     module.exports = '\u0009\u000A\u000B\u000C\u000D\u0020\u00A0\u1680\u2000\u2001\u2002' +
       '\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF' + '\u{a0}';";
+
     let expected = r"// a string of all valid unicode whitespaces
 module.exports = '\u0009\u000A\u000B\u000C\u000D\u0020\u00A0\u1680\u2000\u2001\u2002' + '\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF' + '\u{a0}';";
 
@@ -755,6 +786,7 @@ module.exports = '\u0009\u000A\u000B\u000C\u000D\u0020\u00A0\u1680\u2000\u2001\u
     );
 
     dbg!(&out);
+
     dbg!(&expected);
 
     assert_eq!(
@@ -776,6 +808,7 @@ fn test_all(src: &str, expected: &str, expected_minified: &str, config: Config) 
         );
 
         dbg!(out.trim());
+
         dbg!(expected.trim());
 
         assert_eq!(
@@ -785,6 +818,7 @@ fn test_all(src: &str, expected: &str, expected_minified: &str, config: Config) 
     }
     {
         eprintln!("> minified");
+
         let out = parse_then_emit(
             src,
             Config {
@@ -796,6 +830,7 @@ fn test_all(src: &str, expected: &str, expected_minified: &str, config: Config) 
         );
 
         dbg!(out.trim());
+
         dbg!(expected_minified.trim());
 
         assert_eq!(
@@ -884,6 +919,7 @@ fn emit_type_import_statement_named() {
     let from = r#"
       import type { X } from "y";
     "#;
+
     let to = r#"
       import type { X } from "y";
     "#;
@@ -893,6 +929,7 @@ fn emit_type_import_statement_named() {
         Default::default(),
         Syntax::Typescript(Default::default()),
     );
+
     assert_eq!(DebugUsingDisplay(out.trim()), DebugUsingDisplay(to.trim()),);
 }
 
@@ -901,6 +938,7 @@ fn emit_type_import_statement_default() {
     let from = r#"
       import type X from "y";
     "#;
+
     let to = r#"
       import type X from "y";
     "#;
@@ -910,6 +948,7 @@ fn emit_type_import_statement_default() {
         Default::default(),
         Syntax::Typescript(Default::default()),
     );
+
     assert_eq!(DebugUsingDisplay(out.trim()), DebugUsingDisplay(to.trim()),);
 }
 
@@ -918,6 +957,7 @@ fn emit_type_import_specifier() {
     let from = r#"
       import { type X } from "y";
     "#;
+
     let to = r#"
       import { type X } from "y";
     "#;
@@ -927,6 +967,7 @@ fn emit_type_import_specifier() {
         Default::default(),
         Syntax::Typescript(Default::default()),
     );
+
     assert_eq!(DebugUsingDisplay(out.trim()), DebugUsingDisplay(to.trim()),);
 }
 
@@ -995,6 +1036,7 @@ fn run_node(code: &str) -> String {
 
 fn test_str_lit_inner(input: PathBuf) {
     let raw_str = std::fs::read_to_string(&*input).unwrap();
+
     let input_code = format!("console.log('{raw_str}')");
 
     let output_code = parse_then_emit(
@@ -1006,6 +1048,7 @@ fn test_str_lit_inner(input: PathBuf) {
     );
 
     let expected = run_node(&input_code);
+
     let actual = run_node(&output_code);
 
     assert_eq!(actual, expected);

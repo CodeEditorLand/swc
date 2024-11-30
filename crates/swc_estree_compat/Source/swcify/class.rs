@@ -74,6 +74,7 @@ impl Swcify for swc_estree_ast::ClassMethod {
                 }
                 .into()
             }
+
             ClassMethodKind::Constructor => swc_ecma_ast::Constructor {
                 span: ctx.span(&self.base),
                 key: self.key.swcify(ctx),
@@ -201,6 +202,7 @@ impl Swcify for TSExpressionWithTypeArguments {
                 TSEntityName::Qualified(v) => swcify_qualified_name(v, ctx),
             }
         }
+
         fn swcify_qualified_name(qualified_name: TSQualifiedName, ctx: &Context) -> Box<Expr> {
             MemberExpr {
                 obj: swcify_expr(*qualified_name.left, ctx),

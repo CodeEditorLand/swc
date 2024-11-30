@@ -50,16 +50,19 @@ impl<'a> BabelLikeFixtureTest<'a> {
 
     pub fn syntax(mut self, syntax: Syntax) -> Self {
         self.syntax = syntax;
+
         self
     }
 
     pub fn source_map(mut self) -> Self {
         self.source_map = true;
+
         self
     }
 
     pub fn allow_error(mut self) -> Self {
         self.source_map = true;
+
         self
     }
 
@@ -68,6 +71,7 @@ impl<'a> BabelLikeFixtureTest<'a> {
     /// configured.
     pub fn add_factory(mut self, factory: impl 'a + FnOnce() -> PassFactory<'a>) -> Self {
         self.factories.push(Box::new(factory));
+
         self
     }
 
@@ -78,6 +82,7 @@ impl<'a> BabelLikeFixtureTest<'a> {
             let options = parse_options::<BabelOptions>(self.input.parent().unwrap());
 
             let comments = SingleThreadedComments::default();
+
             let mut builder = PassContext {
                 cm: cm.clone(),
                 assumptions: options.assumptions,
@@ -102,10 +107,13 @@ impl<'a> BabelLikeFixtureTest<'a> {
                 };
 
                 let mut done = false;
+
                 for factory in &mut factories {
                     if let Some(built) = factory(&builder, &name, options.clone()) {
                         pass = Box::new((pass, built));
+
                         done = true;
+
                         break;
                     }
                 }
@@ -120,6 +128,7 @@ impl<'a> BabelLikeFixtureTest<'a> {
             // Run pass
 
             let src = read_to_string(self.input).expect("failed to read file");
+
             let src = if output_path.is_none() && !compare_stdout {
                 format!(
                     "it('should work', async function () {{
@@ -129,12 +138,14 @@ impl<'a> BabelLikeFixtureTest<'a> {
             } else {
                 src
             };
+
             let fm = cm.new_source_file(
                 swc_common::FileName::Real(self.input.to_path_buf()).into(),
                 src,
             );
 
             let mut errors = Vec::new();
+
             let input_program = parse_file_as_program(
                 &fm,
                 self.syntax,
@@ -153,6 +164,7 @@ impl<'a> BabelLikeFixtureTest<'a> {
                 Ok(v) => v,
                 Err(err) => {
                     err.into_diagnostic(handler).emit();
+
                     return Err(());
                 }
             };
@@ -162,6 +174,7 @@ impl<'a> BabelLikeFixtureTest<'a> {
             }
 
             let helpers = Helpers::new(output_path.is_some());
+
             let (code_without_helper, output_program) = HELPERS.set(&helpers, || {
                 let mut p = input_program.apply(pass);
 
@@ -200,6 +213,7 @@ impl<'a> BabelLikeFixtureTest<'a> {
 
                 let actual_stdout: String =
                     stdout_of(&code).expect("failed to execute transfomred code");
+
                 let expected_stdout =
                     stdout_of(&fm.src).expect("failed to execute transfomred code");
 
@@ -217,6 +231,7 @@ impl<'a> BabelLikeFixtureTest<'a> {
         if self.allow_error {
             match err {
                 Ok(_) => {}
+
                 Err(err) => {
                     err.compare_to_file(self.input.with_extension("stderr"))
                         .unwrap();
@@ -289,6 +304,7 @@ impl PassContext {
         }
 
         let s = String::from_utf8_lossy(&buf);
+
         s.to_string()
     }
 }

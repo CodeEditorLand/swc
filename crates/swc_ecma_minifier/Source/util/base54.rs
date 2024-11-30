@@ -71,6 +71,7 @@ impl CharFreq {
     #[inline(always)]
     fn write(&mut self, data: &str) -> io::Result<()> {
         self.scan(data, 1);
+
         Ok(())
     }
 }
@@ -99,24 +100,28 @@ impl WriteJs for CharFreq {
     #[inline(always)]
     fn write_keyword(&mut self, _: Option<Span>, s: &'static str) -> io::Result<()> {
         self.write(s)?;
+
         Ok(())
     }
 
     #[inline(always)]
     fn write_operator(&mut self, _: Option<Span>, s: &str) -> io::Result<()> {
         self.write(s)?;
+
         Ok(())
     }
 
     #[inline(always)]
     fn write_param(&mut self, s: &str) -> io::Result<()> {
         self.write(s)?;
+
         Ok(())
     }
 
     #[inline(always)]
     fn write_property(&mut self, s: &str) -> io::Result<()> {
         self.write(s)?;
+
         Ok(())
     }
 
@@ -149,18 +154,21 @@ impl WriteJs for CharFreq {
     #[inline(always)]
     fn write_str(&mut self, s: &str) -> io::Result<()> {
         self.write(s)?;
+
         Ok(())
     }
 
     #[inline(always)]
     fn write_symbol(&mut self, _: Span, s: &str) -> io::Result<()> {
         self.write(s)?;
+
         Ok(())
     }
 
     #[inline(always)]
     fn write_punct(&mut self, _: Option<Span>, s: &'static str) -> io::Result<()> {
         self.write(s)?;
+
         Ok(())
     }
 
@@ -207,15 +215,19 @@ impl CharFreq {
                 b'a'..=b'z' => {
                     self.0[c as usize - 'a' as usize] += delta;
                 }
+
                 b'A'..=b'Z' => {
                     self.0[c as usize - 'A' as usize + 26] += delta;
                 }
+
                 b'0'..=b'9' => {
                     self.0[c as usize - '0' as usize + 52] += delta;
                 }
+
                 b'$' => {
                     self.0[62] += delta;
                 }
+
                 b'_' => {
                     self.0[63] += delta;
                 }
@@ -267,7 +279,9 @@ impl CharFreq {
         arr.sort_by_key(|&(freq, _)| Reverse(freq));
 
         let mut digits = Vec::with_capacity(10);
+
         let mut alpha = Vec::with_capacity(54);
+
         let mut all = Vec::with_capacity(64);
 
         for (_, c) in arr {
@@ -277,7 +291,9 @@ impl CharFreq {
                 alpha.push(c);
             }
         }
+
         all.extend_from_slice(&alpha);
+
         all.extend_from_slice(&digits);
 
         #[cfg(feature = "debug")]
@@ -316,8 +332,11 @@ impl Visit for CharFreqAnalyzer<'_> {
     fn visit_prop_name(&mut self, n: &PropName) {
         match n {
             PropName::Ident(_) => {}
+
             PropName::Str(_) => {}
+
             PropName::Num(_) => {}
+
             PropName::Computed(e) => e.visit_with(self),
             PropName::BigInt(_) => {}
         }
@@ -347,6 +366,7 @@ impl Base54Chars {
 
         while n >= base {
             n -= base;
+
             base <<= 6;
         }
 
@@ -354,12 +374,16 @@ impl Base54Chars {
         let mut ret: ArrayVec<_, 14> = ArrayVec::new();
 
         base /= 54;
+
         let mut c = self.chars[n / base];
+
         ret.push(c);
 
         while base > 1 {
             n %= base;
+
             base >>= 6;
+
             c = self.chars[n / base];
 
             ret.push(c);

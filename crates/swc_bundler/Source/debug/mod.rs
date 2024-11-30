@@ -15,9 +15,11 @@ pub(crate) fn print_hygiene(event: &str, cm: &Lrc<SourceMap>, t: &Module) {
     let module = t.clone().fold_with(&mut HygieneVisualizer);
 
     let stdout = stderr();
+
     let mut w = stdout.lock();
 
     writeln!(w, "==================== @ {} ====================", event).unwrap();
+
     Emitter {
         cfg: swc_ecma_codegen::Config::default(),
         cm: cm.clone(),
@@ -26,6 +28,7 @@ pub(crate) fn print_hygiene(event: &str, cm: &Lrc<SourceMap>, t: &Module) {
     }
     .emit_module(&module)
     .unwrap();
+
     writeln!(w, "==================== @ ====================").unwrap();
 }
 
@@ -38,6 +41,7 @@ impl Fold for HygieneVisualizer {
         if node.ctxt == SyntaxContext::empty() {
             return node;
         }
+
         Ident {
             sym: format!("{}{:?}", node.sym, node.ctxt).into(),
             ..node

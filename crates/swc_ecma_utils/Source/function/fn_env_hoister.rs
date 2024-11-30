@@ -83,6 +83,7 @@ impl FnEnvHoister {
         } = self;
 
         let mut decls = Vec::with_capacity(3);
+
         if let Some(this_id) = this {
             decls.push(VarDeclarator {
                 span: DUMMY_SP,
@@ -91,6 +92,7 @@ impl FnEnvHoister {
                 definite: false,
             });
         }
+
         if let Some(id) = args {
             decls.push(VarDeclarator {
                 span: DUMMY_SP,
@@ -99,6 +101,7 @@ impl FnEnvHoister {
                 definite: false,
             });
         }
+
         if let Some(id) = new_target {
             decls.push(VarDeclarator {
                 span: DUMMY_SP,
@@ -113,7 +116,9 @@ impl FnEnvHoister {
                 definite: false,
             });
         }
+
         extend_super(&mut decls, super_get, super_set, super_update);
+
         decls
     }
 
@@ -146,6 +151,7 @@ impl FnEnvHoister {
         } = self;
 
         let mut decls = Vec::with_capacity(3);
+
         if let Some(this_id) = &this {
             decls.push(VarDeclarator {
                 span: DUMMY_SP,
@@ -154,6 +160,7 @@ impl FnEnvHoister {
                 definite: false,
             });
         }
+
         if let Some(id) = args {
             decls.push(VarDeclarator {
                 span: DUMMY_SP,
@@ -162,6 +169,7 @@ impl FnEnvHoister {
                 definite: false,
             });
         }
+
         if let Some(id) = new_target {
             decls.push(VarDeclarator {
                 span: DUMMY_SP,
@@ -207,9 +215,11 @@ impl FnEnvHoister {
             callee.clone()
         } else {
             let ident = private_ident!(prop_span, format!("_superprop_get_{}", prop_name));
+
             self.super_get
                 .ident
                 .insert(prop_name.clone(), ident.clone());
+
             ident
         }
     }
@@ -226,9 +236,11 @@ impl FnEnvHoister {
             callee.clone()
         } else {
             let ident = private_ident!(prop_span, format!("_superprop_set_{}", prop_name));
+
             self.super_set
                 .ident
                 .insert(prop_name.clone(), ident.clone());
+
             ident
         }
     }
@@ -259,9 +271,11 @@ impl FnEnvHoister {
                 });
 
             let ident = private_ident!(prop_span, format!("_superprop_update_{}", prop_name));
+
             self.super_update
                 .ident
                 .insert(prop_name.clone(), ident.clone());
+
             ident
         }
     }
@@ -270,9 +284,11 @@ impl FnEnvHoister {
         self.super_get
             .computed
             .get_or_insert_with(|| private_ident!(span, "_superprop_get"));
+
         self.super_set
             .computed
             .get_or_insert_with(|| private_ident!(span, "_superprop_set"));
+
         self.super_update
             .computed
             .get_or_insert_with(|| private_ident!(span, "_superprop_update"))
@@ -285,8 +301,11 @@ impl VisitMut for FnEnvHoister {
 
     fn visit_mut_assign_target_pat(&mut self, n: &mut AssignTargetPat) {
         let in_pat = self.in_pat;
+
         self.in_pat = true;
+
         n.visit_mut_children_with(self);
+
         self.in_pat = in_pat;
     }
 
@@ -366,10 +385,12 @@ impl VisitMut for FnEnvHoister {
                     .get_or_insert_with(|| private_ident!("_arguments"));
                 *e = arguments.clone().into();
             }
+
             Expr::This(..) if !self.this_disabled => {
                 let this = self.get_this();
                 *e = this.into();
             }
+
             Expr::MetaProp(MetaPropExpr {
                 kind: MetaPropKind::NewTarget,
                 ..
@@ -390,12 +411,15 @@ impl VisitMut for FnEnvHoister {
                     AssignTarget::Simple(e) => e,
                     AssignTarget::Pat(..) => {
                         e.visit_mut_children_with(self);
+
                         return;
                     }
                 };
+
                 if !self.super_disabled {
                     if let SimpleAssignTarget::SuperProp(super_prop) = &mut *expr {
                         let left_span = super_prop.span;
+
                         match &mut super_prop.prop {
                             SuperProp::Computed(c) => {
                                 let callee = self.super_set_computed(left_span);
@@ -404,7 +428,9 @@ impl VisitMut for FnEnvHoister {
 
                                 let args = if let Some(op) = op {
                                     let tmp = private_ident!("tmp");
+
                                     self.extra_ident.push(tmp.clone());
+
                                     vec![
                                         Expr::Assign(AssignExpr {
                                             span: DUMMY_SP,
@@ -439,6 +465,7 @@ impl VisitMut for FnEnvHoister {
                                 }
                                 .into();
                             }
+
                             SuperProp::Ident(id) => {
                                 let callee = self.super_set(&id.sym, left_span);
                                 *e = CallExpr {
@@ -465,6 +492,7 @@ impl VisitMut for FnEnvHoister {
                         }
                     }
                 }
+
                 e.visit_mut_children_with(self)
             }
             // super.foo() => super_get_foo = () => super.foo
@@ -479,6 +507,7 @@ impl VisitMut for FnEnvHoister {
                         match &mut super_prop.prop {
                             SuperProp::Computed(c) => {
                                 let callee = self.super_get_computed(super_prop.span);
+
                                 let call: Expr = CallExpr {
                                     span: *span,
                                     args: vec![c.expr.take().as_arg()],
@@ -486,14 +515,17 @@ impl VisitMut for FnEnvHoister {
                                     ..Default::default()
                                 }
                                 .into();
+
                                 let mut new_args = args.take();
 
                                 new_args.insert(0, self.get_this().as_arg());
 
                                 *e = call.call_fn(*span, new_args);
                             }
+
                             SuperProp::Ident(id) => {
                                 let callee = self.super_get(&id.sym, super_prop.span);
+
                                 let call: Expr = CallExpr {
                                     span: *span,
                                     args: Vec::new(),
@@ -501,6 +533,7 @@ impl VisitMut for FnEnvHoister {
                                     ..Default::default()
                                 }
                                 .into();
+
                                 let mut new_args = args.take();
 
                                 new_args.insert(0, self.get_this().as_arg());
@@ -510,6 +543,7 @@ impl VisitMut for FnEnvHoister {
                         }
                     };
                 }
+
                 e.visit_mut_children_with(self)
             }
             // super.foo ++
@@ -517,9 +551,12 @@ impl VisitMut for FnEnvHoister {
                 let in_pat = self.in_pat;
                 // NOTE: It's not in pat, but we need the `update` trick
                 self.in_pat = true;
+
                 arg.visit_mut_with(self);
+
                 self.in_pat = in_pat;
             }
+
             Expr::SuperProp(SuperPropExpr { prop, span, .. }) if !self.super_disabled => match prop
             {
                 SuperProp::Computed(c) => {
@@ -543,6 +580,7 @@ impl VisitMut for FnEnvHoister {
                         .into()
                     };
                 }
+
                 SuperProp::Ident(id) => {
                     *e = if self.in_pat {
                         self.super_update(&id.sym, *span)
@@ -581,8 +619,11 @@ impl VisitMut for FnEnvHoister {
 
     fn visit_mut_pat(&mut self, n: &mut Pat) {
         let in_pat = self.in_pat;
+
         self.in_pat = true;
+
         n.visit_mut_children_with(self);
+
         self.in_pat = in_pat;
     }
 
@@ -651,6 +692,7 @@ fn extend_super(
 ) {
     decls.extend(update.ident.into_iter().map(|(key, ident)| {
         let value = private_ident!("v");
+
         VarDeclarator {
             span: DUMMY_SP,
             name: ident.into(),
@@ -705,8 +747,10 @@ fn extend_super(
             definite: false,
         }
     }));
+
     if let Some(id) = update.computed {
         let prop = private_ident!("_prop");
+
         let value = private_ident!("v");
 
         decls.push(VarDeclarator {
@@ -770,6 +814,7 @@ fn extend_super(
             definite: false,
         });
     }
+
     decls.extend(get.ident.into_iter().map(|(key, ident)| {
         VarDeclarator {
             span: DUMMY_SP,
@@ -793,8 +838,10 @@ fn extend_super(
             definite: false,
         }
     }));
+
     if let Some(id) = get.computed {
         let param = private_ident!("_prop");
+
         decls.push(VarDeclarator {
             span: DUMMY_SP,
             name: id.without_loc().into(),
@@ -820,8 +867,10 @@ fn extend_super(
             definite: false,
         });
     }
+
     decls.extend(set.ident.into_iter().map(|(key, ident)| {
         let value = private_ident!("_value");
+
         VarDeclarator {
             span: DUMMY_SP,
             name: ident.without_loc().into(),
@@ -850,9 +899,12 @@ fn extend_super(
             definite: false,
         }
     }));
+
     if let Some(id) = set.computed {
         let prop = private_ident!("_prop");
+
         let value = private_ident!("_value");
+
         decls.push(VarDeclarator {
             span: DUMMY_SP,
             name: id.without_loc().into(),

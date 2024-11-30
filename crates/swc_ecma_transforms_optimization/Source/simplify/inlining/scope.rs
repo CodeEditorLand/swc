@@ -87,7 +87,9 @@ impl Inlining<'_> {
                 v.hoisted.set(true);
 
                 *v.value.borrow_mut() = None;
+
                 v.is_undefined.set(false);
+
                 self.scope.bindings.insert(id, v);
             }
         }
@@ -128,11 +130,13 @@ impl Inlining<'_> {
             Some(Expr::Ident(vi)) => {
                 if let Some((value_idx, value_var)) = self.scope.idx_val(&vi.to_id()) {
                     alias_of = Some(value_var.kind);
+
                     Some((value_idx, vi.to_id()))
                 } else {
                     None
                 }
             }
+
             _ => None,
         };
 
@@ -145,6 +149,7 @@ impl Inlining<'_> {
         if is_inline_prevented {
             tracing::trace!("\tdeclare: Inline prevented: {:?}", id)
         }
+
         if is_undefined {
             tracing::trace!("\tdeclare: {:?} is undefined", id);
         }
@@ -152,7 +157,9 @@ impl Inlining<'_> {
         let idx = match self.scope.bindings.entry(id.clone()) {
             Entry::Occupied(mut e) => {
                 e.get().is_undefined.set(is_undefined);
+
                 e.get().read_cnt.set(0);
+
                 e.get().read_from_nested_scope.set(false);
 
                 match init {
@@ -162,10 +169,13 @@ impl Inlining<'_> {
                 }
 
                 e.get().inline_prevented.set(is_inline_prevented);
+
                 e.index()
             }
+
             Entry::Vacant(e) => {
                 let idx = e.index();
+
                 e.insert(VarInfo {
                     kind,
                     alias_of,
@@ -180,12 +190,14 @@ impl Inlining<'_> {
                     this_sensitive: Cell::new(false),
                     hoisted: Cell::new(false),
                 });
+
                 idx
             }
         };
 
         {
             let mut cur = Some(&self.scope);
+
             while let Some(scope) = cur {
                 if let ScopeKind::Fn { .. } = scope.kind {
                     break;
@@ -193,7 +205,9 @@ impl Inlining<'_> {
 
                 if scope.kind == ScopeKind::Loop {
                     tracing::trace!("preventing inline as it's declared in a loop");
+
                     self.scope.prevent_inline(&id);
+
                     break;
                 }
 
@@ -226,7 +240,9 @@ impl Inlining<'_> {
 
                 if value_idx > idx || barrier_exists {
                     tracing::trace!("Variable use before declaration: {:?}", id);
+
                     self.scope.prevent_inline(&id);
+
                     self.scope.prevent_inline(&vi)
                 }
             } else {
@@ -293,6 +309,7 @@ impl<'a> Scope<'a> {
         if self.constants.contains_key(id) {
             return (self, true);
         }
+
         if self.find_binding_from_current(id).is_some() {
             return (self, true);
         }
@@ -340,8 +357,10 @@ impl<'a> Scope<'a> {
 
                 if found {
                     tracing::trace!("found");
+
                     break;
                 }
+
                 tracing::trace!("({}): {}: kind = {:?}", scope.depth(), id.0, scope.kind);
 
                 match scope.kind {
@@ -350,13 +369,17 @@ impl<'a> Scope<'a> {
                             "{}: variable access from a nested function detected",
                             id.0
                         );
+
                         return true;
                     }
+
                     ScopeKind::Loop | ScopeKind::Cond => {
                         return true;
                     }
+
                     _ => {}
                 }
+
                 cur = scope.parent;
             }
         }
@@ -377,15 +400,18 @@ impl<'a> Scope<'a> {
 
         if let Some(var_info) = self.find_binding(id) {
             var_info.read_cnt.set(var_info.read_cnt.get() + 1);
+
             if var_info.hoisted.get() {
                 var_info.inline_prevented.set(true);
             }
         } else {
             tracing::trace!("({}): Unresolved usage.: {:?}", self.depth(), id);
+
             self.unresolved_usages.insert(id.clone());
         }
 
         let (scope, is_self) = self.scope_for(id);
+
         if !is_self {
             if let Some(var_info) = scope.find_binding_from_current(id) {
                 var_info.read_from_nested_scope.set(true);
@@ -405,6 +431,7 @@ impl<'a> Scope<'a> {
                 if found {
                     break;
                 }
+
                 tracing::trace!("({}): {}: kind = {:?}", scope.depth(), id.0, scope.kind);
 
                 match scope.kind {
@@ -413,13 +440,17 @@ impl<'a> Scope<'a> {
                             "{}: variable access from a nested function detected",
                             id.0
                         );
+
                         return true;
                     }
+
                     ScopeKind::Loop | ScopeKind::Cond => {
                         return true;
                     }
+
                     _ => {}
                 }
+
                 cur = scope.parent;
             }
         }
@@ -463,6 +494,7 @@ impl<'a> Scope<'a> {
                 scope.depth(),
                 id
             );
+
             self.bindings.insert(
                 id.clone(),
                 VarInfo {
@@ -539,8 +571,10 @@ impl<'a> Scope<'a> {
         match phase {
             Phase::Analysis => {
                 let idx = self.bindings.len();
+
                 self.inline_barriers.borrow_mut().push_back(idx);
             }
+
             Phase::Inlining => {
                 //if let Some(idx) =
                 // self.inline_barriers.borrow_mut().pop_front() {
@@ -555,6 +589,7 @@ impl<'a> Scope<'a> {
 
         match self.parent {
             None => {}
+
             Some(p) => p.store_inline_barrier(phase),
         }
     }
@@ -594,6 +629,7 @@ impl<'a> Scope<'a> {
 
         match self.parent {
             None => {}
+
             Some(p) => p.prevent_inline(id),
         }
     }
@@ -605,6 +641,7 @@ impl<'a> Scope<'a> {
                     return v.inline_prevented.get();
                 }
             }
+
             Expr::Member(MemberExpr {
                 obj: right_expr, ..
             }) if right_expr.is_ident() => {
@@ -614,6 +651,7 @@ impl<'a> Scope<'a> {
                     return v.inline_prevented.get();
                 }
             }
+
             Expr::Update(..) => return true,
 
             // TODO: Remove this

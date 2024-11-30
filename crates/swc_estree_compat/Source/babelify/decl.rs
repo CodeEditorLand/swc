@@ -29,6 +29,7 @@ impl Babelify for FnDecl {
 
     fn babelify(self, ctx: &Context) -> Self::Output {
         let func = self.function.babelify(ctx);
+
         FunctionDeclaration {
             base: func.base,
             id: Some(self.ident.babelify(ctx)),
@@ -67,7 +68,9 @@ impl Babelify for ClassDecl {
         // It may need to be modified to take into account implements, super classes,
         // etc.
         let body_span = extract_class_body_span(&self.class, ctx);
+
         let class = self.class.babelify(ctx);
+
         ClassDeclaration {
             base: class.base,
             id: self.ident.babelify(ctx),

@@ -35,6 +35,7 @@ impl ActiveFormattingElementStack {
         // identical names, namespaces, and values (the order of the attributes
         // does not matter).
         let mut count = 0;
+
         let new_element = match &value {
             ActiveFormattingElement::Element(node, token_and_info) => (node, token_and_info),
             _ => {
@@ -47,6 +48,7 @@ impl ActiveFormattingElementStack {
                 ActiveFormattingElement::Marker => {
                     break;
                 }
+
                 ActiveFormattingElement::Element(node, token_and_info) => {
                     if get_namespace!(node) != get_namespace!(new_element.0)
                         || get_tag_name!(node) != get_tag_name!(new_element.0)
@@ -64,6 +66,7 @@ impl ActiveFormattingElementStack {
                     unreachable!()
                 }
             };
+
             let attributes_in_new_element = match &new_element.1.token {
                 Token::StartTag { attributes, .. } | Token::EndTag { attributes, .. } => attributes,
                 _ => {
@@ -88,6 +91,7 @@ impl ActiveFormattingElementStack {
             }
 
             sorted_attributes_in_element.sort();
+
             sorted_attributes_in_new_element.sort();
 
             if sorted_attributes_in_element != sorted_attributes_in_new_element {

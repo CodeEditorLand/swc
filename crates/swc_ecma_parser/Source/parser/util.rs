@@ -102,7 +102,9 @@ impl<I: Tokens> Parser<I> {
     /// Original context is restored when returned guard is dropped.
     pub(super) fn with_ctx(&mut self, ctx: Context) -> WithCtx<I> {
         let orig_ctx = self.ctx();
+
         self.set_ctx(ctx);
+
         WithCtx {
             orig_ctx,
             inner: self,
@@ -112,6 +114,7 @@ impl<I: Tokens> Parser<I> {
     /// Original state is restored when returned guard is dropped.
     pub(super) fn with_state(&mut self, state: State) -> WithState<I> {
         let orig_state = std::mem::replace(&mut self.state, state);
+
         WithState {
             orig_state,
             inner: self,
@@ -127,6 +130,7 @@ impl<I: Tokens> Parser<I> {
             strict: true,
             ..self.ctx()
         };
+
         self.with_ctx(ctx)
     }
 
@@ -136,6 +140,7 @@ impl<I: Tokens> Parser<I> {
             in_type: true,
             ..self.ctx()
         };
+
         self.with_ctx(ctx)
     }
 
@@ -145,6 +150,7 @@ impl<I: Tokens> Parser<I> {
             include_in_expr,
             ..self.ctx()
         };
+
         self.with_ctx(ctx)
     }
 
@@ -163,12 +169,14 @@ impl<I: Tokens> Parser<I> {
 }
 pub trait ParseObject<Obj> {
     type Prop;
+
     fn make_object(
         &mut self,
         span: Span,
         props: Vec<Self::Prop>,
         trailing_comma: Option<Span>,
     ) -> PResult<Obj>;
+
     fn parse_object_prop(&mut self) -> PResult<Self::Prop>;
 }
 
@@ -227,6 +235,7 @@ pub(super) trait ExprExt {
                 if strict && ident.is_reserved_in_strict_bind() {
                     return false;
                 }
+
                 true
             }
 

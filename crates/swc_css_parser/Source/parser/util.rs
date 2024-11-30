@@ -43,8 +43,10 @@ where
         match op(&mut parser) {
             Ok(v) => {
                 *self = parser;
+
                 Some(v)
             }
+
             Err(..) => None,
         }
     }
@@ -64,7 +66,9 @@ where
         op: impl FnOnce(&mut Parser<Input>) -> PResult<T>,
     ) -> PResult<T> {
         let lexer = Input::new(InputType::ListOfComponentValues(list_of_component_values));
+
         let mut parser = Parser::new(lexer, self.config);
+
         let res = op(&mut parser.with_ctx(self.ctx));
 
         self.errors.extend(parser.take_errors());
@@ -83,6 +87,7 @@ where
                 AtRulePrelude::ListOfComponentValues(list_of_component_values) => {
                     list_of_component_values
                 }
+
                 _ => {
                     unreachable!();
                 }
@@ -109,6 +114,7 @@ where
                         list_of_component_values,
                     )))
                 }
+
                 None if normalized_at_rule_name == "layer" && at_rule.block.is_none() => {
                     self.errors.push(Error::new(
                         at_rule.span,
@@ -119,6 +125,7 @@ where
                         list_of_component_values,
                     )))
                 }
+
                 _ => at_rule_prelude.map(Box::new),
             },
             Err(err) => {
@@ -180,6 +187,7 @@ where
             QualifiedRulePrelude::ListOfComponentValues(list_of_component_values) => {
                 list_of_component_values
             }
+
             _ => {
                 unreachable!();
             }
@@ -195,6 +203,7 @@ where
                 Ok(relative_selector_list) => {
                     QualifiedRulePrelude::RelativeSelectorList(relative_selector_list)
                 }
+
                 Err(err) => {
                     self.errors.push(err);
 
@@ -299,6 +308,7 @@ where
 
             Ok(values)
         });
+
         declaration.value = match value {
             Ok(values) => values,
             Err(err) => {
@@ -315,6 +325,7 @@ where
 
     pub(super) fn try_to_parse_legacy_nesting(&mut self) -> Option<QualifiedRule> {
         let state = self.input.state();
+
         let qualified_rule = self
             .with_ctx(Ctx {
                 block_contents_grammar: BlockContentsGrammar::StyleBlock,

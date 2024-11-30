@@ -49,6 +49,7 @@ impl StmtDepGraph {
         let mut set = AHashSet::default();
 
         let mut queue = VecDeque::default();
+
         queue.push_front(id);
 
         while let Some(id) = queue.pop_front() {
@@ -70,6 +71,7 @@ impl StmtDepGraph {
             self.paths
                 .extend(repeat(Default::default()).take(from + 1 - self.paths.len()))
         }
+
         if !self.paths[from].insert(to) {
             return;
         }
@@ -78,6 +80,7 @@ impl StmtDepGraph {
             if from == transitive {
                 continue;
             }
+
             self.paths[from].insert(transitive);
         }
 

@@ -450,11 +450,13 @@ impl OpenElementsStack {
                 Data::Element { namespace, .. } if *namespace == Namespace::HTML => {
                     break;
                 }
+
                 _ if is_mathml_text_integration_point(Some(node))
                     || is_html_integration_point(Some(node)) =>
                 {
                     break;
                 }
+
                 _ => {}
             }
 

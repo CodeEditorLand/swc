@@ -110,8 +110,10 @@ impl Serialize for ObjectMethod {
                     return_type: self.return_type.as_deref(),
                     type_parameters: self.type_parameters.as_ref(),
                 };
+
                 actual.serialize(serializer)
             }
+
             Flavor::Acorn { .. } => {
                 let mut s = serializer.serialize_map(None)?;
 
@@ -122,10 +124,15 @@ impl Serialize for ObjectMethod {
                 }
 
                 s.serialize_entry("type", "Property")?;
+
                 s.serialize_entry("kind", &self.kind)?;
+
                 s.serialize_entry("method", &false)?;
+
                 s.serialize_entry("shorthand", &false)?;
+
                 s.serialize_entry("key", &self.key)?;
+
                 s.serialize_entry("computed", &self.computed)?;
 
                 s.serialize_entry(
@@ -248,8 +255,10 @@ impl Serialize for ObjectProperty {
                     shorthand: self.shorthand,
                     decorators: self.decorators.as_deref(),
                 };
+
                 actual.serialize(serializer)
             }
+
             Flavor::Acorn { .. } => {
                 let mut s = serializer.serialize_map(None)?;
 
@@ -260,12 +269,19 @@ impl Serialize for ObjectProperty {
                 }
 
                 s.serialize_entry("type", "Property")?;
+
                 s.serialize_entry("kind", "init")?;
+
                 s.serialize_entry("method", &false)?;
+
                 s.serialize_entry("shorthand", &self.shorthand)?;
+
                 s.serialize_entry("key", &self.key)?;
+
                 s.serialize_entry("value", &self.value)?;
+
                 s.serialize_entry("computed", &self.computed)?;
+
                 if let Some(decorators) = &self.decorators {
                     if !decorators.is_empty() {
                         s.serialize_entry("decorators", decorators)?;

@@ -18,6 +18,7 @@ pub(super) fn compress_alpha_value(alpha_value: &mut AlphaValue) {
                 raw: None,
             });
         }
+
         AlphaValue::Number(Number { value, span, .. }) if *value < 0.1 && *value != 0.0 => {
             let new_value = *value * 100.0;
 
@@ -30,6 +31,7 @@ pub(super) fn compress_alpha_value(alpha_value: &mut AlphaValue) {
                 },
             });
         }
+
         _ => {}
     }
 }
@@ -57,6 +59,7 @@ impl Compressor {
                     raw: None,
                 }));
             }
+
             _ => {}
         }
     }

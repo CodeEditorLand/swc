@@ -61,21 +61,27 @@ impl MemberInitRecord {
                 self.record.iter_mut().find(|item| matches!(item, MemberInit::PrivAccessor(PrivAccessor { name, .. }) if name.sym == accessor.name.sym))
             {
                 previous.getter = previous.getter.take().or(accessor.getter);
+
                 previous.setter = previous.setter.take().or(accessor.setter);
+
                 false
             } else {
                 self.record.push(MemberInit::PrivAccessor(accessor));
+
                 true
             }
         } else {
             self.record.push(member);
+
             true
         }
     }
 
     pub fn into_init(self) -> Vec<Box<Expr>> {
         let mut normal_init = Vec::new();
+
         let mut value_init = Vec::new();
+
         for init in self.record {
             match init {
                 MemberInit::PrivMethod(PrivMethod {
@@ -98,6 +104,7 @@ impl MemberInitRecord {
                             vec![ThisExpr { span: DUMMY_SP }.as_arg(), name.as_arg()],
                         )
                     };
+
                     normal_init.push(
                         CallExpr {
                             span,
@@ -108,6 +115,7 @@ impl MemberInitRecord {
                         .into(),
                     )
                 }
+
                 MemberInit::PrivProp(PrivProp { span, name, value }) => value_init.push(
                     CallExpr {
                         span,
@@ -150,6 +158,7 @@ impl MemberInitRecord {
                 MemberInit::PubProp(PubProp { span, name, value }) => value_init.push(
                     if self.c.set_public_fields {
                         let this = ThisExpr { span: DUMMY_SP };
+
                         Expr::from(AssignExpr {
                             span,
                             left: match name {
@@ -185,6 +194,7 @@ impl MemberInitRecord {
 
     pub fn into_init_static(self, class_ident: Ident) -> Vec<Stmt> {
         let mut normal_init = Vec::new();
+
         let mut value_init = Vec::new();
 
         for value in self.record {
@@ -194,6 +204,7 @@ impl MemberInitRecord {
                         span,
                         expr: (if self.c.set_public_fields {
                             let class = class_ident.clone();
+
                             Expr::from(AssignExpr {
                                 span,
                                 left: match name {
@@ -252,6 +263,7 @@ impl MemberInitRecord {
                         .into()
                     })
                 }
+
                 MemberInit::PrivAccessor(PrivAccessor {
                     span,
                     name,
@@ -314,6 +326,7 @@ impl MemberInitRecord {
                         unreachable!()
                     }
                 }
+
                 MemberInit::StaticBlock(expr) => value_init.push(expr.into_stmt()),
             }
         }

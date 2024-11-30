@@ -56,6 +56,7 @@ impl Lexer<'_> {
 
             if self.eat(b'n') {
                 let end = self.cur_pos();
+
                 let raw = unsafe {
                     // Safety: We got both start and end position from `self.input`
                     self.input.slice(start, end)
@@ -81,11 +82,14 @@ impl Lexer<'_> {
                         // `-1` is utf 8 length of `0`
 
                         let end = self.cur_pos();
+
                         let raw = unsafe {
                             // Safety: We got both start and end position from `self.input`
                             self.input.slice(start, end)
                         };
+
                         let raw = self.atoms.atom(raw);
+
                         return self
                             .make_legacy_octal(start, 0f64)
                             .map(|value| Either::Left((value, raw)));
@@ -116,10 +120,12 @@ impl Lexer<'_> {
                                 });
 
                             let end = self.cur_pos();
+
                             let raw = unsafe {
                                 // Safety: We got both start and end position from `self.input`
                                 self.input.slice(start, end)
                             };
+
                             let raw = self.atoms.atom(raw);
 
                             return self
@@ -145,6 +151,7 @@ impl Lexer<'_> {
 
             if starts_with_dot {
                 debug_assert!(self.cur().is_some());
+
                 debug_assert!(self.cur().unwrap().is_ascii_digit());
             }
 
@@ -153,6 +160,7 @@ impl Lexer<'_> {
 
             val = {
                 let end = self.cur_pos();
+
                 let raw = unsafe {
                     // Safety: We got both start and end position from `self.input`
                     self.input.slice(start, end)
@@ -183,6 +191,7 @@ impl Lexer<'_> {
                     Some(next) => next,
                     None => {
                         let pos = self.cur_pos();
+
                         self.error(pos, SyntaxError::NumLitTerminatedWithExp)?
                     }
                 };
@@ -205,6 +214,7 @@ impl Lexer<'_> {
                     }
                 } else {
                     let end = self.cur_pos();
+
                     let raw = unsafe {
                         // Safety: We got both start and end position from `self.input`
                         self.input.slice(start, end)
@@ -219,16 +229,19 @@ impl Lexer<'_> {
                     .expect("failed to parse float literal")
                 }
             }
+
             _ => {}
         }
 
         self.ensure_not_ident()?;
 
         let end = self.cur_pos();
+
         let raw_str = unsafe {
             // Safety: We got both start and end position from `self.input`
             self.input.slice(start, end)
         };
+
         Ok(Either::Left((val, raw_str.into())))
     }
 
@@ -241,6 +254,7 @@ impl Lexer<'_> {
             "radix should be one of 2, 8, 16, but got {}",
             RADIX
         );
+
         debug_assert_eq!(self.cur(), Some('0'));
 
         let start = self.cur_pos();
@@ -251,6 +265,7 @@ impl Lexer<'_> {
             Some(..) => {
                 self.bump();
             }
+
             _ => {
                 unreachable!();
             }
@@ -260,6 +275,7 @@ impl Lexer<'_> {
 
         if self.eat(b'n') {
             let end = self.cur_pos();
+
             let raw = unsafe {
                 // Safety: We got both start and end position from `self.input`
                 self.input.slice(start, end)
@@ -274,6 +290,7 @@ impl Lexer<'_> {
         self.ensure_not_ident()?;
 
         let end = self.cur_pos();
+
         let raw = unsafe {
             // Safety: We got both start and end position from `self.input`
             self.input.slice(start, end)
@@ -290,6 +307,7 @@ impl Lexer<'_> {
             "radix for read_number_no_dot should be one of 2, 8, 10, 16, but got {}",
             RADIX
         );
+
         let start = self.cur_pos();
 
         let mut read_any = false;
@@ -306,6 +324,7 @@ impl Lexer<'_> {
         if !read_any {
             self.error(start, SyntaxError::ExpectedDigit { radix: RADIX })?;
         }
+
         res
     }
 
@@ -321,9 +340,11 @@ impl Lexer<'_> {
             "radix for read_number_no_dot should be one of 2, 8, 10, 16, but got {}",
             RADIX
         );
+
         let start = self.cur_pos();
 
         let mut non_octal = false;
+
         let mut read_any = false;
 
         self.read_digits::<_, f64, RADIX>(
@@ -344,16 +365,19 @@ impl Lexer<'_> {
         }
 
         let end = self.cur_pos();
+
         let raw = unsafe {
             // Safety: We got both start and end position from `self.input`
             self.input.slice(start, end)
         };
         // Remove number separator from number
         let raw_number_str = raw.replace('_', "");
+
         let parsed_float = BigIntValue::from_str_radix(&raw_number_str, RADIX as u32)
             .expect("failed to parse float using BigInt")
             .to_f64()
             .expect("failed to parse float using BigInt");
+
         Ok((parsed_float, LazyBigInt::new(raw_number_str), non_octal))
     }
 
@@ -362,8 +386,10 @@ impl Lexer<'_> {
         match self.cur() {
             Some(c) if c.is_ident_start() => {
                 let span = pos_span(self.cur_pos());
+
                 self.error_span(span, SyntaxError::IdentAfterNum)?
             }
+
             _ => Ok(()),
         }
     }
@@ -374,15 +400,18 @@ impl Lexer<'_> {
     /// will return `None` unless the integer has exactly `len` digits.
     pub(super) fn read_int<const RADIX: u8>(&mut self, len: u8) -> LexResult<Option<f64>> {
         let mut count = 0u16;
+
         let v = self.read_digits::<_, Option<f64>, RADIX>(
             |opt: Option<f64>, radix, val| {
                 count += 1;
+
                 let total = opt.unwrap_or_default() * radix as f64 + val as f64;
 
                 Ok((Some(total), count != len as u16))
             },
             true,
         )?;
+
         if len != 0 && count != len as u16 {
             Ok(None)
         } else {
@@ -394,6 +423,7 @@ impl Lexer<'_> {
         let start = self.state.start;
 
         let mut count = 0;
+
         let v = self.read_digits::<_, Option<u32>, RADIX>(
             |opt: Option<u32>, radix, val| {
                 count += 1;
@@ -404,6 +434,7 @@ impl Lexer<'_> {
                     .and_then(|v| v.checked_add(val))
                     .ok_or_else(|| {
                         let span = Span::new(start, start);
+
                         Error::new(span, SyntaxError::InvalidUnicodeEscape)
                     })?;
 
@@ -411,6 +442,7 @@ impl Lexer<'_> {
             },
             true,
         )?;
+
         if len != 0 && count != len {
             Ok(None)
         } else {
@@ -439,7 +471,9 @@ impl Lexer<'_> {
         }
 
         let start = self.cur_pos();
+
         let mut total: Ret = Default::default();
+
         let mut prev = None;
 
         while let Some(c) = self.cur() {
@@ -453,6 +487,7 @@ impl Lexer<'_> {
 
                     c.is_digit(RADIX as _)
                 };
+
                 let is_forbidden = |c: Option<char>| {
                     if c.is_none() {
                         return true;
@@ -536,8 +571,11 @@ mod tests {
                 input,
                 None,
             );
+
             let ret = f(&mut l);
+
             assert_eq!(l.input.cur(), None);
+
             Ok(ret)
         })
         .unwrap()
@@ -578,24 +616,28 @@ mod tests {
              00000000000000000000000000000000000000000000000000000000000000000\
              00000000000000000000000000000000000000000000000000000000000000000\
              00000000000000000000000000000000000000000000000000000";
+
         const LARGE_NEGATIVE_EXP: &str =
             "1e-10000000000000000000000000000000000000000000000000000000000000\
              00000000000000000000000000000000000000000000000000000000000000000\
              00000000000000000000000000000000000000000000000000000000000000000\
              00000000000000000000000000000000000000000000000000000000000000000\
              000000000000000000000000000000000000000000000000000000";
+
         const ZERO_WITH_LARGE_POSITIVE_EXP: &str =
             "0e100000000000000000000000000000000000000000000000000000000000000\
              00000000000000000000000000000000000000000000000000000000000000000\
              00000000000000000000000000000000000000000000000000000000000000000\
              00000000000000000000000000000000000000000000000000000000000000000\
              00000000000000000000000000000000000000000000000000000";
+
         const ZERO_WITH_LARGE_NEGATIVE_EXP: &str =
             "0e-10000000000000000000000000000000000000000000000000000000000000\
              00000000000000000000000000000000000000000000000000000000000000000\
              00000000000000000000000000000000000000000000000000000000000000000\
              00000000000000000000000000000000000000000000000000000000000000000\
              000000000000000000000000000000000000000000000000000000";
+
         const LARGE_MANTISSA_WITH_LARGE_NEGATIVE_EXP: &str =
             "10000000000000000000000000000000000000000000000000000000000000\
              00000000000000000000000000000000000000000000000000000000000000000\
@@ -612,15 +654,19 @@ mod tests {
             num(LARGE_POSITIVE_EXP),
             (f64::INFINITY, LARGE_POSITIVE_EXP.into())
         );
+
         assert_eq!(num(LARGE_NEGATIVE_EXP), (0.0, LARGE_NEGATIVE_EXP.into()));
+
         assert_eq!(
             num(ZERO_WITH_LARGE_POSITIVE_EXP),
             (0.0, ZERO_WITH_LARGE_POSITIVE_EXP.into())
         );
+
         assert_eq!(
             num(ZERO_WITH_LARGE_NEGATIVE_EXP),
             (0.0, ZERO_WITH_LARGE_NEGATIVE_EXP.into())
         );
+
         assert_eq!(
             num(LARGE_MANTISSA_WITH_LARGE_NEGATIVE_EXP),
             (0.0, LARGE_MANTISSA_WITH_LARGE_NEGATIVE_EXP.into())
@@ -636,6 +682,7 @@ mod tests {
             ),
             num("1000000000000000000000000000000")
         );
+
         assert_eq!(
             (3.402_823_466_385_288_6e38, "34028234663852886e22".into()),
             num("34028234663852886e22"),
@@ -658,18 +705,21 @@ mod tests {
     #[test]
     fn num_legacy_octal() {
         assert_eq!((0o12 as f64, "0012".into()), num("0012"));
+
         assert_eq!((10f64, "012".into()), num("012"));
     }
 
     #[test]
     fn read_int_1() {
         assert_eq!(60, int::<10>("60"));
+
         assert_eq!(0o73, int::<8>("73"));
     }
 
     #[test]
     fn read_int_short() {
         assert_eq!(7, int::<10>("7"));
+
         assert_eq!(10, int::<10>("10"));
     }
 
@@ -688,8 +738,11 @@ mod tests {
     #[test]
     fn read_num_sep() {
         assert_eq!(1_000, int::<10>("1_000"));
+
         assert_eq!(0xaebece, int::<16>("AE_BE_CE"));
+
         assert_eq!(0b1010000110000101, int::<2>("1010_0001_1000_0101"));
+
         assert_eq!(0o0666, int::<8>("0_6_6_6"));
     }
 
@@ -715,6 +768,7 @@ mod tests {
     fn large_bin_number() {
         const LONG: &str =
             "0B11111111111111111111111111111111111111111111111101001010100000010111110001111111111";
+
         const VERY_LARGE_BINARY_NUMBER: &str =
             "0B1111111111111111111111111111111111111111111111111111111111111111\
              111111111111111111111111111111111111111111111111111111111111111111\
@@ -732,6 +786,7 @@ mod tests {
              111111111111111111111111111111111111111111111111111111111111111111\
              111111111111111111111111111111111111111111111111111111111111111111\
              0010111110001111111111";
+
         assert_eq!(
             lex(LONG, |l| l
                 .read_radix_number::<2>()
@@ -740,6 +795,7 @@ mod tests {
                 .unwrap()),
             (9.671_406_556_917_009e24, LONG.into())
         );
+
         assert_eq!(
             lex(VERY_LARGE_BINARY_NUMBER, |l| l
                 .read_radix_number::<2>()
@@ -759,7 +815,9 @@ mod tests {
 
     /// Valid even on strict mode.
     const VALID_CASES: &[&str] = &[".0", "0.e-1", "0e8", ".8e1", "0.8e1", "1.18e1"];
+
     const INVALID_CASES_ON_STRICT: &[&str] = &["08e1", "08.1", "08.8e1", "08", "01"];
+
     const INVALID_CASES: &[&str] = &["01.8e1", "012e1", "00e1", "00.0"];
 
     fn test_floats(strict: bool, success: bool, cases: &'static [&'static str]) {
@@ -782,7 +840,9 @@ mod tests {
             let vec = panic::catch_unwind(|| {
                 crate::with_test_sess(case, |_, input| {
                     let mut l = Lexer::new(Syntax::default(), Default::default(), input, None);
+
                     l.ctx.strict = strict;
+
                     Ok(l.map(|ts| ts.token).collect::<Vec<_>>())
                 })
                 .unwrap()
@@ -797,6 +857,7 @@ mod tests {
                 assert_eq!(vec.len(), 1);
 
                 let token = vec.into_iter().next().unwrap();
+
                 let value = match token {
                     Token::Num { value, .. } => value,
                     _ => {
@@ -827,7 +888,9 @@ mod tests {
     #[test]
     fn non_strict() {
         test_floats(false, true, VALID_CASES);
+
         test_floats(false, true, INVALID_CASES_ON_STRICT);
+
         test_floats(false, false, INVALID_CASES);
     }
 }

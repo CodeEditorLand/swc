@@ -21,8 +21,10 @@ impl Pure<'_> {
         };
 
         let lt = cond.cons.get_type();
+
         if let Value::Known(Type::Bool) = lt {
             let lb = cond.cons.as_pure_bool(&self.expr_ctx);
+
             if let Value::Known(true) = lb {
                 report_change!("conditionals: `foo ? true : bar` => `!!foo || bar`");
 
@@ -37,6 +39,7 @@ impl Pure<'_> {
                     right: cond.alt.take(),
                 }
                 .into();
+
                 return;
             }
 
@@ -45,6 +48,7 @@ impl Pure<'_> {
                 report_change!("conditionals: `foo ? false : bar` => `!foo && bar`");
 
                 self.changed = true;
+
                 self.negate(&mut cond.test, false, false);
 
                 *e = BinExpr {
@@ -54,15 +58,19 @@ impl Pure<'_> {
                     right: cond.alt.take(),
                 }
                 .into();
+
                 return;
             }
         }
 
         let rt = cond.alt.get_type();
+
         if let Value::Known(Type::Bool) = rt {
             let rb = cond.alt.as_pure_bool(&self.expr_ctx);
+
             if let Value::Known(false) = rb {
                 report_change!("conditionals: `foo ? bar : false` => `!!foo && bar`");
+
                 self.changed = true;
 
                 // Negate twice to convert `test` to boolean.
@@ -75,11 +83,13 @@ impl Pure<'_> {
                     right: cond.cons.take(),
                 }
                 .into();
+
                 return;
             }
 
             if let Value::Known(true) = rb {
                 report_change!("conditionals: `foo ? bar : true` => `!foo || bar");
+
                 self.changed = true;
 
                 self.negate(&mut cond.test, false, false);
@@ -112,6 +122,7 @@ impl Pure<'_> {
                 let cons_span = cons.span;
 
                 report_change!("conditionals: `x ? y || z : z` => `x || y && z`");
+
                 self.changed = true;
 
                 *e = BinExpr {
@@ -128,6 +139,7 @@ impl Pure<'_> {
                 }
                 .into();
             }
+
             _ => {}
         }
     }
@@ -142,6 +154,7 @@ impl Pure<'_> {
         let start_str = dump(&*cond, false);
 
         self.negate(&mut cond.test, true, false);
+
         swap(&mut cond.cons, &mut cond.alt);
 
         dump_change_detail!(
@@ -171,9 +184,11 @@ impl Pure<'_> {
         }
 
         let lt = bin.left.get_type();
+
         let rt = bin.right.get_type();
 
         let _lb = bin.left.as_pure_bool(&self.expr_ctx);
+
         let rb = bin.right.as_pure_bool(&self.expr_ctx);
 
         if bin.op == op!("||") {
@@ -181,6 +196,7 @@ impl Pure<'_> {
                 // `!!b || true` => true
                 if let Value::Known(true) = rb {
                     self.changed = true;
+
                     report_change!("conditionals: `!!foo || true` => `true`");
                     *e = make_bool(bin.span, true);
                 }

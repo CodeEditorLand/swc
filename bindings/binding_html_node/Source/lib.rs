@@ -42,6 +42,7 @@ fn init() {
     if cfg!(debug_assertions) || env::var("SWC_DEBUG").unwrap_or_default() == "1" {
         set_hook(Box::new(|panic_info| {
             let backtrace = Backtrace::force_capture();
+
             println!("Panic: {:?}\nBacktrace: {:?}", panic_info, backtrace);
         }));
     }
@@ -205,6 +206,7 @@ const fn default_collapse_whitespaces() -> CollapseWhitespaces {
 #[napi]
 impl Task for MinifyTask {
     type JsValue = TransformOutput;
+
     type Output = TransformOutput;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
@@ -303,6 +305,7 @@ impl MinifyCss for CssMinifier {
                     return None;
                 }
             }
+
             MinifyCssOption::Options(opts) => Cow::Borrowed(opts),
         };
 
@@ -338,9 +341,11 @@ impl MinifyCss for CssMinifier {
 
             CssMinfierOptions::Swc(options) => {
                 let mut options = options.clone();
+
                 let mut errors: Vec<_> = Vec::new();
 
                 let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
+
                 let fm = cm.new_source_file(FileName::Anon.into(), data);
 
                 let mut stylesheet = match mode {
@@ -350,6 +355,7 @@ impl MinifyCss for CssMinifier {
                             _ => return None,
                         }
                     }
+
                     CssMinificationMode::ListOfDeclarations => {
                         match swc_css_parser::parse_file::<Vec<swc_css_ast::DeclarationOrAtRule>>(
                             &fm,
@@ -389,9 +395,11 @@ impl MinifyCss for CssMinifier {
                                     )],
                                 }
                             }
+
                             _ => return None,
                         }
                     }
+
                     CssMinificationMode::MediaQueryList => {
                         match swc_css_parser::parse_file::<swc_css_ast::MediaQueryList>(
                             &fm,
@@ -449,6 +457,7 @@ impl MinifyCss for CssMinifier {
                 swc_css_minifier::minify(&mut stylesheet, options.minifier);
 
                 let mut minified = String::new();
+
                 let wr = swc_css_codegen::writer::basic::BasicCssWriter::new(
                     &mut minified,
                     None,
@@ -463,6 +472,7 @@ impl MinifyCss for CssMinifier {
                     CssMinificationMode::Stylesheet => {
                         swc_css_codegen::Emit::emit(&mut gen, &stylesheet).unwrap();
                     }
+
                     CssMinificationMode::ListOfDeclarations => {
                         let swc_css_ast::Stylesheet { rules, .. } = &stylesheet;
 
@@ -478,6 +488,7 @@ impl MinifyCss for CssMinifier {
 
                         minified = minified[1..minified.len() - 1].to_string();
                     }
+
                     CssMinificationMode::MediaQueryList => {
                         let swc_css_ast::Stylesheet { rules, .. } = &stylesheet;
 
@@ -515,6 +526,7 @@ fn minify_inner(
             let fm = cm.new_source_file(filename.into(), code.into());
 
             let scripting_enabled = opts.scripting_enabled;
+
             let mut errors = vec![];
 
             let (mut document_or_document_fragment, context_element) = if is_fragment {
@@ -530,14 +542,17 @@ fn minify_inner(
                         is_self_closing: false,
                     },
                 };
+
                 let mode = match opts.mode {
                     Some(mode) => mode,
                     _ => DocumentMode::NoQuirks,
                 };
+
                 let form_element = match opts.form_element {
                     Some(form_element) => Some(create_element(form_element)?),
                     _ => None,
                 };
+
                 let document_fragment = parse_file_as_document_fragment(
                     &fm,
                     &context_element,
@@ -640,6 +655,7 @@ fn minify_inner(
                 DocumentOrDocumentFragment::Document(ref mut document) => {
                     minify_document_with_custom_css_minifier(document, &options, &CssMinifier);
                 }
+
                 DocumentOrDocumentFragment::DocumentFragment(ref mut document_fragment) => {
                     minify_document_fragment_with_custom_css_minifier(
                         document_fragment,
@@ -661,6 +677,7 @@ fn minify_inner(
                             ..Default::default()
                         },
                     );
+
                     let mut gen = CodeGenerator::new(
                         &mut wr,
                         CodegenConfig {
@@ -677,6 +694,7 @@ fn minify_inner(
                         DocumentOrDocumentFragment::Document(document) => {
                             gen.emit(&document).context("failed to emit")?;
                         }
+
                         DocumentOrDocumentFragment::DocumentFragment(document_fragment) => {
                             gen.emit(&document_fragment).context("failed to emit")?;
                         }
@@ -709,6 +727,7 @@ fn minify(
     signal: Option<AbortSignal>,
 ) -> AsyncTask<MinifyTask> {
     let code = to_string(code);
+
     let options = String::from_utf8_lossy(opts.as_ref()).to_string();
 
     let task = MinifyTask {
@@ -728,6 +747,7 @@ fn minify_fragment(
     signal: Option<AbortSignal>,
 ) -> AsyncTask<MinifyTask> {
     let code = to_string(code);
+
     let options = String::from_utf8_lossy(opts.as_ref()).to_string();
 
     let task = MinifyTask {
@@ -743,6 +763,7 @@ fn minify_fragment(
 #[napi]
 pub fn minify_sync(code: Either<Buffer, String>, opts: Buffer) -> napi::Result<TransformOutput> {
     let code = to_string(code);
+
     let options = get_deserialized(opts)?;
 
     minify_inner(&code, options, false).convert_err()
@@ -755,6 +776,7 @@ pub fn minify_fragment_sync(
     opts: Buffer,
 ) -> napi::Result<TransformOutput> {
     let code = to_string(code);
+
     let options = get_deserialized(opts)?;
 
     minify_inner(&code, options, true).convert_err()

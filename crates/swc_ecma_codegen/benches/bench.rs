@@ -20,6 +20,7 @@ const COLORS_JS: &str = r#"
 function red( color )
 {
     let foo = 3.14;
+
     return color >> 16;
 }
 /**
@@ -56,7 +57,9 @@ function blue( color )
 function intToHex( int )
 {
     const mask = '#000000';
+
     const hex = int.toString( 16 );
+
     return mask.substring( 0, 7 - hex.length ) + hex;
 }
 /**
@@ -84,6 +87,7 @@ const LARGE_PARTIAL_JS:&str = include_str!("large-partial.js");
 fn bench_emitter(b:&mut Bencher, s:&str) {
 	let _ = ::testing::run_test(true, |cm, handler| {
 		let fm = cm.new_source_file(FileName::Anon.into(), s.into());
+
 		let mut parser = Parser::new(Syntax::default(), StringInput::from(&*fm), None);
 
 		let module = parser.parse_module().map_err(|e| e.into_diagnostic(handler).emit()).unwrap();
@@ -94,9 +98,11 @@ fn bench_emitter(b:&mut Bencher, s:&str) {
 
 		b.iter(|| {
 			let alloc = Allocator::default();
+
 			let mut _guard = unsafe { alloc.guard() };
 
 			let mut src_map_buf = Vec::new();
+
 			let mut buf = Vec::new();
 			{
 				let mut emitter = Emitter {
@@ -113,22 +119,28 @@ fn bench_emitter(b:&mut Bencher, s:&str) {
 
 				let _ = emitter.emit_module(&module);
 			}
+
 			black_box(buf);
+
 			let srcmap = cm.build_source_map(&src_map_buf);
+
 			black_box(srcmap);
 		});
+
 		Ok(())
 	});
 }
 
 fn bench_cases(c:&mut Criterion) {
 	c.bench_function("es/codegen/colors", |b| bench_emitter(b, COLORS_JS));
+
 	c.bench_function("es/codegen/large", |b| bench_emitter(b, LARGE_PARTIAL_JS));
 const LARGE_PARTIAL_JS: &str = include_str!("large-partial.js");
 
 fn bench_emitter(b: &mut Bencher, s: &str) {
     let _ = ::testing::run_test(true, |cm, handler| {
         let fm = cm.new_source_file(FileName::Anon.into(), s.into());
+
         let mut parser = Parser::new(Syntax::default(), StringInput::from(&*fm), None);
 
         let module = parser
@@ -142,9 +154,11 @@ fn bench_emitter(b: &mut Bencher, s: &str) {
 
         b.iter(|| {
             let alloc = Allocator::default();
+
             let mut _guard = unsafe { alloc.guard() };
 
             let mut src_map_buf = Vec::new();
+
             let mut buf = Vec::new();
             {
                 let mut emitter = Emitter {
@@ -161,16 +175,21 @@ fn bench_emitter(b: &mut Bencher, s: &str) {
 
                 let _ = emitter.emit_module(&module);
             }
+
             black_box(buf);
+
             let srcmap = cm.build_source_map(&src_map_buf);
+
             black_box(srcmap);
         });
+
         Ok(())
     });
 }
 
 fn bench_cases(c: &mut Criterion) {
     c.bench_function("es/codegen/colors", |b| bench_emitter(b, COLORS_JS));
+
     c.bench_function("es/codegen/large", |b| bench_emitter(b, LARGE_PARTIAL_JS));
 }
 

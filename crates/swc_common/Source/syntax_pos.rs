@@ -72,6 +72,7 @@ impl From<Span> for (BytePos, BytePos) {
 impl<'a> arbitrary::Arbitrary<'a> for Span {
     fn arbitrary(u: &mut arbitrary::Unstructured<'_>) -> arbitrary::Result<Self> {
         let lo = u.arbitrary::<BytePos>()?;
+
         let hi = u.arbitrary::<BytePos>()?;
 
         Ok(Self::new(lo, hi))
@@ -187,6 +188,7 @@ pub struct EncodePathBuf;
 #[cfg(feature = "rkyv-impl")]
 impl rkyv::with::ArchiveWith<PathBuf> for EncodePathBuf {
     type Archived = rkyv::string::ArchivedString;
+
     type Resolver = rkyv::string::StringResolver;
 
     #[inline]
@@ -210,6 +212,7 @@ where
     #[inline]
     fn serialize_with(field: &PathBuf, serializer: &mut S) -> Result<Self::Resolver, S::Error> {
         let s = field.to_str().unwrap_or_default();
+
         rkyv::string::ArchivedString::serialize_from_str(s, serializer)
     }
 }
@@ -238,6 +241,7 @@ pub struct EncodeUrl;
 #[cfg(feature = "rkyv-impl")]
 impl rkyv::with::ArchiveWith<Url> for EncodeUrl {
     type Archived = rkyv::string::ArchivedString;
+
     type Resolver = rkyv::string::StringResolver;
 
     #[inline]
@@ -259,6 +263,7 @@ where
     #[inline]
     fn serialize_with(field: &Url, serializer: &mut S) -> Result<Self::Resolver, S::Error> {
         let field = field.as_str();
+
         rkyv::string::ArchivedString::serialize_from_str(field, serializer)
     }
 }
@@ -287,6 +292,7 @@ impl std::fmt::Display for FileName {
             FileName::Custom(ref s) => {
                 write!(fmt, "{}", s)
             }
+
             FileName::Internal(ref s) => write!(fmt, "<{}>", s),
         }
     }
@@ -295,6 +301,7 @@ impl std::fmt::Display for FileName {
 impl From<PathBuf> for FileName {
     fn from(p: PathBuf) -> Self {
         assert!(!p.to_string_lossy().ends_with('>'));
+
         FileName::Real(p)
     }
 }
@@ -473,6 +480,7 @@ impl Span {
     /// Return a `Span` that would enclose both `self` and `end`.
     pub fn to(self, end: Span) -> Span {
         let span_data = self;
+
         let end_data = end;
         // FIXME(jseyfried): self.ctxt should always equal end.ctxt here (c.f. issue
         // #23480) Return the macro span on its own to avoid weird diagnostic
@@ -488,6 +496,7 @@ impl Span {
     /// Return a `Span` between the end of `self` to the beginning of `end`.
     pub fn between(self, end: Span) -> Span {
         let span = self;
+
         Span::new(span.hi, end.lo)
     }
 
@@ -495,11 +504,13 @@ impl Span {
     /// `end`.
     pub fn until(self, end: Span) -> Span {
         let span = self;
+
         Span::new(span.lo, end.lo)
     }
 
     pub fn from_inner_byte_pos(self, start: usize, end: usize) -> Span {
         let span = self;
+
         Span::new(
             span.lo + BytePos::from_usize(start),
             span.lo + BytePos::from_usize(end),
@@ -523,6 +534,7 @@ impl Span {
                     .dummy_cnt
                     .fetch_add(1, std::sync::atomic::Ordering::SeqCst),
             );
+
             Span { lo, hi: lo }
         });
     }
@@ -585,11 +597,13 @@ impl MultiSpan {
     /// hygienic context.
     pub fn is_dummy(&self) -> bool {
         let mut is_dummy = true;
+
         for span in &self.primary_spans {
             if !span.is_dummy() {
                 is_dummy = false;
             }
         }
+
         is_dummy
     }
 
@@ -598,18 +612,23 @@ impl MultiSpan {
     /// replacements occurred.
     pub fn replace(&mut self, before: Span, after: Span) -> bool {
         let mut replacements_occurred = false;
+
         for primary_span in &mut self.primary_spans {
             if *primary_span == before {
                 *primary_span = after;
+
                 replacements_occurred = true;
             }
         }
+
         for span_label in &mut self.span_labels {
             if span_label.0 == before {
                 span_label.0 = after;
+
                 replacements_occurred = true;
             }
         }
+
         replacements_occurred
     }
 
@@ -769,6 +788,7 @@ pub struct EncodeArcString;
 #[cfg(feature = "rkyv-impl")]
 impl rkyv::with::ArchiveWith<Lrc<String>> for EncodeArcString {
     type Archived = rkyv::Archived<String>;
+
     type Resolver = rkyv::Resolver<String>;
 
     unsafe fn resolve_with(
@@ -778,6 +798,7 @@ impl rkyv::with::ArchiveWith<Lrc<String>> for EncodeArcString {
         out: *mut Self::Archived,
     ) {
         let s = field.to_string();
+
         rkyv::Archive::resolve(&s, pos, resolver, out);
     }
 }
@@ -890,14 +911,20 @@ impl SourceFile {
 
         let src_hash = {
             let mut hasher: StableHasher = StableHasher::new();
+
             hasher.write(src.as_bytes());
+
             hasher.finish()
         };
+
         let name_hash = {
             let mut hasher: StableHasher = StableHasher::new();
+
             name.hash(&mut hasher);
+
             hasher.finish()
         };
+
         let end_pos = start_pos.to_usize() + src.len();
 
         let (lines, multibyte_chars, non_narrow_chars) =
@@ -922,6 +949,7 @@ impl SourceFile {
     /// Return the BytePos of the beginning of the current line.
     pub fn line_begin_pos(&self, pos: BytePos) -> BytePos {
         let line_index = self.lookup_line(pos).unwrap();
+
         self.lines[line_index]
     }
 
@@ -933,6 +961,7 @@ impl SourceFile {
             // be parsing when we call this function and thus the current
             // line is the last one we have line info for.
             let slice = &src[begin..];
+
             match slice.find('\n') {
                 Some(e) => &slice[..e],
                 None => slice,
@@ -941,7 +970,9 @@ impl SourceFile {
 
         let begin = {
             let line = self.lines.get(line_number)?;
+
             let begin: BytePos = *line - self.start_pos;
+
             begin.to_usize()
         };
 
@@ -970,7 +1001,9 @@ impl SourceFile {
         }
 
         let line_index = lookup_line(&self.lines[..], pos);
+
         assert!(line_index < self.lines.len() as isize);
+
         if line_index >= 0 {
             Some(line_index as usize)
         } else {
@@ -984,6 +1017,7 @@ impl SourceFile {
         }
 
         assert!(line_index < self.lines.len());
+
         if line_index == (self.lines.len() - 1) {
             (self.lines[line_index], self.end_pos)
         } else {
@@ -1010,8 +1044,11 @@ pub(super) fn remove_bom(src: &mut String) {
 
 pub trait SmallPos {
     fn from_usize(n: usize) -> Self;
+
     fn to_usize(&self) -> usize;
+
     fn from_u32(n: u32) -> Self;
+
     fn to_u32(&self) -> u32;
 }
 
@@ -1043,6 +1080,7 @@ pub struct BytePos(#[cfg_attr(feature = "__rkyv", omit_bounds)] pub u32);
 impl BytePos {
     /// Dummy position. This is reserved for synthesized spans.
     pub const DUMMY: Self = BytePos(0);
+
     const MIN_RESERVED: Self = BytePos(DUMMY_RESERVE);
     /// Placeholders, commonly used where names are required, but the names are
     /// not referenced elsewhere.
@@ -1404,14 +1442,19 @@ mod tests {
         let lines = &[BytePos(3), BytePos(17), BytePos(28)];
 
         assert_eq!(lookup_line(lines, BytePos(0)), -1);
+
         assert_eq!(lookup_line(lines, BytePos(3)), 0);
+
         assert_eq!(lookup_line(lines, BytePos(4)), 0);
 
         assert_eq!(lookup_line(lines, BytePos(16)), 0);
+
         assert_eq!(lookup_line(lines, BytePos(17)), 1);
+
         assert_eq!(lookup_line(lines, BytePos(18)), 1);
 
         assert_eq!(lookup_line(lines, BytePos(28)), 2);
+
         assert_eq!(lookup_line(lines, BytePos(29)), 2);
     }
 

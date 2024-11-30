@@ -13,15 +13,20 @@ bitflags! {
         const MultiLine = 1 << 0;
         /// Prints the list using line preservation if possible.
         const PreserveLines = 1 << 1;
+
         const LinesMask = Self::MultiLine.bits() | Self::PreserveLines.bits();
 
         // Delimiters
         const NotDelimited = 0;
+
         const SpaceDelimited = 1 << 2;
         /// There is no delimiter between list items (default).
         const SemiDelimited = 1 << 3;
+
         const CommaDelimited = 1 << 4;
+
         const DotDelimited = 1 << 5;
+
         const DelimitersMask = Self::SpaceDelimited.bits()
             | Self::SemiDelimited.bits()
             | Self::CommaDelimited.bits()

@@ -12,6 +12,7 @@ macro_rules! impl_visit_mut_fn {
             let (params, body) = self.visit_mut_fn_like(&mut f.params, &mut f.body.take().unwrap());
 
             f.params = params;
+
             f.body = Some(body);
         }
 
@@ -24,6 +25,7 @@ macro_rules! impl_visit_mut_fn {
                 BlockStmtOrExpr::Expr(..) => true,
                 _ => false,
             };
+
             let (params, mut body) = self.visit_mut_fn_like(
                 &mut f
                     .params
@@ -57,6 +59,7 @@ macro_rules! impl_visit_mut_fn {
                     Stmt::Return(ReturnStmt { arg: Some(arg), .. }) => {
                         Box::new(BlockStmtOrExpr::Expr(arg))
                     }
+
                     _ => unreachable!(),
                 }
             } else {
@@ -64,6 +67,7 @@ macro_rules! impl_visit_mut_fn {
             };
 
             f.params = params.into_iter().map(|param| param.pat).collect();
+
             f.body = body;
         }
 
@@ -82,9 +86,11 @@ macro_rules! impl_visit_mut_fn {
                 }],
                 &mut f.body.take().unwrap(),
             );
+
             debug_assert!(params.len() == 1);
 
             f.param = Box::new(params.into_iter().next().unwrap().pat);
+
             f.body = Some(body);
         }
 
@@ -97,6 +103,7 @@ macro_rules! impl_visit_mut_fn {
 
             let (params, body) =
                 self.visit_mut_fn_like(&mut Vec::new(), &mut f.body.take().unwrap());
+
             debug_assert_eq!(params, Vec::new());
 
             f.body = Some(body);
@@ -116,6 +123,7 @@ macro_rules! impl_visit_mut_fn {
                 ),
                 None => self.visit_mut_fn_like(&mut Vec::new(), &mut f.body.take()),
             };
+
             assert!(
                 params.len() == 0 || params.len() == 1,
                 "fold_fn_like should return 0 ~ 1 parameter while handling catch clause"
@@ -128,6 +136,7 @@ macro_rules! impl_visit_mut_fn {
             };
 
             f.param = param.map(|param| param.pat);
+
             f.body = body;
         }
 
@@ -160,6 +169,7 @@ macro_rules! impl_visit_mut_fn {
             );
 
             f.params = params.into_iter().map(ParamOrTsParamProp::Param).collect();
+
             f.body = Some(body);
         }
     };

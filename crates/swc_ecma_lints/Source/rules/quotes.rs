@@ -61,9 +61,11 @@ impl Quotes {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, message).emit();
             }
+
             _ => {}
         });
     }
@@ -111,6 +113,7 @@ impl Quotes {
 
                 self.emit_report(*span);
             }
+
             _ => {}
         }
     }
@@ -142,9 +145,11 @@ impl Visit for Quotes {
             Expr::Tpl(tpl_str) => {
                 self.check_tpl_str(tpl_str);
             }
+
             Expr::Lit(Lit::Str(lit_str)) => {
                 self.check_str(false, lit_str);
             }
+
             _ => {}
         }
 

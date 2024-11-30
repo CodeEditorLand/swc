@@ -37,9 +37,11 @@ pub struct Atom(hstr::Atom);
 impl<'a> arbitrary::Arbitrary<'a> for Atom {
     fn arbitrary(u: &mut arbitrary::Unstructured<'_>) -> arbitrary::Result<Self> {
         let sym = u.arbitrary::<String>()?;
+
         if sym.is_empty() {
             return Err(arbitrary::Error::NotEnoughData);
         }
+
         Ok(Self(hstr::Atom::from(sym)))
     }
 }
@@ -48,9 +50,11 @@ fn _asserts() {
     // let _static_assert_size_eq = std::mem::transmute::<Atom, [usize; 1]>;
 
     fn _assert_send<T: Send>() {}
+
     fn _assert_sync<T: Sync>() {}
 
     _assert_send::<Atom>();
+
     _assert_sync::<Atom>();
 }
 
@@ -196,6 +200,7 @@ impl PartialEq<Atom> for str {
 #[cfg(feature = "rkyv-impl")]
 impl rkyv::Archive for Atom {
     type Archived = rkyv::string::ArchivedString;
+
     type Resolver = rkyv::string::StringResolver;
 
     #[allow(clippy::unit_arg)]

@@ -78,13 +78,16 @@ where
             // In case of common module
             if let Some(cached) = self.scope.get_module_by_path(file_name) {
                 tracing::debug!("Cached: {}", file_name);
+
                 return Ok(Some(cached));
             }
 
             let (_, data) = self.load(file_name).context("Bundler.load() failed")?;
+
             let (v, mut files) = self
                 .analyze(file_name, data)
                 .context("failed to analyze module")?;
+
             files.dedup_by_key(|v| v.1.clone());
 
             tracing::debug!(
@@ -94,6 +97,7 @@ where
                 v.export_ctxt(),
                 file_name
             );
+
             self.scope.store_module(v.clone());
 
             // Load dependencies and store them in the `Scope`
@@ -101,6 +105,7 @@ where
                 .into_par_iter()
                 .map(|(_src, path)| {
                     tracing::trace!("loading dependency: {}", path);
+
                     self.load_transformed(&path)
                 })
                 .collect::<Vec<_>>();
@@ -122,7 +127,9 @@ where
                 .loader
                 .load(file_name)
                 .with_context(|| format!("Bundler.loader.load({}) failed", file_name))?;
+
             self.scope.mark_as_loaded(module_id);
+
             Ok((module_id, data))
         })
     }
@@ -135,6 +142,7 @@ where
     ) -> Result<(TransformedModule, Vec<(Source, Lrc<FileName>)>), Error> {
         self.run(|| {
             tracing::trace!("transform_module({})", data.fm.name);
+
             let (id, local_mark, export_mark) = self.scope.module_id_gen.gen(file_name);
 
             data.module.visit_mut_with(&mut ClearMark);
@@ -187,7 +195,9 @@ where
                     forced_es6: false,
                     found_other: false,
                 };
+
                 data.module.visit_with(&mut v);
+
                 v.forced_es6 || !v.found_other
             };
 
@@ -195,8 +205,11 @@ where
                 || self.resolve_imports(file_name, imports),
                 || self.resolve_exports(file_name, exports),
             );
+
             let (imports, mut import_files) = imports?;
+
             let (exports, reexport_files) = exports?;
+
             import_files.extend(reexport_files);
 
             Ok((
@@ -225,6 +238,7 @@ where
     ) -> Result<(Exports, Vec<(Source, Lrc<FileName>)>), Error> {
         self.run(|| {
             tracing::trace!("resolve_exports({})", base);
+
             let mut files = Vec::new();
 
             let mut exports = Exports::default();
@@ -237,10 +251,13 @@ where
                         let info = match src {
                             Some(src) => {
                                 let name = self.resolve(base, &src.value)?;
+
                                 let (id, local_mark, export_mark) =
                                     self.scope.module_id_gen.gen(&name);
+
                                 Some((id, local_mark, export_mark, name, src))
                             }
+
                             None => None,
                         };
 
@@ -264,7 +281,9 @@ where
                             export_ctxt: SyntaxContext::empty().apply_mark(export_mark),
                             src,
                         };
+
                         exports.reexports.push((src.clone(), specifiers));
+
                         files.push((src, name));
                     }
                 }
@@ -282,9 +301,11 @@ where
     ) -> Result<(Imports, Vec<(Source, Lrc<FileName>)>), Error> {
         self.run(|| {
             tracing::trace!("resolve_imports({})", base);
+
             let mut files = Vec::new();
 
             let mut merged = Imports::default();
+
             let RawImports {
                 imports,
                 lazy_imports,
@@ -314,6 +335,7 @@ where
                     self.run(|| {
                         //
                         let file_name = self.resolve(base, &decl.src.value)?;
+
                         let (id, local_mark, export_mark) =
                             self.scope.module_id_gen.gen(&file_name);
 
@@ -343,10 +365,12 @@ where
                     export_ctxt: SyntaxContext::empty().apply_mark(export_mark),
                     src: *decl.src,
                 };
+
                 files.push((src.clone(), file_name));
 
                 // TODO: Handle rename
                 let mut specifiers = Vec::new();
+
                 for s in decl.specifiers {
                     match s {
                         ImportSpecifier::Named(s) => {
@@ -355,13 +379,16 @@ where
                                 Some(ModuleExportName::Str(..)) => {
                                     unimplemented!("module string names unimplemented")
                                 }
+
                                 _ => None,
                             };
+
                             specifiers.push(Specifier::Specific {
                                 local: s.local.into(),
                                 alias: imported.map(From::from),
                             })
                         }
+
                         ImportSpecifier::Default(s) => specifiers.push(Specifier::Specific {
                             local: s.local.into(),
                             alias: Some(Id::new("default".into(), SyntaxContext::empty())),
@@ -436,6 +463,7 @@ impl Visit for Es6ModuleDetector {
                     self.found_other = true;
                 }
             }
+
             Callee::Super(_) | Callee::Import(_) => {}
         }
     }
@@ -477,7 +505,9 @@ impl Visit for Es6ModuleDetector {
             }
 
             ModuleDecl::TsImportEquals(_) => {}
+
             ModuleDecl::TsExportAssignment(_) => {}
+
             ModuleDecl::TsNamespaceExport(_) => {}
         }
     }

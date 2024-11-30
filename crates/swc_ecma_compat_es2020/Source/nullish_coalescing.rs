@@ -65,7 +65,9 @@ impl VisitMut for NullishCoalescing {
     /// Prevents #1123
     fn visit_mut_block_stmt(&mut self, s: &mut BlockStmt) {
         let old_vars = self.vars.take();
+
         s.visit_mut_children_with(self);
+
         self.vars = old_vars;
     }
 
@@ -73,8 +75,11 @@ impl VisitMut for NullishCoalescing {
     fn visit_mut_switch_case(&mut self, s: &mut SwitchCase) {
         // Prevents #6328
         s.test.visit_mut_with(self);
+
         let old_vars = self.vars.take();
+
         s.cons.visit_mut_with(self);
+
         self.vars = old_vars;
     }
 
@@ -143,6 +148,7 @@ impl VisitMut for NullishCoalescing {
 
                     AssignTarget::Simple(left) => {
                         let alias = alias_ident_for_simple_assign_tatget(left, "refs");
+
                         self.vars.push(VarDeclarator {
                             span: DUMMY_SP,
                             name: alias.clone().into(),
@@ -192,12 +198,14 @@ impl VisitMut for NullishCoalescing {
 
     fn visit_mut_block_stmt_or_expr(&mut self, n: &mut BlockStmtOrExpr) {
         let vars = self.vars.take();
+
         n.visit_mut_children_with(self);
 
         if !self.vars.is_empty() {
             if let BlockStmtOrExpr::Expr(expr) = n {
                 // expr
                 // { var decl = init; return expr; }
+
                 let stmts = vec![
                     VarDecl {
                         span: DUMMY_SP,

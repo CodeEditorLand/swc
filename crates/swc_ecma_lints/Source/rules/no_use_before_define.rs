@@ -121,9 +121,11 @@ impl NoUseBeforeDefine {
             LintRuleReaction::Error => {
                 handler.struct_span_err(span, &message).emit();
             }
+
             LintRuleReaction::Warning => {
                 handler.struct_span_warn(span, &message).emit();
             }
+
             _ => {}
         });
     }
@@ -133,6 +135,7 @@ impl NoUseBeforeDefine {
 
         if self.has_access_before_define(&ident_id) {
             let sym = &*ident.sym;
+
             let mut spans = self
                 .get_ident_spans_in_current_scope(&ident_id)
                 .iter()
@@ -152,6 +155,7 @@ impl NoUseBeforeDefine {
             Pat::Ident(id) => {
                 self.check_ident(es6_var_check, &Ident::from(id));
             }
+
             Pat::Array(ArrayPat { elems, .. }) => {
                 elems.iter().for_each(|elem| {
                     if let Some(elem) = elem {
@@ -159,26 +163,33 @@ impl NoUseBeforeDefine {
                     }
                 });
             }
+
             Pat::Object(ObjectPat { props, .. }) => {
                 props.iter().for_each(|prop| match prop {
                     ObjectPatProp::Assign(AssignPatProp { key, .. }) => {
                         self.check_ident(es6_var_check, &Ident::from(key));
                     }
+
                     ObjectPatProp::KeyValue(KeyValuePatProp { value, .. }) => {
                         self.check_pat(es6_var_check, value.as_ref());
                     }
+
                     ObjectPatProp::Rest(RestPat { arg, .. }) => {
                         self.check_pat(es6_var_check, arg.as_ref());
                     }
                 });
             }
+
             Pat::Rest(RestPat { arg, .. }) => {
                 self.check_pat(es6_var_check, arg.as_ref());
             }
+
             Pat::Assign(AssignPat { left, .. }) => {
                 self.check_pat(es6_var_check, left.as_ref());
             }
+
             Pat::Invalid(_) => {}
+
             Pat::Expr(_) => {}
         }
     }
@@ -193,11 +204,13 @@ impl Visit for NoUseBeforeDefine {
 
     fn visit_block_stmt(&mut self, block: &BlockStmt) {
         self.scoped_indents.insert(block.span, Default::default());
+
         self.scope.push(block.span);
 
         block.visit_children_with(self);
 
         self.scoped_indents.remove(&block.span);
+
         self.scope.pop();
     }
 

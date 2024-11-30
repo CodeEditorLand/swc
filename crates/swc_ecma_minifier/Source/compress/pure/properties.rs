@@ -13,6 +13,7 @@ impl Pure<'_> {
         if !self.options.props {
             return None;
         }
+
         if let Some(Expr::Array(..) | Expr::Await(..) | Expr::Yield(..) | Expr::Lit(..)) = obj {
             return None;
         }
@@ -24,6 +25,7 @@ impl Pure<'_> {
                     || is_valid_identifier(&s.value, true) =>
             {
                 self.changed = true;
+
                 report_change!(
                     "properties: Computed member => member expr with identifier as a prop"
                 );
@@ -61,11 +63,13 @@ impl Pure<'_> {
                         *p = PropName::Str(s.clone());
                     }
                 }
+
                 Expr::Lit(Lit::Num(n)) => {
                     if n.value.is_sign_positive() {
                         *p = PropName::Num(n.clone());
                     }
                 }
+
                 _ => {}
             }
         }
@@ -78,17 +82,20 @@ impl Pure<'_> {
                 || is_valid_identifier(&s.value, false)
             {
                 self.changed = true;
+
                 report_change!("misc: Optimizing string property name");
                 *name = PropName::Ident(IdentName {
                     span: s.span,
                     sym: s.value.clone(),
                 });
+
                 return;
             }
 
             if (!s.value.starts_with('0') && !s.value.starts_with('+')) || s.value.len() <= 1 {
                 if let Ok(v) = s.value.parse::<u32>() {
                     self.changed = true;
+
                     report_change!("misc: Optimizing numeric property name");
                     *name = PropName::Num(Number {
                         span: s.span,
@@ -122,6 +129,7 @@ impl Pure<'_> {
 
                 Some(IdentName::new(s.value.clone(), s.span))
             }
+
             _ => None,
         }
     }

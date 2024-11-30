@@ -37,8 +37,11 @@ impl Optimizer<'_> {
         };
 
         let mut var_ids = Vec::new();
+
         let mut cases = Vec::new();
+
         let mut exact = None;
+
         let mut may_match_other_than_exact = false;
 
         for (idx, case) in stmt.cases.iter_mut().enumerate() {
@@ -48,11 +51,13 @@ impl Optimizer<'_> {
                         (Expr::Lit(Lit::Num(e)), Expr::Lit(Lit::Num(tail))) => {
                             e.value == tail.value
                         }
+
                         _ => e.eq_ignore_span(tail),
                     } {
                         cases.push(case.take());
 
                         exact = Some(idx);
+
                         break;
                     } else {
                         var_ids.extend(extract_var_ids(&case.cons))
@@ -74,12 +79,15 @@ impl Optimizer<'_> {
 
         if let Some(exact) = exact {
             let exact_case = cases.last_mut().unwrap();
+
             let mut terminate = exact_case.cons.iter().rev().any(|s| s.terminates());
+
             for case in stmt.cases[(exact + 1)..].iter_mut() {
                 if terminate {
                     var_ids.extend(extract_var_ids(&case.cons))
                 } else {
                     terminate |= case.cons.iter().rev().any(|s| s.terminates());
+
                     exact_case.cons.extend(case.cons.take())
                 }
             }
@@ -91,6 +99,7 @@ impl Optimizer<'_> {
                         true
                     } else {
                         var_ids.extend(extract_var_ids(&case.cons));
+
                         false
                     }
                 });
@@ -100,6 +109,7 @@ impl Optimizer<'_> {
                 let last = cases.last_mut().unwrap();
 
                 self.changed = true;
+
                 report_change!("switches: Turn exact match into default");
                 // so that following pass could turn it into if else
                 if let Some(test) = last.test.take() {
@@ -110,6 +120,7 @@ impl Optimizer<'_> {
 
         if cases.len() == stmt.cases.len() {
             stmt.cases = cases;
+
             return;
         }
 
@@ -149,7 +160,9 @@ impl Optimizer<'_> {
             }
 
             stmts.push(discriminant.take().into_stmt());
+
             let mut last = cases.pop().unwrap();
+
             remove_last_break(&mut last.cons);
 
             if let Some(test) = last.test {
@@ -213,6 +226,7 @@ impl Optimizer<'_> {
                 .any(|stmt| stmt.may_have_side_effects(&self.ctx.expr_ctx) || stmt.terminates())
             {
                 last = idx + 1;
+
                 break;
             }
         }
@@ -233,7 +247,9 @@ impl Optimizer<'_> {
         // if default is before empty cases, we must ensure empty case is preserved
         if last < cases.len() && default.map(|idx| idx >= last).unwrap_or(true) {
             self.changed = true;
+
             report_change!("switches: Removing empty cases at the end");
+
             cases.drain(last..);
         }
 
@@ -256,6 +272,7 @@ impl Optimizer<'_> {
             if end != cases.len() - 1 {
                 return;
             }
+
             let start = cases.iter().enumerate().rposition(|(idx, case)| {
                 case.test
                     .as_deref()
@@ -272,12 +289,15 @@ impl Optimizer<'_> {
             if start <= default {
                 if start < end {
                     cases[start].cons = cases[end].cons.take();
+
                     cases.drain((start + 1)..);
+
                     cases[start].test = None;
                 }
             } else {
                 if start <= end {
                     cases[start].cons = cases[end].cons.take();
+
                     cases.drain(start..);
                 }
             }
@@ -289,15 +309,19 @@ impl Optimizer<'_> {
     /// them.
     fn merge_cases_with_same_cons(&mut self, cases: &mut Vec<SwitchCase>) {
         let mut i = 0;
+
         let len = cases.len();
 
         // may some smarter person find a better solution
         while i < len {
             if cases[i].cons.is_empty() {
                 i += 1;
+
                 continue;
             }
+
             let mut block_start = i + 1;
+
             let mut cannot_cross_block = false;
 
             for j in (i + 1)..len {
@@ -350,13 +374,19 @@ impl Optimizer<'_> {
 
                 if found {
                     self.changed = true;
+
                     report_change!("switches: Merging cases with same cons");
+
                     let mut len = 1;
+
                     while len < j && cases[j - len].cons.is_empty() {
                         len += 1;
                     }
+
                     cases[j].cons = cases[i].cons.take();
+
                     cases[(i + 1)..=j].rotate_right(len);
+
                     i += len;
                 }
             }
@@ -375,6 +405,7 @@ impl Optimizer<'_> {
             match &mut *sw.cases {
                 [] => {
                     self.changed = true;
+
                     report_change!("switches: Removing empty switch");
                     *s = ExprStmt {
                         span: sw.span,
@@ -386,11 +417,15 @@ impl Optimizer<'_> {
                     if contains_nested_break(case) {
                         return;
                     }
+
                     self.changed = true;
+
                     report_change!("switches: Turn one case switch into if");
+
                     remove_last_break(&mut case.cons);
 
                     let case = case.take();
+
                     let discriminant = sw.discriminant.take();
 
                     if let Some(test) = case.test {
@@ -419,6 +454,7 @@ impl Optimizer<'_> {
                             span: discriminant.span(),
                             expr: discriminant,
                         })];
+
                         stmts.extend(case.cons);
                         *s = BlockStmt {
                             span: sw.span,
@@ -432,8 +468,11 @@ impl Optimizer<'_> {
                     if contains_nested_break(first) || contains_nested_break(second) {
                         return;
                     }
+
                     self.changed = true;
+
                     report_change!("switches: Turn two cases switch into if else");
+
                     let terminate = first.cons.iter().rev().any(|s| s.terminates());
 
                     if terminate {
@@ -496,6 +535,7 @@ impl Optimizer<'_> {
                             .into(),
                             alt: None,
                         })];
+
                         stmts.extend(second.cons.take());
                         *s = BlockStmt {
                             span: sw.span,
@@ -505,6 +545,7 @@ impl Optimizer<'_> {
                         .into()
                     }
                 }
+
                 _ => (),
             }
         }
@@ -515,45 +556,62 @@ fn remove_last_break(stmt: &mut Vec<Stmt>) -> bool {
     match stmt.last_mut() {
         Some(Stmt::Break(BreakStmt { label: None, .. })) => {
             report_change!("switches: Removing `break` at the end");
+
             stmt.pop();
+
             true
         }
+
         Some(Stmt::If(i)) => {
             let mut changed = false;
+
             match &mut *i.cons {
                 Stmt::Break(BreakStmt { label: None, .. }) => {
                     report_change!("switches: Removing `break` at the end");
+
                     i.cons.take();
+
                     changed = true
                 }
+
                 Stmt::Block(b) => changed |= remove_last_break(&mut b.stmts),
                 _ => (),
             };
+
             if let Some(alt) = i.alt.as_mut() {
                 match &mut **alt {
                     Stmt::Break(BreakStmt { label: None, .. }) => {
                         report_change!("switches: Removing `break` at the end");
+
                         alt.take();
+
                         changed = true
                     }
+
                     Stmt::Block(b) => changed |= remove_last_break(&mut b.stmts),
                     _ => (),
                 };
             }
+
             changed
         }
+
         Some(Stmt::Try(t)) => {
             let mut changed = false;
+
             changed |= remove_last_break(&mut t.block.stmts);
 
             if let Some(h) = t.handler.as_mut() {
                 changed |= remove_last_break(&mut h.body.stmts);
             }
+
             if let Some(f) = t.finalizer.as_mut() {
                 changed |= remove_last_break(&mut f.stmts);
             }
+
             changed
         }
+
         Some(Stmt::Block(BlockStmt { stmts, .. })) => remove_last_break(stmts),
         _ => false,
     }
@@ -564,7 +622,9 @@ fn contains_nested_break(case: &SwitchCase) -> bool {
         top_level: true,
         nested_unlabelled_break: false,
     };
+
     case.visit_with(&mut v);
+
     v.nested_unlabelled_break
 }
 
@@ -586,7 +646,9 @@ impl Visit for BreakFinder {
     fn visit_if_stmt(&mut self, i: &IfStmt) {
         if self.top_level {
             self.top_level = false;
+
             i.visit_children_with(self);
+
             self.top_level = true;
         } else {
             i.visit_children_with(self);

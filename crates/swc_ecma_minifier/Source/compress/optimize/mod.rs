@@ -181,6 +181,7 @@ impl Ctx {
         if self.in_fn_like || self.in_block {
             return false;
         }
+
         true
     }
 
@@ -260,6 +261,7 @@ impl Vars {
         N: for<'aa> VisitMutWith<Finalizer<'aa>>,
     {
         let mut changed = false;
+
         if !self.simple_functions.is_empty()
             || !self.lits.is_empty()
             || !self.lits_for_cmp.is_empty()
@@ -276,13 +278,17 @@ impl Vars {
                 vars_to_remove: &self.removed,
                 changed: false,
             };
+
             n.visit_mut_with(&mut v);
+
             changed |= v.changed;
         }
 
         if !self.vars_for_inlining.is_empty() {
             let mut v = NormalMultiReplacer::new(&mut self.vars_for_inlining);
+
             n.visit_mut_with(&mut v);
+
             changed |= v.changed;
         }
 
@@ -366,6 +372,7 @@ impl Optimizer<'_> {
                     Expr::Lit(Lit::Str(Str { raw, .. })) => {
                         matches!(raw, Some(value) if value == "\"use asm\"" || value == "'use asm'")
                     }
+
                     _ => false,
                 },
                 _ => false,
@@ -405,11 +412,14 @@ impl Optimizer<'_> {
         Vec<T>: VisitMutWith<Self> + VisitWith<UsageAnalyzer<ProgramData>> + VisitWith<AssertValid>,
     {
         let mut use_asm = false;
+
         let prepend_stmts = self.prepend_stmts.take();
+
         let append_stmts = self.append_stmts.take();
 
         {
             let mut child_ctx = self.ctx.clone();
+
             let mut directive_count = 0;
 
             if !stmts.is_empty() {
@@ -422,11 +432,15 @@ impl Optimizer<'_> {
                             Some(value) if value == "\"use strict\"" || value == "'use strict'" => {
                                 child_ctx.expr_ctx.in_strict = true;
                             }
+
                             Some(value) if value == "\"use asm\"" || value == "'use asm'" => {
                                 child_ctx.in_asm = true;
+
                                 self.ctx.in_asm = true;
+
                                 use_asm = true;
                             }
+
                             _ => {}
                         }
                     }
@@ -434,6 +448,7 @@ impl Optimizer<'_> {
             }
 
             let mut new = Vec::with_capacity(stmts.len() * 11 / 10);
+
             for (i, mut stmt) in stmts.take().into_iter().enumerate() {
                 // debug_assert_eq!(self.prepend_stmts, Vec::new());
                 // debug_assert_eq!(self.append_stmts, Vec::new());
@@ -443,6 +458,7 @@ impl Optimizer<'_> {
                     stmt.visit_mut_with(self);
                 } else {
                     let child_optimizer = &mut *self.with_ctx(child_ctx.clone());
+
                     stmt.visit_mut_with(child_optimizer);
                 }
 
@@ -457,9 +473,11 @@ impl Optimizer<'_> {
                     Ok(Stmt::Block(s)) if s.ctxt.has_mark(self.marks.fake_block) => {
                         new.extend(s.stmts.into_iter().map(T::from));
                     }
+
                     Ok(s) => {
                         new.push(T::from(s));
                     }
+
                     Err(stmt) => {
                         new.push(stmt);
                     }
@@ -517,7 +535,9 @@ impl Optimizer<'_> {
         drop_invalid_stmts(stmts);
 
         // debug_assert_eq!(self.prepend_stmts, Vec::new());
+
         self.prepend_stmts = prepend_stmts;
+
         self.append_stmts = append_stmts;
     }
 
@@ -568,48 +588,62 @@ impl Optimizer<'_> {
             BinaryOp::RShift => {
                 op!(">>=")
             }
+
             BinaryOp::ZeroFillRShift => {
                 op!(">>>=")
             }
+
             BinaryOp::Add => {
                 op!("+=")
             }
+
             BinaryOp::Sub => {
                 op!("-=")
             }
+
             BinaryOp::Mul => {
                 op!("*=")
             }
+
             BinaryOp::Div => {
                 op!("/=")
             }
+
             BinaryOp::Mod => {
                 op!("%=")
             }
+
             BinaryOp::BitOr => {
                 op!("|=")
             }
+
             BinaryOp::BitXor => {
                 op!("^=")
             }
+
             BinaryOp::BitAnd => {
                 op!("&=")
             }
+
             BinaryOp::LogicalOr => {
                 op!("||=")
             }
+
             BinaryOp::LogicalAnd => {
                 op!("&&=")
             }
+
             BinaryOp::Exp => {
                 op!("**=")
             }
+
             BinaryOp::NullishCoalescing => {
                 op!("??=")
             }
         };
 
         e.op = op;
+
         e.right = right.take();
         // Now we can compress it to an assignment
     }
@@ -636,6 +670,7 @@ impl Optimizer<'_> {
         if self.options.bools_as_ints || self.options.bools {
             if let Lit::Bool(v) = lit {
                 self.changed = true;
+
                 report_change!("Compressing boolean literal");
                 *e = UnaryExpr {
                     span: v.span,
@@ -655,13 +690,16 @@ impl Optimizer<'_> {
     fn remove_invalid_bin(&mut self, e: &mut Expr) {
         if let Expr::Bin(BinExpr { left, right, .. }) = e {
             self.remove_invalid_bin(left);
+
             self.remove_invalid_bin(right);
 
             if left.is_invalid() {
                 *e = *right.take();
+
                 self.remove_invalid_bin(e);
             } else if right.is_invalid() {
                 *e = *left.take();
+
                 self.remove_invalid_bin(e);
             }
         }
@@ -687,12 +725,15 @@ impl Optimizer<'_> {
                 );
                 // We don't need to run this again
                 // self.changed = true;
+
                 return None;
             }
 
             Expr::Tpl(t) if t.exprs.is_empty() => {
                 report_change!("ignore_return_value: Dropping tpl expr without expr");
+
                 self.changed = true;
+
                 return None;
             }
 
@@ -702,7 +743,9 @@ impl Optimizer<'_> {
                     "ignore_return_value: Dropping unused fn expr as it does not have any side \
                      effect"
                 );
+
                 self.changed = true;
+
                 return None;
             }
 
@@ -747,12 +790,14 @@ impl Optimizer<'_> {
                         || self.options.side_effects,
                     ..self.ctx.clone()
                 };
+
                 let new_r = self.with_ctx(ctx).ignore_return_value(right);
 
                 match new_r {
                     Some(r) => {
                         *right = Box::new(r);
                     }
+
                     None => return self.ignore_return_value(left),
                 }
 
@@ -795,7 +840,9 @@ impl Optimizer<'_> {
                 },
             ) => {
                 let left = self.ignore_return_value(&mut bin.left);
+
                 let right = self.ignore_return_value(&mut bin.right);
+
                 let span = bin.span;
 
                 if left.is_none() && right.is_none() {
@@ -807,7 +854,9 @@ impl Optimizer<'_> {
                 }
 
                 self.changed = true;
+
                 report_change!("ignore_return_value: Compressing binary as seq");
+
                 return Some(
                     SeqExpr {
                         span,
@@ -837,7 +886,9 @@ impl Optimizer<'_> {
             } && args.is_empty() =>
             {
                 report_change!("ignore_return_value: Dropping a pure call");
+
                 self.changed = true;
+
                 return None;
             }
 
@@ -873,6 +924,7 @@ impl Optimizer<'_> {
                         if let Some(usage) = self.data.vars.get(&callee.to_id()) {
                             if !usage.reassigned && usage.pure_fn {
                                 self.changed = true;
+
                                 report_change!("Reducing function call to a variable");
 
                                 if args.iter().any(|arg| arg.spread.is_some()) {
@@ -883,6 +935,7 @@ impl Optimizer<'_> {
                                             if arg.spread.is_some() {
                                                 return Some(arg);
                                             }
+
                                             self.ignore_return_value(&mut arg.expr)
                                                 .map(Box::new)
                                                 .map(|expr| ExprOrSpread { expr, spread: None })
@@ -953,11 +1006,13 @@ impl Optimizer<'_> {
                                     "ignore_return_value: Dropping unused assign target: {}",
                                     dump(&*expr, false)
                                 );
+
                                 return Some(*right.take());
                             }
                         }
                     }
                 }
+
                 return Some(e.take());
             }
 
@@ -968,10 +1023,12 @@ impl Optimizer<'_> {
                 ..
             }) => {
                 let old = i.id.to_id();
+
                 self.store_var_for_inlining(&mut i.id, right, true);
 
                 if i.is_dummy() && self.options.unused {
                     report_change!("inline: Removed variable ({}{:?})", old.0, old.1);
+
                     self.vars.removed.insert(old);
                 }
 
@@ -985,6 +1042,7 @@ impl Optimizer<'_> {
             // function f() {
             //      return f.g, 1
             // }
+
             Expr::Member(MemberExpr { obj, prop, .. })
                 if !prop.is_computed()
                     && (self.options.top_level() || !self.ctx.in_top_level()) =>
@@ -1057,8 +1115,11 @@ impl Optimizer<'_> {
                 }
 
                 let mut exprs = Vec::new();
+
                 self.changed = true;
+
                 report_change!("ignore_return_value: Inverting an array literal");
+
                 exprs.extend(
                     arr.elems
                         .take()
@@ -1084,40 +1145,53 @@ impl Optimizer<'_> {
 
             Expr::Object(obj) => {
                 let mut exprs = Vec::new();
+
                 self.changed = true;
+
                 report_change!("ignore_return_value: Inverting an object literal");
+
                 for prop in obj.props.take() {
                     match prop {
                         PropOrSpread::Spread(mut e) => {
                             exprs.extend(self.ignore_return_value(&mut e.expr).map(Box::new));
                         }
+
                         PropOrSpread::Prop(prop) => match *prop {
                             Prop::KeyValue(KeyValueProp { key, mut value, .. }) => {
                                 match key {
                                     PropName::Ident(_) => {}
+
                                     PropName::Str(_) => {}
+
                                     PropName::Num(_) => {}
+
                                     PropName::Computed(mut key) => {
                                         exprs.extend(
                                             self.ignore_return_value(&mut key.expr).map(Box::new),
                                         );
                                     }
+
                                     PropName::BigInt(_) => {}
                                 }
 
                                 exprs.extend(self.ignore_return_value(&mut value).map(Box::new));
                             }
+
                             Prop::Getter(GetterProp { key, .. })
                             | Prop::Setter(SetterProp { key, .. })
                             | Prop::Method(MethodProp { key, .. }) => match key {
                                 PropName::Ident(_) => {}
+
                                 PropName::Str(_) => {}
+
                                 PropName::Num(_) => {}
+
                                 PropName::Computed(mut key) => {
                                     exprs.extend(
                                         self.ignore_return_value(&mut key.expr).map(Box::new),
                                     );
                                 }
+
                                 PropName::BigInt(_) => {}
                             },
 
@@ -1165,18 +1239,21 @@ impl Optimizer<'_> {
                 *arg = Box::new(processed_arg);
 
                 log_abort!("ignore_return_value: Preserving negated iife");
+
                 return Some(e.take());
             }
 
             // `delete` is handled above
             Expr::Unary(expr) => {
                 self.changed = true;
+
                 report_change!("ignore_return_value: Reducing unary ({})", expr.op);
 
                 // We can ignore the identifier in case of typeof
                 if expr.op == op!("typeof") && expr.arg.is_ident() {
                     return None;
                 }
+
                 return self.ignore_return_value(&mut expr.arg);
             }
 
@@ -1191,6 +1268,7 @@ impl Optimizer<'_> {
                 report_change!("ignore_return_value: Reducing binary ({})", *op);
 
                 let left = self.ignore_return_value(left).map(Box::new);
+
                 let right = self.ignore_return_value(right).map(Box::new);
 
                 let mut seq = SeqExpr {
@@ -1198,6 +1276,7 @@ impl Optimizer<'_> {
                     exprs: left.into_iter().chain(right).collect(),
                 }
                 .into();
+
                 return self.ignore_return_value(&mut seq);
             }
 
@@ -1213,11 +1292,14 @@ impl Optimizer<'_> {
                 };
 
                 let cons_span = cond.cons.span();
+
                 let alt_span = cond.alt.span();
+
                 let cons = self
                     .with_ctx(ctx.clone())
                     .ignore_return_value(&mut cond.cons)
                     .map(Box::new);
+
                 let alt = self
                     .with_ctx(ctx.clone())
                     .ignore_return_value(&mut cond.alt)
@@ -1231,12 +1313,16 @@ impl Optimizer<'_> {
                         test: cond.test.take(),
                         cons: cons.unwrap_or_else(|| {
                             report_change!("ignore_return_value: Dropped `cons`");
+
                             self.changed = true;
+
                             Expr::undefined(cons_span)
                         }),
                         alt: alt.unwrap_or_else(|| {
                             report_change!("ignore_return_value: Dropped `alt`");
+
                             self.changed = true;
+
                             Expr::undefined(alt_span)
                         }),
                     }
@@ -1262,14 +1348,17 @@ impl Optimizer<'_> {
                         if idx == 0 && self.ctx.is_this_aware_callee && is_injected_zero {
                             return Some(*expr.take());
                         }
+
                         let ctx = Ctx {
                             dont_use_negated_iife: idx != 0,
                             ..self.ctx.clone()
                         };
+
                         self.with_ctx(ctx).ignore_return_value(expr)
                     })
                     .map(Box::new)
                     .collect::<Vec<_>>();
+
                 if exprs.len() <= 1 {
                     return exprs.pop().map(|v| *v);
                 } else {
@@ -1285,6 +1374,7 @@ impl Optimizer<'_> {
                         // Make return type undefined.
                         if let Some(last) = exprs.last_mut() {
                             report_change!("ignore_return_value: Shifting void");
+
                             self.changed = true;
                             *last = UnaryExpr {
                                 span: DUMMY_SP,
@@ -1297,6 +1387,7 @@ impl Optimizer<'_> {
 
                     if exprs.is_empty() {
                         report_change!("ignore_return_value: Dropping empty seq");
+
                         return None;
                     }
 
@@ -1312,9 +1403,12 @@ impl Optimizer<'_> {
 
             Expr::Ident(id) if id.ctxt != self.ctx.expr_ctx.unresolved_ctxt => {
                 report_change!("ignore_return_value: Dropping a declared ident {}", id);
+
                 self.changed = true;
+
                 return None;
             }
+
             _ => {}
         }
 
@@ -1327,6 +1421,7 @@ impl Optimizer<'_> {
                 if bs.stmts.is_empty() {
                     report_change!("Converting empty block to empty statement");
                     *s = EmptyStmt { span: DUMMY_SP }.into();
+
                     return;
                 }
 
@@ -1335,17 +1430,21 @@ impl Optimizer<'_> {
                     if bs.ctxt.has_mark(self.marks.fake_block) {
                         report_change!("Unwrapping a fake block");
                         *s = bs.stmts.take().into_iter().next().unwrap();
+
                         return;
                     }
 
                     if let Stmt::Block(block) = &mut bs.stmts[0] {
                         let stmts = &block.stmts;
+
                         if maybe_par!(
                             stmts.iter().all(|stmt| !matches!(stmt, Stmt::Decl(..))),
                             *crate::LIGHT_TASK_PARALLELS
                         ) {
                             report_change!("optimizer: Removing nested block");
+
                             self.changed = true;
+
                             bs.stmts = block.stmts.take();
                         }
                     }
@@ -1367,12 +1466,15 @@ impl Optimizer<'_> {
                         {
                             true
                         }
+
                         _ => false,
                     })
                 {
                     report_change!("optimizer: Unwrapping a block with variable statements");
+
                     self.changed = true;
                     *s = bs.stmts[0].take();
+
                     return;
                 }
 
@@ -1380,8 +1482,10 @@ impl Optimizer<'_> {
                     if let Stmt::Block(block) = &stmt {
                         if block.stmts.is_empty() {
                             self.changed = true;
+
                             report_change!("optimizer: Removing empty block");
                             *stmt = EmptyStmt { span: DUMMY_SP }.into();
+
                             return;
                         }
                     }
@@ -1391,16 +1495,22 @@ impl Optimizer<'_> {
                     match &bs.stmts[0] {
                         Stmt::Expr(..) | Stmt::If(..) => {
                             *s = bs.stmts[0].take();
+
                             report_change!("optimizer: Unwrapping block stmt");
+
                             self.changed = true;
                         }
+
                         Stmt::Decl(Decl::Fn(..))
                             if allow_fn_decl && !self.ctx.expr_ctx.in_strict =>
                         {
                             *s = bs.stmts[0].take();
+
                             report_change!("optimizer: Unwrapping block stmt in non strcit mode");
+
                             self.changed = true;
                         }
+
                         _ => {}
                     }
                 }
@@ -1408,11 +1518,13 @@ impl Optimizer<'_> {
 
             Stmt::If(s) => {
                 self.try_removing_block(&mut s.cons, true, true);
+
                 let can_remove_block_of_alt = match &*s.cons {
                     Stmt::Expr(..) | Stmt::If(..) => true,
                     Stmt::Block(bs) if bs.stmts.len() == 1 => matches!(&bs.stmts[0], Stmt::For(..)),
                     _ => false,
                 };
+
                 if can_remove_block_of_alt {
                     if let Some(alt) = &mut s.alt {
                         self.try_removing_block(alt, true, false);
@@ -1447,11 +1559,13 @@ impl Optimizer<'_> {
             Stmt::Block(block) if block.stmts.is_empty() => {
                 *s = EmptyStmt { span: block.span }.into();
             }
+
             Stmt::Block(block)
                 if block.stmts.len() == 1 && is_fine_for_if_cons(&block.stmts[0]) =>
             {
                 *s = block.stmts.take().into_iter().next().unwrap();
             }
+
             _ => {}
         }
     }
@@ -1469,6 +1583,7 @@ impl Optimizer<'_> {
         if stmt.alt.is_none() {
             if let Stmt::Expr(cons) = &mut *stmt.cons {
                 self.changed = true;
+
                 report_change!("Converting if statement to a form `test && cons`");
                 *s = ExprStmt {
                     span: stmt.span,
@@ -1484,12 +1599,17 @@ impl Optimizer<'_> {
         N: VisitMutWith<Self>,
     {
         let mut old_prepend_stmts = self.prepend_stmts.take();
+
         let old_append_stmts = self.append_stmts.take();
+
         n.visit_mut_with(self);
+
         old_prepend_stmts.append(&mut self.prepend_stmts);
+
         old_prepend_stmts.append(&mut self.append_stmts);
 
         self.prepend_stmts = old_prepend_stmts;
+
         self.append_stmts = old_append_stmts;
     }
 }
@@ -1516,12 +1636,15 @@ impl VisitMut for Optimizer<'_> {
 
         if !self.prepend_stmts.is_empty() {
             let mut stmts = self.prepend_stmts.take().take_stmts();
+
             match &mut *n.body {
                 BlockStmtOrExpr::BlockStmt(v) => {
                     prepend_stmts(&mut v.stmts, stmts.into_iter());
                 }
+
                 BlockStmtOrExpr::Expr(v) => {
                     self.changed = true;
+
                     report_change!("Converting a body of an arrow expression to BlockStmt");
 
                     stmts.push(
@@ -1531,6 +1654,7 @@ impl VisitMut for Optimizer<'_> {
                         }
                         .into(),
                     );
+
                     n.body = Box::new(BlockStmtOrExpr::BlockStmt(BlockStmt {
                         span: DUMMY_SP,
                         stmts,
@@ -1555,15 +1679,18 @@ impl VisitMut for Optimizer<'_> {
                 is_exact_lhs_of_assign: true,
                 ..self.ctx.clone()
             };
+
             e.left.visit_mut_with(&mut *self.with_ctx(ctx));
 
             if is_left_access_to_arguments(&e.left) {
                 // self.ctx.can_inline_arguments = false;
             }
         }
+
         e.right.visit_mut_with(self);
 
         self.compress_bin_assignment_to_left(e);
+
         self.compress_bin_assignment_to_right(e);
     }
 
@@ -1619,6 +1746,7 @@ impl VisitMut for Optimizer<'_> {
             in_param: false,
             ..self.ctx.clone()
         };
+
         n.visit_mut_children_with(&mut *self.with_ctx(ctx));
     }
 
@@ -1628,8 +1756,10 @@ impl VisitMut for Optimizer<'_> {
         match n {
             BlockStmtOrExpr::BlockStmt(n) => {
                 self.merge_if_returns(&mut n.stmts, false, true);
+
                 self.drop_else_token(&mut n.stmts);
             }
+
             BlockStmtOrExpr::Expr(_) => {}
         }
     }
@@ -1653,6 +1783,7 @@ impl VisitMut for Optimizer<'_> {
                 is_update_arg: false,
                 ..self.ctx.clone()
             };
+
             e.callee.visit_mut_with(&mut *self.with_ctx(ctx));
         }
 
@@ -1665,7 +1796,9 @@ impl VisitMut for Optimizer<'_> {
                         raw: None,
                     })
                     .into();
+
                     self.changed = true;
+
                     report_change!("injecting zero to preserve `this` in call");
 
                     *callee = SeqExpr {
@@ -1690,6 +1823,7 @@ impl VisitMut for Optimizer<'_> {
         }
 
         self.ignore_unused_args_of_iife(e);
+
         self.inline_args_of_iife(e);
     }
 
@@ -1703,6 +1837,7 @@ impl VisitMut for Optimizer<'_> {
                 is_update_arg: false,
                 ..self.ctx.clone()
             };
+
             n.super_class.visit_mut_with(&mut *self.with_ctx(ctx));
         }
 
@@ -1715,6 +1850,7 @@ impl VisitMut for Optimizer<'_> {
                 },
                 ..self.ctx.clone()
             };
+
             n.body.visit_mut_with(&mut *self.with_ctx(ctx));
         }
     }
@@ -1740,7 +1876,9 @@ impl VisitMut for Optimizer<'_> {
         };
 
         self.drop_unused_decl(decl);
+
         self.store_typeofs(decl);
+
         self.store_decl_for_inlining(decl);
     }
 
@@ -1748,9 +1886,11 @@ impl VisitMut for Optimizer<'_> {
     fn visit_mut_default_decl(&mut self, n: &mut DefaultDecl) {
         match n {
             DefaultDecl::Class(_) => {}
+
             DefaultDecl::Fn(f) => {
                 self.drop_unused_params(&mut f.function.params);
             }
+
             DefaultDecl::TsInterfaceDecl(_) => {}
         }
 
@@ -1763,6 +1903,7 @@ impl VisitMut for Optimizer<'_> {
                 executed_multiple_time: true,
                 ..self.ctx.clone()
             };
+
             n.visit_mut_children_with(&mut *self.with_ctx(ctx));
         }
     }
@@ -1777,6 +1918,7 @@ impl VisitMut for Optimizer<'_> {
             is_exported: true,
             ..self.ctx.clone()
         };
+
         n.visit_mut_children_with(&mut *self.with_ctx(ctx));
     }
 
@@ -1785,6 +1927,7 @@ impl VisitMut for Optimizer<'_> {
             is_exported: true,
             ..self.ctx.clone()
         };
+
         n.visit_mut_children_with(&mut *self.with_ctx(ctx));
     }
 
@@ -1792,6 +1935,7 @@ impl VisitMut for Optimizer<'_> {
         #[cfg(feature = "trace-ast")]
         let _tracing = {
             let s = dump(&*e, true);
+
             tracing::span!(
                 tracing::Level::ERROR,
                 "visit_mut_expr",
@@ -1799,15 +1943,18 @@ impl VisitMut for Optimizer<'_> {
             )
             .entered()
         };
+
         let ctx = Ctx {
             is_exported: false,
             is_callee: false,
             ..self.ctx.clone()
         };
+
         e.visit_mut_children_with(&mut *self.with_ctx(ctx));
         #[cfg(feature = "trace-ast")]
         let _tracing = {
             let s = dump(&*e, true);
+
             tracing::span!(
                 tracing::Level::ERROR,
                 "visit_mut_expr_after_children",
@@ -1820,6 +1967,7 @@ impl VisitMut for Optimizer<'_> {
             Expr::Seq(seq) if seq.exprs.len() == 1 => {
                 let span = seq.span;
                 *e = *seq.exprs[0].take();
+
                 e.set_span(span);
             }
 
@@ -1836,6 +1984,7 @@ impl VisitMut for Optimizer<'_> {
 
                     if i.is_dummy() && self.options.unused {
                         report_change!("inline: Removed variable ({}, {:?})", old.0, old.1);
+
                         self.vars.removed.insert(old.clone());
                     }
 
@@ -1917,8 +2066,10 @@ impl VisitMut for Optimizer<'_> {
 
         if let Expr::Bin(bin) = e {
             let expr = self.optimize_lit_cmp(bin);
+
             if let Some(expr) = expr {
                 report_change!("Optimizing: Literal comparison");
+
                 self.changed = true;
                 *e = expr;
             }
@@ -1968,6 +2119,7 @@ impl VisitMut for Optimizer<'_> {
             Expr::Seq(s) if s.exprs.is_empty() => {
                 e.take();
             }
+
             _ => {}
         }
 
@@ -2004,6 +2156,7 @@ impl VisitMut for Optimizer<'_> {
                     expr: Take::dummy(),
                 };
             }
+
             return;
         }
 
@@ -2046,6 +2199,7 @@ impl VisitMut for Optimizer<'_> {
 
             if !is_object_lit_with_spread {
                 let expr = self.ignore_return_value(&mut n.expr);
+
                 n.expr = expr.map(Box::new).unwrap_or_else(|| {
                     report_change!("visit_mut_expr_stmt: Dropped an expression statement");
                     #[cfg(feature = "debug")]
@@ -2062,6 +2216,7 @@ impl VisitMut for Optimizer<'_> {
                         self.optimize_bang_within_logical_ops(e, true);
                     }
                 }
+
                 _ => {
                     self.optimize_bang_within_logical_ops(&mut n.expr, true);
                 }
@@ -2098,6 +2253,7 @@ impl VisitMut for Optimizer<'_> {
             is_exact_lhs_of_assign: false,
             ..self.ctx.clone()
         };
+
         f.visit_mut_children_with(&mut *self.with_ctx(ctx));
     }
 
@@ -2122,6 +2278,7 @@ impl VisitMut for Optimizer<'_> {
             is_exact_lhs_of_assign: false,
             ..self.ctx.clone()
         };
+
         e.visit_mut_children_with(&mut *self.with_ctx(ctx));
     }
 
@@ -2135,6 +2292,7 @@ impl VisitMut for Optimizer<'_> {
                 is_exact_lhs_of_assign: n.left.is_pat(),
                 ..self.ctx.clone()
             };
+
             self.with_ctx(ctx).visit_with_prepend(&mut n.left);
         }
 
@@ -2143,6 +2301,7 @@ impl VisitMut for Optimizer<'_> {
                 executed_multiple_time: true,
                 ..self.ctx.clone()
             };
+
             n.body.visit_mut_with(&mut *self.with_ctx(ctx));
         }
     }
@@ -2157,6 +2316,7 @@ impl VisitMut for Optimizer<'_> {
                 is_exact_lhs_of_assign: n.left.is_pat(),
                 ..self.ctx.clone()
             };
+
             self.with_ctx(ctx).visit_with_prepend(&mut n.left);
         }
 
@@ -2165,6 +2325,7 @@ impl VisitMut for Optimizer<'_> {
                 executed_multiple_time: true,
                 ..self.ctx.clone()
             };
+
             n.body.visit_mut_with(&mut *self.with_ctx(ctx));
         }
     }
@@ -2176,6 +2337,7 @@ impl VisitMut for Optimizer<'_> {
         debug_assert_valid(&s.init);
 
         s.test.visit_mut_with(self);
+
         s.update.visit_mut_with(self);
 
         let ctx = Ctx {
@@ -2202,9 +2364,11 @@ impl VisitMut for Optimizer<'_> {
 
                 ..self.ctx.clone()
             };
+
             let optimizer = &mut *self.with_ctx(ctx);
 
             n.params.visit_mut_with(optimizer);
+
             if let Some(body) = n.body.as_mut() {
                 optimizer.handle_stmts(&mut body.stmts, true);
                 #[cfg(debug_assertions)]
@@ -2294,8 +2458,10 @@ impl VisitMut for Optimizer<'_> {
                 is_update_arg: false,
                 ..self.ctx.clone()
             };
+
             n.obj.visit_mut_with(&mut *self.with_ctx(ctx));
         }
+
         if let MemberProp::Computed(c) = &mut n.prop {
             let ctx = Ctx {
                 is_exact_lhs_of_assign: false,
@@ -2303,6 +2469,7 @@ impl VisitMut for Optimizer<'_> {
                 is_update_arg: false,
                 ..self.ctx.clone()
             };
+
             c.visit_mut_with(&mut *self.with_ctx(ctx));
         }
     }
@@ -2328,6 +2495,7 @@ impl VisitMut for Optimizer<'_> {
             top_level: true,
             ..self.ctx.clone()
         };
+
         self.with_ctx(ctx).handle_stmt_likes(stmts, true);
 
         if self.vars.inline_with_multi_replacer(stmts) {
@@ -2346,6 +2514,7 @@ impl VisitMut for Optimizer<'_> {
                 is_lhs_of_assign: false,
                 ..self.ctx.clone()
             };
+
             n.callee.visit_mut_with(&mut *self.with_ctx(ctx));
         }
 
@@ -2355,6 +2524,7 @@ impl VisitMut for Optimizer<'_> {
                 is_lhs_of_assign: false,
                 ..self.ctx.clone()
             };
+
             n.args.visit_mut_with(&mut *self.with_ctx(ctx));
         }
     }
@@ -2365,6 +2535,7 @@ impl VisitMut for Optimizer<'_> {
 
         if let Some(Stmt::Empty(..)) = s.as_deref() {
             self.changed = true;
+
             report_change!("misc: Removing empty statement");
             *s = None;
         }
@@ -2379,9 +2550,11 @@ impl VisitMut for Optimizer<'_> {
                 Expr::Invalid(..) => {
                     *n = None;
                 }
+
                 Expr::Seq(SeqExpr { exprs, .. }) if exprs.is_empty() => {
                     *n = None;
                 }
+
                 _ => {}
             },
             Some(VarDeclOrExpr::VarDecl(v)) => {
@@ -2389,6 +2562,7 @@ impl VisitMut for Optimizer<'_> {
                     *n = None;
                 }
             }
+
             _ => {}
         }
     }
@@ -2400,7 +2574,9 @@ impl VisitMut for Optimizer<'_> {
             in_param: true,
             ..self.ctx.clone()
         };
+
         let mut o = self.with_ctx(ctx);
+
         n.visit_mut_children_with(&mut *o);
 
         o.drop_unused_param(&mut n.pat, false);
@@ -2419,6 +2595,7 @@ impl VisitMut for Optimizer<'_> {
         if let Prop::Shorthand(i) = n {
             if self.vars.has_pending_inline_for(&i.to_id()) {
                 let mut e: Expr = i.clone().into();
+
                 e.visit_mut_with(self);
 
                 *n = Prop::KeyValue(KeyValueProp {
@@ -2449,6 +2626,7 @@ impl VisitMut for Optimizer<'_> {
             top_level: true,
             ..self.ctx.clone()
         };
+
         s.visit_mut_children_with(&mut *self.with_ctx(ctx));
 
         if self.vars.inline_with_multi_replacer(s) {
@@ -2482,6 +2660,7 @@ impl VisitMut for Optimizer<'_> {
                     tracing::span!(tracing::Level::ERROR, "seq_expr_with_children").entered();
 
                 expr.visit_mut_with(&mut *self.with_ctx(ctx.clone()));
+
                 let is_injected_zero = match &**expr {
                     Expr::Lit(Lit::Num(v)) => v.span.is_dummy(),
                     _ => false,
@@ -2509,6 +2688,7 @@ impl VisitMut for Optimizer<'_> {
                 }
             })
             .collect::<Vec<_>>();
+
         n.exprs = exprs;
 
         self.shift_void(n);
@@ -2521,6 +2701,7 @@ impl VisitMut for Optimizer<'_> {
     #[cfg_attr(feature = "debug", tracing::instrument(skip_all))]
     fn visit_mut_stmt(&mut self, s: &mut Stmt) {
         let old_prepend = self.prepend_stmts.take();
+
         let old_append = self.append_stmts.take();
 
         #[cfg(feature = "debug")]
@@ -2544,6 +2725,7 @@ impl VisitMut for Optimizer<'_> {
             in_obj_of_non_computed_member: false,
             ..self.ctx.clone()
         };
+
         s.visit_mut_children_with(&mut *self.with_ctx(ctx));
 
         if self.prepend_stmts.is_empty() && self.append_stmts.is_empty() {
@@ -2551,18 +2733,26 @@ impl VisitMut for Optimizer<'_> {
                 // We use var decl with no declarator to indicate we dropped an decl.
                 Stmt::Decl(Decl::Var(v)) if v.decls.is_empty() => {
                     *s = EmptyStmt { span: DUMMY_SP }.into();
+
                     self.prepend_stmts = old_prepend;
+
                     self.append_stmts = old_append;
+
                     return;
                 }
+
                 Stmt::Expr(es) => {
                     if es.expr.is_invalid() {
                         *s = EmptyStmt { span: DUMMY_SP }.into();
+
                         self.prepend_stmts = old_prepend;
+
                         self.append_stmts = old_append;
+
                         return;
                     }
                 }
+
                 _ => {}
             }
 
@@ -2582,6 +2772,7 @@ impl VisitMut for Optimizer<'_> {
 
                 debug_assert_valid(s);
             }
+
             _ => (),
         }
 
@@ -2590,9 +2781,12 @@ impl VisitMut for Optimizer<'_> {
         match s {
             Stmt::Decl(Decl::Var(v)) if v.decls.is_empty() => {
                 s.take();
+
                 if self.prepend_stmts.is_empty() && self.append_stmts.is_empty() {
                     self.prepend_stmts = old_prepend;
+
                     self.append_stmts = old_append;
+
                     return;
                 }
             }
@@ -2650,9 +2844,11 @@ impl VisitMut for Optimizer<'_> {
         }
 
         self.prepend_stmts = old_prepend;
+
         self.append_stmts = old_append;
 
         let prepend_len = self.prepend_stmts.len();
+
         let append_len = self.append_stmts.len();
 
         #[cfg(feature = "debug")]
@@ -2665,11 +2861,13 @@ impl VisitMut for Optimizer<'_> {
         }
 
         debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+
         debug_assert_eq!(self.append_stmts.len(), append_len);
 
         if let Stmt::Expr(ExprStmt { expr, .. }) = s {
             if is_pure_undefined(&self.ctx.expr_ctx, expr) {
                 *s = EmptyStmt { span: DUMMY_SP }.into();
+
                 return;
             }
 
@@ -2685,6 +2883,7 @@ impl VisitMut for Optimizer<'_> {
             {
                 report_change!("Removing 'use strict'");
                 *s = EmptyStmt { span: DUMMY_SP }.into();
+
                 return;
             }
 
@@ -2695,58 +2894,76 @@ impl VisitMut for Optimizer<'_> {
 
                 if can_be_removed {
                     self.changed = true;
+
                     report_change!("unused: Dropping an expression without side effect");
+
                     dump_change_detail!("unused: Dropping \n{}\n", dump(&*expr, false));
                     *s = EmptyStmt { span: DUMMY_SP }.into();
+
                     return;
                 }
             }
         }
 
         debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+
         debug_assert_eq!(self.append_stmts.len(), append_len);
 
         match s {
             // We use var decl with no declarator to indicate we dropped an decl.
             Stmt::Decl(Decl::Var(v)) if v.decls.is_empty() => {
                 *s = EmptyStmt { span: DUMMY_SP }.into();
+
                 return;
             }
+
             _ => {}
         }
 
         debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+
         debug_assert_eq!(self.append_stmts.len(), append_len);
+
         debug_assert_valid(s);
 
         self.compress_if_without_alt(s);
 
         debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+
         debug_assert_eq!(self.append_stmts.len(), append_len);
+
         debug_assert_valid(s);
 
         self.compress_if_stmt_as_cond(s);
 
         debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+
         debug_assert_eq!(self.append_stmts.len(), append_len);
+
         debug_assert_valid(s);
 
         self.compress_if_stmt_as_expr(s);
 
         debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+
         debug_assert_eq!(self.append_stmts.len(), append_len);
+
         debug_assert_valid(s);
 
         self.optimize_const_switches(s);
 
         debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+
         debug_assert_eq!(self.append_stmts.len(), append_len);
+
         debug_assert_valid(s);
 
         self.optimize_switches(s);
 
         debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+
         debug_assert_eq!(self.append_stmts.len(), append_len);
+
         debug_assert_valid(s);
 
         #[cfg(feature = "debug")]
@@ -2759,7 +2976,9 @@ impl VisitMut for Optimizer<'_> {
         }
 
         debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+
         debug_assert_eq!(self.append_stmts.len(), append_len);
+
         debug_assert_valid(s);
     }
 
@@ -2772,6 +2991,7 @@ impl VisitMut for Optimizer<'_> {
                     Expr::Lit(Lit::Str(Str { raw, .. })) => {
                         matches!(raw, Some(value) if value == "\"use asm\"" || value == "'use asm'")
                     }
+
                     _ => false,
                 },
                 _ => false,
@@ -2785,6 +3005,7 @@ impl VisitMut for Optimizer<'_> {
         {
             stmts.visit_with(&mut AssertValid);
         }
+
         self.handle_stmts(stmts, false);
 
         if stmts.len() == 1 {
@@ -2810,6 +3031,7 @@ impl VisitMut for Optimizer<'_> {
                 is_lhs_of_assign: false,
                 ..self.ctx.clone()
             };
+
             c.visit_mut_with(&mut *self.with_ctx(ctx));
         }
     }
@@ -2855,7 +3077,9 @@ impl VisitMut for Optimizer<'_> {
                 in_tpl_expr: true,
                 ..self.ctx.clone()
             };
+
             let mut o = self.with_ctx(ctx);
+
             n.visit_mut_children_with(&mut *o);
         }
 
@@ -2870,6 +3094,7 @@ impl VisitMut for Optimizer<'_> {
             in_try_block: true,
             ..self.ctx.clone()
         };
+
         n.block.visit_mut_with(&mut *self.with_ctx(ctx));
 
         n.handler.visit_mut_with(self);
@@ -2886,6 +3111,7 @@ impl VisitMut for Optimizer<'_> {
 
         if let Some(param) = &mut n.param {
             self.take_pat_if_unused(param, None, false);
+
             if param.is_invalid() {
                 n.param = None;
             }
@@ -2909,6 +3135,7 @@ impl VisitMut for Optimizer<'_> {
 
                 _ => {
                     report_change!("Ignoring arg of `void`");
+
                     let arg = self.ignore_return_value(&mut n.arg);
 
                     n.arg = Box::new(arg.unwrap_or_else(|| make_number(DUMMY_SP, 0.0)));
@@ -2959,6 +3186,7 @@ impl VisitMut for Optimizer<'_> {
                 if let Some(e) = &var.init {
                     if is_pure_undefined(&self.ctx.expr_ctx, e) {
                         self.changed = true;
+
                         report_change!(
                             "Dropping explicit initializer which evaluates to `undefined`"
                         );
@@ -3011,6 +3239,7 @@ impl VisitMut for Optimizer<'_> {
         vars.retain_mut(|var| {
             if var.name.is_invalid() {
                 self.changed = true;
+
                 return false;
             }
 
@@ -3024,11 +3253,13 @@ impl VisitMut for Optimizer<'_> {
 
             while idx < vars.len() {
                 let var = &mut vars[idx];
+
                 var.visit_mut_with(self);
 
                 // The varaible is dropped.
                 if var.name.is_invalid() {
                     vars.remove(idx);
+
                     continue;
                 }
 
@@ -3036,7 +3267,9 @@ impl VisitMut for Optimizer<'_> {
 
                 if let Some(new) = new {
                     let len = new.len();
+
                     vars.splice(idx..=idx, new);
+
                     idx += len;
                 } else {
                     idx += 1;
@@ -3047,6 +3280,7 @@ impl VisitMut for Optimizer<'_> {
         vars.retain_mut(|var| {
             if var.name.is_invalid() {
                 self.changed = true;
+
                 return false;
             }
 
@@ -3069,14 +3303,18 @@ impl VisitMut for Optimizer<'_> {
             }
 
             let mut can_prepend = true;
+
             let mut side_effects = Vec::new();
 
             for v in vars.iter_mut() {
                 let mut storage = None;
+
                 self.drop_unused_var_declarator(v, &mut storage);
+
                 if let Some(expr) = &mut storage {
                     expr.visit_mut_with(self);
                 }
+
                 side_effects.extend(storage);
 
                 // Dropped. Side effects of the initializer is stored in `side_effects`.
@@ -3094,6 +3332,7 @@ impl VisitMut for Optimizer<'_> {
                 // effect.
                 if side_effects.is_empty() {
                     can_prepend = false;
+
                     continue;
                 }
 
@@ -3121,6 +3360,7 @@ impl VisitMut for Optimizer<'_> {
                     // We prepend side effects to the initializer.
 
                     let seq = v.init.as_mut().unwrap().force_seq();
+
                     seq.exprs = side_effects
                         .drain(..)
                         .chain(seq.exprs.take())
@@ -3151,6 +3391,7 @@ impl VisitMut for Optimizer<'_> {
             vars.retain_mut(|var| {
                 if var.name.is_invalid() {
                     self.changed = true;
+
                     return false;
                 }
 
@@ -3159,7 +3400,9 @@ impl VisitMut for Optimizer<'_> {
                         if let Some(usage) = self.data.vars.get(&i.id.to_id()) {
                             if usage.declared_as_catch_param {
                                 var.init = None;
+
                                 debug_assert_valid(var);
+
                                 return true;
                             }
                         }
@@ -3182,6 +3425,7 @@ impl VisitMut for Optimizer<'_> {
                 executed_multiple_time: true,
                 ..self.ctx.clone()
             };
+
             n.visit_mut_children_with(&mut *self.with_ctx(ctx));
         }
     }
@@ -3195,6 +3439,7 @@ impl VisitMut for Optimizer<'_> {
                 in_with_stmt: true,
                 ..self.ctx.clone()
             };
+
             n.body.visit_mut_with(&mut *self.with_ctx(ctx));
         }
     }
@@ -3237,6 +3482,7 @@ fn is_expr_access_to_arguments(l: &SimpleAssignTarget) -> bool {
         SimpleAssignTarget::Member(MemberExpr { obj, .. }) => {
             matches!(&**obj, Expr::Ident(Ident { sym, .. }) if (&**sym == "arguments"))
         }
+
         _ => false,
     }
 }

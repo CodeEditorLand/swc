@@ -14,6 +14,7 @@ use crate::{
 impl Pure<'_> {
     pub(super) fn negate_twice(&mut self, e: &mut Expr, is_ret_val_ignored: bool) {
         negate(&self.expr_ctx, e, false, is_ret_val_ignored);
+
         negate(&self.expr_ctx, e, false, is_ret_val_ignored);
     }
 
@@ -47,7 +48,9 @@ impl Pure<'_> {
                     {
                         return;
                     }
+
                     report_change!("bools: Optimizing `!(a && b)` as `!a || !b`");
+
                     self.negate(arg, false, false);
                     *e = *arg.take();
                 }
@@ -69,7 +72,9 @@ impl Pure<'_> {
                         {
                             return;
                         }
+
                         report_change!("bools: Optimizing `!!(a || b)` as `!a && !b`");
+
                         self.negate(arg_of_arg, false, false);
                         *e = *arg.take();
                     }
@@ -105,6 +110,7 @@ impl Pure<'_> {
 
         match e.op {
             op!("===") | op!("!==") => {}
+
             _ => return,
         }
 
@@ -112,14 +118,18 @@ impl Pure<'_> {
             || should_optimize(&e.right, &e.left, self.options)
         {
             report_change!("bools: Compressing comparison of `typeof` with literal");
+
             self.changed = true;
+
             e.op = match e.op {
                 op!("===") => {
                     op!("==")
                 }
+
                 op!("!==") => {
                     op!("!=")
                 }
+
                 _ => {
                     unreachable!()
                 }
@@ -150,10 +160,12 @@ impl Pure<'_> {
                 ..
             }) => {
                 let lt = left.get_type();
+
                 let rt = right.get_type();
 
                 if let (Value::Known(Type::Bool), Value::Known(Type::Bool)) = (lt, rt) {
                     let rb = right.as_pure_bool(&self.expr_ctx);
+
                     let rb = match rb {
                         Value::Known(v) => v,
                         Value::Unknown => return,
@@ -169,11 +181,13 @@ impl Pure<'_> {
                         } else {
                             report_change!("booleans: Compressing `!foo || false` as `!foo`");
                         }
+
                         self.changed = true;
                         *e = *left.take();
                     }
                 }
             }
+
             _ => {}
         }
     }
@@ -221,6 +235,7 @@ impl Pure<'_> {
                 ..
             }) => {
                 let rn = right.as_pure_number(&self.expr_ctx);
+
                 let v = if let Value::Known(rn) = rn {
                     rn != 0.0
                 } else {
@@ -231,13 +246,16 @@ impl Pure<'_> {
                     true
                 } else {
                     self.changed = true;
+
                     let span = delete.arg.span();
+
                     report_change!("booleans: Compressing `delete` as sequence expression");
                     *e = SeqExpr {
                         span,
                         exprs: vec![delete.arg.take(), Box::new(make_bool(span, true))],
                     }
                     .into();
+
                     return;
                 }
             }
@@ -247,7 +265,9 @@ impl Pure<'_> {
 
         if convert_to_true {
             self.changed = true;
+
             let span = delete.arg.span();
+
             report_change!("booleans: Compressing `delete` => true");
             *e = make_bool(span, true);
         }
@@ -260,10 +280,12 @@ impl Pure<'_> {
                     if exprs.is_empty() {
                         return;
                     }
+
                     report_change!("bools: Optimizing negated sequences");
 
                     {
                         let last = exprs.last_mut().unwrap();
+
                         self.optimize_expr_in_bool_ctx(last, false);
                         // Negate last element.
                         negate(&self.expr_ctx, last, false, false);
@@ -272,11 +294,13 @@ impl Pure<'_> {
                     *n = *e.arg.take();
                 }
             }
+
             Expr::Unary(UnaryExpr {
                 op: op!("delete"), ..
             }) => {
                 // TODO
             }
+
             _ => {}
         }
     }
@@ -295,7 +319,9 @@ impl Pure<'_> {
                 // Regardless if it's truthy or falsy, we can optimize it because it will be
                 // casted as bool anyway.
                 self.optimize_expr_in_bool_ctx(left, is_ignore);
+
                 self.optimize_expr_in_bool_ctx(right, is_ignore);
+
                 return;
             }
 
@@ -334,9 +360,11 @@ impl Pure<'_> {
                     op: op!("!"), arg, ..
                 }) => {
                     report_change!("bools: !!expr => expr (in bool ctx)");
+
                     self.changed = true;
                     *n = *arg.take();
                 }
+
                 _ => {}
             },
 
@@ -346,6 +374,7 @@ impl Pure<'_> {
                 arg,
             }) => {
                 report_change!("Optimizing: typeof => true (in bool context)");
+
                 self.changed = true;
 
                 match &**arg {
@@ -357,6 +386,7 @@ impl Pure<'_> {
                         })
                         .into()
                     }
+
                     _ => {
                         // Return value of typeof is always truthy
                         let true_expr = Lit::Num(Number {
@@ -377,6 +407,7 @@ impl Pure<'_> {
             Expr::Lit(Lit::Str(s)) => {
                 if !is_ignore {
                     report_change!("Converting string as boolean expressions");
+
                     self.changed = true;
                     *n = Lit::Num(Number {
                         span: s.span,
@@ -391,8 +422,10 @@ impl Pure<'_> {
                 if num.value == 1.0 || num.value == 0.0 {
                     return;
                 }
+
                 if self.options.bools {
                     report_change!("booleans: Converting number as boolean expressions");
+
                     self.changed = true;
                     *n = Lit::Num(Number {
                         span: num.span,
@@ -410,10 +443,12 @@ impl Pure<'_> {
                 ..
             }) => {
                 // Optimize if (a ?? false); as if (a);
+
                 if let Value::Known(false) = right.as_pure_bool(&self.expr_ctx) {
                     report_change!(
                         "Dropping right operand of `??` as it's always false (in bool context)"
                     );
+
                     self.changed = true;
                     *n = *left.take();
                 }
@@ -429,6 +464,7 @@ impl Pure<'_> {
 
                 if let Value::Known(false) = right.as_pure_bool(&self.expr_ctx) {
                     report_change!("bools: `expr || false` => `expr` (in bool context)");
+
                     self.changed = true;
                     *n = *left.take();
                 }
@@ -436,8 +472,10 @@ impl Pure<'_> {
 
             _ => {
                 let v = n.as_pure_bool(&self.expr_ctx);
+
                 if let Value::Known(v) = v {
                     let span = n.span();
+
                     report_change!("Optimizing expr as {} (in bool context)", v);
                     *n = make_bool(span, v);
                 }
@@ -535,6 +573,7 @@ impl Pure<'_> {
 
         if can_swap {
             report_change!("Swapping operands of binary expession");
+
             swap(left, right);
         }
 
@@ -548,6 +587,7 @@ impl Pure<'_> {
             | Expr::Bin(e @ BinExpr { op: op!("<"), .. }) => {
                 if self.options.comparisons && self.can_swap_bin_operands(&e.left, &e.right, true) {
                     self.changed = true;
+
                     report_change!("comparisons: Swapping operands of {}", e.op);
 
                     e.op = if e.op == op!("<=") {
@@ -565,6 +605,7 @@ impl Pure<'_> {
                     self.changed = true;
                 }
             }
+
             _ => {}
         }
     }

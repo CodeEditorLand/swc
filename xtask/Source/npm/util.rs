@@ -8,7 +8,9 @@ use crate::util::{repository_root, wrap};
 pub fn set_version(version: &Version) -> Result<()> {
     wrap(|| {
         let mut c = Command::new("npm");
+
         c.current_dir(repository_root()?).stderr(Stdio::inherit());
+
         c.arg("version")
             .arg(version.to_string())
             .arg("--no-git-tag-version")
@@ -22,8 +24,10 @@ pub fn set_version(version: &Version) -> Result<()> {
 
     wrap(|| {
         let mut c = Command::new("npm");
+
         c.current_dir(repository_root()?.join("packages").join("minifier"))
             .stderr(Stdio::inherit());
+
         c.arg("version")
             .arg(version.to_string())
             .arg("--no-git-tag-version")
@@ -37,8 +41,10 @@ pub fn set_version(version: &Version) -> Result<()> {
 
     wrap(|| {
         let mut c = Command::new("cargo");
+
         c.current_dir(repository_root()?.join("bindings"))
             .stderr(Stdio::inherit());
+
         c.arg("set-version")
             .arg(version.to_string())
             .arg("-p")
@@ -47,6 +53,7 @@ pub fn set_version(version: &Version) -> Result<()> {
             .arg("binding_minifier_wasm");
 
         c.status()?;
+
         Ok(())
     })
     .with_context(|| format!("failed to set version of Wasm packages to v{}", version))?;
@@ -56,8 +63,10 @@ pub fn set_version(version: &Version) -> Result<()> {
 
 pub fn bump_swc_cli() -> Result<()> {
     let mut c = Command::new("cargo");
+
     c.current_dir(repository_root()?.join("bindings"))
         .stderr(Stdio::inherit());
+
     c.arg("set-version")
         .arg("--bump")
         .arg("patch")

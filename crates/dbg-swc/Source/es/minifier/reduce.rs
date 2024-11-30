@@ -78,7 +78,9 @@ impl ReduceCommand {
         // Strip comments to workaround a bug of creduce
 
         let fm = cm.load_file(src_path).context("failed to prepare file")?;
+
         let m = parse_js(fm)?;
+
         let code = print_js(cm, &m.module, false)?;
 
         fs::write(src_path, code.as_bytes()).context("failed to strip comments")?;
@@ -101,12 +103,17 @@ impl ReduceCommand {
                 ReduceMode::Semantics => "SEMANTICS",
             },
         );
+
         c.env(CREDUCE_INPUT_ENV_VAR, &input);
 
         let exe = current_exe()?;
+
         c.arg(&exe);
+
         c.arg(&input);
+
         let mut child = ChildGuard(c.spawn().context("failed to run creduce")?);
+
         let status = child.0.wait().context("failed to wait for creduce")?;
 
         if status.success() {
@@ -137,11 +144,13 @@ fn move_to_data_dir(input_path: &Path) -> Result<PathBuf> {
     // acquire hash digest in the form of GenericArray,
     // which in this case is equivalent to [u8; 20]
     let result = hasher.finalize();
+
     let hash_str = format!("{:x}", result);
 
     create_dir_all(format!(".swc-reduce/{}", hash_str)).context("failed to create `.data`")?;
 
     let to = PathBuf::from(format!(".swc-reduce/{}/input.js", hash_str));
+
     fs::write(&to, src.as_bytes()).context("failed to write")?;
 
     Ok(to)

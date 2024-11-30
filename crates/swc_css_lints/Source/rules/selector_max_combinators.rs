@@ -9,6 +9,7 @@ pub fn selector_max_combinators(
     ctx: LintRuleContext<SelectorMaxCombinatorsConfig>,
 ) -> Box<dyn LintRule> {
     let max = ctx.config().unwrap_or(3);
+
     visitor_rule(ctx.reaction(), SelectorMaxCombinators { ctx, max })
 }
 
@@ -25,6 +26,7 @@ impl SelectorMaxCombinators {
         } else {
             "combinators"
         };
+
         format!(
             "Expected selector to have no more than {} {}, but {} actually.",
             self.max, combinators, count

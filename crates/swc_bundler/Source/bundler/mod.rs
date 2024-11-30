@@ -118,10 +118,15 @@ where
     ) -> Self {
         GLOBALS.set(globals, || {
             let helper_ctxt = SyntaxContext::empty().apply_mark(Mark::fresh(Mark::root()));
+
             tracing::debug!("Helper ctxt: {:?}", helper_ctxt);
+
             let synthesized_ctxt = SyntaxContext::empty().apply_mark(Mark::fresh(Mark::root()));
+
             tracing::debug!("Synthesized ctxt: {:?}", synthesized_ctxt);
+
             let injected_ctxt = SyntaxContext::empty().apply_mark(Mark::fresh(Mark::root()));
+
             tracing::debug!("Injected ctxt: {:?}", injected_ctxt);
 
             Bundler {
@@ -160,17 +165,20 @@ where
                             let path = path
                                 .canonicalize()
                                 .context("failed to canonicalize entry")?;
+
                             FileName::Real(path)
                         } else {
                             FileName::Real(path)
                         }
                     }
+
                     _ => path,
                 };
 
                 let res = self
                     .load_transformed(&path)
                     .context("load_transformed failed")?;
+
                 Ok((name, res))
             })
             .collect::<Vec<_>>();
@@ -183,6 +191,7 @@ where
 
             for res in results {
                 let (name, m) = res?;
+
                 let m = m.unwrap();
 
                 output.insert(name, m);
@@ -198,6 +207,7 @@ where
         #[cfg(feature = "concurrent")]
         {
             let scope = std::mem::take(&mut self.scope);
+
             rayon::spawn(move || drop(scope))
         }
 

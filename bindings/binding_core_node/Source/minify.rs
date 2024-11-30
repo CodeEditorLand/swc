@@ -61,10 +61,12 @@ impl MinifyTarget {
 #[napi]
 impl Task for MinifyTask {
     type JsValue = TransformOutput;
+
     type Output = TransformOutput;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
         let input: MinifyTarget = deserialize_json(&self.code)?;
+
         let options: JsMinifyOptions = deserialize_json(&self.options)?;
 
         try_with(self.c.cm.clone(), false, ErrorFormat::Normal, |handler| {
@@ -85,6 +87,7 @@ type NameMangleCache = External<Arc<dyn MangleCache>>;
 #[napi(ts_return_type = "object")]
 fn new_mangle_name_cache() -> NameMangleCache {
     let cache = Arc::new(SimpleMangleCache::default());
+
     External::new(cache)
 }
 
@@ -96,8 +99,11 @@ fn minify(
     signal: Option<AbortSignal>,
 ) -> AsyncTask<MinifyTask> {
     crate::util::init_default_trace_subscriber();
+
     let code = String::from_utf8_lossy(code.as_ref()).to_string();
+
     let options = String::from_utf8_lossy(opts.as_ref()).to_string();
+
     let extras = JsMinifyExtras::default()
         .with_mangle_name_cache(extras.mangle_name_cache.as_deref().cloned());
 
@@ -120,8 +126,11 @@ pub fn minify_sync(
     extras: NapiMinifyExtra,
 ) -> napi::Result<TransformOutput> {
     crate::util::init_default_trace_subscriber();
+
     let code: MinifyTarget = get_deserialized(code)?;
+
     let opts = get_deserialized(opts)?;
+
     let extras = JsMinifyExtras::default()
         .with_mangle_name_cache(extras.mangle_name_cache.as_deref().cloned());
 

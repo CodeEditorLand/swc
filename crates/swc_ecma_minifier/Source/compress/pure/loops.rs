@@ -8,6 +8,7 @@ impl Pure<'_> {
     ///
     /// - `while(test);` => `for(;;test);
     /// - `do; while(true)` => `for(;;);
+
     pub(super) fn loop_to_for_stmt(&mut self, s: &mut Stmt) {
         if !self.options.loops {
             return;
@@ -16,6 +17,7 @@ impl Pure<'_> {
         match s {
             Stmt::While(stmt) => {
                 self.changed = true;
+
                 report_change!("loops: Converting a while loop to a for loop");
                 *s = ForStmt {
                     span: stmt.span,
@@ -26,10 +28,13 @@ impl Pure<'_> {
                 }
                 .into();
             }
+
             Stmt::DoWhile(stmt) => {
                 let val = stmt.test.as_pure_bool(&self.expr_ctx);
+
                 if let Value::Known(true) = val {
                     self.changed = true;
+
                     report_change!("loops: Converting an always-true do-while loop to a for loop");
 
                     *s = ForStmt {
@@ -42,6 +47,7 @@ impl Pure<'_> {
                     .into();
                 }
             }
+
             _ => {}
         }
     }
@@ -89,6 +95,7 @@ impl Pure<'_> {
                             }
                             .into();
                         }
+
                         None => {
                             s.test = Some(test.take());
                         }
@@ -97,6 +104,7 @@ impl Pure<'_> {
                     report_change!("loops: Optimizing a for loop with an if-then-break");
 
                     first.take();
+
                     return None;
                 }
             }
@@ -121,6 +129,7 @@ impl Pure<'_> {
                             }
                             .into();
                         }
+
                         None => {
                             s.test = Some(test.take());
                         }
@@ -129,6 +138,7 @@ impl Pure<'_> {
                     report_change!("loops: Optimizing a for loop with an if-else-break");
 
                     *first = *cons.take();
+
                     return None;
                 }
             }
@@ -170,6 +180,7 @@ impl Pure<'_> {
                 // will remove block and with the next pass we can apply
                 // this pass.
                 self.changed = true;
+
                 report_change!("loops: Compressing for-if-break into a for statement");
 
                 // We negate because this `test` is used as a condition for `break`.
@@ -187,6 +198,7 @@ impl Pure<'_> {
                             .into(),
                         );
                     }
+
                     None => {
                         s.test = Some(test.take());
                     }

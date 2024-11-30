@@ -73,9 +73,11 @@ impl VisitMut for ComputedProps {
             }
 
             let mark = Mark::fresh(Mark::root());
+
             let obj_ident = quote_ident!(SyntaxContext::empty().apply_mark(mark), *span, "_obj");
 
             let mut exprs: Vec<Box<Expr>> = Vec::with_capacity(props.len() + 2);
+
             let mutator_map = quote_ident!(
                 SyntaxContext::empty().apply_mark(mark),
                 *span,
@@ -145,9 +147,11 @@ impl VisitMut for ComputedProps {
                         Prop::KeyValue(KeyValueProp { key, value }) => {
                             (prop_name_to_expr(key, self.c.loose), *value)
                         }
+
                         Prop::Assign(..) => {
                             unreachable!("assign property in object literal is invalid")
                         }
+
                         prop @ Prop::Getter(GetterProp { .. })
                         | prop @ Prop::Setter(SetterProp { .. }) => {
                             self.used_define_enum_props = true;
@@ -158,6 +162,7 @@ impl VisitMut for ComputedProps {
                                 Prop::Setter(..) => Some("set"),
                                 _ => None,
                             };
+
                             let (key, function) = match prop {
                                 Prop::Getter(GetterProp {
                                     span, body, key, ..
@@ -198,6 +203,7 @@ impl VisitMut for ComputedProps {
                                 .computed_member(prop_name_to_expr(key, false).0);
 
                             // mutator[f] = mutator[f] || {}
+
                             exprs.push(
                                 AssignExpr {
                                     span,
@@ -220,6 +226,7 @@ impl VisitMut for ComputedProps {
                             );
 
                             // mutator[f].get = function(){}
+
                             exprs.push(
                                 AssignExpr {
                                     span,
@@ -241,6 +248,7 @@ impl VisitMut for ComputedProps {
                             continue;
                             // unimplemented!("getter /setter property")
                         }
+
                         Prop::Method(MethodProp { key, function }) => (
                             prop_name_to_expr(key, self.c.loose),
                             FnExpr {
@@ -263,14 +271,17 @@ impl VisitMut for ComputedProps {
                         }
                         .into(),
                     );
+
                     break;
                 }
+
                 exprs.push(if self.c.loose {
                     let left = if is_compute {
                         obj_ident.clone().computed_member(key)
                     } else {
                         obj_ident.clone().make_member(key.ident().unwrap().into())
                     };
+
                     AssignExpr {
                         span,
                         op: op!("="),
@@ -291,6 +302,7 @@ impl VisitMut for ComputedProps {
 
             if let Some(single_expr) = single_cnt_prop {
                 *expr = single_expr;
+
                 return;
             }
 
@@ -300,6 +312,7 @@ impl VisitMut for ComputedProps {
                 init: None,
                 definite: false,
             });
+
             if self.used_define_enum_props {
                 self.vars.push(VarDeclarator {
                     span: DUMMY_SP,
@@ -313,6 +326,7 @@ impl VisitMut for ComputedProps {
                     ),
                     definite: false,
                 });
+
                 exprs.push(
                     CallExpr {
                         span: *span,
@@ -345,7 +359,9 @@ impl VisitMut for ComputedProps {
 
 fn is_complex<T: VisitWith<ComplexVisitor>>(node: &T) -> bool {
     let mut visitor = ComplexVisitor::default();
+
     node.visit_children_with(&mut visitor);
+
     visitor.found
 }
 
@@ -376,6 +392,7 @@ impl ComputedProps {
         for mut stmt in stmts.drain(..) {
             if !contains_computed_expr(&stmt) {
                 stmts_updated.push(stmt);
+
                 continue;
             }
 
@@ -433,7 +450,9 @@ where
     N: VisitWith<ShouldWork>,
 {
     let mut v = ShouldWork { found: false };
+
     node.visit_with(&mut v);
+
     v.found
 }
 

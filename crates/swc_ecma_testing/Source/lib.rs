@@ -37,7 +37,9 @@ fn cargo_cache_root() -> PathBuf {
 pub fn exec_node_js(js_code: &str, opts: JsExecOptions) -> Result<String> {
     if opts.cache {
         let hash = calc_hash(&format!("{:?}:{}", opts.args, js_code));
+
         let cache_dir = cargo_cache_root().join(".swc-node-exec-cache");
+
         let cache_path = cache_dir.join(format!("{}.stdout", hash));
 
         if let Ok(s) = fs::read_to_string(&cache_path) {
@@ -90,7 +92,9 @@ pub fn exec_node_js(js_code: &str, opts: JsExecOptions) -> Result<String> {
 
 fn calc_hash(s: &str) -> String {
     let mut hasher = Sha256::default();
+
     hasher.update(s.as_bytes());
+
     let sum = hasher.finalize();
 
     hex::encode(sum)

@@ -58,8 +58,10 @@ impl Optimizer<'_> {
                         "dead_code: Dropping an assignment to a variable declared in function \
                          because function is being terminated"
                     );
+
                     self.changed = true;
                     *e = *assign.right.take();
+
                     return true;
                 }
             }
@@ -94,6 +96,7 @@ impl Optimizer<'_> {
                             right: assign.right.take(),
                         }
                         .into();
+
                         return true;
                     }
                 }

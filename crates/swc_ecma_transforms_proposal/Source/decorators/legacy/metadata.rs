@@ -30,12 +30,15 @@ impl VisitMut for ParamMetadata {
                         ParamOrTsParamProp::TsParamProp(p) => {
                             for decorator in p.decorators.drain(..) {
                                 let new_dec = self.create_param_decorator(idx, decorator.expr);
+
                                 decorators.push(new_dec);
                             }
                         }
+
                         ParamOrTsParamProp::Param(param) => {
                             for decorator in param.decorators.drain(..) {
                                 let new_dec = self.create_param_decorator(idx, decorator.expr);
+
                                 decorators.push(new_dec);
                             }
                         }
@@ -44,8 +47,10 @@ impl VisitMut for ParamMetadata {
 
                 ClassMember::Constructor(c)
             }
+
             _ => m,
         });
+
         cls.decorators = decorators;
     }
 
@@ -53,6 +58,7 @@ impl VisitMut for ParamMetadata {
         for (idx, param) in m.function.params.iter_mut().enumerate() {
             for decorator in param.decorators.drain(..) {
                 let new_dec = self.create_param_decorator(idx, decorator.expr);
+
                 m.function.decorators.push(new_dec);
             }
         }
@@ -84,17 +90,22 @@ pub(super) fn remove_span(e: &mut Expr) {
     match e {
         Expr::Member(m) => {
             m.span = DUMMY_SP;
+
             remove_span(&mut m.obj);
         }
+
         Expr::Call(c) => {
             c.span = DUMMY_SP;
+
             if let Callee::Expr(e) = &mut c.callee {
                 remove_span(e);
             }
+
             for arg in &mut c.args {
                 remove_span(&mut arg.expr);
             }
         }
+
         _ => {
             e.set_span(DUMMY_SP);
         }
@@ -146,6 +157,7 @@ impl VisitMut for Metadata<'_> {
             ClassMember::Constructor(c) => Some(c),
             _ => None,
         });
+
         if constructor.is_none() {
             return;
         }
@@ -153,6 +165,7 @@ impl VisitMut for Metadata<'_> {
         {
             let dec = self
                 .create_metadata_design_decorator("design:type", quote_ident!("Function").as_arg());
+
             c.decorators.push(dec);
         }
         {
@@ -171,8 +184,10 @@ impl VisitMut for Metadata<'_> {
                                     TsParamPropParam::Ident(i) => i.type_ann.as_deref(),
                                     TsParamPropParam::Assign(a) => get_type_ann_of_pat(&a.left),
                                 };
+
                                 Some(serialize_type(self.class_name, ann).as_arg())
                             }
+
                             ParamOrTsParamProp::Param(p) => Some(
                                 serialize_type(self.class_name, get_type_ann_of_pat(&p.pat))
                                     .as_arg(),
@@ -182,6 +197,7 @@ impl VisitMut for Metadata<'_> {
                 }
                 .as_arg(),
             );
+
             c.decorators.push(dec);
         }
     }
@@ -203,6 +219,7 @@ impl VisitMut for Metadata<'_> {
                         serialize_type(self.class_name, return_type).as_arg()
                     }
                 }
+
                 MethodKind::Setter => serialize_type(
                     self.class_name,
                     get_type_ann_of_pat(&m.function.params[0].pat),
@@ -211,6 +228,7 @@ impl VisitMut for Metadata<'_> {
             };
 
             let dec = self.create_metadata_design_decorator("design:type", type_arg);
+
             m.function.decorators.push(dec);
         }
         {
@@ -232,6 +250,7 @@ impl VisitMut for Metadata<'_> {
                 }
                 .as_arg(),
             );
+
             m.function.decorators.push(dec);
         }
 
@@ -253,6 +272,7 @@ impl VisitMut for Metadata<'_> {
                     }
                 },
             );
+
             m.function.decorators.push(dec);
         }
     }
@@ -271,6 +291,7 @@ impl VisitMut for Metadata<'_> {
                 serialize_type(self.class_name, prop_type).as_arg()
             }
         });
+
         p.decorators.push(dec);
     }
 }
@@ -302,6 +323,7 @@ fn serialize_type(class_name: Option<&Ident>, param: Option<&TsTypeAnn>) -> Expr
         match *expr {
             Expr::Member(ref member_expr) => {
                 let obj_expr = member_expr.obj.clone();
+
                 BinExpr {
                     span: DUMMY_SP,
                     left: check_object_existed(obj_expr),
@@ -326,6 +348,7 @@ fn serialize_type(class_name: Option<&Ident>, param: Option<&TsTypeAnn>) -> Expr
                 }
                 .into()
             }
+
             _ => BinExpr {
                 span: DUMMY_SP,
                 left: Box::new(
@@ -357,6 +380,7 @@ fn serialize_type(class_name: Option<&Ident>, param: Option<&TsTypeAnn>) -> Expr
             TsEntityName::Ident(i) if &*i.sym == class_name => {
                 return quote_ident!("Object").into()
             }
+
             _ => {}
         }
 
@@ -379,12 +403,14 @@ fn serialize_type(class_name: Option<&Ident>, param: Option<&TsTypeAnn>) -> Expr
 
     fn serialize_type_list(class_name: &str, types: &[Box<TsType>]) -> Expr {
         let mut u = None;
+
         for ty in types {
             // Skip parens if need be
             let ty = match &**ty {
                 TsType::TsParenthesizedType(ty) => &ty.type_ann,
                 _ => ty,
             };
+
             match &**ty {
                 // Always elide `never` from the union/intersection if possible
                 TsType::TsKeywordType(TsKeywordType {
@@ -432,6 +458,7 @@ fn serialize_type(class_name: Option<&Ident>, param: Option<&TsTypeAnn>) -> Expr
                     match prev {
                         Expr::Ident(prev) => match &item {
                             Expr::Ident(item) if prev.sym == item.sym => {}
+
                             _ => return quote_ident!("Object").into(),
                         },
 
@@ -449,6 +476,7 @@ fn serialize_type(class_name: Option<&Ident>, param: Option<&TsTypeAnn>) -> Expr
 
     fn serialize_type_node(class_name: &str, ty: &TsType) -> Expr {
         let span = ty.span();
+
         match ty {
             TsType::TsKeywordType(TsKeywordType {
                 kind: TsKeywordTypeKind::TsVoidKeyword,
@@ -539,6 +567,7 @@ fn serialize_type(class_name: Option<&Ident>, param: Option<&TsTypeAnn>) -> Expr
                 TsUnionOrIntersectionType::TsUnionType(ty) => {
                     serialize_type_list(class_name, &ty.types)
                 }
+
                 TsUnionOrIntersectionType::TsIntersectionType(ty) => {
                     serialize_type_list(class_name, &ty.types)
                 }
@@ -574,6 +603,7 @@ fn ts_entity_to_member_expr(type_name: &TsEntityName) -> Expr {
             }
             .into()
         }
+
         TsEntityName::Ident(i) => i.clone().with_pos(BytePos::DUMMY, BytePos::DUMMY).into(),
     }
 }

@@ -64,6 +64,7 @@ impl VisitMut for ModuleDeclStrip {
                 ModuleItem::ModuleDecl(mut module_decl) => {
                     // collect link meta
                     module_decl.visit_mut_with(self);
+
                     self.has_module_decl = true;
 
                     // emit stmt
@@ -72,20 +73,24 @@ impl VisitMut for ModuleDeclStrip {
                         ModuleDecl::ExportDecl(ExportDecl { decl, .. }) => {
                             list.push(decl.into());
                         }
+
                         ModuleDecl::ExportNamed(..) => continue,
                         ModuleDecl::ExportDefaultDecl(ExportDefaultDecl { decl, .. }) => match decl
                         {
                             DefaultDecl::Class(class_expr) => {
                                 list.extend(class_expr.as_class_decl().map(From::from))
                             }
+
                             DefaultDecl::Fn(fn_expr) => {
                                 list.extend(fn_expr.as_fn_decl().map(From::from))
                             }
+
                             DefaultDecl::TsInterfaceDecl(_) => continue,
                         },
                         ModuleDecl::ExportDefaultExpr(..) => {
                             list.extend(self.export_default.take().map(From::from))
                         }
+
                         ModuleDecl::ExportAll(..) => continue,
                         ModuleDecl::TsImportEquals(..) => continue,
                         ModuleDecl::TsExportAssignment(..) => continue,
@@ -144,6 +149,7 @@ impl VisitMut for ModuleDeclStrip {
                         .map(|id| (id.sym.clone(), ExportItem::new((id.span, id.ctxt), id))),
                 );
             }
+
             _ => {}
         };
     }
@@ -174,9 +180,11 @@ impl VisitMut for ModuleDeclStrip {
                 ExportSpecifier::Namespace(..) => {
                     unreachable!("`export *` without src is invalid")
                 }
+
                 ExportSpecifier::Default(..) => {
                     unreachable!("`export foo` without src is invalid")
                 }
+
                 ExportSpecifier::Named(ExportNamedSpecifier { orig, exported, .. }) => {
                     let orig = match orig {
                         ModuleExportName::Ident(id) => id,
@@ -233,6 +241,7 @@ impl VisitMut for ModuleDeclStrip {
                     ExportItem::new((n.span, Default::default()), ident),
                 );
             }
+
             DefaultDecl::Fn(fn_expr) => {
                 let ident = fn_expr
                     .ident
@@ -244,6 +253,7 @@ impl VisitMut for ModuleDeclStrip {
                     ExportItem::new((n.span, Default::default()), ident),
                 );
             }
+
             DefaultDecl::TsInterfaceDecl(_) => {}
         }
     }
@@ -412,6 +422,7 @@ impl From<ImportSpecifier> for LinkSpecifier {
             ImportSpecifier::Default(ImportDefaultSpecifier { local, .. }) => {
                 Self::ImportDefault(local.to_id())
             }
+
             ImportSpecifier::Named(ImportNamedSpecifier {
                 is_type_only: false,
                 local,
@@ -437,6 +448,7 @@ impl From<ImportSpecifier> for LinkSpecifier {
                     imported,
                 }
             }
+
             _ => Self::Empty,
         }
     }
@@ -489,9 +501,11 @@ impl From<ExportSpecifier> for LinkSpecifier {
 
                         Self::ExportDefaultAs(default_span, sym, span)
                     }
+
                     _ => Self::ExportNamed { orig, exported },
                 }
             }
+
             _ => Self::Empty,
         }
     }
@@ -506,9 +520,13 @@ bitflags! {
     #[derive(Default, Debug)]
     pub struct LinkFlag: u8 {
         const NAMED = 1 << 0;
+
         const DEFAULT = 1 << 1;
+
         const NAMESPACE = Self::NAMED.bits() | Self::DEFAULT.bits();
+
         const EXPORT_STAR = 1 << 2;
+
         const IMPORT_EQUAL = 1 << 3;
     }
 }
@@ -622,6 +640,7 @@ impl LinkItem {
 
     fn insert(&mut self, link: LinkSpecifier) -> bool {
         self.2 |= (&link).into();
+
         self.1.insert(link)
     }
 }
@@ -661,6 +680,7 @@ impl LinkSpecifierReducer for AHashSet<LinkSpecifier> {
                     (mod_ident.clone(), imported.or(Some(local.0))),
                 );
             }
+
             LinkSpecifier::ImportDefault(id) => {
                 *ref_to_mod_ident = true;
 
@@ -672,11 +692,13 @@ impl LinkSpecifierReducer for AHashSet<LinkSpecifier> {
                     ),
                 );
             }
+
             LinkSpecifier::ImportStarAs(id) => {
                 *ref_to_mod_ident = true;
 
                 import_map.insert(id, (mod_ident.clone(), None));
             }
+
             LinkSpecifier::ExportNamed { orig, exported } => {
                 *ref_to_mod_ident = true;
 
@@ -701,6 +723,7 @@ impl LinkSpecifierReducer for AHashSet<LinkSpecifier> {
                     ExportItem::new(export_name_span, quote_ident!(orig.1 .1, orig.1 .0, orig.0)),
                 ))
             }
+
             LinkSpecifier::ExportDefaultAs(_, key, span) => {
                 *ref_to_mod_ident = true;
 
@@ -722,12 +745,15 @@ impl LinkSpecifierReducer for AHashSet<LinkSpecifier> {
                     ExportItem::new(span, quote_ident!(span.1, span.0, key)),
                 ));
             }
+
             LinkSpecifier::ExportStarAs(key, span) => {
                 *ref_to_mod_ident = true;
 
                 export_obj_prop_list.push((key, ExportItem::new(span, mod_ident.clone())));
             }
+
             LinkSpecifier::ExportStar => {}
+
             LinkSpecifier::ImportEqual(id) => {
                 *ref_to_mod_ident = true;
 
@@ -739,6 +765,7 @@ impl LinkSpecifierReducer for AHashSet<LinkSpecifier> {
                     ),
                 );
             }
+
             LinkSpecifier::Empty => {}
         })
     }

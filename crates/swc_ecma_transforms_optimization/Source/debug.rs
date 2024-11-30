@@ -35,7 +35,9 @@ impl Visit for AssertValid {
     #[cfg(debug_assertions)]
     fn visit_expr(&mut self, n: &Expr) {
         let ctx = Ctx { v: n };
+
         n.visit_children_with(self);
+
         forget(ctx);
     }
 
@@ -57,7 +59,9 @@ impl Visit for AssertValid {
     #[cfg(debug_assertions)]
     fn visit_stmt(&mut self, n: &Stmt) {
         let ctx = Ctx { v: n };
+
         n.visit_children_with(self);
+
         forget(ctx);
     }
 

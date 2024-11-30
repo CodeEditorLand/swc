@@ -77,14 +77,18 @@ impl VisitMut for TemplateLiteral {
                 let len = quasis.len() + exprs.len();
 
                 let mut args = Vec::new();
+
                 let mut quasis = quasis.iter_mut();
+
                 let mut exprs = exprs.take().into_iter();
 
                 for i in 0..len {
                     if i == 0 {
                         quasis.next();
+
                         continue;
                     }
+
                     let last = i == len - 1;
 
                     let expr = if i % 2 == 0 {
@@ -104,6 +108,7 @@ impl VisitMut for TemplateLiteral {
                                     .into(),
                                 )
                             }
+
                             _ => unreachable!(),
                         }
                     } else {
@@ -136,8 +141,10 @@ impl VisitMut for TemplateLiteral {
                                             value: format!("{}{}", value, r_value).into(),
                                         })
                                         .into();
+
                                         continue;
                                     }
+
                                     _ => {
                                         obj = Lit::Str(Str { span, raw, value }).into();
                                     }
@@ -152,6 +159,7 @@ impl VisitMut for TemplateLiteral {
                         if last && !args.is_empty() {
                             obj = if self.c.ignore_to_primitive {
                                 let args = mem::take(&mut args);
+
                                 for arg in args {
                                     obj = BinExpr {
                                         span: span.with_hi(expr_span.hi() + BytePos(1)),
@@ -161,6 +169,7 @@ impl VisitMut for TemplateLiteral {
                                     }
                                     .into()
                                 }
+
                                 obj
                             } else {
                                 CallExpr {
@@ -187,15 +196,19 @@ impl VisitMut for TemplateLiteral {
                         if !args.is_empty() {
                             obj = if self.c.ignore_to_primitive {
                                 let args = mem::take(&mut args);
+
                                 let len = args.len();
+
                                 for arg in args {
                                     // for `${asd}a`
                                     if let Expr::Lit(Lit::Str(s)) = obj.as_ref() {
                                         if s.value.len() == 0 && len == 2 {
                                             obj = arg;
+
                                             continue;
                                         }
                                     }
+
                                     obj = BinExpr {
                                         span: span.with_hi(expr_span.hi() + BytePos(1)),
                                         op: op!(bin, "+"),
@@ -204,6 +217,7 @@ impl VisitMut for TemplateLiteral {
                                     }
                                     .into()
                                 }
+
                                 obj
                             } else {
                                 CallExpr {
@@ -226,6 +240,7 @@ impl VisitMut for TemplateLiteral {
                                 .into()
                             };
                         }
+
                         debug_assert!(args.is_empty());
 
                         args.push(expr);
@@ -247,6 +262,7 @@ impl VisitMut for TemplateLiteral {
                     params: Vec::new(),
                     body: {
                         // const data = _tagged_template_literal(["first", "second"]);
+
                         let data_decl = VarDecl {
                             span: DUMMY_SP,
                             kind: VarDeclKind::Const,
@@ -312,6 +328,7 @@ impl VisitMut for TemplateLiteral {
                         // _templateObject2 = function () {
                         //     return data;
                         // };
+
                         let assign_expr: Expr = {
                             AssignExpr {
                                 span: DUMMY_SP,
@@ -354,6 +371,7 @@ impl VisitMut for TemplateLiteral {
 
                     ..Default::default()
                 };
+
                 self.added.push(
                     FnDecl {
                         declare: false,

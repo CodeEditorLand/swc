@@ -38,10 +38,12 @@ pub struct ParseFileTask {
 #[napi]
 impl Task for ParseTask {
     type JsValue = String;
+
     type Output = String;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
         let options: ParseOptions = deserialize_json(&self.options)?;
+
         let fm = self
             .c
             .cm
@@ -86,6 +88,7 @@ impl Task for ParseTask {
 #[napi]
 impl Task for ParseFileTask {
     type JsValue = String;
+
     type Output = String;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
@@ -100,6 +103,7 @@ impl Task for ParseFileTask {
                     .context("failed to read module")?;
 
                 let c = self.c.comments().clone();
+
                 let comments = if options.comments {
                     Some(&c as &dyn Comments)
                 } else {
@@ -146,7 +150,9 @@ pub fn parse(
     crate::util::init_default_trace_subscriber();
 
     let c = get_compiler();
+
     let options = String::from_utf8_lossy(options.as_ref()).to_string();
+
     let filename = if let Some(value) = filename {
         FileName::Real(value.into())
     } else {
@@ -167,9 +173,11 @@ pub fn parse(
 #[napi]
 pub fn parse_sync(src: String, opts: Buffer, filename: Option<String>) -> napi::Result<String> {
     crate::util::init_default_trace_subscriber();
+
     let c = get_compiler();
 
     let options: ParseOptions = get_deserialized(&opts)?;
+
     let filename = if let Some(value) = filename {
         FileName::Real(value.into())
     } else {
@@ -212,7 +220,9 @@ pub fn parse_sync(src: String, opts: Buffer, filename: Option<String>) -> napi::
 #[napi]
 pub fn parse_file_sync(path: String, opts: Buffer) -> napi::Result<String> {
     crate::util::init_default_trace_subscriber();
+
     let c = get_compiler();
+
     let options: ParseOptions = get_deserialized(&opts)?;
 
     let program = {
@@ -235,6 +245,7 @@ pub fn parse_file_sync(path: String, opts: Buffer) -> napi::Result<String> {
                 options.is_module,
                 comments,
             )?;
+
             p.visit_mut_with(&mut resolver(
                 Mark::new(),
                 Mark::new(),
@@ -258,7 +269,9 @@ pub fn parse_file(
     crate::util::init_default_trace_subscriber();
 
     let c = get_compiler();
+
     let path = PathBuf::from(&path);
+
     let options = String::from_utf8_lossy(options.as_ref()).to_string();
 
     AsyncTask::with_optional_signal(ParseFileTask { c, path, options }, signal)

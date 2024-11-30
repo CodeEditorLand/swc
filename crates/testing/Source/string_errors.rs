@@ -28,7 +28,9 @@ pub(crate) fn new_handler(cm: Lrc<SourceMap>, treat_err_as_bug: bool) -> (Handle
             skip_filename: false,
         },
     );
+
     let emitter = multi_emitter(Box::new(emitter), stderr_emitter(cm));
+
     let handler = Handler::with_emitter_and_flags(
         emitter,
         HandlerFlags {
@@ -55,6 +57,7 @@ impl Write for BufferedError {
 impl From<BufferedError> for StdErr {
     fn from(buf: BufferedError) -> Self {
         let s = buf.0.read().unwrap();
+
         let s: String = String::from_utf8_lossy(&s).into();
 
         s.into()
@@ -64,6 +67,7 @@ impl From<BufferedError> for StdErr {
 impl fmt::Write for BufferedError {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write(s.as_bytes()).map_err(|_| fmt::Error)?;
+
         Ok(())
     }
 }

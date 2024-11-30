@@ -13,6 +13,7 @@ impl FileLoader for MyFileLoader {
     /// Query the existence of a file.
     fn file_exists(&self, path: &Path) -> bool {
         println!("File exists?: {}", path.display());
+
         true
     }
 
@@ -36,15 +37,20 @@ function foo() {
 #[test]
 fn test() {
     let cm = SourceMap::with_file_loader(box MyFileLoader, FilePathMapping::empty());
+
     let file_map = cm
         .load_file(Path::new("tmp.js").into())
         .expect("failed to load tmp.js");
+
     println!(
         "File (start={},end={})",
         file_map.start_pos.0, file_map.end_pos.0
     );
+
     let start_pos = file_map.start_pos + BytePos(1);
+
     let end_pos = file_map.end_pos - BytePos(1);
+
     let full = Span::new(start_pos, end_pos);
 
     let handler = Handler::with_tty_emitter(ColorConfig::Always, false, false, Some(Arc::new(cm)));

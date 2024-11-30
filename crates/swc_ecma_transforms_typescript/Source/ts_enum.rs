@@ -76,6 +76,7 @@ impl From<TsEnumRecordValue> for Expr {
                     value
                 }
             }
+
             TsEnumRecordValue::Number(num) => Lit::Num(Number {
                 span: DUMMY_SP,
                 value: *num,
@@ -104,9 +105,11 @@ pub(crate) struct EnumValueComputer<'a> {
 impl EnumValueComputer<'_> {
     pub fn compute(&mut self, expr: Box<Expr>) -> TsEnumRecordValue {
         let mut expr = self.compute_rec(expr);
+
         if let TsEnumRecordValue::Opaque(expr) = &mut expr {
             expr.visit_mut_with(self);
         }
+
         expr
     }
 
@@ -119,11 +122,13 @@ impl EnumValueComputer<'_> {
             {
                 TsEnumRecordValue::Number(f64::NAN.into())
             }
+
             Expr::Ident(Ident { ctxt, sym, .. })
                 if &*sym == "Infinity" && ctxt == self.unresolved_ctxt =>
             {
                 TsEnumRecordValue::Number(f64::INFINITY.into())
             }
+
             Expr::Ident(ref ident) => self
                 .record
                 .get(&TsEnumRecordKey {
@@ -178,6 +183,7 @@ impl EnumValueComputer<'_> {
 
     fn compute_bin(&self, expr: BinExpr) -> TsEnumRecordValue {
         let origin_expr = expr.clone();
+
         if !matches!(
             expr.op,
             op!(bin, "+")
@@ -197,6 +203,7 @@ impl EnumValueComputer<'_> {
         }
 
         let left = self.compute_rec(expr.left);
+
         let right = self.compute_rec(expr.right);
 
         match (left, right, expr.op) {
@@ -264,6 +271,7 @@ impl EnumValueComputer<'_> {
 
                 s.value
             }
+
             _ => return opaque_expr,
         };
 
@@ -302,6 +310,7 @@ impl EnumValueComputer<'_> {
             };
 
             string.push_str(&expr);
+
             string.push_str(&q.raw);
         }
 

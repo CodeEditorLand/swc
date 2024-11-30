@@ -26,9 +26,11 @@ impl Compressor {
                     '(' | ')' | '"' | '\'' => {
                         counter += 1;
                     }
+
                     _ if c.is_whitespace() => {
                         counter += 1;
                     }
+
                     _ => {}
                 }
             }

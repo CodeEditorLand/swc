@@ -15,20 +15,27 @@ pub fn parse(i: Input) -> IResult<Input, JsDoc> {
     let i = skip(i);
 
     let mut tags = Vec::new();
+
     let lo = i.span().lo;
+
     let (description, mut i) = take_while(|c| c != '@')(i)?;
+
     let description = trim(description).into();
 
     i = skip(i);
 
     while i.starts_with('@') {
         let (input, tag) = parse_tag_item(i)?;
+
         i = input;
+
         tags.push(tag);
+
         i = skip(i);
     }
 
     let hi = i.span().hi;
+
     Ok((
         i,
         JsDoc {
@@ -41,24 +48,31 @@ pub fn parse(i: Input) -> IResult<Input, JsDoc> {
 
 pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
     let i = skip(i);
+
     let (_, i) = tag("@")(i)?;
 
     let (mut i, tag_name) = parse_word(i)?;
+
     i = skip_ws(i);
 
     let span = tag_name.span();
+
     let tag = match &*tag_name.value {
         "abstract" | "virtual" => Tag::Abstract(AbstractTag { span }),
 
         "access" => {
             let (input, access) = parse_one_of(i, &["private", "protected", "package", "public"])?;
+
             i = input;
+
             Tag::Access(AccessTag { span, access })
         }
 
         "alias" => {
             let (input, name_path) = parse_name_path(i)?;
+
             i = input;
+
             Tag::Alias(AliasTag { span, name_path })
         }
 
@@ -66,7 +80,9 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "augments" | "extends" => {
             let (input, name_path) = parse_name_path(i)?;
+
             i = input;
+
             Tag::Augments(AugmentsTag {
                 span,
                 class: name_path,
@@ -75,28 +91,38 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "author" => {
             let (input, author) = parse_line(i)?;
+
             i = input;
+
             Tag::Author(AuthorTag { span, author })
         }
 
         "borrows" => {
             let (input, from) = parse_name_path(i)?;
+
             let (_, input) = tag("as")(input)?;
+
             let (input, to) = parse_name_path(input)?;
+
             i = input;
+
             Tag::Borrows(BorrowsTag { span, from, to })
         }
 
         "callback" => {
             let (input, name_path) = parse_name_path(i)?;
+
             i = input;
+
             Tag::Callback(CallbackTag { span, name_path })
         }
 
         "class" | "constructor" => {
             // TODO: name is must if ty is some
             let (input, ty) = parse_opt_str(i)?;
+
             let (input, name) = parse_opt_str(input)?;
+
             i = input;
 
             Tag::Class(ClassTag { span, ty, name })
@@ -104,6 +130,7 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "classdesc" => {
             let (input, desc) = parse_line(i)?;
+
             i = input;
 
             Tag::ClassDesc(JSDocClassDescTag { span, desc })
@@ -112,57 +139,76 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
         "constant" | "const" => {
             // TODO: name is must if ty is some
             let (input, ty) = parse_opt_str(i)?;
+
             let (input, name) = parse_opt_str(input)?;
+
             i = input;
+
             Tag::Const(ConstTag { span, ty, name })
         }
 
         "constructs" => {
             let (input, name) = parse_line(i)?;
+
             i = input;
+
             Tag::Constructs(ConstructsTag { span, name })
         }
 
         "copyright" => {
             let (input, text) = parse_line(i)?;
+
             i = input;
+
             Tag::Copyright(CopyrightTag { span, text })
         }
 
         "default" | "defaultvalue" => {
             let (input, value) = parse_line(i)?;
+
             i = input;
+
             Tag::Default(DefaultTag { span, value })
         }
 
         "deprecated" => {
             let (input, text) = parse_line(i)?;
+
             i = input;
+
             Tag::Deprecated(DeprecatedTag { span, text })
         }
 
         "description" | "desc" => {
             let (input, text) = parse_line(i)?;
+
             i = input;
+
             Tag::Description(DescriptionTag { span, text })
         }
 
         "enum" => {
             let (input, ty) = parse_type(i)?;
+
             i = input;
+
             Tag::Enum(EnumTag { span, ty })
         }
 
         "event" => {
             // TODO: implement this
             let (input, ty) = parse_line(i)?;
+
             i = input;
+
             Tag::Unknown(UnknownTag { span, extras: ty })
         }
 
         "example" => {
             let (text, input) = take_while(|c| c != '@')(i)?;
+
             i = input;
+
             Tag::Example(ExampleTag {
                 span,
                 text: text.into(),
@@ -171,7 +217,9 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "exports" => {
             let (input, text) = parse_line(i)?;
+
             i = input;
+
             Tag::Exports(ExportsTag {
                 span,
                 module_name: text,
@@ -180,26 +228,34 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "external" | "host" => {
             let (input, name) = parse_line(i)?;
+
             i = input;
+
             Tag::External(ExternalTag { span, name })
         }
 
         "file" | "fileoverview" | "overview" => {
             let (input, text) = parse_line(i)?;
+
             i = input;
+
             Tag::File(FileTag { span, text })
         }
 
         "fires" | "emits" => {
             // TODO: implement this
             let (input, ty) = parse_line(i)?;
+
             i = input;
+
             Tag::Unknown(UnknownTag { span, extras: ty })
         }
 
         "function" | "func" | "method" => {
             let (input, name) = parse_opt_str(i)?;
+
             i = input;
+
             Tag::Function(FunctionTag { span, name })
         }
 
@@ -211,7 +267,9 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "implements" => {
             let (input, class) = parse_type(i)?;
+
             i = input;
+
             Tag::Implements(ImplementsTag { span, class })
         }
 
@@ -223,7 +281,9 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "interface" => {
             let (input, name) = parse_opt_str(i)?;
+
             i = input;
+
             Tag::Interface(InterfaceTag { span, name })
         }
 
@@ -244,38 +304,51 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
                     "typedef",
                 ],
             )?;
+
             i = input;
+
             Tag::Kind(KindTag { span, name })
         }
 
         "lends" => {
             let (input, name) = parse_name_path(i)?;
+
             i = input;
+
             Tag::Lends(LendsTag { span, name })
         }
 
         "license" => {
             let (input, identifier) = parse_line(i)?;
+
             i = input;
+
             Tag::License(LicenseTag { span, identifier })
         }
 
         "listens" => {
             let (input, event_name) = parse_line(i)?;
+
             i = input;
+
             Tag::Listens(ListensTag { span, event_name })
         }
 
         "member" | "var" => {
             let (input, ty) = parse_word(i)?;
+
             let (input, name) = parse_word(input)?;
+
             i = input;
+
             Tag::Member(MemberTag { span, ty, name })
         }
 
         "memberof" | "memberof!" => {
             let (input, parent_name_path) = parse_name_path(i)?;
+
             i = input;
+
             Tag::MemberOf(MemberOfTag {
                 span,
                 parent_name_path,
@@ -284,33 +357,45 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "mixes" => {
             let (input, name_path) = parse_name_path(i)?;
+
             i = input;
+
             Tag::Mixes(MixesTag { span, name_path })
         }
 
         "mixin" => {
             let (input, name) = parse_line(i)?;
+
             i = input;
+
             Tag::Mixin(MixinTag { span, name })
         }
 
         "module" => {
             let (input, ty) = parse_word(i)?;
+
             let (input, name) = parse_line(input)?;
+
             i = input;
+
             Tag::Module(ModuleTag { span, ty, name })
         }
 
         "name" => {
             let (input, name_path) = parse_name_path(i)?;
+
             i = input;
+
             Tag::Name(NameTag { span, name_path })
         }
 
         "namespace" => {
             let (input, ty) = parse_opt_type(i)?;
+
             let (input, name) = parse_opt_str(input)?;
+
             i = input;
+
             Tag::Namespace(NamespaceTag { span, ty, name })
         }
 
@@ -318,15 +403,21 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "package" => {
             let (input, ty) = parse_opt_type(i)?;
+
             i = input;
+
             Tag::Package(PackageTag { span, ty })
         }
 
         "param" | "arg" | "argument" => {
             let (input, ty) = parse_opt_type(i)?;
+
             let (input, name) = parse_opt_word(input)?;
+
             let (input, desc) = parse_line(input)?;
+
             i = input;
+
             Tag::Parameter(ParameterTag {
                 span,
                 ty,
@@ -337,15 +428,21 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "private" => {
             let (input, ty) = parse_opt_type(i)?;
+
             i = input;
+
             Tag::Private(PrivateTag { span, ty })
         }
 
         "property" | "prop" => {
             let (input, ty) = parse_opt_type(i)?;
+
             let (input, name_path) = parse_name_path(input)?;
+
             let (input, desc) = parse_line(input)?;
+
             i = input;
+
             Tag::Property(PropertyTag {
                 span,
                 ty,
@@ -356,7 +453,9 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "protected" => {
             let (input, ty) = parse_opt_type(i)?;
+
             i = input;
+
             Tag::Protected(ProtectedTag { span, ty })
         }
 
@@ -366,14 +465,19 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "requires" => {
             let (input, name_path) = parse_name_path(i)?;
+
             i = input;
+
             Tag::Requires(RequiresTag { span, name_path })
         }
 
         "returns" | "return" => {
             let (input, ty) = parse_opt_type(i)?;
+
             let (input, description) = parse_line(input)?;
+
             i = input;
+
             Tag::Return(ReturnTag {
                 span,
                 ty,
@@ -383,13 +487,17 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "see" => {
             let (input, text) = parse_line(i)?;
+
             i = input;
+
             Tag::See(SeeTag { span, text })
         }
 
         "since" => {
             let (input, version) = parse_line(i)?;
+
             i = input;
+
             Tag::Since(SinceTag { span, version })
         }
 
@@ -397,44 +505,59 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "summary" => {
             let (input, text) = parse_line(i)?;
+
             i = input;
+
             Tag::Summary(SummaryTag { span, text })
         }
 
         "this" => {
             let (input, name_path) = parse_name_path(i)?;
+
             i = input;
+
             Tag::This(ThisTag { span, name_path })
         }
 
         "throws" => {
             let (input, text) = parse_line(i)?;
+
             i = input;
+
             Tag::Throw(ThrowTag { span, text })
         }
 
         "todo" => {
             let (input, text) = parse_line(i)?;
+
             i = input;
+
             Tag::Todo(TodoTag { span, text })
         }
 
         "tutorial" => {
             let (input, text) = parse_line(i)?;
+
             i = input;
+
             Tag::Tutorial(TutorialTag { span, text })
         }
 
         "type" => {
             let (input, name) = parse_line(i)?;
+
             i = input;
+
             Tag::Type(TypeTag { span, name })
         }
 
         "typedef" => {
             let (input, ty) = parse_opt_type(i)?;
+
             let (input, name_path) = parse_name_path(input)?;
+
             i = input;
+
             Tag::TypeDef(TypeDefTag {
                 span,
                 ty,
@@ -444,20 +567,27 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         "variation" => {
             let (input, number) = parse_line(i)?;
+
             i = input;
+
             Tag::Variation(VariationTag { span, number })
         }
 
         "version" => {
             let (input, value) = parse_line(i)?;
+
             i = input;
+
             Tag::Version(VersionTag { span, value })
         }
 
         "yields" | "yield" => {
             let (input, value) = parse_opt_type(i)?;
+
             let (input, description) = parse_line(input)?;
+
             i = input;
+
             Tag::Yield(YieldTag {
                 span,
                 value,
@@ -467,7 +597,9 @@ pub fn parse_tag_item(i: Input) -> IResult<Input, TagItem> {
 
         _ => {
             let (input, extras) = parse_str(i)?;
+
             i = input;
+
             Tag::Unknown(UnknownTag { span, extras })
         }
     };
@@ -504,6 +636,7 @@ fn parse_type(i: Input) -> IResult<Input, Text> {
 
 fn trim(i: Input) -> Input {
     let prev_len = i.len();
+
     let new_str = i.trim_start();
 
     let start = prev_len - new_str.len();
@@ -519,10 +652,13 @@ fn trim(i: Input) -> Input {
 
 fn parse_opt_type(i: Input) -> IResult<Input, Option<Text>> {
     let i = skip_ws(i);
+
     if i.starts_with('{') {
         if let Some(pos) = i.find('}') {
             let ret = i.slice(..pos + 1);
+
             let i = i.slice(pos + 1..);
+
             return Ok((i, Some(ret.into())));
         }
     }
@@ -534,6 +670,7 @@ fn parse_one_of<'i>(i: Input<'i>, list: &[&str]) -> IResult<Input<'i>, Text> {
     for &item in list {
         if i.starts_with(item) {
             let res = tag::<&str, Input<'_>, (_, ErrorKind)>(item)(i);
+
             match res {
                 Ok(v) => return Ok((v.1, v.0.into())),
                 Err(..) => continue,
@@ -546,11 +683,14 @@ fn parse_one_of<'i>(i: Input<'i>, list: &[&str]) -> IResult<Input<'i>, Text> {
 
 fn parse_name_path(mut i: Input) -> IResult<Input, NamePath> {
     let lo = i.span().lo;
+
     let mut components = Vec::new();
 
     loop {
         let (input, component) = parse_word(i)?;
+
         components.push(component);
+
         i = input;
 
         let (_, input) = match tag(".")(i) {
@@ -569,12 +709,14 @@ fn parse_name_path(mut i: Input) -> IResult<Input, NamePath> {
                 ));
             }
         };
+
         i = input;
     }
 }
 
 fn parse_opt_word(i: Input) -> IResult<Input, Option<Text>> {
     let (i, v) = parse_word(i)?;
+
     if v.value.is_empty() {
         return Ok((i, None));
     }
@@ -589,6 +731,7 @@ fn parse_word(i: Input) -> IResult<Input, Text> {
 
     if let Some((idx, _)) = res {
         let rest = i.slice(idx + 1..);
+
         let ret = i.slice(..idx);
 
         Ok((rest, ret.into()))
@@ -600,10 +743,12 @@ fn parse_word(i: Input) -> IResult<Input, Text> {
 
 fn parse_line(i: Input) -> IResult<Input, Text> {
     let i = skip_ws(i);
+
     let res = i.iter_indices().find(|(_, c)| *c == '\n' || *c == '\r');
 
     if let Some((idx, _)) = res {
         let rest = i.slice(idx + 1..);
+
         let ret = i.slice(..idx);
 
         Ok((rest, ret.into()))
@@ -621,6 +766,7 @@ fn skip_ws(i: Input) -> Input {
     for (idx, c) in i.char_indices() {
         if c == ' ' {
             index = idx + 1;
+
             continue;
         }
 
@@ -635,23 +781,29 @@ fn skip(i: Input) -> Input {
     //
 
     let mut at_line_start = true;
+
     let mut index = 0;
 
     for (idx, c) in i.char_indices() {
         if at_line_start && c == '*' {
             at_line_start = false;
+
             index = idx + 1;
+
             continue;
         }
 
         if c == '\r' || c == '\n' {
             at_line_start = true;
+
             index = idx + 1;
+
             continue;
         }
 
         if c == ' ' {
             index = idx + 1;
+
             continue;
         }
 
@@ -694,6 +846,7 @@ mod tests {
         .unwrap();
 
         assert_eq!(&*skip(i), "");
+
         assert_eq!(ret.tags.len(), 3);
     }
 
@@ -708,7 +861,9 @@ mod tests {
         .unwrap();
 
         assert_eq!(&*ret.description.value, "Give x another name.");
+
         assert_eq!(ret.tags.len(), 2);
+
         assert_eq!(&*skip(i), "");
     }
 
@@ -722,6 +877,7 @@ mod tests {
 
         match ret.tag {
             Tag::Abstract(..) => {}
+
             _ => panic!("Invalid tag: {:?}", ret.tag),
         }
 
@@ -741,11 +897,13 @@ mod tests {
         match ret.tag {
             Tag::Yield(tag) => {
                 assert_eq!(tag.value.as_ref().map(|v| &*v.value), Some("{number}"));
+
                 assert_eq!(
                     &*tag.description.value,
                     "The next number in the Fibonacci sequence."
                 );
             }
+
             _ => panic!("Invalid tag: {:?}", ret.tag),
         }
 
@@ -755,7 +913,9 @@ mod tests {
     #[test]
     fn trim_1() {
         assert_eq!(&*trim(input(" foo ")), "foo");
+
         assert_eq!(&*trim(input("foo ")), "foo");
+
         assert_eq!(&*trim(input(" foo")), "foo");
     }
 
@@ -775,6 +935,7 @@ mod tests {
         let (rest, ret) = parse_one_of(input("foo bar\nbaz"), &["fo", "bar"]).unwrap();
 
         assert_eq!(&*ret.value, "fo");
+
         assert_eq!(&*rest, "o bar\nbaz");
     }
 
@@ -783,6 +944,7 @@ mod tests {
         let (rest, ret) = parse_line(input("foo bar\nbaz")).unwrap();
 
         assert_eq!(&*ret.value, "foo bar");
+
         assert_eq!(&*rest, "baz");
     }
 
@@ -791,6 +953,7 @@ mod tests {
         let (rest, ret) = parse_word(input("foo bar\nbaz")).unwrap();
 
         assert_eq!(&*ret.value, "foo");
+
         assert_eq!(&*rest, "bar\nbaz");
     }
 }

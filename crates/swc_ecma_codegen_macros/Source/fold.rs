@@ -14,7 +14,9 @@ pub(crate) struct InjectSelf {
 
 fn get_joined_span(t: &dyn ToTokens) -> Span {
     let tts: TokenStream = t.into_token_stream();
+
     let mut first = None;
+
     for tt in tts {
         if first.is_none() {
             first = Some(tt.span());
@@ -22,6 +24,7 @@ fn get_joined_span(t: &dyn ToTokens) -> Span {
 
         // last = Some(tt.span());
     }
+
     let cs = Span::call_site();
     // first.unwrap_or(cs).join(last.unwrap_or(cs)).unwrap_or(cs)
     first.unwrap_or(cs)
@@ -33,6 +36,7 @@ where
     P: Parse + Token,
 {
     let parser = Punctuated::parse_separated_nonempty;
+
     parser.parse2(tokens).expect("failed parse args")
 }
 
@@ -47,8 +51,10 @@ impl Fold for InjectSelf {
             | FnArg::Receiver(Receiver { self_token, .. }) => {
                 Some(Ident::new("self", self_token.span()))
             }
+
             _ => None,
         });
+
         i
     }
 
@@ -62,6 +68,7 @@ impl Fold for InjectSelf {
         };
 
         let name = i.path.clone().into_token_stream().to_string();
+
         let span = get_joined_span(&i.path);
 
         match &*name {
@@ -69,10 +76,12 @@ impl Fold for InjectSelf {
             "println" | "print" | "format" | "assert" | "assert_eq" | "assert_ne"
             | "debug_assert" | "debug_assert_eq" | "debug_assert_ne" | "dbg" => {
                 let mut args: Punctuated<Expr, token::Comma> = parse_args(i.tokens);
+
                 args = args
                     .into_pairs()
                     .map(|el| el.map_item(|expr| self.fold_expr(expr)))
                     .collect();
+
                 Macro {
                     tokens: args.into_token_stream(),
                     ..i
@@ -90,6 +99,7 @@ impl Fold for InjectSelf {
                     quote_spanned!(span => #parser)
                 } else {
                     let args: Punctuated<Expr, token::Comma> = parse_args(i.tokens);
+
                     let args = args
                         .into_pairs()
                         .map(|el| el.map_item(|expr| self.fold_expr(expr)))
@@ -103,6 +113,7 @@ impl Fold for InjectSelf {
 
                 Macro { tokens, ..i }
             }
+
             _ => {
                 unimplemented!("Macro: {:#?}", i);
             }

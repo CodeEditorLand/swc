@@ -80,6 +80,7 @@ impl<'a, 'b, P: Pass> PassBuilder<'a, 'b, P> {
         N: Pass,
     {
         let pass = (self.pass, next);
+
         PassBuilder {
             cm: self.cm,
             handler: self.handler,
@@ -100,17 +101,20 @@ impl<'a, 'b, P: Pass> PassBuilder<'a, 'b, P> {
 
     pub fn skip_helper_injection(mut self, skip: bool) -> Self {
         self.inject_helpers = !skip;
+
         self
     }
 
     pub fn minify(mut self, options: Option<JsMinifyOptions>) -> Self {
         self.minify = options;
+
         self
     }
 
     /// Note: fixer is enabled by default.
     pub fn fixer(mut self, enable: bool) -> Self {
         self.fixer = enable;
+
         self
     }
 
@@ -119,6 +123,7 @@ impl<'a, 'b, P: Pass> PassBuilder<'a, 'b, P> {
     /// If you pass [None] to this method, the `hygiene` pass will be disabled.
     pub fn hygiene(mut self, config: Option<hygiene::Config>) -> Self {
         self.hygiene = config;
+
         self
     }
 
@@ -127,26 +132,31 @@ impl<'a, 'b, P: Pass> PassBuilder<'a, 'b, P> {
         globals: FxHashMap<JsWord, FxHashMap<JsWord, String>>,
     ) -> PassBuilder<'a, 'b, (P, impl Pass)> {
         let cm = self.cm.clone();
+
         self.then(const_modules(cm, globals))
     }
 
     pub fn inline_globals(self, c: GlobalPassOption) -> PassBuilder<'a, 'b, (P, impl Pass)> {
         let pass = c.build(self.cm, self.handler);
+
         self.then(pass)
     }
 
     pub fn target(mut self, target: EsVersion) -> Self {
         self.target = target;
+
         self
     }
 
     pub fn preset_env(mut self, env: Option<swc_ecma_preset_env::Config>) -> Self {
         self.env = env;
+
         self
     }
 
     pub fn regenerator(mut self, config: regenerator::Config) -> Self {
         self.regenerator = config;
+
         self
     }
 
@@ -177,9 +187,11 @@ impl<'a, 'b, P: Pass> PassBuilder<'a, 'b, P> {
             Some(ModuleConfig::Amd(ref c)) => {
                 (true, c.config.import_interop(), c.config.ignore_dynamic)
             }
+
             Some(ModuleConfig::Umd(ref c)) => {
                 (true, c.config.import_interop(), c.config.ignore_dynamic)
             }
+
             Some(ModuleConfig::SystemJs(_))
             | Some(ModuleConfig::Es6(..))
             | Some(ModuleConfig::NodeNext(..))
@@ -386,6 +398,7 @@ impl VisitMut for MinifierPass<'_> {
                         if v.const_to_let.is_none() {
                             v.const_to_let = Some(true);
                         }
+
                         if v.toplevel.is_none() {
                             v.toplevel = Some(TerserTopLevelOptions::Bool(true));
                         }
@@ -414,6 +427,7 @@ impl VisitMut for MinifierPass<'_> {
             ));
 
             let unresolved_mark = Mark::new();
+
             let top_level_mark = Mark::new();
 
             m.visit_mut_with(&mut resolver(unresolved_mark, top_level_mark, false));
@@ -477,6 +491,7 @@ impl VisitMut for MinifierPass<'_> {
             ));
 
             let unresolved_mark = Mark::new();
+
             let top_level_mark = Mark::new();
 
             m.visit_mut_with(&mut resolver(unresolved_mark, top_level_mark, false));

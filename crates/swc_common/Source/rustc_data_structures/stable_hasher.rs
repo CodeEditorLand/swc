@@ -143,6 +143,7 @@ impl Hasher for StableHasher {
         #[inline(never)]
         fn hash_value(state: &mut SipHasher24, value: u64) {
             state.write_u8(0xff);
+
             state.write_u64(value.to_le());
         }
 
@@ -180,6 +181,7 @@ pub trait HashStable<CTX> {
 /// bringing maps into a predictable order before hashing them.
 pub trait ToStableHashKey<HCX> {
     type KeyType: Ord + Clone + Sized + HashStable<HCX>;
+
     fn to_stable_hash_key(&self, hcx: &HCX) -> Self::KeyType;
 }
 
@@ -228,6 +230,7 @@ impl<CTX> HashStable<CTX> for ::std::num::NonZeroU32 {
 impl<CTX> HashStable<CTX> for f32 {
     fn hash_stable(&self, ctx: &mut CTX, hasher: &mut StableHasher) {
         let val: u32 = unsafe { ::std::mem::transmute(*self) };
+
         val.hash_stable(ctx, hasher);
     }
 }
@@ -235,6 +238,7 @@ impl<CTX> HashStable<CTX> for f32 {
 impl<CTX> HashStable<CTX> for f64 {
     fn hash_stable(&self, ctx: &mut CTX, hasher: &mut StableHasher) {
         let val: u64 = unsafe { ::std::mem::transmute(*self) };
+
         val.hash_stable(ctx, hasher);
     }
 }
@@ -248,6 +252,7 @@ impl<CTX> HashStable<CTX> for ::std::cmp::Ordering {
 impl<T1: HashStable<CTX>, CTX> HashStable<CTX> for (T1,) {
     fn hash_stable(&self, ctx: &mut CTX, hasher: &mut StableHasher) {
         let (ref _0,) = *self;
+
         _0.hash_stable(ctx, hasher);
     }
 }
@@ -255,7 +260,9 @@ impl<T1: HashStable<CTX>, CTX> HashStable<CTX> for (T1,) {
 impl<T1: HashStable<CTX>, T2: HashStable<CTX>, CTX> HashStable<CTX> for (T1, T2) {
     fn hash_stable(&self, ctx: &mut CTX, hasher: &mut StableHasher) {
         let (ref _0, ref _1) = *self;
+
         _0.hash_stable(ctx, hasher);
+
         _1.hash_stable(ctx, hasher);
     }
 }
@@ -268,8 +275,11 @@ where
 {
     fn hash_stable(&self, ctx: &mut CTX, hasher: &mut StableHasher) {
         let (ref _0, ref _1, ref _2) = *self;
+
         _0.hash_stable(ctx, hasher);
+
         _1.hash_stable(ctx, hasher);
+
         _2.hash_stable(ctx, hasher);
     }
 }
@@ -283,9 +293,13 @@ where
 {
     fn hash_stable(&self, ctx: &mut CTX, hasher: &mut StableHasher) {
         let (ref _0, ref _1, ref _2, ref _3) = *self;
+
         _0.hash_stable(ctx, hasher);
+
         _1.hash_stable(ctx, hasher);
+
         _2.hash_stable(ctx, hasher);
+
         _3.hash_stable(ctx, hasher);
     }
 }
@@ -293,6 +307,7 @@ where
 impl<T: HashStable<CTX>, CTX> HashStable<CTX> for [T] {
     fn hash_stable(&self, ctx: &mut CTX, hasher: &mut StableHasher) {
         self.len().hash_stable(ctx, hasher);
+
         for item in self {
             item.hash_stable(ctx, hasher);
         }
@@ -331,6 +346,7 @@ impl<CTX> HashStable<CTX> for str {
     #[inline]
     fn hash_stable(&self, _: &mut CTX, hasher: &mut StableHasher) {
         self.len().hash(hasher);
+
         self.as_bytes().hash(hasher);
     }
 }
@@ -366,6 +382,7 @@ where
     fn hash_stable(&self, ctx: &mut CTX, hasher: &mut StableHasher) {
         if let Some(ref value) = *self {
             1u8.hash_stable(ctx, hasher);
+
             value.hash_stable(ctx, hasher);
         } else {
             0u8.hash_stable(ctx, hasher);
@@ -381,6 +398,7 @@ where
     #[inline]
     fn hash_stable(&self, ctx: &mut CTX, hasher: &mut StableHasher) {
         mem::discriminant(self).hash_stable(ctx, hasher);
+
         match *self {
             Ok(ref x) => x.hash_stable(ctx, hasher),
             Err(ref x) => x.hash_stable(ctx, hasher),
@@ -441,7 +459,9 @@ where
             self.len(),
             |hasher, hcx, (key, value)| {
                 let key = key.to_stable_hash_key(hcx);
+
                 key.hash_stable(hcx, hasher);
+
                 value.hash_stable(hcx, hasher);
             },
         );
@@ -456,6 +476,7 @@ where
     fn hash_stable(&self, hcx: &mut HCX, hasher: &mut StableHasher) {
         stable_hash_reduce(hcx, hasher, self.iter(), self.len(), |hasher, hcx, key| {
             let key = key.to_stable_hash_key(hcx);
+
             key.hash_stable(hcx, hasher);
         });
     }
@@ -474,7 +495,9 @@ where
             self.len(),
             |hasher, hcx, (key, value)| {
                 let key = key.to_stable_hash_key(hcx);
+
                 key.hash_stable(hcx, hasher);
+
                 value.hash_stable(hcx, hasher);
             },
         );
@@ -488,6 +511,7 @@ where
     fn hash_stable(&self, hcx: &mut HCX, hasher: &mut StableHasher) {
         stable_hash_reduce(hcx, hasher, self.iter(), self.len(), |hasher, hcx, key| {
             let key = key.to_stable_hash_key(hcx);
+
             key.hash_stable(hcx, hasher);
         });
     }
@@ -509,14 +533,18 @@ fn stable_hash_reduce<HCX, I, C, F>(
         1 => {
             hash_function(hasher, hcx, collection.next().unwrap());
         }
+
         _ => {
             let hash = collection
                 .map(|value| {
                     let mut hasher = StableHasher::new();
+
                     hash_function(&mut hasher, hcx, value);
+
                     hasher.finish::<u128>()
                 })
                 .reduce(|accum, value| accum.wrapping_add(value));
+
             hash.hash_stable(hcx, hasher);
         }
     }

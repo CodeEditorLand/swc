@@ -37,6 +37,7 @@ where
             bundler: self,
             replaced: false,
         };
+
         module.visit_mut_with(&mut v);
 
         if v.replaced {
@@ -63,6 +64,7 @@ where
         module.visit_mut_with(&mut DefaultHandler {
             local_ctxt: info.local_ctxt(),
         });
+
         module.sort(info.id, &ctx.graph, &ctx.cycles, &self.cm);
 
         let stmt = wrap_module(
@@ -102,7 +104,9 @@ fn wrap_module(
         // Those are unresolved, but it's actually an injected variable.
 
         let mut from = HashMap::default();
+
         from.insert(("module".into(), unresolved_ctxt), local_ctxt);
+
         from.insert(("exports".into(), unresolved_ctxt), local_ctxt);
 
         dep.visit_mut_with(&mut Remapper { vars: from })
@@ -137,6 +141,7 @@ fn wrap_module(
                         ModuleItem::ModuleDecl(i) => {
                             unreachable!("module item found but is_es6 is false: {:?}", i)
                         }
+
                         ModuleItem::Stmt(s) => s,
                     })
                     .collect(),
@@ -202,12 +207,14 @@ where
                         if self.bundler.is_external(&module_name.value) {
                             return;
                         }
+
                         let load = CallExpr {
                             span: node.span,
                             callee: Ident::new("load".into(), i.span, i.ctxt).as_callee(),
                             args: Vec::new(),
                             ..Default::default()
                         };
+
                         self.replaced = true;
                         *node = load;
 
@@ -233,6 +240,7 @@ where
                 .iter()
                 .find(|(src, _)| src.src.value == i.src.value)
                 .map(|v| v.0.module_id);
+
             let dep_module_id = match dep_module_id {
                 Some(v) => v,
                 _ => {
@@ -241,6 +249,7 @@ where
             };
             // Replace imports iff dependency is common js module.
             let dep_module = self.bundler.scope.get_module(dep_module_id).unwrap();
+
             if !self.bundler.scope.is_cjs(dep_module_id) && dep_module.is_es6 {
                 return;
             }
@@ -259,6 +268,7 @@ where
                 }
                 .into_stmt()
                 .into();
+
                 return;
             }
 
@@ -273,9 +283,11 @@ where
                                 value: Box::new(s.local.into()),
                             }));
                         }
+
                         Some(ModuleExportName::Str(..)) => {
                             unimplemented!("module string names unimplemented")
                         }
+
                         _ => {
                             props.push(ObjectPatProp::Assign(AssignPatProp {
                                 span: s.span,
@@ -290,6 +302,7 @@ where
                             value: Box::new(s.local.into()),
                         }));
                     }
+
                     ImportSpecifier::Namespace(ns) => {
                         self.replaced = true;
                         *node = VarDecl {
@@ -314,6 +327,7 @@ where
                             ..Default::default()
                         }
                         .into();
+
                         return;
                     }
                 }

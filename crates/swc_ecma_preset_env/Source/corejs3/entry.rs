@@ -100,6 +100,7 @@ impl VisitMut for Entry {
 
         if remove {
             i.src.span = DUMMY_SP;
+
             i.src.value = js_word!("");
         }
     }

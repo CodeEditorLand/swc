@@ -8,6 +8,7 @@ where
     T: rkyv::Archive,
 {
     type Archived = rkyv::vec::ArchivedVec<T::Archived>;
+
     type Resolver = rkyv::vec::VecResolver;
 
     unsafe fn resolve(&self, pos: usize, resolver: Self::Resolver, out: *mut Self::Archived) {
@@ -34,8 +35,11 @@ where
         unsafe {
             let data_address =
                 (**self).deserialize_unsized(deserializer, |layout| std::alloc::alloc(layout))?;
+
             let metadata = self.as_slice().deserialize_metadata(deserializer)?;
+
             let ptr = ptr_meta::from_raw_parts_mut(data_address, metadata);
+
             Ok(Box::<[T]>::from_raw(ptr).into())
         }
     }

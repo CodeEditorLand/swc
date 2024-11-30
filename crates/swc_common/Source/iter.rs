@@ -9,6 +9,7 @@ where
 {
     fn identify_last(mut self) -> Iter<Self> {
         let e = self.next();
+
         Iter {
             iter: self,
             buffer: e,
@@ -37,6 +38,7 @@ where
                 None => Some((true, e)),
                 Some(f) => {
                     self.buffer = Some(f);
+
                     Some((false, e))
                 }
             },

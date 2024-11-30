@@ -39,7 +39,9 @@ pub(crate) fn mangle_names(
 
     if let Some(mangle_cache) = &mangle_name_cache {
         let mut c = RenameMap::default();
+
         mangle_cache.vars_cache(&mut |v| c.extend(v.iter().map(|(k, v)| (k.clone(), v.clone()))));
+
         cache = Some(c);
     }
 
@@ -69,6 +71,7 @@ struct ManglingRenamer {
 
 impl Renamer for ManglingRenamer {
     const MANGLE: bool = true;
+
     const RESET_N: bool = false;
 
     fn preserved_ids_for_module(&mut self, _: &Module) -> FxHashSet<Id> {

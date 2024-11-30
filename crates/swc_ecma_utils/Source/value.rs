@@ -28,6 +28,7 @@ impl Value<Type> {
             Known(Type::Bool) | Known(Type::Null) | Known(Type::Num) | Known(Type::Undefined) => {
                 true
             }
+
             _ => false,
         }
     }
