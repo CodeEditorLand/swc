@@ -92,7 +92,6 @@
 		"build:dev": "cd ./packages/core && yarn build:dev",
 		"build:ts": "cd ./packages/core && yarn build:ts",
 		"changelog": "git cliff --output CHANGELOG.md",
-		"prepare": "husky install . && git config feature.manyFiles true && node ./crates/swc_ecma_preset_env/scripts/copy-data.js",
 		"prepublishOnly": "Build 'Source/**/*.ts'",
 		"test:core": "cd ./packages/core && yarn test",
 		"test:html": "cd ./packages/html && yarn test"
