@@ -38,6 +38,11 @@ mod rkyv_impl {
 
     use rkyv::{
         option::ArchivedOption, out_field, Archive, Archived, Deserialize, Fallible, Resolver,
+    use std::hint::unreachable_unchecked;
+
+    use rancor::Fallible;
+    use rkyv::{
+        munge::munge, option::ArchivedOption, traits::NoUndef, Archive, Deserialize, Place,
         Serialize,
     };
 
@@ -49,6 +54,10 @@ mod rkyv_impl {
         None,
         Some,
     }
+
+    // SAFETY: `ArchivedOptionTag` is `repr(u8)` and so always consists of a single
+    // well-defined byte.
+    unsafe impl NoUndef for ArchivedOptionTag {}
 
     #[repr(C)]
     struct ArchivedOptionVariantNone(ArchivedOptionTag);
@@ -88,6 +97,32 @@ mod rkyv_impl {
                     let (fp, fo) = out_field!(out.1);
 
                     value.resolve(pos + fp, resolver, fo);
+    impl<T: Archive> Archive for CacheCell<T> {
+        type Archived = ArchivedOption<T::Archived>;
+        type Resolver = Option<T::Resolver>;
+
+        fn resolve(&self, resolver: Self::Resolver, out: Place<Self::Archived>) {
+            match resolver {
+                None => {
+                    let out = unsafe { out.cast_unchecked::<ArchivedOptionVariantNone>() };
+                    munge!(let ArchivedOptionVariantNone(tag) = out);
+                    tag.write(ArchivedOptionTag::None);
+                }
+                Some(resolver) => {
+                    let out =
+                        unsafe { out.cast_unchecked::<ArchivedOptionVariantSome<T::Archived>>() };
+                    munge!(let ArchivedOptionVariantSome(tag, out_value) = out);
+                    tag.write(ArchivedOptionTag::Some);
+
+                    let value = if let Some(value) = self.get() {
+                        value
+                    } else {
+                        unsafe {
+                            unreachable_unchecked();
+                        }
+                    };
+
+                    value.resolve(resolver, out_value);
                 }
             }
         }
@@ -98,6 +133,8 @@ mod rkyv_impl {
         fn serialize(&self, serializer: &mut S) -> Result<Self::Resolver, S::Error> {
             self.0
                 .get()
+        fn serialize(&self, serializer: &mut S) -> Result<Self::Resolver, S::Error> {
+            self.get()
                 .map(|value| value.serialize(serializer))
                 .transpose()
         }
@@ -118,6 +155,17 @@ mod rkyv_impl {
 
                 ArchivedOption::None => Ok(CacheCell::new()),
             }
+    impl<T, D> Deserialize<CacheCell<T>, D> for ArchivedOption<T::Archived>
+    where
+        T: Archive,
+        T::Archived: Deserialize<T, D>,
+        D: Fallible + ?Sized,
+    {
+        fn deserialize(&self, deserializer: &mut D) -> Result<CacheCell<T>, D::Error> {
+            Ok(match self {
+                ArchivedOption::Some(value) => CacheCell::from(value.deserialize(deserializer)?),
+                ArchivedOption::None => CacheCell::new(),
+            })
         }
     }
 }

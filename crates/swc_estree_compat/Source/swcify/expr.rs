@@ -27,7 +27,7 @@ use swc_estree_ast::{
 };
 
 use super::Context;
-use crate::swcify::Swcify;
+use crate::{swcify::Swcify, Never};
 
 impl Swcify for Expression {
     type Output = Box<Expr>;
@@ -861,7 +861,7 @@ impl Swcify for OptionalCallExpression {
 }
 
 impl Swcify for TypeCastExpression {
-    type Output = !;
+    type Output = Never;
 
     fn swcify(self, _: &Context) -> Self::Output {
         unimplemented!("flow type cast")
@@ -1132,7 +1132,7 @@ impl Swcify for swc_estree_ast::JSXClosingFragment {
 }
 
 impl Swcify for BindExpression {
-    type Output = !;
+    type Output = Never;
 
     fn swcify(self, _: &Context) -> Self::Output {
         panic!("swc does not support bind expressions")
@@ -1140,7 +1140,7 @@ impl Swcify for BindExpression {
 }
 
 impl Swcify for DoExpression {
-    type Output = !;
+    type Output = Never;
 
     fn swcify(self, _: &Context) -> Self::Output {
         panic!("swc does not support do expressions")
@@ -1148,7 +1148,7 @@ impl Swcify for DoExpression {
 }
 
 impl Swcify for PipelinePrimaryTopicReference {
-    type Output = !;
+    type Output = Never;
 
     fn swcify(self, _: &Context) -> Self::Output {
         panic!("swc does not support `PipelinePrimaryTopicReference`")
@@ -1156,7 +1156,7 @@ impl Swcify for PipelinePrimaryTopicReference {
 }
 
 impl Swcify for RecordExpression {
-    type Output = !;
+    type Output = Never;
 
     fn swcify(self, _: &Context) -> Self::Output {
         panic!("swc does not support record expressions")
@@ -1164,7 +1164,7 @@ impl Swcify for RecordExpression {
 }
 
 impl Swcify for TupleExpression {
-    type Output = !;
+    type Output = Never;
 
     fn swcify(self, _: &Context) -> Self::Output {
         panic!("swc does not support tuple expressions")
@@ -1172,7 +1172,7 @@ impl Swcify for TupleExpression {
 }
 
 impl Swcify for ModuleExpression {
-    type Output = !;
+    type Output = Never;
 
     fn swcify(self, _: &Context) -> Self::Output {
         panic!("swc does not support module expressions")

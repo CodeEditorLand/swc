@@ -1,18 +1,31 @@
-use std::{mem::take, sync::Arc};
+use std::{borrow::Cow, mem::take, sync::Arc};
 
+use rustc_hash::{FxHashMap, FxHashSet};
 use swc_atoms::Atom;
-use swc_common::{util::take::Take, FileName, Span, Spanned, DUMMY_SP};
-use swc_ecma_ast::{
-    AssignPat, BindingIdent, ClassMember, ComputedPropName, Decl, DefaultDecl, ExportDecl,
-    ExportDefaultExpr, Expr, Ident, Lit, MethodKind, ModuleDecl, ModuleItem, OptChainBase, Param,
-    ParamOrTsParamProp, Pat, Program, Prop, PropName, PropOrSpread, Stmt, TsEntityName,
-    TsFnOrConstructorType, TsFnParam, TsFnType, TsKeywordType, TsKeywordTypeKind, TsLit, TsLitType,
-    TsNamespaceBody, TsParamPropParam, TsPropertySignature, TsTupleElement, TsTupleType, TsType,
-    TsTypeAnn, TsTypeElement, TsTypeLit, TsTypeOperator, TsTypeOperatorOp, TsTypeRef, VarDecl,
-    VarDeclKind, VarDeclarator,
+use swc_common::{
+    comments::SingleThreadedComments, util::take::Take, BytePos, FileName, Span, Spanned, DUMMY_SP,
 };
+use swc_ecma_ast::{
+    BindingIdent, Decl, DefaultDecl, ExportDefaultExpr, Id, Ident, ImportSpecifier, ModuleDecl,
+    ModuleItem, NamedExport, Pat, Program, Script, Stmt, TsExportAssignment, VarDecl, VarDeclKind,
+    VarDeclarator,
+};
+use type_usage::TypeUsageAnalyzer;
+use util::{
+    ast_ext::MemberPropExt, expando_function_collector::ExpandoFunctionCollector, types::type_ann,
+};
+use visitors::type_usage;
 
 use crate::diagnostic::{DtsIssue, SourceRange};
+
+mod class;
+mod decl;
+mod r#enum;
+mod function;
+mod inferrer;
+mod types;
+mod util;
+mod visitors;
 
 /// TypeScript Isolated Declaration support.
 ///
@@ -20,61 +33,51 @@ use crate::diagnostic::{DtsIssue, SourceRange};
 ///
 /// # License
 ///
-/// Mostly copied from <https://github.com/denoland/deno_graph/blob/15db6e5fb6d3faea027e16c3d9ce6498b11beed2/src/fast_check/transform_dts.rs>
+/// Mostly translated from <https://github.com/oxc-project/oxc/tree/main/crates/oxc_isolated_declarations>
 ///
 /// The original code is MIT licensed.
 pub struct FastDts {
     filename: Arc<FileName>,
-    is_top_level: bool,
-    id_counter: u32,
     diagnostics: Vec<DtsIssue>,
+    // states
+    id_counter: u32,
+    is_top_level: bool,
+    used_refs: FxHashSet<Id>,
+    internal_annotations: Option<FxHashSet<BytePos>>,
+}
+
+#[derive(Debug, Default)]
+pub struct FastDtsOptions {
+    pub internal_annotations: Option<FxHashSet<BytePos>>,
 }
 
 /// Diagnostics
 impl FastDts {
-    pub fn new(filename: Arc<FileName>) -> Self {
+    pub fn new(filename: Arc<FileName>, options: FastDtsOptions) -> Self {
+        let internal_annotations = options.internal_annotations;
         Self {
             filename,
-            is_top_level: false,
-            id_counter: 0,
             diagnostics: Vec::new(),
+            id_counter: 0,
+            is_top_level: true,
+            used_refs: FxHashSet::default(),
+            internal_annotations,
         }
     }
 
-    fn mark_diagnostic(&mut self, diagnostic: DtsIssue) {
-        self.diagnostics.push(diagnostic)
-    }
-
-    fn source_range_to_range(&self, range: Span) -> SourceRange {
-        SourceRange {
-            filename: self.filename.clone(),
-            span: range,
-        }
-    }
-
-    fn mark_diagnostic_unable_to_infer(&mut self, range: Span) {
-        self.mark_diagnostic(DtsIssue::UnableToInferType {
-            range: self.source_range_to_range(range),
-        })
-    }
-
-    fn mark_diagnostic_any_fallback(&mut self, range: Span) {
-        self.mark_diagnostic(DtsIssue::UnableToInferTypeFallbackAny {
-            range: self.source_range_to_range(range),
-        })
-    }
-
-    fn mark_diagnostic_unsupported_prop(&mut self, range: Span) {
-        self.mark_diagnostic(DtsIssue::UnableToInferTypeFromProp {
-            range: self.source_range_to_range(range),
+    pub fn mark_diagnostic<T: Into<Cow<'static, str>>>(&mut self, message: T, range: Span) {
+        self.diagnostics.push(DtsIssue {
+            message: message.into(),
+            range: SourceRange {
+                filename: self.filename.clone(),
+                span: range,
+            },
         })
     }
 }
 
 impl FastDts {
     pub fn transform(&mut self, program: &mut Program) -> Vec<DtsIssue> {
-        self.is_top_level = true;
-
         match program {
             Program::Module(module) => {
                 self.transform_module_items(&mut module.body);
@@ -99,10 +102,109 @@ impl FastDts {
 
                     self.transform_module_stmt(stmt)
                 })
+            Program::Module(module) => self.transform_module_body(&mut module.body, false),
+            Program::Script(script) => self.transform_script(script),
+        }
+        take(&mut self.diagnostics)
+    }
+
+    fn transform_module_body(
+        &mut self,
+        items: &mut Vec<ModuleItem>,
+        in_global_or_lit_module: bool,
+    ) {
+        // 1. Analyze usage
+        self.used_refs.extend(TypeUsageAnalyzer::analyze(
+            items,
+            self.internal_annotations.as_ref(),
+        ));
+
+        // 2. Transform.
+        Self::remove_function_overloads_in_module(items);
+        self.transform_module_items(items);
+
+        // 3. Strip export keywords in ts module blocks
+        for item in items.iter_mut() {
+            if let Some(Stmt::Decl(Decl::TsModule(ts_module))) = item.as_mut_stmt() {
+                if ts_module.global || !ts_module.id.is_str() {
+                    continue;
+                }
+
+                if let Some(body) = ts_module
+                    .body
+                    .as_mut()
+                    .and_then(|body| body.as_mut_ts_module_block())
+                {
+                    self.strip_export(&mut body.body);
+                }
             }
         }
 
-        take(&mut self.diagnostics)
+        // 4. Report error for expando function and remove statements.
+        self.report_error_for_expando_function_in_module(items);
+        items.retain(|item| {
+            item.as_stmt()
+                .map(|stmt| stmt.is_decl() && !self.has_internal_annotation(stmt.span_lo()))
+                .unwrap_or(true)
+        });
+
+        // 5. Remove unused imports and decls
+        self.remove_ununsed(items, in_global_or_lit_module);
+
+        // 6. Add empty export mark if there's any declaration that is used but not
+        // exported to keep its privacy.
+        let mut has_non_exported_stmt = false;
+        let mut has_export = false;
+        for item in items.iter_mut() {
+            match item {
+                ModuleItem::Stmt(stmt) => {
+                    if stmt.as_decl().map_or(true, |decl| !decl.is_ts_module()) {
+                        has_non_exported_stmt = true;
+                    }
+                }
+                ModuleItem::ModuleDecl(
+                    ModuleDecl::ExportDefaultDecl(_)
+                    | ModuleDecl::ExportDefaultExpr(_)
+                    | ModuleDecl::ExportNamed(_)
+                    | ModuleDecl::TsExportAssignment(_),
+                ) => has_export = true,
+                _ => {}
+            }
+        }
+        if items.is_empty() || (has_non_exported_stmt && !has_export) {
+            items.push(ModuleItem::ModuleDecl(ModuleDecl::ExportNamed(
+                NamedExport {
+                    span: DUMMY_SP,
+                    specifiers: Vec::new(),
+                    src: None,
+                    type_only: false,
+                    with: None,
+                },
+            )));
+        } else if !self.is_top_level {
+            self.strip_export(items);
+        }
+    }
+
+    fn transform_script(&mut self, script: &mut Script) {
+        // 1. Transform.
+        Self::remove_function_overloads_in_script(script);
+        let body = script.body.take();
+        for mut stmt in body {
+            if self.has_internal_annotation(stmt.span_lo()) {
+                continue;
+            }
+            if let Some(decl) = stmt.as_mut_decl() {
+                self.transform_decl(decl, false);
+            }
+            script.body.push(stmt);
+        }
+
+        // 2. Report error for expando function and remove statements.
+        self.report_error_for_expando_function_in_script(&script.body);
+        script
+            .body
+            .retain(|stmt| stmt.is_decl() && !self.has_internal_annotation(stmt.span_lo()));
     }
 
     fn transform_module_items(&mut self, items: &mut Vec<ModuleItem>) {
@@ -116,66 +218,31 @@ impl FastDts {
 
         for mut item in orig_items {
             match &mut item {
-                // Keep all these
                 ModuleItem::ModuleDecl(
                     ModuleDecl::Import(..)
                     | ModuleDecl::TsImportEquals(_)
-                    | ModuleDecl::TsNamespaceExport(_)
-                    | ModuleDecl::TsExportAssignment(_)
-                    | ModuleDecl::ExportNamed(_)
-                    | ModuleDecl::ExportAll(_),
-                ) => new_items.push(item),
-
+                    | ModuleDecl::TsNamespaceExport(_),
+                ) => items.push(item),
+                ModuleItem::ModuleDecl(ModuleDecl::ExportNamed(_) | ModuleDecl::ExportAll(_)) => {
+                    items.push(item);
+                }
                 ModuleItem::Stmt(stmt) => {
-                    if let Some(fn_decl) = stmt.as_decl().and_then(|decl| decl.as_fn_decl()) {
-                        if fn_decl.function.body.is_some() {
-                            if last_function_name
-                                .as_ref()
-                                .is_some_and(|last_name| last_name == &fn_decl.ident.sym)
-                            {
-                                continue;
-                            }
-                        } else {
-                            last_function_name = Some(fn_decl.ident.sym.clone());
-                        }
+                    if self.has_internal_annotation(stmt.span_lo()) {
+                        continue;
                     }
 
-                    if self.transform_module_stmt(stmt) {
-                        new_items.push(item);
+                    if let Some(decl) = stmt.as_mut_decl() {
+                        self.transform_decl(decl, true);
                     }
+                    items.push(item);
                 }
-
-                ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
-                    span, decl, ..
-                })) => {
-                    if let Some(fn_decl) = decl.as_fn_decl() {
-                        if fn_decl.function.body.is_some() {
-                            if last_function_name
-                                .as_ref()
-                                .is_some_and(|last_name| last_name == &fn_decl.ident.sym)
-                            {
-                                continue;
-                            }
-                        } else {
-                            last_function_name = Some(fn_decl.ident.sym.clone());
-                        }
+                ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(expor_decl)) => {
+                    if self.has_internal_annotation(expor_decl.span_lo()) {
+                        continue;
                     }
-
-                    if let Some(()) = self.decl_to_type_decl(decl) {
-                        new_items.push(
-                            ExportDecl {
-                                decl: decl.take(),
-                                span: *span,
-                            }
-                            .into(),
-                        );
-                    } else {
-                        self.mark_diagnostic(DtsIssue::UnableToInferType {
-                            range: self.source_range_to_range(*span),
-                        })
-                    }
+                    self.transform_decl(&mut expor_decl.decl, false);
+                    items.push(item);
                 }
-
                 ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultDecl(export)) => {
                     if let Some(fn_expr) = export.decl.as_fn_expr() {
                         if is_export_default_function_overloads && fn_expr.function.body.is_some() {
@@ -184,14 +251,18 @@ impl FastDts {
                             continue;
                         } else {
                             is_export_default_function_overloads = true;
+                    self.transform_default_decl(&mut export.decl);
+                    items.push(item);
+                }
+                ModuleItem::ModuleDecl(
+                    ModuleDecl::ExportDefaultExpr(_) | ModuleDecl::TsExportAssignment(_),
+                ) => {
+                    let expr = match &item {
+                        ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(export)) => {
+                            &export.expr
                         }
-                    } else {
-                        is_export_default_function_overloads = false;
-                    }
-
-                    match &mut export.decl {
-                        DefaultDecl::Class(class_expr) => {
-                            self.class_body_to_type(&mut class_expr.class.body);
+                        ModuleItem::ModuleDecl(ModuleDecl::TsExportAssignment(export)) => {
+                            &export.expr
                         }
 
                         DefaultDecl::Fn(fn_expr) => {
@@ -199,10 +270,13 @@ impl FastDts {
                         }
 
                         DefaultDecl::TsInterfaceDecl(_) => {}
+                        _ => unreachable!(),
                     };
 
-                    new_items.push(item);
-                }
+                    if expr.is_ident() {
+                        items.push(item);
+                        continue;
+                    }
 
                 ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(export)) => {
                     let name = self.gen_unique_name();
@@ -212,55 +286,89 @@ impl FastDts {
                     let type_ann = self
                         .expr_to_ts_type(export.expr.clone(), false, true)
                         .map(type_ann);
+                    let name_ident = Ident::new_no_ctxt(self.gen_unique_name("_default"), DUMMY_SP);
+                    let type_ann = self.infer_type_from_expr(expr).map(type_ann);
+                    self.used_refs.insert(name_ident.to_id());
 
-                    if let Some(type_ann) = type_ann {
-                        new_items.push(
-                            VarDecl {
-                                span: DUMMY_SP,
-                                kind: VarDeclKind::Const,
-                                declare: true,
-                                decls: vec![VarDeclarator {
-                                    span: DUMMY_SP,
-                                    name: Pat::Ident(BindingIdent {
-                                        id: name_ident.clone(),
-
-                                        type_ann: Some(type_ann),
-                                    }),
-                                    init: None,
-                                    definite: false,
-                                }],
-                                ..Default::default()
-                            }
-                            .into(),
-                        );
-
-                        new_items.push(
-                            ExportDefaultExpr {
-                                span: export.span,
-                                expr: name_ident.into(),
-                            }
-                            .into(),
-                        )
-                    } else {
-                        new_items.push(
-                            ExportDefaultExpr {
-                                span: export.span,
-                                expr: export.expr.take(),
-                            }
-                            .into(),
-                        )
+                    if type_ann.is_none() {
+                        self.default_export_inferred(expr.span());
                     }
+
+                    items.push(
+                        VarDecl {
+                            span: DUMMY_SP,
+                            kind: VarDeclKind::Const,
+                            declare: true,
+                            decls: vec![VarDeclarator {
+                                span: DUMMY_SP,
+                                name: Pat::Ident(BindingIdent {
+                                    id: name_ident.clone(),
+                                    type_ann,
+                                }),
+                                init: None,
+                                definite: false,
+                            }],
+                            ..Default::default()
+                        }
+                        .into(),
+                    );
+
+                    match &item {
+                        ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(export)) => items
+                            .push(
+                                ExportDefaultExpr {
+                                    span: export.span,
+                                    expr: name_ident.into(),
+                                }
+                                .into(),
+                            ),
+                        ModuleItem::ModuleDecl(ModuleDecl::TsExportAssignment(export)) => items
+                            .push(
+                                TsExportAssignment {
+                                    span: export.span,
+                                    expr: name_ident.into(),
+                                }
+                                .into(),
+                            ),
+                        _ => unreachable!(),
+                    };
                 }
             }
         }
-
-        *items = new_items;
     }
 
-    fn transform_module_stmt(&mut self, stmt: &mut Stmt) -> bool {
-        let Stmt::Decl(ref mut decl) = stmt else {
-            return false;
-        };
+    fn report_error_for_expando_function_in_module(&mut self, items: &[ModuleItem]) {
+        let used_refs = self.used_refs.clone();
+        let mut assignable_properties_for_namespace = FxHashMap::<&str, FxHashSet<Atom>>::default();
+        let mut collector = ExpandoFunctionCollector::new(&used_refs);
+
+        for item in items {
+            let decl = match item {
+                ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(export_decl)) => {
+                    if let Some(ts_module) = export_decl.decl.as_ts_module() {
+                        ts_module
+                    } else {
+                        continue;
+                    }
+                }
+                ModuleItem::Stmt(Stmt::Decl(Decl::TsModule(ts_module))) => ts_module,
+                _ => continue,
+            };
+
+            let (Some(name), Some(block)) = (
+                decl.id.as_ident(),
+                decl.body
+                    .as_ref()
+                    .and_then(|body| body.as_ts_module_block()),
+            ) else {
+                continue;
+            };
+
+            for item in &block.body {
+                // Note that all the module blocks have been transformed
+                let Some(decl) = item.as_stmt().and_then(|stmt| stmt.as_decl()) else {
+                    continue;
+                };
 
         match decl {
             Decl::TsEnum(_) | Decl::Class(_) | Decl::Fn(_) | Decl::Var(_) | Decl::TsModule(_) => {
@@ -270,22 +378,77 @@ impl FastDts {
                     self.mark_diagnostic_unable_to_infer(decl.span());
 
                     false
+                match &decl {
+                    Decl::Class(class_decl) => {
+                        assignable_properties_for_namespace
+                            .entry(name.sym.as_str())
+                            .or_default()
+                            .insert(class_decl.ident.sym.clone());
+                    }
+                    Decl::Fn(fn_decl) => {
+                        assignable_properties_for_namespace
+                            .entry(name.sym.as_str())
+                            .or_default()
+                            .insert(fn_decl.ident.sym.clone());
+                    }
+                    Decl::Var(var_decl) => {
+                        for decl in &var_decl.decls {
+                            if let Some(ident) = decl.name.as_ident() {
+                                assignable_properties_for_namespace
+                                    .entry(name.sym.as_str())
+                                    .or_default()
+                                    .insert(ident.sym.clone());
+                            }
+                        }
+                    }
+                    Decl::Using(using_decl) => {
+                        for decl in &using_decl.decls {
+                            if let Some(ident) = decl.name.as_ident() {
+                                assignable_properties_for_namespace
+                                    .entry(name.sym.as_str())
+                                    .or_default()
+                                    .insert(ident.sym.clone());
+                            }
+                        }
+                    }
+                    _ => {}
                 }
             }
-
-            Decl::TsInterface(_) | Decl::TsTypeAlias(_) | Decl::Using(_) => true,
         }
-    }
 
-    fn expr_to_ts_type(
-        &mut self,
-        e: Box<Expr>,
-        as_const: bool,
-        as_readonly: bool,
-    ) -> Option<Box<TsType>> {
-        match *e {
-            Expr::Array(arr) => {
-                let mut elem_types: Vec<TsTupleElement> = Vec::new();
+        for item in items {
+            match item {
+                ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(export_decl)) => {
+                    match &export_decl.decl {
+                        Decl::Fn(fn_decl) => collector.add_fn_decl(fn_decl, false),
+                        Decl::Var(var_decl) => collector.add_var_decl(var_decl, false),
+                        _ => (),
+                    }
+                }
+                ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultDecl(export_decl)) => {
+                    if let DefaultDecl::Fn(fn_expr) = &export_decl.decl {
+                        collector.add_fn_expr(fn_expr)
+                    }
+                }
+                ModuleItem::ModuleDecl(ModuleDecl::ExportNamed(_export_named)) => {
+                    // TODO: may be function
+                }
+                ModuleItem::Stmt(Stmt::Decl(decl)) => match decl {
+                    Decl::Fn(fn_decl) => collector.add_fn_decl(fn_decl, true),
+                    Decl::Var(var_decl) => collector.add_var_decl(var_decl, true),
+                    _ => (),
+                },
+                ModuleItem::Stmt(Stmt::Expr(expr_stmt)) => {
+                    let Some(assign_expr) = expr_stmt.expr.as_assign() else {
+                        continue;
+                    };
+                    let Some(member_expr) = assign_expr
+                        .left
+                        .as_simple()
+                        .and_then(|simple| simple.as_member())
+                    else {
+                        continue;
+                    };
 
                 for elems in arr.elems {
                     if let Some(expr_or_spread) = elems {
@@ -382,14 +545,22 @@ impl FastDts {
                             self.mark_diagnostic(DtsIssue::UnableToInferTypeFromSpread {
                                 range: self.source_range_to_range(item.span()),
                             })
+                    if let Some(ident) = member_expr.obj.as_ident() {
+                        if collector.contains(&ident.sym)
+                            && !assignable_properties_for_namespace
+                                .get(ident.sym.as_str())
+                                .map_or(false, |properties| {
+                                    member_expr
+                                        .prop
+                                        .static_name()
+                                        .map_or(false, |name| properties.contains(name))
+                                })
+                        {
+                            self.function_with_assigning_properties(member_expr.span);
                         }
                     }
                 }
-
-                Some(Box::new(TsType::TsTypeLit(TsTypeLit {
-                    span: obj.span,
-                    members,
-                })))
+                _ => (),
             }
 
             Expr::Lit(lit) => {
@@ -529,26 +700,109 @@ impl FastDts {
                         ident.type_ann = ts_type;
                     } else {
                         self.mark_diagnostic_unable_to_infer(decl.span());
+        }
+    }
+
+    fn report_error_for_expando_function_in_script(&mut self, stmts: &[Stmt]) {
+        let used_refs = self.used_refs.clone();
+        let mut collector = ExpandoFunctionCollector::new(&used_refs);
+        for stmt in stmts {
+            match stmt {
+                Stmt::Decl(decl) => match decl {
+                    Decl::Fn(fn_decl) => collector.add_fn_decl(fn_decl, false),
+                    Decl::Var(var_decl) => collector.add_var_decl(var_decl, false),
+                    _ => (),
+                },
+                Stmt::Expr(expr_stmt) => {
+                    let Some(assign_expr) = expr_stmt.expr.as_assign() else {
+                        continue;
+                    };
+                    let Some(member_expr) = assign_expr
+                        .left
+                        .as_simple()
+                        .and_then(|simple| simple.as_member())
+                    else {
+                        continue;
+                    };
+
+                    if let Some(ident) = member_expr.obj.as_ident() {
+                        if collector.contains(&ident.sym) {
+                            self.function_with_assigning_properties(member_expr.span);
+                        }
                     }
-
-                    decl.init = None;
                 }
-
-                Some(())
+                _ => (),
             }
 
             Decl::TsEnum(ts_enum) => {
                 ts_enum.declare = is_declare;
+        }
+    }
 
-                for member in &mut ts_enum.members {
-                    if let Some(init) = &member.init {
-                        // Support for expressions is limited in enums,
-                        // see https://www.typescriptlang.org/docs/handbook/enums.html
-                        member.init = if self.valid_enum_init_expr(init) {
-                            Some(init.clone())
+    fn strip_export(&self, items: &mut Vec<ModuleItem>) {
+        for item in items {
+            if let ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(export_decl)) = item {
+                *item = ModuleItem::Stmt(Stmt::Decl(export_decl.decl.clone()));
+            }
+        }
+    }
+
+    fn remove_ununsed(&self, items: &mut Vec<ModuleItem>, in_global_or_lit_module: bool) {
+        let used_refs = &self.used_refs;
+        items.retain_mut(|node| match node {
+            ModuleItem::Stmt(Stmt::Decl(decl)) if !in_global_or_lit_module => match decl {
+                Decl::Class(class_decl) => used_refs.contains(&class_decl.ident.to_id()),
+                Decl::Fn(fn_decl) => used_refs.contains(&fn_decl.ident.to_id()),
+                Decl::Var(var_decl) => {
+                    var_decl.decls.retain(|decl| {
+                        if let Some(ident) = decl.name.as_ident() {
+                            used_refs.contains(&ident.to_id())
                         } else {
-                            None
-                        };
+                            false
+                        }
+                    });
+                    !var_decl.decls.is_empty()
+                }
+                Decl::Using(using_decl) => {
+                    using_decl.decls.retain(|decl| {
+                        if let Some(ident) = decl.name.as_ident() {
+                            used_refs.contains(&ident.to_id())
+                        } else {
+                            false
+                        }
+                    });
+                    !using_decl.decls.is_empty()
+                }
+                Decl::TsInterface(ts_interface_decl) => {
+                    used_refs.contains(&ts_interface_decl.id.to_id())
+                }
+                Decl::TsTypeAlias(ts_type_alias_decl) => {
+                    used_refs.contains(&ts_type_alias_decl.id.to_id())
+                }
+                Decl::TsEnum(ts_enum) => used_refs.contains(&ts_enum.id.to_id()),
+                Decl::TsModule(ts_module_decl) => {
+                    ts_module_decl.global
+                        || ts_module_decl.id.is_str()
+                        || ts_module_decl
+                            .id
+                            .as_ident()
+                            .map_or(true, |ident| used_refs.contains(&ident.to_id()))
+                }
+            },
+            ModuleItem::ModuleDecl(ModuleDecl::Import(import_decl)) => {
+                if import_decl.specifiers.is_empty() {
+                    return true;
+                }
+
+                import_decl.specifiers.retain(|specifier| match specifier {
+                    ImportSpecifier::Named(specifier) => {
+                        used_refs.contains(&specifier.local.to_id())
+                    }
+                    ImportSpecifier::Default(specifier) => {
+                        used_refs.contains(&specifier.local.to_id())
+                    }
+                    ImportSpecifier::Namespace(specifier) => {
+                        used_refs.contains(&specifier.local.to_id())
                     }
                 }
 
@@ -574,8 +828,36 @@ impl FastDts {
                 });
 
                 None
+                });
+
+                !import_decl.specifiers.is_empty()
+            }
+            ModuleItem::ModuleDecl(ModuleDecl::TsImportEquals(ts_import_equals)) => {
+                used_refs.contains(&ts_import_equals.id.to_id())
+            }
+            _ => true,
+        });
+    }
+
+    pub fn has_internal_annotation(&self, pos: BytePos) -> bool {
+        if let Some(internal_annotations) = &self.internal_annotations {
+            return internal_annotations.contains(&pos);
+        }
+        false
+    }
+
+    pub fn get_internal_annotations(comments: &SingleThreadedComments) -> FxHashSet<BytePos> {
+        let mut internal_annotations = FxHashSet::default();
+        let (leading, _) = comments.borrow_all();
+        for (pos, comment) in leading.iter() {
+            let has_internal_annotation = comment
+                .iter()
+                .any(|comment| comment.text.contains("@internal"));
+            if has_internal_annotation {
+                internal_annotations.insert(*pos);
             }
         }
+        internal_annotations
     }
 
     fn transform_ts_ns_body(&mut self, ns: TsNamespaceBody) -> TsNamespaceBody {
@@ -1167,5 +1449,8 @@ fn valid_prop_name(prop_name: &PropName) -> Option<PropName> {
         }
 
         PropName::Computed(computed) => prop_name_from_expr(&computed.expr),
+    fn gen_unique_name(&mut self, name: &str) -> Atom {
+        self.id_counter += 1;
+        format!("{name}_{}", self.id_counter).into()
     }
 }
