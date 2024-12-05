@@ -2,7 +2,7 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Visitor generator for stable rustc"
 edition = "2021"
-license = "Apache-2.0"
+license-file = "LICENSE"
 name = "swc_visit"
 repository = "https://github.com/swc-project/swc.git"
 version = "2.0.0"

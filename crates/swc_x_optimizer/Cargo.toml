@@ -2,7 +2,7 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Cross-module optimizer built on SWC"
 edition = "2021"
-license = "Apache-2.0"
+license-file = "LICENSE"
 name = "swc_x_optimizer"
 repository = "https://github.com/swc-project/swc.git"
 version = "0.1.0"

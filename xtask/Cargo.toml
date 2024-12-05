@@ -2,7 +2,7 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Tasks for the swc project"
 edition = "2021"
-license = "Apache-2.0"
+license-file = "LICENSE"
 name = "xtask"
 publish = false
 repository = "https://github.com/swc-project/swc.git"
