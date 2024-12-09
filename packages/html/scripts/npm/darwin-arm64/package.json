@@ -10,6 +10,7 @@
 	"cpu": [
 		"arm64"
 	],
+	"dependencies": {},
 	"description": "Super-fast HTML minifier",
 	"devDependencies": {
 		"@playform/build": "0.2.0"
@@ -25,7 +26,7 @@
 	],
 	"license": "SEE LICENSE IN LICENSE",
 	"main": "swc-html.darwin-arm64.node",
-	"name": "@swc/html-darwin-arm64",
+	"name": "@codeeditorland/html-darwin-arm64",
 	"os": [
 		"darwin"
 	],

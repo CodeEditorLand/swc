@@ -10,6 +10,7 @@
 	"cpu": [
 		"arm"
 	],
+	"dependencies": {},
 	"description": "Super-fast HTML minifier",
 	"devDependencies": {
 		"@playform/build": "0.2.0"
@@ -25,7 +26,7 @@
 	],
 	"license": "SEE LICENSE IN LICENSE",
 	"main": "swc-html.linux-arm-gnueabihf.node",
-	"name": "@swc/html-linux-arm-gnueabihf",
+	"name": "@codeeditorland/html-linux-arm-gnueabihf",
 	"os": [
 		"linux"
 	],

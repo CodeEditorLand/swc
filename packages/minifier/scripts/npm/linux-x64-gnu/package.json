@@ -10,6 +10,7 @@
 	"cpu": [
 		"x64"
 	],
+	"dependencies": {},
 	"description": "Super-fast alternative for babel",
 	"devDependencies": {
 		"@playform/build": "0.2.0"
@@ -29,7 +30,7 @@
 	],
 	"license": "SEE LICENSE IN LICENSE",
 	"main": "minifier.linux-x64-gnu.node",
-	"name": "@swc/minifier-linux-x64-gnu",
+	"name": "@codeeditorland/minifier-linux-x64-gnu",
 	"os": [
 		"linux"
 	],

@@ -7,15 +7,17 @@
 	"bugs": {
 		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
 	},
+	"dependencies": {},
 	"devDependencies": {
 		"@babel/compat-data": "7.26.3",
 		"@babel/generator": "7.26.3",
 		"@babel/plugin-proposal-decorators": "7.25.9",
 		"@babel/plugin-proposal-object-rest-spread": "7.20.7",
 		"@babel/types": "7.26.3",
+		"@codeeditorland/helpers": "workspace:^",
+		"@codeeditorland/plugin-coverage-instrument": "0.0.25",
+		"@codeeditorland/plugin-jest": "6.0.1",
 		"@playform/build": "0.2.0",
-		"@swc/helpers": "workspace:^",
-		"@swc/plugin-jest": "6.0.1",
 		"@taplo/cli": "0.7.0",
 		"@types/node": "22.10.1",
 		"@types/terser": "3.12.0",
@@ -43,7 +45,6 @@
 		"source-map": "0.7.4",
 		"source-map-support": "0.5.21",
 		"sourcemap-validator": "2.1.0",
-		"swc-plugin-coverage-instrument": "0.0.25",
 		"terser": "5.36.0",
 		"yaml": "2.6.1",
 		"zx": "8.2.4"
@@ -78,7 +79,7 @@
 			"taplo format"
 		]
 	},
-	"name": "@swc/workspace",
+	"name": "@codeeditorland/workspace",
 	"private": false,
 	"publishConfig": {
 		"access": "public"

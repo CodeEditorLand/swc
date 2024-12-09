@@ -10,6 +10,7 @@
 	"cpu": [
 		"arm"
 	],
+	"dependencies": {},
 	"description": "Super-fast alternative for terser",
 	"devDependencies": {
 		"@playform/build": "0.2.0"
@@ -26,7 +27,7 @@
 	],
 	"license": "SEE LICENSE IN LICENSE",
 	"main": "minifier.linux-arm-gnueabihf.node",
-	"name": "@swc/minifier-linux-arm-gnueabihf",
+	"name": "@codeeditorland/minifier-linux-arm-gnueabihf",
 	"os": [
 		"linux"
 	],

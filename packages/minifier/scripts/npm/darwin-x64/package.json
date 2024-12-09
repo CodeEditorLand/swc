@@ -10,6 +10,7 @@
 	"cpu": [
 		"x64"
 	],
+	"dependencies": {},
 	"description": "Super-fast alternative for babel",
 	"devDependencies": {
 		"@playform/build": "0.2.0"
@@ -26,7 +27,7 @@
 	],
 	"license": "SEE LICENSE IN LICENSE",
 	"main": "minifier.darwin-x64.node",
-	"name": "@swc/minifier-darwin-x64",
+	"name": "@codeeditorland/minifier-darwin-x64",
 	"os": [
 		"darwin"
 	],

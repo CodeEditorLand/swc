@@ -7,6 +7,7 @@
 	"bugs": {
 		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
 	},
+	"dependencies": {},
 	"description": "EcmaScript minifier for the swc project. This is basically a port of terser.",
 	"devDependencies": {
 		"@playform/build": "0.2.0",

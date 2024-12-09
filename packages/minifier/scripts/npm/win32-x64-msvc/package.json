@@ -10,6 +10,7 @@
 	"cpu": [
 		"x64"
 	],
+	"dependencies": {},
 	"description": "Super-fast alternative for babel",
 	"devDependencies": {
 		"@playform/build": "0.2.0"
@@ -26,7 +27,7 @@
 	],
 	"license": "SEE LICENSE IN LICENSE",
 	"main": "minifier.win32-x64-msvc.node",
-	"name": "@swc/minifier-win32-x64-msvc",
+	"name": "@codeeditorland/minifier-win32-x64-msvc",
 	"os": [
 		"win32"
 	],

@@ -8,7 +8,7 @@
 		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
 	},
 	"dependencies": {
-		"@swc/counter": "^0.1.3"
+		"@codeeditorland/counter": "^0.1.3"
 	},
 	"description": "Super-fast HTML minifier",
 	"devDependencies": {
@@ -23,7 +23,7 @@
 	],
 	"license": "SEE LICENSE IN LICENSE",
 	"main": "./index.js",
-	"name": "@swc/html",
+	"name": "@codeeditorland/html",
 	"napi": {
 		"binaryName": "swc-html",
 		"targets": [

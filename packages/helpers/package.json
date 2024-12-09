@@ -457,7 +457,7 @@
 	"license": "SEE LICENSE IN LICENSE",
 	"main": "cjs/index.cjs",
 	"module": "esm/index.js",
-	"name": "@swc/helpers",
+	"name": "@codeeditorland/helpers",
 	"private": false,
 	"publishConfig": {
 		"access": "public"

@@ -8,8 +8,8 @@
 		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
 	},
 	"dependencies": {
-		"@swc/counter": "^0.1.3",
-		"@swc/types": "workspace:^"
+		"@codeeditorland/counter": "^0.1.3",
+		"@codeeditorland/types": "workspace:^"
 	},
 	"description": "Super-fast alternative for babel",
 	"devDependencies": {
@@ -49,7 +49,7 @@
 	],
 	"license": "SEE LICENSE IN LICENSE",
 	"main": "./index.js",
-	"name": "@swc/core",
+	"name": "@codeeditorland/core",
 	"napi": {
 		"binaryName": "swc",
 		"targets": [

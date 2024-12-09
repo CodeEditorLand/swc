@@ -10,6 +10,7 @@
 	"cpu": [
 		"x64"
 	],
+	"dependencies": {},
 	"description": "Super-fast alternative for babel",
 	"devDependencies": {
 		"@playform/build": "0.2.0"
@@ -26,7 +27,7 @@
 	],
 	"license": "SEE LICENSE IN LICENSE",
 	"main": "swc.win32-x64-msvc.node",
-	"name": "@swc/core-win32-x64-msvc",
+	"name": "@codeeditorland/core-win32-x64-msvc",
 	"os": [
 		"win32"
 	],
