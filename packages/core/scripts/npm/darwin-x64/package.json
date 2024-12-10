@@ -1,28 +1,6 @@
 {
 	"name": "@codeeditorland/core-darwin-x64",
-	"version": "0.0.1",
-	"private": false,
 	"description": "Super-fast alternative for babel",
-	"keywords": [
-		"codeeditorland",
-		"land",
-		"playform"
-	],
-	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/SWC#readme",
-	"bugs": {
-		"url": "HTTPS://GitHub.Com/CodeEditorLand/SWC/issues"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+HTTPS://github.com/CodeEditorLand/SWC.git"
-	},
-	"license": "SEE LICENSE IN LICENSE",
-	"author": {
-		"name": "🖋️ Source — 👐🏻 Open —",
-		"email": "Source/Open@Editor.Land",
-		"url": "HTTPS://Editor.Land"
-	},
-	"type": "module",
 	"main": "swc.darwin-x64.node",
 	"files": [
 		"swc.darwin-x64.node",
@@ -40,49 +18,5 @@
 	],
 	"cpu": [
 		"x64"
-	],
-	"publishConfig": {
-		"access": "public"
-	}
-}
-  "name": "@swc/core-darwin-x64",
-  "version": "1.10.1",
-  "os": [
-    "darwin"
-  ],
-  "cpu": [
-    "x64"
-  ],
-  "main": "swc.darwin-x64.node",
-  "files": [
-    "swc.darwin-x64.node",
-    "swc"
-  ],
-  "description": "Super-fast alternative for babel",
-  "keywords": [
-    "swc",
-    "swcpack",
-    "babel",
-    "typescript",
-    "rust",
-    "webpack",
-    "tsc"
-  ],
-  "author": "강동윤 <kdy1997.dev@gmail.com>",
-  "homepage": "https://swc.rs",
-  "license": "Apache-2.0 AND MIT",
-  "engines": {
-    "node": ">=10"
-  },
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/swc-project/swc.git"
-  },
-  "bugs": {
-    "url": "https://github.com/swc-project/swc/issues"
-  }
+	]
 }
