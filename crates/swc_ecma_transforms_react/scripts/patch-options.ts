@@ -6,7 +6,6 @@ async function* walk(dir: string): AsyncGenerator<string> {
 		const entry = path.join(dir, d.name);
 
 		if (d.isDirectory()) yield* walk(entry);
-
 		else if (d.isFile()) yield entry;
 	}
 
@@ -14,7 +13,6 @@ async function* walk(dir: string): AsyncGenerator<string> {
 		const entry = path.join(dir, d.name);
 
 		if (d.isDirectory()) yield* walk(entry);
-
 		else if (d.isFile()) yield entry;
 	}
 
@@ -22,7 +20,6 @@ async function* walk(dir: string): AsyncGenerator<string> {
 		const entry = path.join(dir, d.name);
 
 		if (d.isDirectory()) yield* walk(entry);
-
 		else if (d.isFile()) yield entry;
 	}
 }

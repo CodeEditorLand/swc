@@ -10,4 +10,4 @@ mod rules;
 pub use config::LintConfig;
 pub(crate) use error::ConfigError;
 pub use rule::LintRule;
-pub use rules::{get_rules, LintParams};
+pub use rules::{LintParams, get_rules};

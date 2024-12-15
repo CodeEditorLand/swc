@@ -28,8 +28,8 @@
 #![allow(clippy::needless_doctest_main)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(
-    feature = "nightly",
-    feature(allocator_api, fundamental, with_negative_coherence, box_into_inner)
+	feature = "nightly",
+	feature(allocator_api, fundamental, with_negative_coherence, box_into_inner)
 )]
 #![deny(missing_docs)]
 #![allow(clippy::derivable_impls)]
@@ -45,11 +45,11 @@ pub mod vec;
 
 /// Box<T> and Vec<T> depeding on the feature.
 pub mod maybe {
-    #[cfg(not(feature = "nightly"))]
-    pub use std::{boxed, vec};
+	#[cfg(not(feature = "nightly"))]
+	pub use std::{boxed, vec};
 
-    #[cfg(feature = "nightly")]
-    pub use crate::{boxed, vec};
+	#[cfg(feature = "nightly")]
+	pub use crate::{boxed, vec};
 }
 
 /// Fast allocator, effectively working as a cache.
@@ -74,20 +74,20 @@ pub mod maybe {
 /// original types.
 #[derive(Clone, Copy)]
 pub struct FastAlloc {
-    #[cfg(feature = "scoped")]
-    alloc: Option<&'static Allocator>,
+	#[cfg(feature = "scoped")]
+	alloc:Option<&'static Allocator>,
 }
 
 impl FastAlloc {
-    /// [crate::boxed::Box] or [crate::vec::Vec] created with this instance is
-    /// managed by the global allocator and it can outlive the
-    /// [crate::Allocator] instance used for [Allocator::scope].
-    pub const fn global() -> Self {
-        Self {
-            #[cfg(feature = "scoped")]
-            alloc: None,
-        }
-    }
+	/// [crate::boxed::Box] or [crate::vec::Vec] created with this instance is
+	/// managed by the global allocator and it can outlive the
+	/// [crate::Allocator] instance used for [Allocator::scope].
+	pub const fn global() -> Self {
+		Self {
+			#[cfg(feature = "scoped")]
+			alloc:None,
+		}
+	}
 }
 
 /// This expands to the given tokens if the `nightly` feature is enabled.
@@ -108,9 +108,7 @@ macro_rules! nightly_only {
 #[cfg(not(feature = "nightly"))]
 #[macro_export]
 macro_rules! nightly_only {
-    (
-        $($item:item)*
-    ) => {};
+	($($item:item)*) => {};
 }
 
 /// Usage: `swc_allocator::Type!(Vec<T>)` or `swc_allocator::Type!(Box<T>)`.

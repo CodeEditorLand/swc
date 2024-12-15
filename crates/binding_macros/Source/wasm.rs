@@ -11,19 +11,21 @@ pub use serde_wasm_bindgen;
 use serde_wasm_bindgen::Serializer;
 #[doc(hidden)]
 pub use swc::PrintArgs;
-use swc::{config::ErrorFormat, Compiler, HandlerOpts};
+use swc::{Compiler, HandlerOpts, config::ErrorFormat};
 #[doc(hidden)]
 pub use swc::{
-    config::{Options, ParseOptions, SourceMapsConfig},
-    try_with_handler,
+	config::{Options, ParseOptions, SourceMapsConfig},
+	try_with_handler,
 };
 #[doc(hidden)]
 pub use swc_common::{
-    comments::{self, SingleThreadedComments},
-    errors::Handler,
-    FileName, Mark, GLOBALS,
+	FileName,
+	GLOBALS,
+	Mark,
+	comments::{self, SingleThreadedComments},
+	errors::Handler,
 };
-use swc_common::{sync::Lrc, FilePathMapping, SourceMap};
+use swc_common::{FilePathMapping, SourceMap, sync::Lrc};
 #[doc(hidden)]
 pub use swc_ecma_ast::noop_pass;
 #[doc(hidden)]
@@ -41,53 +43,44 @@ pub use wasm_bindgen_futures::future_to_promise;
 // from the bindgen generated swc interfaces.
 #[doc(hidden)]
 pub fn compat_serializer() -> Arc<Serializer> {
-    static V: Lazy<Arc<Serializer>> = Lazy::new(|| {
-        let s = Serializer::new()
-            .serialize_maps_as_objects(true)
-            .serialize_missing_as_null(true);
+	static V:Lazy<Arc<Serializer>> = Lazy::new(|| {
+		let s = Serializer::new()
+			.serialize_maps_as_objects(true)
+			.serialize_missing_as_null(true);
 
-        Arc::new(s)
-    });
+		Arc::new(s)
+	});
 
-    V.clone()
+	V.clone()
 }
 
 #[doc(hidden)]
 pub fn try_with_handler_globals<F, Ret>(
-    cm: Lrc<SourceMap>,
-    config: HandlerOpts,
-    op: F,
+	cm:Lrc<SourceMap>,
+	config:HandlerOpts,
+	op:F,
 ) -> Result<Ret, Error>
 where
-    F: FnOnce(&Handler) -> Result<Ret, Error>,
-{
-    GLOBALS.set(&Default::default(), || {
-        swc::try_with_handler(cm, config, op)
-    })
+	F: FnOnce(&Handler) -> Result<Ret, Error>, {
+	GLOBALS.set(&Default::default(), || swc::try_with_handler(cm, config, op))
 }
 
 /// Get global sourcemap
 pub fn compiler() -> Arc<Compiler> {
-    console_error_panic_hook::set_once();
+	console_error_panic_hook::set_once();
 
-    static C: Lazy<Arc<Compiler>> = Lazy::new(|| {
-        let cm = Arc::new(SourceMap::new(FilePathMapping::empty()));
+	static C:Lazy<Arc<Compiler>> = Lazy::new(|| {
+		let cm = Arc::new(SourceMap::new(FilePathMapping::empty()));
 
-        Arc::new(Compiler::new(cm))
-    });
+		Arc::new(Compiler::new(cm))
+	});
 
-    C.clone()
+	C.clone()
 }
 
 #[doc(hidden)]
-pub fn convert_err(
-    err: Error,
-    error_format: Option<ErrorFormat>,
-) -> wasm_bindgen::prelude::JsValue {
-    error_format
-        .unwrap_or(ErrorFormat::Normal)
-        .format(&err)
-        .into()
+pub fn convert_err(err:Error, error_format:Option<ErrorFormat>) -> wasm_bindgen::prelude::JsValue {
+	error_format.unwrap_or(ErrorFormat::Normal).format(&err).into()
 }
 
 #[macro_export]

@@ -1,94 +1,89 @@
 #![deny(warnings)]
 
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 
-use anyhow::{anyhow, Error};
+use anyhow::{Error, anyhow};
 use napi::Env;
 use swc_core::common::{
-    errors::Handler,
-    sync::{Lrc, OnceCell},
-    SourceMap, GLOBALS,
+	GLOBALS,
+	SourceMap,
+	errors::Handler,
+	sync::{Lrc, OnceCell},
 };
-use swc_error_reporters::handler::{try_with_handler, HandlerOpts};
+use swc_error_reporters::handler::{HandlerOpts, try_with_handler};
 use tracing::instrument;
 use tracing_chrome::ChromeLayerBuilder;
 use tracing_subscriber::{
-    filter, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer,
+	EnvFilter,
+	Layer,
+	filter,
+	prelude::__tracing_subscriber_SubscriberExt,
+	util::SubscriberInitExt,
 };
 
-static TARGET_TRIPLE: &str = include_str!(concat!(env!("OUT_DIR"), "/triple.txt"));
-static CUSTOM_TRACE_SUBSCRIBER: OnceCell<bool> = OnceCell::new();
+static TARGET_TRIPLE:&str = include_str!(concat!(env!("OUT_DIR"), "/triple.txt"));
+static CUSTOM_TRACE_SUBSCRIBER:OnceCell<bool> = OnceCell::new();
 
 #[napi]
-pub fn get_target_triple() -> napi::Result<String> {
-    Ok(TARGET_TRIPLE.to_string())
-}
+pub fn get_target_triple() -> napi::Result<String> { Ok(TARGET_TRIPLE.to_string()) }
 
 #[napi]
 pub fn init_custom_trace_subscriber(
-    mut env: Env,
-    trace_out_file_path: Option<String>,
+	mut env:Env,
+	trace_out_file_path:Option<String>,
 ) -> napi::Result<()> {
-    CUSTOM_TRACE_SUBSCRIBER.get_or_init(|| {
-        let mut layer = ChromeLayerBuilder::new().include_args(true);
+	CUSTOM_TRACE_SUBSCRIBER.get_or_init(|| {
+		let mut layer = ChromeLayerBuilder::new().include_args(true);
 
-        if let Some(trace_out_file) = trace_out_file_path {
-            layer = layer.file(trace_out_file);
-        }
+		if let Some(trace_out_file) = trace_out_file_path {
+			layer = layer.file(trace_out_file);
+		}
 
-        let (chrome_layer, guard) = layer.build();
+		let (chrome_layer, guard) = layer.build();
 
-        tracing_subscriber::registry()
-            .with(chrome_layer.with_filter(filter::filter_fn(|metadata| {
-                !metadata.target().contains("cranelift") && !metadata.name().contains("log ")
-            })))
-            .try_init()
-            .expect("Failed to register tracing subscriber");
+		tracing_subscriber::registry()
+			.with(chrome_layer.with_filter(filter::filter_fn(|metadata| {
+				!metadata.target().contains("cranelift") && !metadata.name().contains("log ")
+			})))
+			.try_init()
+			.expect("Failed to register tracing subscriber");
 
-        env.add_env_cleanup_hook(guard, |flush_guard| {
-            flush_guard.flush();
+		env.add_env_cleanup_hook(guard, |flush_guard| {
+			flush_guard.flush();
 
-            drop(flush_guard);
-        })
-        .expect("Should able to initialize cleanup for custom trace subscriber");
+			drop(flush_guard);
+		})
+		.expect("Should able to initialize cleanup for custom trace subscriber");
 
-        true
-    });
+		true
+	});
 
-    Ok(())
+	Ok(())
 }
 
 #[instrument(level = "trace", skip_all)]
-pub fn try_with<F, Ret>(cm: Lrc<SourceMap>, skip_filename: bool, op: F) -> Result<Ret, Error>
+pub fn try_with<F, Ret>(cm:Lrc<SourceMap>, skip_filename:bool, op:F) -> Result<Ret, Error>
 where
-    F: FnOnce(&Handler) -> Result<Ret, Error>,
-{
-    GLOBALS.set(&Default::default(), || {
-        try_with_handler(
-            cm,
-            HandlerOpts {
-                skip_filename,
-                ..Default::default()
-            },
-            |handler| {
-                //
-                let result = catch_unwind(AssertUnwindSafe(|| op(handler)));
+	F: FnOnce(&Handler) -> Result<Ret, Error>, {
+	GLOBALS.set(&Default::default(), || {
+		try_with_handler(cm, HandlerOpts { skip_filename, ..Default::default() }, |handler| {
+			//
+			let result = catch_unwind(AssertUnwindSafe(|| op(handler)));
 
-                let p = match result {
-                    Ok(v) => return v,
-                    Err(v) => v,
-                };
+			let p = match result {
+				Ok(v) => return v,
+				Err(v) => v,
+			};
 
-                if let Some(s) = p.downcast_ref::<String>() {
-                    Err(anyhow!("failed to handle: {}", s))
-                } else if let Some(s) = p.downcast_ref::<&str>() {
-                    Err(anyhow!("failed to handle: {}", s))
-                } else {
-                    Err(anyhow!("failed to handle with unknown panic message"))
-                }
-            },
-        )
-    })
+			if let Some(s) = p.downcast_ref::<String>() {
+				Err(anyhow!("failed to handle: {}", s))
+			} else if let Some(s) = p.downcast_ref::<&str>() {
+				Err(anyhow!("failed to handle: {}", s))
+			} else {
+				Err(anyhow!("failed to handle with unknown panic message"))
+			}
+		})
+	})
 }
 
 // This was originally under swc_nodejs_common, but this is not a public
@@ -99,12 +94,12 @@ where
 /// This can be called multiple time, however subsequent calls will be ignored
 /// as tracing_subscriber only allows single global dispatch.
 pub fn init_default_trace_subscriber() {
-    let _unused = tracing_subscriber::FmtSubscriber::builder()
-        .without_time()
-        .with_target(false)
-        .with_writer(std::io::stderr)
-        .with_ansi(true)
-        .with_env_filter(EnvFilter::from_env("SWC_LOG"))
-        .pretty()
-        .try_init();
+	let _unused = tracing_subscriber::FmtSubscriber::builder()
+		.without_time()
+		.with_target(false)
+		.with_writer(std::io::stderr)
+		.with_ansi(true)
+		.with_env_filter(EnvFilter::from_env("SWC_LOG"))
+		.pretty()
+		.try_init();
 }

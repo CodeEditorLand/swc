@@ -62,8 +62,7 @@
 /// use swc_ecma_quote::quote;
 ///
 /// // This will return ast for `const ref = 4;`
-/// let _stmt = quote!("const $name = 4;" as Stmt, name =
-/// Ident::new("ref".into(), DUMMY_SP));
+/// let _stmt = quote!("const $name = 4;" as Stmt, name = Ident::new("ref".into(), DUMMY_SP));
 ///
 /// // Tip: Use private_ident!("ref") for real identifiers.
 /// ```
@@ -91,9 +90,7 @@ macro_rules! quote_expr {
 
 /// Noop
 pub trait ImplicitClone: Clone {
-    fn clone_quote_var(&self) -> Self {
-        self.clone()
-    }
+	fn clone_quote_var(&self) -> Self { self.clone() }
 }
 
-impl<T: Clone> ImplicitClone for T {}
+impl<T:Clone> ImplicitClone for T {}

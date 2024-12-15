@@ -6,7 +6,7 @@ mod module;
 #[cfg(feature = "sourcemap")]
 mod source_map;
 
-pub use swc_cached::{regex::CachedRegex, Error};
+pub use swc_cached::{Error, regex::CachedRegex};
 
 pub use crate::module::IsModule;
 #[cfg(feature = "sourcemap")]

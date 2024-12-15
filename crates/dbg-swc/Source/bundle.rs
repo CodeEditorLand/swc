@@ -1,38 +1,38 @@
 use std::{
-    process::{Command, Stdio},
-    sync::Arc,
+	process::{Command, Stdio},
+	sync::Arc,
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use swc_common::{FileName, SourceMap};
 use swc_timer::timer;
 
-use crate::util::{parse_js, wrap_task, ModuleRecord};
+use crate::util::{ModuleRecord, parse_js, wrap_task};
 
-pub fn bundle(cm: Arc<SourceMap>, entry_url: &str) -> Result<ModuleRecord> {
-    wrap_task(|| {
-        let _timer = timer!("bundle");
+pub fn bundle(cm:Arc<SourceMap>, entry_url:&str) -> Result<ModuleRecord> {
+	wrap_task(|| {
+		let _timer = timer!("bundle");
 
-        let mut cmd = Command::new("deno");
+		let mut cmd = Command::new("deno");
 
-        cmd.arg("bundle");
+		cmd.arg("bundle");
 
-        cmd.arg(entry_url);
+		cmd.arg(entry_url);
 
-        cmd.stderr(Stdio::inherit());
+		cmd.stderr(Stdio::inherit());
 
-        let output = cmd.output().context("failed to invoke `deno bundle`")?;
+		let output = cmd.output().context("failed to invoke `deno bundle`")?;
 
-        if !output.status.success() {
-            bail!("`deno bundle` failed with status code {}", output.status);
-        }
+		if !output.status.success() {
+			bail!("`deno bundle` failed with status code {}", output.status);
+		}
 
-        let code =
-            String::from_utf8(output.stdout).context("deno bundle emitted non-utf8 output")?;
+		let code =
+			String::from_utf8(output.stdout).context("deno bundle emitted non-utf8 output")?;
 
-        let fm = cm.new_source_file(FileName::Anon.into(), code);
+		let fm = cm.new_source_file(FileName::Anon.into(), code);
 
-        parse_js(fm).context("failed to parse js filed emitted by `deno bundle`")
-    })
-    .with_context(|| format!("failed to bundle `{}`", entry_url))
+		parse_js(fm).context("failed to parse js filed emitted by `deno bundle`")
+	})
+	.with_context(|| format!("failed to bundle `{}`", entry_url))
 }

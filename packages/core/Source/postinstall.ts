@@ -23,7 +23,6 @@ function removeRecursive(dir: string): void {
 		}
 
 		if (stats.isDirectory()) removeRecursive(entryPath);
-
 		else fs.unlinkSync(entryPath);
 	}
 
