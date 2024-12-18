@@ -1,17 +1,17 @@
 use swc_common::{Span, SyntaxContext};
 use swc_ecma_ast::*;
-use syn::{parse_quote, ExprBlock};
+use syn::{ExprBlock, parse_quote};
 
 use crate::ctxt::Ctx;
 
 macro_rules! fail_todo {
-    ($T:ty) => {
-        impl crate::ast::ToCode for $T {
-            fn to_code(&self, _: &crate::ctxt::Ctx) -> syn::Expr {
-                todo!("ToCode for {}", stringify!($T))
-            }
-        }
-    };
+	($T:ty) => {
+		impl crate::ast::ToCode for $T {
+			fn to_code(&self, _:&crate::ctxt::Ctx) -> syn::Expr {
+				todo!("ToCode for {}", stringify!($T))
+			}
+		}
+	};
 }
 
 macro_rules! impl_enum_body {
@@ -94,73 +94,67 @@ mod stmt;
 mod typescript;
 
 pub(crate) trait ToCode: 'static {
-    fn to_code(&self, cx: &Ctx) -> syn::Expr;
+	fn to_code(&self, cx:&Ctx) -> syn::Expr;
 }
 
 impl<T> ToCode for Box<T>
 where
-    T: ?Sized + ToCode,
+	T: ?Sized + ToCode,
 {
-    fn to_code(&self, cx: &Ctx) -> syn::Expr {
-        let inner = (**self).to_code(cx);
+	fn to_code(&self, cx:&Ctx) -> syn::Expr {
+		let inner = (**self).to_code(cx);
 
-        parse_quote!(Box::new(#inner))
-    }
+		parse_quote!(Box::new(#inner))
+	}
 }
 
 /// TODO: Optimize
 impl<T> ToCode for Option<T>
 where
-    T: ToCode,
+	T: ToCode,
 {
-    fn to_code(&self, cx: &Ctx) -> syn::Expr {
-        match self {
-            Some(inner) => {
-                let inner = inner.to_code(cx);
+	fn to_code(&self, cx:&Ctx) -> syn::Expr {
+		match self {
+			Some(inner) => {
+				let inner = inner.to_code(cx);
 
-                parse_quote!(Some(#inner))
-            }
+				parse_quote!(Some(#inner))
+			},
 
-            None => parse_quote!(None),
-        }
-    }
+			None => parse_quote!(None),
+		}
+	}
 }
 
 impl_struct!(Invalid, [span]);
 
 impl ToCode for Span {
-    fn to_code(&self, _: &Ctx) -> syn::Expr {
-        parse_quote!(swc_core::common::DUMMY_SP)
-    }
+	fn to_code(&self, _:&Ctx) -> syn::Expr { parse_quote!(swc_core::common::DUMMY_SP) }
 }
 
 impl ToCode for SyntaxContext {
-    fn to_code(&self, _: &Ctx) -> syn::Expr {
-        parse_quote!(swc_core::common::SyntaxContext::empty())
-    }
+	fn to_code(&self, _:&Ctx) -> syn::Expr {
+		parse_quote!(swc_core::common::SyntaxContext::empty())
+	}
 }
 
 impl_enum!(ModuleItem, [ModuleDecl, Stmt]);
 
-impl_enum!(
-    Pat,
-    [Ident, Array, Rest, Object, Assign, Invalid, Expr],
-    true
-);
+impl_enum!(Pat, [Ident, Array, Rest, Object, Assign, Invalid, Expr], true);
 impl_enum!(Lit, [Str, Bool, Null, Num, BigInt, Regex, JSXText]);
 impl_enum!(
-    ClassMember,
-    [
-        Constructor,
-        Method,
-        PrivateMethod,
-        ClassProp,
-        PrivateProp,
-        TsIndexSignature,
-        Empty,
-        StaticBlock,
-        AutoAccessor
-    ]
+	ClassMember,
+	[
+		Constructor,
+		Method,
+		PrivateMethod,
+		ClassProp,
+		PrivateProp,
+		TsIndexSignature,
+		Empty,
+		StaticBlock,
+		AutoAccessor
+	]
 );
 impl_enum!(ObjectPatProp, [KeyValue, Assign, Rest]);
 impl_enum!(PropName, [Ident, Str, Num, Computed, BigInt]);
@@ -171,14 +165,8 @@ impl_enum!(MemberProp, [Ident, PrivateName, Computed]);
 impl_enum!(SuperProp, [Ident, Computed]);
 impl_enum!(JSXObject, [Ident, JSXMemberExpr]);
 impl_enum!(
-    JSXElementChild,
-    [
-        JSXText,
-        JSXElement,
-        JSXExprContainer,
-        JSXFragment,
-        JSXSpreadChild
-    ]
+	JSXElementChild,
+	[JSXText, JSXElement, JSXExprContainer, JSXFragment, JSXSpreadChild]
 );
 impl_enum!(OptChainBase, [Member, Call]);
 impl_enum!(JSXElementName, [Ident, JSXMemberExpr, JSXNamespacedName]);
@@ -186,33 +174,27 @@ impl_enum!(JSXAttrOrSpread, [JSXAttr, SpreadElement]);
 
 impl<T> ToCode for Vec<T>
 where
-    T: ToCode,
+	T: ToCode,
 {
-    fn to_code(&self, cx: &Ctx) -> syn::Expr {
-        let len = self.len();
+	fn to_code(&self, cx:&Ctx) -> syn::Expr {
+		let len = self.len();
 
-        let var_stmt: syn::Stmt = parse_quote!(let mut items = Vec::with_capacity(#len););
+		let var_stmt:syn::Stmt = parse_quote!(let mut items = Vec::with_capacity(#len););
 
-        let mut stmts = vec![var_stmt];
+		let mut stmts = vec![var_stmt];
 
-        for item in self {
-            let item = item.to_code(cx);
+		for item in self {
+			let item = item.to_code(cx);
 
-            stmts.push(syn::Stmt::Expr(
-                parse_quote!(items.push(#item)),
-                Some(Default::default()),
-            ));
-        }
+			stmts.push(syn::Stmt::Expr(parse_quote!(items.push(#item)), Some(Default::default())));
+		}
 
-        stmts.push(syn::Stmt::Expr(parse_quote!(items), None));
+		stmts.push(syn::Stmt::Expr(parse_quote!(items), None));
 
-        syn::Expr::Block(ExprBlock {
-            attrs: Default::default(),
-            label: Default::default(),
-            block: syn::Block {
-                brace_token: Default::default(),
-                stmts,
-            },
-        })
-    }
+		syn::Expr::Block(ExprBlock {
+			attrs:Default::default(),
+			label:Default::default(),
+			block:syn::Block { brace_token:Default::default(), stmts },
+		})
+	}
 }

@@ -3,11 +3,9 @@
 use std::{
 	fmt,
 	sync::{Arc, Mutex},
-    fmt,
-    sync::{Arc, Mutex},
 };
 
-use swc_common::{errors::Handler, sync::Lrc, BytePos, FileName, SourceFile, SourceMap, Span};
+use swc_common::{BytePos, FileName, SourceFile, SourceMap, Span, errors::Handler, sync::Lrc};
 use swc_error_reporters::{GraphicalReportHandler, PrettyEmitter, PrettyEmitterConfig};
 
 fn main() {
@@ -54,59 +52,52 @@ fn span(base:&SourceFile, lo:u32, hi:u32) -> Span {
 
 	let hi = base.start_pos.0 + hi;
 
-	Span::new(BytePos(lo), BytePos(hi))
-    let cm = Lrc::<SourceMap>::default();
+	Span::new(BytePos(lo), BytePos(hi));
 
-    let wr = Box::<LockedWriter>::default();
+	let cm = Lrc::<SourceMap>::default();
 
-    let emitter = PrettyEmitter::new(
-        cm.clone(),
-        wr.clone(),
-        GraphicalReportHandler::new().with_context_lines(3),
-        PrettyEmitterConfig {
-            skip_filename: false,
-        },
-    );
-    // let e_wr = EmitterWriter::new(wr.clone(), Some(cm), false,
-    // true).skip_filename(skip_filename);
+	let wr = Box::<LockedWriter>::default();
 
-    let handler = Handler::with_emitter(true, false, Box::new(emitter));
+	let emitter = PrettyEmitter::new(
+		cm.clone(),
+		wr.clone(),
+		GraphicalReportHandler::new().with_context_lines(3),
+		PrettyEmitterConfig { skip_filename:false },
+	);
+	// let e_wr = EmitterWriter::new(wr.clone(), Some(cm), false,
+	// true).skip_filename(skip_filename);
 
-    let fm1 = cm.new_source_file(
-        Lrc::new(FileName::Custom("foo.js".into())),
-        "13579\n12345\n13579".into(),
-    );
+	let handler = Handler::with_emitter(true, false, Box::new(emitter));
 
-    let fm2 = cm.new_source_file(
-        Lrc::new(FileName::Custom("bar.js".into())),
-        "02468\n12345\n02468".into(),
-    );
+	let fm1 = cm
+		.new_source_file(Lrc::new(FileName::Custom("foo.js".into())), "13579\n12345\n13579".into());
 
-    // This is a simple example.
-    handler
-        .struct_span_err(span(&fm1, 0, 3), "simple message")
-        .emit();
+	let fm2 = cm
+		.new_source_file(Lrc::new(FileName::Custom("bar.js".into())), "02468\n12345\n02468".into());
 
-    // We can show other file.
-    // This can be used to show configurable error with the config.
+	// This is a simple example.
+	handler.struct_span_err(span(&fm1, 0, 3), "simple message").emit();
 
-    handler
-        .struct_span_err(span(&fm1, 6, 9), "constraint violation")
-        .span_note(span(&fm2, 0, 1), "this is your config")
-        .emit();
+	// We can show other file.
+	// This can be used to show configurable error with the config.
 
-    let s = &**wr.0.lock().unwrap();
+	handler
+		.struct_span_err(span(&fm1, 6, 9), "constraint violation")
+		.span_note(span(&fm2, 0, 1), "this is your config")
+		.emit();
 
-    println!("{}", s);
+	let s = &**wr.0.lock().unwrap();
+
+	println!("{}", s);
 }
 
 /// Don't do this in your real app. You should use [Span] created by parser
-fn span(base: &SourceFile, lo: u32, hi: u32) -> Span {
-    let lo = base.start_pos.0 + lo;
+fn span(base:&SourceFile, lo:u32, hi:u32) -> Span {
+	let lo = base.start_pos.0 + lo;
 
-    let hi = base.start_pos.0 + hi;
+	let hi = base.start_pos.0 + hi;
 
-    Span::new(BytePos(lo), BytePos(hi))
+	Span::new(BytePos(lo), BytePos(hi))
 }
 
 #[derive(Clone, Default)]
@@ -119,9 +110,9 @@ impl fmt::Write for LockedWriter {
 		Ok(())
 	}
 
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.0.lock().unwrap().push_str(s);
+	fn write_str(&mut self, s:&str) -> fmt::Result {
+		self.0.lock().unwrap().push_str(s);
 
-        Ok(())
-    }
+		Ok(())
+	}
 }

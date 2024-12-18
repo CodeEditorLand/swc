@@ -22,453 +22,431 @@ pub mod writer;
 
 #[derive(Debug, Clone, Default)]
 pub struct CodegenConfig<'a> {
-    pub minify: bool,
-    pub scripting_enabled: bool,
-    /// Should be used only for `DocumentFragment` code generation
-    pub context_element: Option<&'a Element>,
+	pub minify:bool,
+	pub scripting_enabled:bool,
+	/// Should be used only for `DocumentFragment` code generation
+	pub context_element:Option<&'a Element>,
 }
 
 #[derive(Debug)]
 pub struct CodeGenerator<'a, W>
 where
-    W: XmlWriter,
-{
-    wr: W,
-    config: CodegenConfig<'a>,
-    ctx: Ctx,
+	W: XmlWriter, {
+	wr:W,
+	config:CodegenConfig<'a>,
+	ctx:Ctx,
 }
 
 impl<'a, W> CodeGenerator<'a, W>
 where
-    W: XmlWriter,
+	W: XmlWriter,
 {
-    pub fn new(wr: W, config: CodegenConfig<'a>) -> Self {
-        CodeGenerator {
-            wr,
-            config,
-            ctx: Default::default(),
-        }
-    }
-
-    #[emitter]
-    fn emit_document(&mut self, n: &Document) -> Result {
-        self.emit_list(&n.children, ListFormat::NotDelimited)?;
-    }
+	pub fn new(wr:W, config:CodegenConfig<'a>) -> Self {
+		CodeGenerator { wr, config, ctx:Default::default() }
+	}
 
-    #[emitter]
-    fn emit_child(&mut self, n: &Child) -> Result {
-        match n {
-            Child::DocumentType(n) => emit!(self, n),
-            Child::Element(n) => emit!(self, n),
-            Child::Text(n) => emit!(self, n),
-            Child::Comment(n) => emit!(self, n),
-            Child::ProcessingInstruction(n) => emit!(self, n),
-            Child::CdataSection(n) => emit!(self, n),
-        }
-    }
+	#[emitter]
+	fn emit_document(&mut self, n:&Document) -> Result {
+		self.emit_list(&n.children, ListFormat::NotDelimited)?;
+	}
 
-    #[emitter]
-    fn emit_document_doctype(&mut self, n: &DocumentType) -> Result {
-        let mut doctype = String::with_capacity(
-            10 + if let Some(name) = &n.name {
-                name.len() + 1
-            } else {
-                0
-            } + if let Some(public_id) = &n.public_id {
-                let mut len = public_id.len() + 10;
+	#[emitter]
+	fn emit_child(&mut self, n:&Child) -> Result {
+		match n {
+			Child::DocumentType(n) => emit!(self, n),
+			Child::Element(n) => emit!(self, n),
+			Child::Text(n) => emit!(self, n),
+			Child::Comment(n) => emit!(self, n),
+			Child::ProcessingInstruction(n) => emit!(self, n),
+			Child::CdataSection(n) => emit!(self, n),
+		}
+	}
 
-                if let Some(system_id) = &n.system_id {
-                    len += system_id.len() + 3
-                }
+	#[emitter]
+	fn emit_document_doctype(&mut self, n:&DocumentType) -> Result {
+		let mut doctype = String::with_capacity(
+			10 + if let Some(name) = &n.name { name.len() + 1 } else { 0 }
+				+ if let Some(public_id) = &n.public_id {
+					let mut len = public_id.len() + 10;
 
-                len
-            } else if let Some(system_id) = &n.system_id {
-                system_id.len() + 10
-            } else {
-                0
-            },
-        );
+					if let Some(system_id) = &n.system_id {
+						len += system_id.len() + 3
+					}
 
-        doctype.push('<');
+					len
+				} else if let Some(system_id) = &n.system_id {
+					system_id.len() + 10
+				} else {
+					0
+				},
+		);
 
-        doctype.push('!');
+		doctype.push('<');
 
-        if self.config.minify {
-            doctype.push_str("doctype");
-        } else {
-            doctype.push_str("DOCTYPE");
-        }
+		doctype.push('!');
 
-        if let Some(name) = &n.name {
-            doctype.push(' ');
+		if self.config.minify {
+			doctype.push_str("doctype");
+		} else {
+			doctype.push_str("DOCTYPE");
+		}
 
-            doctype.push_str(name);
-        }
+		if let Some(name) = &n.name {
+			doctype.push(' ');
 
-        if let Some(public_id) = &n.public_id {
-            doctype.push(' ');
+			doctype.push_str(name);
+		}
 
-            if self.config.minify {
-                doctype.push_str("public");
-            } else {
-                doctype.push_str("PUBLIC");
-            }
+		if let Some(public_id) = &n.public_id {
+			doctype.push(' ');
 
-            doctype.push(' ');
+			if self.config.minify {
+				doctype.push_str("public");
+			} else {
+				doctype.push_str("PUBLIC");
+			}
 
-            let public_id_quote = if public_id.contains('"') { '\'' } else { '"' };
+			doctype.push(' ');
 
-            doctype.push(public_id_quote);
+			let public_id_quote = if public_id.contains('"') { '\'' } else { '"' };
 
-            doctype.push_str(public_id);
+			doctype.push(public_id_quote);
 
-            doctype.push(public_id_quote);
+			doctype.push_str(public_id);
 
-            if let Some(system_id) = &n.system_id {
-                doctype.push(' ');
+			doctype.push(public_id_quote);
 
-                let system_id_quote = if system_id.contains('"') { '\'' } else { '"' };
+			if let Some(system_id) = &n.system_id {
+				doctype.push(' ');
 
-                doctype.push(system_id_quote);
+				let system_id_quote = if system_id.contains('"') { '\'' } else { '"' };
 
-                doctype.push_str(system_id);
+				doctype.push(system_id_quote);
 
-                doctype.push(system_id_quote);
-            }
-        } else if let Some(system_id) = &n.system_id {
-            doctype.push(' ');
+				doctype.push_str(system_id);
 
-            if self.config.minify {
-                doctype.push_str("system");
-            } else {
-                doctype.push_str("SYSTEM");
-            }
+				doctype.push(system_id_quote);
+			}
+		} else if let Some(system_id) = &n.system_id {
+			doctype.push(' ');
 
-            doctype.push(' ');
+			if self.config.minify {
+				doctype.push_str("system");
+			} else {
+				doctype.push_str("SYSTEM");
+			}
 
-            let system_id_quote = if system_id.contains('"') { '\'' } else { '"' };
+			doctype.push(' ');
 
-            doctype.push(system_id_quote);
+			let system_id_quote = if system_id.contains('"') { '\'' } else { '"' };
 
-            doctype.push_str(system_id);
+			doctype.push(system_id_quote);
 
-            doctype.push(system_id_quote);
-        }
+			doctype.push_str(system_id);
 
-        doctype.push('>');
+			doctype.push(system_id_quote);
+		}
 
-        write_raw!(self, n.span, &doctype);
+		doctype.push('>');
 
-        formatting_newline!(self);
-    }
+		write_raw!(self, n.span, &doctype);
 
-    fn basic_emit_element(&mut self, n: &Element) -> Result {
-        let has_attributes = !n.attributes.is_empty();
+		formatting_newline!(self);
+	}
 
-        let is_void_element = n.children.is_empty();
+	fn basic_emit_element(&mut self, n:&Element) -> Result {
+		let has_attributes = !n.attributes.is_empty();
 
-        write_raw!(self, "<");
+		let is_void_element = n.children.is_empty();
 
-        write_raw!(self, &n.tag_name);
+		write_raw!(self, "<");
 
-        if has_attributes {
-            space!(self);
+		write_raw!(self, &n.tag_name);
 
-            self.emit_list(&n.attributes, ListFormat::SpaceDelimited)?;
-        }
+		if has_attributes {
+			space!(self);
 
-        if is_void_element {
-            if !self.config.minify {
-                write_raw!(self, " ");
-            }
+			self.emit_list(&n.attributes, ListFormat::SpaceDelimited)?;
+		}
 
-            write_raw!(self, "/");
-        }
+		if is_void_element {
+			if !self.config.minify {
+				write_raw!(self, " ");
+			}
 
-        write_raw!(self, ">");
+			write_raw!(self, "/");
+		}
 
-        if is_void_element {
-            return Ok(());
-        }
+		write_raw!(self, ">");
 
-        if !n.children.is_empty() {
-            let ctx = self.create_context_for_element(n);
+		if is_void_element {
+			return Ok(());
+		}
 
-            self.with_ctx(ctx)
-                .emit_list(&n.children, ListFormat::NotDelimited)?;
-        }
+		if !n.children.is_empty() {
+			let ctx = self.create_context_for_element(n);
 
-        write_raw!(self, "<");
+			self.with_ctx(ctx).emit_list(&n.children, ListFormat::NotDelimited)?;
+		}
 
-        write_raw!(self, "/");
+		write_raw!(self, "<");
 
-        write_raw!(self, &n.tag_name);
+		write_raw!(self, "/");
 
-        write_raw!(self, ">");
+		write_raw!(self, &n.tag_name);
 
-        Ok(())
-    }
+		write_raw!(self, ">");
 
-    #[emitter]
-    fn emit_element(&mut self, n: &Element) -> Result {
-        self.basic_emit_element(n)?;
-    }
+		Ok(())
+	}
 
-    #[emitter]
-    fn emit_attribute(&mut self, n: &Attribute) -> Result {
-        let mut attribute = String::with_capacity(
-            if let Some(prefix) = &n.prefix {
-                prefix.len() + 1
-            } else {
-                0
-            } + n.name.len()
-                + if let Some(value) = &n.value {
-                    value.len() + 1
-                } else {
-                    0
-                },
-        );
+	#[emitter]
+	fn emit_element(&mut self, n:&Element) -> Result { self.basic_emit_element(n)?; }
 
-        if let Some(prefix) = &n.prefix {
-            attribute.push_str(prefix);
+	#[emitter]
+	fn emit_attribute(&mut self, n:&Attribute) -> Result {
+		let mut attribute = String::with_capacity(
+			if let Some(prefix) = &n.prefix { prefix.len() + 1 } else { 0 }
+				+ n.name.len()
+				+ if let Some(value) = &n.value { value.len() + 1 } else { 0 },
+		);
 
-            attribute.push(':');
-        }
+		if let Some(prefix) = &n.prefix {
+			attribute.push_str(prefix);
 
-        attribute.push_str(&n.name);
+			attribute.push(':');
+		}
 
-        if let Some(value) = &n.value {
-            attribute.push('=');
+		attribute.push_str(&n.name);
 
-            let normalized = normalize_attribute_value(value);
+		if let Some(value) = &n.value {
+			attribute.push('=');
 
-            attribute.push_str(&normalized);
-        }
+			let normalized = normalize_attribute_value(value);
 
-        write_multiline_raw!(self, n.span, &attribute);
-    }
+			attribute.push_str(&normalized);
+		}
 
-    #[emitter]
-    fn emit_text(&mut self, n: &Text) -> Result {
-        if self.ctx.need_escape_text {
-            let mut data = String::with_capacity(n.data.len());
+		write_multiline_raw!(self, n.span, &attribute);
+	}
 
-            if self.config.minify {
-                data.push_str(&minify_text(&n.data));
-            } else {
-                data.push_str(&escape_string(&n.data, false));
-            }
+	#[emitter]
+	fn emit_text(&mut self, n:&Text) -> Result {
+		if self.ctx.need_escape_text {
+			let mut data = String::with_capacity(n.data.len());
 
-            write_multiline_raw!(self, n.span, &data);
-        } else {
-            write_multiline_raw!(self, n.span, &n.data);
-        }
-    }
+			if self.config.minify {
+				data.push_str(&minify_text(&n.data));
+			} else {
+				data.push_str(&escape_string(&n.data, false));
+			}
 
-    #[emitter]
-    fn emit_comment(&mut self, n: &Comment) -> Result {
-        let mut comment = String::with_capacity(n.data.len() + 7);
+			write_multiline_raw!(self, n.span, &data);
+		} else {
+			write_multiline_raw!(self, n.span, &n.data);
+		}
+	}
 
-        comment.push_str("<!--");
+	#[emitter]
+	fn emit_comment(&mut self, n:&Comment) -> Result {
+		let mut comment = String::with_capacity(n.data.len() + 7);
 
-        comment.push_str(&n.data);
+		comment.push_str("<!--");
 
-        comment.push_str("-->");
+		comment.push_str(&n.data);
 
-        write_multiline_raw!(self, n.span, &comment);
-    }
+		comment.push_str("-->");
 
-    #[emitter]
-    fn emit_processing_instruction(&mut self, n: &ProcessingInstruction) -> Result {
-        let mut processing_instruction = String::with_capacity(n.target.len() + n.data.len() + 5);
+		write_multiline_raw!(self, n.span, &comment);
+	}
 
-        processing_instruction.push_str("<?");
+	#[emitter]
+	fn emit_processing_instruction(&mut self, n:&ProcessingInstruction) -> Result {
+		let mut processing_instruction = String::with_capacity(n.target.len() + n.data.len() + 5);
 
-        processing_instruction.push_str(&n.target);
+		processing_instruction.push_str("<?");
 
-        processing_instruction.push(' ');
+		processing_instruction.push_str(&n.target);
 
-        processing_instruction.push_str(&n.data);
+		processing_instruction.push(' ');
 
-        processing_instruction.push_str("?>");
+		processing_instruction.push_str(&n.data);
 
-        write_multiline_raw!(self, n.span, &processing_instruction);
-    }
+		processing_instruction.push_str("?>");
 
-    #[emitter]
-    fn emit_cdata_section(&mut self, n: &CdataSection) -> Result {
-        let mut cdata_section = String::with_capacity(n.data.len() + 12);
+		write_multiline_raw!(self, n.span, &processing_instruction);
+	}
 
-        cdata_section.push_str("<![CDATA[");
+	#[emitter]
+	fn emit_cdata_section(&mut self, n:&CdataSection) -> Result {
+		let mut cdata_section = String::with_capacity(n.data.len() + 12);
 
-        cdata_section.push_str(&n.data);
+		cdata_section.push_str("<![CDATA[");
 
-        cdata_section.push_str("]]>");
+		cdata_section.push_str(&n.data);
 
-        write_multiline_raw!(self, n.span, &cdata_section);
-    }
+		cdata_section.push_str("]]>");
 
-    fn create_context_for_element(&self, n: &Element) -> Ctx {
-        let need_escape_text = match &*n.tag_name {
-            "noscript" => !self.config.scripting_enabled,
-            _ => true,
-        };
+		write_multiline_raw!(self, n.span, &cdata_section);
+	}
 
-        Ctx {
-            need_escape_text,
-            ..self.ctx
-        }
-    }
+	fn create_context_for_element(&self, n:&Element) -> Ctx {
+		let need_escape_text = match &*n.tag_name {
+			"noscript" => !self.config.scripting_enabled,
+			_ => true,
+		};
 
-    fn emit_list<N>(&mut self, nodes: &[N], format: ListFormat) -> Result
-    where
-        Self: Emit<N>,
-        N: Spanned,
-    {
-        for (idx, node) in nodes.iter().enumerate() {
-            if idx != 0 {
-                self.write_delim(format)?;
+		Ctx { need_escape_text, ..self.ctx }
+	}
 
-                if format & ListFormat::LinesMask == ListFormat::MultiLine {
-                    formatting_newline!(self);
-                }
-            }
+	fn emit_list<N>(&mut self, nodes:&[N], format:ListFormat) -> Result
+	where
+		Self: Emit<N>,
+		N: Spanned, {
+		for (idx, node) in nodes.iter().enumerate() {
+			if idx != 0 {
+				self.write_delim(format)?;
 
-            emit!(self, node)
-        }
+				if format & ListFormat::LinesMask == ListFormat::MultiLine {
+					formatting_newline!(self);
+				}
+			}
 
-        Ok(())
-    }
+			emit!(self, node)
+		}
 
-    fn write_delim(&mut self, f: ListFormat) -> Result {
-        match f & ListFormat::DelimitersMask {
-            ListFormat::None => {}
+		Ok(())
+	}
 
-            ListFormat::SpaceDelimited => {
-                space!(self)
-            }
+	fn write_delim(&mut self, f:ListFormat) -> Result {
+		match f & ListFormat::DelimitersMask {
+			ListFormat::None => {},
 
-            _ => unreachable!(),
-        }
+			ListFormat::SpaceDelimited => {
+				space!(self)
+			},
 
-        Ok(())
-    }
+			_ => unreachable!(),
+		}
+
+		Ok(())
+	}
 }
 
-fn normalize_attribute_value(value: &str) -> String {
-    if value.is_empty() {
-        return "\"\"".to_string();
-    }
+fn normalize_attribute_value(value:&str) -> String {
+	if value.is_empty() {
+		return "\"\"".to_string();
+	}
 
-    let mut normalized = String::with_capacity(value.len() + 2);
+	let mut normalized = String::with_capacity(value.len() + 2);
 
-    normalized.push('"');
+	normalized.push('"');
 
-    normalized.push_str(&escape_string(value, true));
+	normalized.push_str(&escape_string(value, true));
 
-    normalized.push('"');
+	normalized.push('"');
 
-    normalized
+	normalized
 }
 
 #[allow(clippy::unused_peekable)]
-fn minify_text(value: &str) -> String {
-    let mut result = String::with_capacity(value.len());
+fn minify_text(value:&str) -> String {
+	let mut result = String::with_capacity(value.len());
 
-    let mut chars = value.chars().peekable();
+	let mut chars = value.chars().peekable();
 
-    while let Some(c) = chars.next() {
-        match c {
-            '&' => {
-                result.push_str(&minify_amp(&mut chars));
-            }
-            '<' => {
-                result.push_str("&lt;");
-            }
-            '>' => {
-                result.push_str("&gt;");
-            }
+	while let Some(c) = chars.next() {
+		match c {
+			'&' => {
+				result.push_str(&minify_amp(&mut chars));
+			},
+			'<' => {
+				result.push_str("&lt;");
+			},
+			'>' => {
+				result.push_str("&gt;");
+			},
 
-            _ => result.push(c),
-        }
-    }
+			_ => result.push(c),
+		}
+	}
 
-    result
+	result
 }
 
-fn minify_amp(chars: &mut Peekable<Chars>) -> String {
-    let mut result = String::with_capacity(7);
+fn minify_amp(chars:&mut Peekable<Chars>) -> String {
+	let mut result = String::with_capacity(7);
 
-    match chars.next() {
-        Some(hash @ '#') => {
-            match chars.next() {
-                // HTML CODE
-                // Prevent `&amp;#38;` -> `&#38`
-                Some(number @ '0'..='9') => {
-                    result.push_str("&amp;");
+	match chars.next() {
+		Some(hash @ '#') => {
+			match chars.next() {
+				// HTML CODE
+				// Prevent `&amp;#38;` -> `&#38`
+				Some(number @ '0'..='9') => {
+					result.push_str("&amp;");
 
-                    result.push(hash);
+					result.push(hash);
 
-                    result.push(number);
-                }
+					result.push(number);
+				},
 
-                Some(x @ 'x' | x @ 'X') => {
-                    match chars.peek() {
-                        // HEX CODE
-                        // Prevent `&amp;#x38;` -> `&#x38`
-                        Some(c) if c.is_ascii_hexdigit() => {
-                            result.push_str("&amp;");
+				Some(x @ 'x' | x @ 'X') => {
+					match chars.peek() {
+						// HEX CODE
+						// Prevent `&amp;#x38;` -> `&#x38`
+						Some(c) if c.is_ascii_hexdigit() => {
+							result.push_str("&amp;");
 
-                            result.push(hash);
+							result.push(hash);
 
-                            result.push(x);
-                        }
+							result.push(x);
+						},
 
-                        _ => {
-                            result.push('&');
+						_ => {
+							result.push('&');
 
-                            result.push(hash);
+							result.push(hash);
 
-                            result.push(x);
-                        }
-                    }
-                }
+							result.push(x);
+						},
+					}
+				},
 
-                any => {
-                    result.push('&');
+				any => {
+					result.push('&');
 
-                    result.push(hash);
+					result.push(hash);
 
-                    if let Some(any) = any {
-                        result.push(any);
-                    }
-                }
-            }
-        }
-        // Named entity
-        // Prevent `&amp;current` -> `&current`
-        Some(c @ 'a'..='z') | Some(c @ 'A'..='Z') => {
-            let mut entity_temporary_buffer = String::with_capacity(33);
+					if let Some(any) = any {
+						result.push(any);
+					}
+				},
+			}
+		},
+		// Named entity
+		// Prevent `&amp;current` -> `&current`
+		Some(c @ 'a'..='z') | Some(c @ 'A'..='Z') => {
+			let mut entity_temporary_buffer = String::with_capacity(33);
 
-            entity_temporary_buffer.push('&');
+			entity_temporary_buffer.push('&');
 
-            entity_temporary_buffer.push(c);
+			entity_temporary_buffer.push(c);
 
-            result.push('&');
+			result.push('&');
 
-            result.push_str(&entity_temporary_buffer[1..]);
-        }
+			result.push_str(&entity_temporary_buffer[1..]);
+		},
 
-        any => {
-            result.push('&');
+		any => {
+			result.push('&');
 
-            if let Some(any) = any {
-                result.push(any);
-            }
-        }
-    }
+			if let Some(any) = any {
+				result.push(any);
+			}
+		},
+	}
 
-    result
+	result
 }
 
 // Escaping a string (for the purposes of the algorithm above) consists of
@@ -485,25 +463,25 @@ fn minify_amp(chars: &mut Peekable<Chars>) -> String {
 // 4. If the algorithm was not invoked in the attribute mode, replace any
 // occurrences of the "<" character by the string "&lt;", and any occurrences of
 // the ">" character by the string "&gt;".
-fn escape_string(value: &str, is_attribute_mode: bool) -> String {
-    let mut result = String::with_capacity(value.len());
+fn escape_string(value:&str, is_attribute_mode:bool) -> String {
+	let mut result = String::with_capacity(value.len());
 
-    for c in value.chars() {
-        match c {
-            '&' => {
-                result.push_str("&amp;");
-            }
-            '"' if is_attribute_mode => result.push_str("&quot;"),
-            '<' => {
-                result.push_str("&lt;");
-            }
-            '>' if !is_attribute_mode => {
-                result.push_str("&gt;");
-            }
+	for c in value.chars() {
+		match c {
+			'&' => {
+				result.push_str("&amp;");
+			},
+			'"' if is_attribute_mode => result.push_str("&quot;"),
+			'<' => {
+				result.push_str("&lt;");
+			},
+			'>' if !is_attribute_mode => {
+				result.push_str("&gt;");
+			},
 
-            _ => result.push(c),
-        }
-    }
+			_ => result.push(c),
+		}
+	}
 
-    result
+	result
 }

@@ -1,6 +1,6 @@
 use std::mem::replace;
 
-use crate::{Span, DUMMY_SP};
+use crate::{DUMMY_SP, Span};
 
 /// Helper for people who are working on `VisitMut`.
 ///
@@ -8,69 +8,54 @@ use crate::{Span, DUMMY_SP};
 /// This trait is implemented for ast nodes. If not and you need it, please file
 /// an issue.
 pub trait Take: Sized {
-    fn take(&mut self) -> Self {
-        replace(self, Self::dummy())
-    }
+	fn take(&mut self) -> Self { replace(self, Self::dummy()) }
 
-    /// Create a dummy value of this type.
-    fn dummy() -> Self;
+	/// Create a dummy value of this type.
+	fn dummy() -> Self;
 
-    /// Mutate `self` using `op`, which accepts owned data.
-    #[inline]
-    fn map_with_mut<F>(&mut self, op: F)
-    where
-        F: FnOnce(Self) -> Self,
-    {
-        let dummy = Self::dummy();
+	/// Mutate `self` using `op`, which accepts owned data.
+	#[inline]
+	fn map_with_mut<F>(&mut self, op:F)
+	where
+		F: FnOnce(Self) -> Self, {
+		let dummy = Self::dummy();
 
-        let cur_val = replace(self, dummy);
+		let cur_val = replace(self, dummy);
 
-        let new_val = op(cur_val);
+		let new_val = op(cur_val);
 
-        let _dummy = replace(self, new_val);
-    }
+		let _dummy = replace(self, new_val);
+	}
 }
 
 impl<T> Take for Option<T> {
-    fn dummy() -> Self {
-        None
-    }
+	fn dummy() -> Self { None }
 }
 
 impl<T> Take for Box<T>
 where
-    T: Take,
+	T: Take,
 {
-    fn dummy() -> Self {
-        Box::new(T::dummy())
-    }
+	fn dummy() -> Self { Box::new(T::dummy()) }
 }
 
 impl<T> Take for Vec<T> {
-    fn dummy() -> Self {
-        Vec::new()
-    }
+	fn dummy() -> Self { Vec::new() }
 }
 
 impl Take for Span {
-    fn dummy() -> Self {
-        DUMMY_SP
-    }
+	fn dummy() -> Self { DUMMY_SP }
 }
 
 swc_allocator::nightly_only!(
-    impl<T> Take for swc_allocator::boxed::Box<T>
-    where
-        T: Take,
-    {
-        fn dummy() -> Self {
-            swc_allocator::boxed::Box::new(T::dummy())
-        }
-    }
+	impl<T> Take for swc_allocator::boxed::Box<T>
+	where
+		T: Take,
+	{
+		fn dummy() -> Self { swc_allocator::boxed::Box::new(T::dummy()) }
+	}
 
-    impl<T> Take for swc_allocator::vec::Vec<T> {
-        fn dummy() -> Self {
-            Default::default()
-        }
-    }
+	impl<T> Take for swc_allocator::vec::Vec<T> {
+		fn dummy() -> Self { Default::default() }
+	}
 );

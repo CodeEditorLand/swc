@@ -61,7 +61,7 @@
 //!
 //! # `Visit`
 //!
-//!`Visit` uses non-mutable references to AST nodes. It can be used to see if
+//! `Visit` uses non-mutable references to AST nodes. It can be used to see if
 //! an AST node contains a specific node nested deeply in the AST. This is
 //! useful for checking if AST node contains `this`. This is useful for lots of
 //! cases - `this` in arrow expressions are special and we need to generate
@@ -102,31 +102,29 @@ pub mod util;
 /// parameter `V` should implement `VisitAll` and `All<V>` implements `Visit`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct All<V> {
-    pub visitor: V,
+	pub visitor:V,
 }
 
 /// A visitor which visits node only if `enabled` is true.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Optional<V> {
-    pub enabled: bool,
-    pub visitor: V,
+	pub enabled:bool,
+	pub visitor:V,
 }
 
 impl<V> Optional<V> {
-    pub const fn new(visitor: V, enabled: bool) -> Self {
-        Self { enabled, visitor }
-    }
+	pub const fn new(visitor:V, enabled:bool) -> Self { Self { enabled, visitor } }
 }
 
 /// Trait for a pass which is designed to invoked multiple time to same input.
 ///
 /// See [Repeat].
 pub trait Repeated {
-    /// Should run again?
-    fn changed(&self) -> bool;
+	/// Should run again?
+	fn changed(&self) -> bool;
 
-    /// Reset.
-    fn reset(&mut self);
+	/// Reset.
+	fn reset(&mut self);
 }
 
 macro_rules! impl_repeated_for_tuple {
@@ -156,80 +154,61 @@ impl_repeated_for_tuple!([0, A], [1, B], [2, C], [3, D]);
 impl_repeated_for_tuple!([0, A], [1, B], [2, C], [3, D], [4, E]);
 impl_repeated_for_tuple!([0, A], [1, B], [2, C], [3, D], [4, E], [5, F]);
 impl_repeated_for_tuple!([0, A], [1, B], [2, C], [3, D], [4, E], [5, F], [6, G]);
+impl_repeated_for_tuple!([0, A], [1, B], [2, C], [3, D], [4, E], [5, F], [6, G], [7, H]);
+impl_repeated_for_tuple!([0, A], [1, B], [2, C], [3, D], [4, E], [5, F], [6, G], [7, H], [8, I]);
 impl_repeated_for_tuple!(
-    [0, A],
-    [1, B],
-    [2, C],
-    [3, D],
-    [4, E],
-    [5, F],
-    [6, G],
-    [7, H]
+	[0, A],
+	[1, B],
+	[2, C],
+	[3, D],
+	[4, E],
+	[5, F],
+	[6, G],
+	[7, H],
+	[8, I],
+	[9, J]
 );
 impl_repeated_for_tuple!(
-    [0, A],
-    [1, B],
-    [2, C],
-    [3, D],
-    [4, E],
-    [5, F],
-    [6, G],
-    [7, H],
-    [8, I]
+	[0, A],
+	[1, B],
+	[2, C],
+	[3, D],
+	[4, E],
+	[5, F],
+	[6, G],
+	[7, H],
+	[8, I],
+	[9, J],
+	[10, K]
 );
 impl_repeated_for_tuple!(
-    [0, A],
-    [1, B],
-    [2, C],
-    [3, D],
-    [4, E],
-    [5, F],
-    [6, G],
-    [7, H],
-    [8, I],
-    [9, J]
+	[0, A],
+	[1, B],
+	[2, C],
+	[3, D],
+	[4, E],
+	[5, F],
+	[6, G],
+	[7, H],
+	[8, I],
+	[9, J],
+	[10, K],
+	[11, L]
 );
 impl_repeated_for_tuple!(
-    [0, A],
-    [1, B],
-    [2, C],
-    [3, D],
-    [4, E],
-    [5, F],
-    [6, G],
-    [7, H],
-    [8, I],
-    [9, J],
-    [10, K]
-);
-impl_repeated_for_tuple!(
-    [0, A],
-    [1, B],
-    [2, C],
-    [3, D],
-    [4, E],
-    [5, F],
-    [6, G],
-    [7, H],
-    [8, I],
-    [9, J],
-    [10, K],
-    [11, L]
-);
-impl_repeated_for_tuple!(
-    [0, A],
-    [1, B],
-    [2, C],
-    [3, D],
-    [4, E],
-    [5, F],
-    [6, G],
-    [7, H],
-    [8, I],
-    [9, J],
-    [10, K],
-    [11, L],
-    [12, M]
+	[0, A],
+	[1, B],
+	[2, C],
+	[3, D],
+	[4, E],
+	[5, F],
+	[6, G],
+	[7, H],
+	[8, I],
+	[9, J],
+	[10, K],
+	[11, L],
+	[12, M]
 );
 
 /// A visitor which applies `V` again and again if `V` modifies the node.
@@ -242,382 +221,323 @@ impl_repeated_for_tuple!(
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Repeat<V>
 where
-    V: Repeated,
-{
-    pub pass: V,
+	V: Repeated, {
+	pub pass:V,
 }
 
 impl<V> Repeat<V>
 where
-    V: Repeated,
+	V: Repeated,
 {
-    pub fn new(pass: V) -> Self {
-        Self { pass }
-    }
+	pub fn new(pass:V) -> Self { Self { pass } }
 }
 
 impl<V> Repeated for Repeat<V>
 where
-    V: Repeated,
+	V: Repeated,
 {
-    fn changed(&self) -> bool {
-        self.pass.changed()
-    }
+	fn changed(&self) -> bool { self.pass.changed() }
 
-    fn reset(&mut self) {
-        self.pass.reset()
-    }
+	fn reset(&mut self) { self.pass.reset() }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AstKindPath<K>
 where
-    K: ParentKind,
-{
-    path: Vec<K>,
+	K: ParentKind, {
+	path:Vec<K>,
 }
 
 impl<K> std::ops::Deref for AstKindPath<K>
 where
-    K: ParentKind,
+	K: ParentKind,
 {
-    type Target = Vec<K>;
+	type Target = Vec<K>;
 
-    fn deref(&self) -> &Self::Target {
-        &self.path
-    }
+	fn deref(&self) -> &Self::Target { &self.path }
 }
 
 impl<K> Default for AstKindPath<K>
 where
-    K: ParentKind,
+	K: ParentKind,
 {
-    fn default() -> Self {
-        Self {
-            path: Default::default(),
-        }
-    }
+	fn default() -> Self { Self { path:Default::default() } }
 }
 
 impl<K> AstKindPath<K>
 where
-    K: ParentKind,
+	K: ParentKind,
 {
-    pub fn new(path: Vec<K>) -> Self {
-        Self { path }
-    }
+	pub fn new(path:Vec<K>) -> Self { Self { path } }
 
-    pub fn with_guard(&mut self, kind: K) -> AstKindPathGuard<K> {
-        self.path.push(kind);
+	pub fn with_guard(&mut self, kind:K) -> AstKindPathGuard<K> {
+		self.path.push(kind);
 
-        AstKindPathGuard { path: self }
-    }
+		AstKindPathGuard { path:self }
+	}
 
-    pub fn with_index_guard(&mut self, index: usize) -> AstKindPathIndexGuard<K> {
-        self.path.last_mut().unwrap().set_index(index);
+	pub fn with_index_guard(&mut self, index:usize) -> AstKindPathIndexGuard<K> {
+		self.path.last_mut().unwrap().set_index(index);
 
-        AstKindPathIndexGuard { path: self }
-    }
+		AstKindPathIndexGuard { path:self }
+	}
 
-    #[deprecated = "Use with_guard instead"]
-    pub fn with<Ret>(&mut self, path: K, op: impl FnOnce(&mut Self) -> Ret) -> Ret {
-        self.path.push(path);
+	#[deprecated = "Use with_guard instead"]
+	pub fn with<Ret>(&mut self, path:K, op:impl FnOnce(&mut Self) -> Ret) -> Ret {
+		self.path.push(path);
 
-        let ret = op(self);
+		let ret = op(self);
 
-        self.path.pop();
+		self.path.pop();
 
-        ret
-    }
+		ret
+	}
 
-    #[deprecated = "Use with_index_guard instead"]
-    pub fn with_index<Ret>(&mut self, index: usize, op: impl FnOnce(&mut Self) -> Ret) -> Ret {
-        self.path.last_mut().unwrap().set_index(index);
+	#[deprecated = "Use with_index_guard instead"]
+	pub fn with_index<Ret>(&mut self, index:usize, op:impl FnOnce(&mut Self) -> Ret) -> Ret {
+		self.path.last_mut().unwrap().set_index(index);
 
-        let res = op(self);
+		let res = op(self);
 
-        self.path.last_mut().unwrap().set_index(usize::MAX);
+		self.path.last_mut().unwrap().set_index(usize::MAX);
 
-        res
-    }
+		res
+	}
 }
 
 pub struct AstKindPathGuard<'a, K>
 where
-    K: ParentKind,
-{
-    path: &'a mut AstKindPath<K>,
+	K: ParentKind, {
+	path:&'a mut AstKindPath<K>,
 }
 
 impl<K> Deref for AstKindPathGuard<'_, K>
 where
-    K: ParentKind,
+	K: ParentKind,
 {
-    type Target = AstKindPath<K>;
+	type Target = AstKindPath<K>;
 
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        self.path
-    }
+	#[inline]
+	fn deref(&self) -> &Self::Target { self.path }
 }
 
 impl<K> DerefMut for AstKindPathGuard<'_, K>
 where
-    K: ParentKind,
+	K: ParentKind,
 {
-    #[inline]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.path
-    }
+	#[inline]
+	fn deref_mut(&mut self) -> &mut Self::Target { self.path }
 }
 
 impl<K> Drop for AstKindPathGuard<'_, K>
 where
-    K: ParentKind,
+	K: ParentKind,
 {
-    fn drop(&mut self) {
-        self.path.path.pop();
-    }
+	fn drop(&mut self) { self.path.path.pop(); }
 }
 
 pub struct AstKindPathIndexGuard<'a, K>
 where
-    K: ParentKind,
-{
-    path: &'a mut AstKindPath<K>,
+	K: ParentKind, {
+	path:&'a mut AstKindPath<K>,
 }
 
 impl<K> Deref for AstKindPathIndexGuard<'_, K>
 where
-    K: ParentKind,
+	K: ParentKind,
 {
-    type Target = AstKindPath<K>;
+	type Target = AstKindPath<K>;
 
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        self.path
-    }
+	#[inline]
+	fn deref(&self) -> &Self::Target { self.path }
 }
 
 impl<K> DerefMut for AstKindPathIndexGuard<'_, K>
 where
-    K: ParentKind,
+	K: ParentKind,
 {
-    #[inline]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.path
-    }
+	#[inline]
+	fn deref_mut(&mut self) -> &mut Self::Target { self.path }
 }
 
 impl<K> Drop for AstKindPathIndexGuard<'_, K>
 where
-    K: ParentKind,
+	K: ParentKind,
 {
-    fn drop(&mut self) {
-        self.path.path.last_mut().unwrap().set_index(usize::MAX);
-    }
+	fn drop(&mut self) { self.path.path.last_mut().unwrap().set_index(usize::MAX); }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AstNodePath<N>
 where
-    N: NodeRef,
-{
-    kinds: AstKindPath<N::ParentKind>,
-    path: Vec<N>,
+	N: NodeRef, {
+	kinds:AstKindPath<N::ParentKind>,
+	path:Vec<N>,
 }
 
 impl<N> std::ops::Deref for AstNodePath<N>
 where
-    N: NodeRef,
+	N: NodeRef,
 {
-    type Target = Vec<N>;
+	type Target = Vec<N>;
 
-    fn deref(&self) -> &Self::Target {
-        &self.path
-    }
+	fn deref(&self) -> &Self::Target { &self.path }
 }
 
 impl<N> Default for AstNodePath<N>
 where
-    N: NodeRef,
+	N: NodeRef,
 {
-    fn default() -> Self {
-        Self {
-            kinds: Default::default(),
-            path: Default::default(),
-        }
-    }
+	fn default() -> Self { Self { kinds:Default::default(), path:Default::default() } }
 }
 
 impl<N> AstNodePath<N>
 where
-    N: NodeRef,
+	N: NodeRef,
 {
-    pub fn new(kinds: AstKindPath<N::ParentKind>, path: Vec<N>) -> Self {
-        Self { kinds, path }
-    }
+	pub fn new(kinds:AstKindPath<N::ParentKind>, path:Vec<N>) -> Self { Self { kinds, path } }
 
-    pub fn kinds(&self) -> &AstKindPath<N::ParentKind> {
-        &self.kinds
-    }
+	pub fn kinds(&self) -> &AstKindPath<N::ParentKind> { &self.kinds }
 
-    pub fn with_guard(&mut self, node: N) -> AstNodePathGuard<N> {
-        self.kinds.path.push(node.kind());
+	pub fn with_guard(&mut self, node:N) -> AstNodePathGuard<N> {
+		self.kinds.path.push(node.kind());
 
-        self.path.push(node);
+		self.path.push(node);
 
-        AstNodePathGuard { path: self }
-    }
+		AstNodePathGuard { path:self }
+	}
 
-    pub fn with_index_guard(&mut self, index: usize) -> AstNodePathIndexGuard<N> {
-        self.kinds.path.last_mut().unwrap().set_index(index);
+	pub fn with_index_guard(&mut self, index:usize) -> AstNodePathIndexGuard<N> {
+		self.kinds.path.last_mut().unwrap().set_index(index);
 
-        self.path.last_mut().unwrap().set_index(index);
+		self.path.last_mut().unwrap().set_index(index);
 
-        AstNodePathIndexGuard { path: self }
-    }
+		AstNodePathIndexGuard { path:self }
+	}
 
-    #[deprecated = "Use with_guard instead"]
-    pub fn with<F, Ret>(&mut self, node: N, op: F) -> Ret
-    where
-        F: for<'aa> FnOnce(&'aa mut AstNodePath<N>) -> Ret,
-    {
-        let kind = node.kind();
+	#[deprecated = "Use with_guard instead"]
+	pub fn with<F, Ret>(&mut self, node:N, op:F) -> Ret
+	where
+		F: for<'aa> FnOnce(&'aa mut AstNodePath<N>) -> Ret, {
+		let kind = node.kind();
 
-        self.kinds.path.push(kind);
+		self.kinds.path.push(kind);
 
-        self.path.push(node);
+		self.path.push(node);
 
-        let ret = op(self);
+		let ret = op(self);
 
-        self.path.pop();
+		self.path.pop();
 
-        self.kinds.path.pop();
+		self.kinds.path.pop();
 
-        ret
-    }
+		ret
+	}
 
-    #[deprecated = "Use with_index_guard instead"]
-    pub fn with_index<F, Ret>(&mut self, index: usize, op: F) -> Ret
-    where
-        F: for<'aa> FnOnce(&'aa mut AstNodePath<N>) -> Ret,
-    {
-        self.kinds.path.last_mut().unwrap().set_index(index);
+	#[deprecated = "Use with_index_guard instead"]
+	pub fn with_index<F, Ret>(&mut self, index:usize, op:F) -> Ret
+	where
+		F: for<'aa> FnOnce(&'aa mut AstNodePath<N>) -> Ret, {
+		self.kinds.path.last_mut().unwrap().set_index(index);
 
-        self.path.last_mut().unwrap().set_index(index);
+		self.path.last_mut().unwrap().set_index(index);
 
-        let res = op(self);
+		let res = op(self);
 
-        self.path.last_mut().unwrap().set_index(usize::MAX);
+		self.path.last_mut().unwrap().set_index(usize::MAX);
 
-        self.kinds.path.last_mut().unwrap().set_index(usize::MAX);
+		self.kinds.path.last_mut().unwrap().set_index(usize::MAX);
 
-        res
-    }
+		res
+	}
 }
 
 pub trait NodeRef: Copy {
-    type ParentKind: ParentKind;
+	type ParentKind: ParentKind;
 
-    fn kind(&self) -> Self::ParentKind;
+	fn kind(&self) -> Self::ParentKind;
 
-    fn set_index(&mut self, index: usize);
+	fn set_index(&mut self, index:usize);
 }
 
 pub trait ParentKind: Copy {
-    fn set_index(&mut self, index: usize);
+	fn set_index(&mut self, index:usize);
 }
 
 pub struct AstNodePathGuard<'a, N>
 where
-    N: NodeRef,
-{
-    path: &'a mut AstNodePath<N>,
+	N: NodeRef, {
+	path:&'a mut AstNodePath<N>,
 }
 
 impl<N> Deref for AstNodePathGuard<'_, N>
 where
-    N: NodeRef,
+	N: NodeRef,
 {
-    type Target = AstNodePath<N>;
+	type Target = AstNodePath<N>;
 
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        self.path
-    }
+	#[inline]
+	fn deref(&self) -> &Self::Target { self.path }
 }
 
 impl<N> DerefMut for AstNodePathGuard<'_, N>
 where
-    N: NodeRef,
+	N: NodeRef,
 {
-    #[inline]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.path
-    }
+	#[inline]
+	fn deref_mut(&mut self) -> &mut Self::Target { self.path }
 }
 
 impl<N> Drop for AstNodePathGuard<'_, N>
 where
-    N: NodeRef,
+	N: NodeRef,
 {
-    fn drop(&mut self) {
-        self.path.path.pop();
+	fn drop(&mut self) {
+		self.path.path.pop();
 
-        self.path.kinds.path.pop();
-    }
+		self.path.kinds.path.pop();
+	}
 }
 
 pub struct AstNodePathIndexGuard<'a, N>
 where
-    N: NodeRef,
-{
-    path: &'a mut AstNodePath<N>,
+	N: NodeRef, {
+	path:&'a mut AstNodePath<N>,
 }
 
 impl<N> Deref for AstNodePathIndexGuard<'_, N>
 where
-    N: NodeRef,
+	N: NodeRef,
 {
-    type Target = AstNodePath<N>;
+	type Target = AstNodePath<N>;
 
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        self.path
-    }
+	#[inline]
+	fn deref(&self) -> &Self::Target { self.path }
 }
 
 impl<N> DerefMut for AstNodePathIndexGuard<'_, N>
 where
-    N: NodeRef,
+	N: NodeRef,
 {
-    #[inline]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.path
-    }
+	#[inline]
+	fn deref_mut(&mut self) -> &mut Self::Target { self.path }
 }
 
 impl<N> Drop for AstNodePathIndexGuard<'_, N>
 where
-    N: NodeRef,
+	N: NodeRef,
 {
-    fn drop(&mut self) {
-        self.path.path.last_mut().unwrap().set_index(usize::MAX);
+	fn drop(&mut self) {
+		self.path.path.last_mut().unwrap().set_index(usize::MAX);
 
-        self.path
-            .kinds
-            .path
-            .last_mut()
-            .unwrap()
-            .set_index(usize::MAX);
-    }
+		self.path.kinds.path.last_mut().unwrap().set_index(usize::MAX);
+	}
 }
 
 /// NOT A PUBLIC API
 #[doc(hidden)]
 pub fn wrong_ast_path() {
-    unsafe {
-        debug_unreachable::debug_unreachable!("Wrong ast path");
-    }
+	unsafe {
+		debug_unreachable::debug_unreachable!("Wrong ast path");
+	}
 }

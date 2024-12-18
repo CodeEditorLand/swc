@@ -7,6 +7,4 @@ pub use self::exponentiation::exponentiation;
 
 mod exponentiation;
 
-pub fn es2016() -> impl Pass {
-    exponentiation()
-}
+pub fn es2016() -> impl Pass { exponentiation() }

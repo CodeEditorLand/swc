@@ -1,41 +1,40 @@
 use std::{
-    env,
-    path::{Path, PathBuf},
-    process::{Command, Stdio},
+	env,
+	path::{Path, PathBuf},
+	process::{Command, Stdio},
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde_derive::Deserialize;
 
-pub fn wrap<F, Ret>(op: F) -> Result<Ret>
+pub fn wrap<F, Ret>(op:F) -> Result<Ret>
 where
-    F: FnOnce() -> Result<Ret>,
-{
-    op()
+	F: FnOnce() -> Result<Ret>, {
+	op()
 }
 
 pub fn repository_root() -> Result<PathBuf> {
-    let dir = env::var("CARGO_MANIFEST_DIR").context("failed to get manifest dir")?;
+	let dir = env::var("CARGO_MANIFEST_DIR").context("failed to get manifest dir")?;
 
-    Ok(Path::new(&*dir).parent().unwrap().to_path_buf())
+	Ok(Path::new(&*dir).parent().unwrap().to_path_buf())
 }
 
-pub fn run_cmd(cmd: &mut Command) -> Result<()> {
-    eprintln!("Running {:?}", *cmd);
+pub fn run_cmd(cmd:&mut Command) -> Result<()> {
+	eprintln!("Running {:?}", *cmd);
 
-    cmd.stdin(Stdio::inherit());
+	cmd.stdin(Stdio::inherit());
 
-    let status = cmd.status()?;
+	let status = cmd.status()?;
 
-    if !status.success() {
-        anyhow::bail!("Failed to run cargo command");
-    }
+	if !status.success() {
+		anyhow::bail!("Failed to run cargo command");
+	}
 
-    Ok(())
+	Ok(())
 }
 
-pub fn get_commit_for_core_version(version: &str, last: bool) -> Result<String> {
-    wrap(|| {
+pub fn get_commit_for_core_version(version:&str, last:bool) -> Result<String> {
+	wrap(|| {
         eprintln!("Getting commit for swc_core@v{}", version);
 
         // We need to get the list of commits and pull requests which changed the
@@ -101,40 +100,40 @@ pub fn get_commit_for_core_version(version: &str, last: bool) -> Result<String> 
 }
 
 /// Read the version of swc_core from `Cargo.lock`
-pub fn get_version_of_swc_core_of_commit(commit: &str) -> Result<Option<String>> {
-    wrap(|| {
-        let output = Command::new("git")
-            .current_dir(repository_root()?)
-            .arg("show")
-            .arg(format!("{}:Cargo.lock", commit))
-            .stderr(Stdio::inherit())
-            .output()
-            .context("failed to spwan git show")?;
+pub fn get_version_of_swc_core_of_commit(commit:&str) -> Result<Option<String>> {
+	wrap(|| {
+		let output = Command::new("git")
+			.current_dir(repository_root()?)
+			.arg("show")
+			.arg(format!("{}:Cargo.lock", commit))
+			.stderr(Stdio::inherit())
+			.output()
+			.context("failed to spwan git show")?;
 
-        let output_toml =
-            String::from_utf8(output.stdout).context("git show output is not utf8")?;
+		let output_toml =
+			String::from_utf8(output.stdout).context("git show output is not utf8")?;
 
-        let content =
-            toml::from_str::<CargoLockfile>(&output_toml).context("failed to parse Cargo.lock")?;
+		let content =
+			toml::from_str::<CargoLockfile>(&output_toml).context("failed to parse Cargo.lock")?;
 
-        for pkg in content.package {
-            if pkg.name == "swc_core" {
-                return Ok(Some(pkg.version));
-            }
-        }
+		for pkg in content.package {
+			if pkg.name == "swc_core" {
+				return Ok(Some(pkg.version));
+			}
+		}
 
-        Ok(None)
-    })
-    .with_context(|| format!("failed to get the version of swc_core of {}", commit))
+		Ok(None)
+	})
+	.with_context(|| format!("failed to get the version of swc_core of {}", commit))
 }
 
 #[derive(Debug, Deserialize)]
 struct CargoLockfile {
-    package: Vec<LockfilePkg>,
+	package:Vec<LockfilePkg>,
 }
 
 #[derive(Debug, Deserialize)]
 struct LockfilePkg {
-    name: String,
-    version: String,
+	name:String,
+	version:String,
 }

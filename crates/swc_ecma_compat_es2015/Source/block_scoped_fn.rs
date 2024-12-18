@@ -1,91 +1,89 @@
-use swc_common::{util::take::Take, DUMMY_SP};
+use swc_common::{DUMMY_SP, util::take::Take};
 use swc_ecma_ast::*;
 use swc_ecma_utils::IdentUsageFinder;
-use swc_ecma_visit::{noop_visit_mut_type, visit_mut_pass, VisitMut, VisitMutWith};
+use swc_ecma_visit::{VisitMut, VisitMutWith, noop_visit_mut_type, visit_mut_pass};
 use swc_trace_macro::swc_trace;
 
-pub fn block_scoped_functions() -> impl Pass {
-    visit_mut_pass(BlockScopedFns)
-}
+pub fn block_scoped_functions() -> impl Pass { visit_mut_pass(BlockScopedFns) }
 
 #[derive(Clone, Copy)]
 struct BlockScopedFns;
 
 #[swc_trace]
 impl VisitMut for BlockScopedFns {
-    noop_visit_mut_type!(fail);
+	noop_visit_mut_type!(fail);
 
-    fn visit_mut_function(&mut self, n: &mut Function) {
-        let Some(body) = &mut n.body else { return };
+	fn visit_mut_function(&mut self, n:&mut Function) {
+		let Some(body) = &mut n.body else { return };
 
-        n.params.visit_mut_with(self);
+		n.params.visit_mut_with(self);
 
-        // skip function scope
-        body.visit_mut_children_with(self);
-    }
+		// skip function scope
+		body.visit_mut_children_with(self);
+	}
 
-    fn visit_mut_block_stmt(&mut self, n: &mut BlockStmt) {
-        n.visit_mut_children_with(self);
+	fn visit_mut_block_stmt(&mut self, n:&mut BlockStmt) {
+		n.visit_mut_children_with(self);
 
-        let mut stmts = Vec::with_capacity(n.stmts.len());
+		let mut stmts = Vec::with_capacity(n.stmts.len());
 
-        let mut extra_stmts = Vec::with_capacity(n.stmts.len());
+		let mut extra_stmts = Vec::with_capacity(n.stmts.len());
 
-        for stmt in n.stmts.take() {
-            if let Stmt::Expr(ExprStmt { ref expr, .. }) = stmt {
-                if let Expr::Lit(Lit::Str(..)) = &**expr {
-                    stmts.push(stmt);
+		for stmt in n.stmts.take() {
+			if let Stmt::Expr(ExprStmt { ref expr, .. }) = stmt {
+				if let Expr::Lit(Lit::Str(..)) = &**expr {
+					stmts.push(stmt);
 
-                    continue;
-                }
-            }
+					continue;
+				}
+			}
 
-            if let Stmt::Decl(Decl::Fn(decl)) = stmt {
-                if IdentUsageFinder::find(&decl.ident.to_id(), &decl.function) {
-                    extra_stmts.push(decl.into());
+			if let Stmt::Decl(Decl::Fn(decl)) = stmt {
+				if IdentUsageFinder::find(&decl.ident.to_id(), &decl.function) {
+					extra_stmts.push(decl.into());
 
-                    continue;
-                }
+					continue;
+				}
 
-                stmts.push(
-                    VarDecl {
-                        span: DUMMY_SP,
-                        kind: VarDeclKind::Let,
-                        decls: vec![VarDeclarator {
-                            span: DUMMY_SP,
-                            name: decl.ident.clone().into(),
-                            init: Some(Box::new(Expr::Fn(FnExpr {
-                                ident: Some(decl.ident),
-                                function: decl.function,
-                            }))),
-                            definite: false,
-                        }],
-                        ..Default::default()
-                    }
-                    .into(),
-                )
-            } else {
-                extra_stmts.push(stmt)
-            }
-        }
+				stmts.push(
+					VarDecl {
+						span:DUMMY_SP,
+						kind:VarDeclKind::Let,
+						decls:vec![VarDeclarator {
+							span:DUMMY_SP,
+							name:decl.ident.clone().into(),
+							init:Some(Box::new(Expr::Fn(FnExpr {
+								ident:Some(decl.ident),
+								function:decl.function,
+							}))),
+							definite:false,
+						}],
+						..Default::default()
+					}
+					.into(),
+				)
+			} else {
+				extra_stmts.push(stmt)
+			}
+		}
 
-        stmts.append(&mut extra_stmts);
+		stmts.append(&mut extra_stmts);
 
-        n.stmts = stmts
-    }
+		n.stmts = stmts
+	}
 }
 
 #[cfg(test)]
 mod tests {
-    use swc_ecma_transforms_testing::test;
+	use swc_ecma_transforms_testing::test;
 
-    use super::*;
+	use super::*;
 
-    test!(
-        ::swc_ecma_parser::Syntax::default(),
-        |_| block_scoped_functions(),
-        hoisting,
-        r#"
+	test!(
+		::swc_ecma_parser::Syntax::default(),
+		|_| block_scoped_functions(),
+		hoisting,
+		r#"
 {
     function fn1() { fn2(); }
 
@@ -94,26 +92,26 @@ mod tests {
     function fn2() { }
 }
 "#
-    );
+	);
 
-    test!(
-        ::swc_ecma_parser::Syntax::default(),
-        |_| block_scoped_functions(),
-        basic,
-        r#"{
+	test!(
+		::swc_ecma_parser::Syntax::default(),
+		|_| block_scoped_functions(),
+		basic,
+		r#"{
   function name (n) {
     return n;
   }
 }
 
 name("Steve");"#
-    );
+	);
 
-    test!(
-        ::swc_ecma_parser::Syntax::default(),
-        |_| block_scoped_functions(),
-        basic_2,
-        r#"
+	test!(
+		::swc_ecma_parser::Syntax::default(),
+		|_| block_scoped_functions(),
+		basic_2,
+		r#"
         {
             function foo() {
                 return function bar() {
@@ -132,13 +130,13 @@ name("Steve");"#
             }
         }
         "#
-    );
+	);
 
-    test!(
-        ::swc_ecma_parser::Syntax::default(),
-        |_| block_scoped_functions(),
-        issue_271,
-        "
+	test!(
+		::swc_ecma_parser::Syntax::default(),
+		|_| block_scoped_functions(),
+		issue_271,
+		"
 function foo(scope) {
     scope.startOperation = startOperation;
 
@@ -147,26 +145,26 @@ function foo(scope) {
     }
 }
 "
-    );
+	);
 
-    test!(
-        ::swc_ecma_parser::Syntax::default(),
-        |_| block_scoped_functions(),
-        issue_288_1,
-        "function components_Link_extends() { components_Link_extends = Object.assign || function \
-         (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for \
-         (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { \
-         target[key] = source[key]; } } } return target; }; return \
-         components_Link_extends.apply(this, arguments); }
+	test!(
+		::swc_ecma_parser::Syntax::default(),
+		|_| block_scoped_functions(),
+		issue_288_1,
+		"function components_Link_extends() { components_Link_extends = Object.assign || function \
+		 (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for \
+		 (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { \
+		 target[key] = source[key]; } } } return target; }; return \
+		 components_Link_extends.apply(this, arguments); }
 
 "
-    );
+	);
 
-    test!(
-        ::swc_ecma_parser::Syntax::default(),
-        |_| block_scoped_functions(),
-        issue_288_2,
-        "function _extends() {
+	test!(
+		::swc_ecma_parser::Syntax::default(),
+		|_| block_scoped_functions(),
+		issue_288_2,
+		"function _extends() {
   module.exports = _extends = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i];
@@ -184,13 +182,13 @@ function foo(scope) {
   return _extends.apply(this, arguments);
 }
 "
-    );
+	);
 
-    test!(
-        ::swc_ecma_parser::Syntax::default(),
-        |_| block_scoped_functions(),
-        hoisting_directives,
-        "function foo() {
+	test!(
+		::swc_ecma_parser::Syntax::default(),
+		|_| block_scoped_functions(),
+		hoisting_directives,
+		"function foo() {
             'use strict';
 
             function _interop_require_default(obj) {
@@ -199,5 +197,5 @@ function foo(scope) {
               };
             }
         }"
-    );
+	);
 }

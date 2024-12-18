@@ -3,16 +3,16 @@
 #![allow(clippy::arc_with_non_send_sync)]
 #![allow(rustc::untranslatable_diagnostic_trivial)]
 
-use swc_common::{comments::Comments, sync::Lrc, Mark, SourceMap};
+use swc_common::{Mark, SourceMap, comments::Comments, sync::Lrc};
 use swc_ecma_ast::Pass;
 
 pub use self::{
-    display_name::display_name,
-    jsx::*,
-    jsx_self::jsx_self,
-    jsx_src::jsx_src,
-    pure_annotations::pure_annotations,
-    refresh::{options::RefreshOptions, refresh},
+	display_name::display_name,
+	jsx::*,
+	jsx_self::jsx_self,
+	jsx_src::jsx_src,
+	pure_annotations::pure_annotations,
+	refresh::{options::RefreshOptions, refresh},
 };
 
 mod display_name;
@@ -36,39 +36,32 @@ mod refresh;
 ///
 /// This pass uses [swc_ecma_utils::HANDLER].
 pub fn react<C>(
-    cm: Lrc<SourceMap>,
-    comments: Option<C>,
-    mut options: Options,
-    top_level_mark: Mark,
-    unresolved_mark: Mark,
+	cm:Lrc<SourceMap>,
+	comments:Option<C>,
+	mut options:Options,
+	top_level_mark:Mark,
+	unresolved_mark:Mark,
 ) -> impl Pass
 where
-    C: Comments + Clone,
-{
-    let Options { development, .. } = options;
+	C: Comments + Clone, {
+	let Options { development, .. } = options;
 
-    let development = development.unwrap_or(false);
+	let development = development.unwrap_or(false);
 
-    let refresh_options = options.refresh.take();
+	let refresh_options = options.refresh.take();
 
-    (
-        jsx_src(development, cm.clone()),
-        jsx_self(development),
-        refresh(
-            development,
-            refresh_options.clone(),
-            cm.clone(),
-            comments.clone(),
-            top_level_mark,
-        ),
-        jsx(
-            cm.clone(),
-            comments.clone(),
-            options,
-            top_level_mark,
-            unresolved_mark,
-        ),
-        display_name(),
-        pure_annotations(comments.clone()),
-    )
+	(
+		jsx_src(development, cm.clone()),
+		jsx_self(development),
+		refresh(
+			development,
+			refresh_options.clone(),
+			cm.clone(),
+			comments.clone(),
+			top_level_mark,
+		),
+		jsx(cm.clone(), comments.clone(), options, top_level_mark, unresolved_mark),
+		display_name(),
+		pure_annotations(comments.clone()),
+	)
 }

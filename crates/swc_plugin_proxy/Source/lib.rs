@@ -7,7 +7,7 @@ mod source_map;
 #[cfg(feature = "__plugin_mode")]
 pub use comments::PluginCommentsProxy;
 #[cfg(feature = "__plugin_rt")]
-pub use comments::{HostCommentsStorage, COMMENTS};
+pub use comments::{COMMENTS, HostCommentsStorage};
 pub use memory_interop::AllocatedBytesPtr;
 #[cfg(feature = "__plugin_mode")]
 pub use metadata::TransformPluginProgramMetadata;

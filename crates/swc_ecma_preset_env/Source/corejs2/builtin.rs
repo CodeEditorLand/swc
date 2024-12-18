@@ -3,16 +3,13 @@ use swc_common::collections::AHashMap;
 
 use crate::{BrowserData, Versions};
 
-pub(crate) static BUILTINS: Lazy<AHashMap<String, Versions>> = Lazy::new(|| {
-    let map: AHashMap<_, BrowserData<Option<String>>> =
-        serde_json::from_str(include_str!("builtin.json")).expect("failed to parse json");
+pub(crate) static BUILTINS:Lazy<AHashMap<String, Versions>> = Lazy::new(|| {
+	let map:AHashMap<_, BrowserData<Option<String>>> =
+		serde_json::from_str(include_str!("builtin.json")).expect("failed to parse json");
 
-    map.into_iter()
-        .map(|(feature, version)| {
-            (
-                feature,
-                version.map_value(|version| version.map(|v| v.parse().unwrap())),
-            )
-        })
-        .collect()
+	map.into_iter()
+		.map(|(feature, version)| {
+			(feature, version.map_value(|version| version.map(|v| v.parse().unwrap())))
+		})
+		.collect()
 });

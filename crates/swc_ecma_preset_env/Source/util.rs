@@ -4,36 +4,31 @@ pub(crate) type ObjectMap<T> = FxHashMap<&'static str, T>;
 pub(crate) type ObjectMap2<V> = ObjectMap<ObjectMap<V>>;
 
 pub(crate) fn descriptor(
-    pure: Option<&'static str>,
-    global: &'static [&'static str],
-    name: Option<&'static str>,
-    exclude: &'static [&'static str],
+	pure:Option<&'static str>,
+	global:&'static [&'static str],
+	name:Option<&'static str>,
+	exclude:&'static [&'static str],
 ) -> CoreJSPolyfillDescriptor {
-    let name = name.unwrap_or_else(|| global[0]);
+	let name = name.unwrap_or_else(|| global[0]);
 
-    CoreJSPolyfillDescriptor {
-        pure,
-        global,
-        name,
-        exclude,
-    }
+	CoreJSPolyfillDescriptor { pure, global, name, exclude }
 }
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct CoreJSPolyfillDescriptor {
-    pub pure: Option<&'static str>,
-    pub global: &'static [&'static str],
-    pub name: &'static str,
-    pub exclude: &'static [&'static str],
+	pub pure:Option<&'static str>,
+	pub global:&'static [&'static str],
+	pub name:&'static str,
+	pub exclude:&'static [&'static str],
 }
 
 macro_rules! val {
-    (& $v:expr) => {
-        &$v
-    };
-    ($v:expr) => {
-        &$v
-    };
+	(& $v:expr) => {
+		&$v
+	};
+	($v:expr) => {
+		&$v
+	};
 }
 
 macro_rules! expand_array_like {
@@ -669,21 +664,19 @@ pub(crate) type DataMap<T> = &'static [(&'static str, T)];
 pub(crate) type FeatureMap = DataMap<&'static [&'static str]>;
 
 pub(crate) trait DataMapExt<T> {
-    fn as_ref(&self) -> DataMap<T>;
+	fn as_ref(&self) -> DataMap<T>;
 
-    fn get_data(&self, s: &str) -> Option<&'static T> {
-        for (k, v) in self.as_ref() {
-            if *k == s {
-                return Some(v);
-            }
-        }
+	fn get_data(&self, s:&str) -> Option<&'static T> {
+		for (k, v) in self.as_ref() {
+			if *k == s {
+				return Some(v);
+			}
+		}
 
-        None
-    }
+		None
+	}
 }
 
 impl<T> DataMapExt<T> for DataMap<T> {
-    fn as_ref(&self) -> &'static [(&'static str, T)] {
-        self
-    }
+	fn as_ref(&self) -> &'static [(&'static str, T)] { self }
 }

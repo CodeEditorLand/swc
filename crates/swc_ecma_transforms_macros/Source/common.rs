@@ -2,15 +2,15 @@
 
 #[derive(Debug, Clone, Copy)]
 pub enum Mode {
-    Fold,
-    VisitMut,
+	Fold,
+	VisitMut,
 }
 
 impl Mode {
-    pub fn prefix(self) -> &'static str {
-        match self {
-            Mode::Fold => "fold",
-            Mode::VisitMut => "visit_mut",
-        }
-    }
+	pub fn prefix(self) -> &'static str {
+		match self {
+			Mode::Fold => "fold",
+			Mode::VisitMut => "visit_mut",
+		}
+	}
 }
