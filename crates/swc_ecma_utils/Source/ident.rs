@@ -1,53 +1,91 @@
 use swc_atoms::JsWord;
 use swc_common::SyntaxContext;
-use swc_ecma_ast::{BindingIdent, Id, Ident};
+use swc_ecma_ast::{fast_id, BindingIdent, FastId, Id, Ident};
 
 pub trait IdentLike: Sized + Send + Sync + 'static {
-	fn from_ident(i:&Ident) -> Self;
-
-	fn to_id(&self) -> Id;
-
-	fn into_id(self) -> Id;
+    fn from_ident(i: &Ident) -> Self;
+    fn to_id(&self) -> Id;
+    fn into_id(self) -> Id;
 }
 
 impl IdentLike for JsWord {
-	fn from_ident(i:&Ident) -> Self { i.sym.clone() }
+    fn from_ident(i: &Ident) -> Self {
+        i.sym.clone()
+    }
 
-	fn to_id(&self) -> Id { (self.clone(), Default::default()) }
+    fn to_id(&self) -> Id {
+        (self.clone(), Default::default())
+    }
 
-	fn into_id(self) -> Id { (self, Default::default()) }
+    fn into_id(self) -> Id {
+        (self, Default::default())
+    }
 }
 
 impl IdentLike for BindingIdent {
-	fn from_ident(i:&Ident) -> Self { i.clone().into() }
+    fn from_ident(i: &Ident) -> Self {
+        i.clone().into()
+    }
 
-	fn to_id(&self) -> Id { (self.sym.clone(), self.ctxt) }
+    fn to_id(&self) -> Id {
+        (self.sym.clone(), self.ctxt)
+    }
 
-	fn into_id(self) -> Id { self.id.into_id() }
+    fn into_id(self) -> Id {
+        self.id.into_id()
+    }
 }
 
 impl IdentLike for (JsWord, SyntaxContext) {
-	#[inline]
-	fn from_ident(i:&Ident) -> Self { (i.sym.clone(), i.ctxt) }
+    #[inline]
+    fn from_ident(i: &Ident) -> Self {
+        (i.sym.clone(), i.ctxt)
+    }
 
-	#[inline]
-	fn to_id(&self) -> Id { (self.0.clone(), self.1) }
+    #[inline]
+    fn to_id(&self) -> Id {
+        (self.0.clone(), self.1)
+    }
 
-	#[inline]
-	fn into_id(self) -> Id { self }
+    #[inline]
+    fn into_id(self) -> Id {
+        self
+    }
 }
 
 impl IdentLike for Ident {
-	#[inline]
-	fn from_ident(i:&Ident) -> Self { Ident::new(i.sym.clone(), i.span, i.ctxt) }
+    #[inline]
+    fn from_ident(i: &Ident) -> Self {
+        Ident::new(i.sym.clone(), i.span, i.ctxt)
+    }
 
-	#[inline]
-	fn to_id(&self) -> Id { (self.sym.clone(), self.ctxt) }
+    #[inline]
+    fn to_id(&self) -> Id {
+        (self.sym.clone(), self.ctxt)
+    }
 
-	#[inline]
-	fn into_id(self) -> Id { (self.sym, self.ctxt) }
+    #[inline]
+    fn into_id(self) -> Id {
+        (self.sym, self.ctxt)
+    }
+}
+
+impl IdentLike for FastId {
+    fn from_ident(i: &Ident) -> Self {
+        unsafe { fast_id(&i.to_id()) }
+    }
+
+    fn to_id(&self) -> Id {
+        unreachable!("FastId.to_id() is not allowed because it is very likely to be unsafe")
+    }
+
+    fn into_id(self) -> Id {
+        unreachable!("FastId.into_id() is not allowed because it is very likely to be unsafe")
+    }
 }
 
 #[deprecated = "Use i.to_id() instead"]
 #[inline(always)]
-pub fn id(i:&Ident) -> Id { (i.sym.clone(), i.ctxt) }
+pub fn id(i: &Ident) -> Id {
+    (i.sym.clone(), i.ctxt)
+}
