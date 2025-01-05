@@ -3,6 +3,7 @@ use std::{env, path::Path};
 use swc_common::{Mark, comments::SingleThreadedComments};
 use swc_ecma_codegen::to_code_with_comments;
 use swc_ecma_parser::{Syntax, parse_file_as_program};
+use swc_ecma_parser::{parse_file_as_program, Syntax, TsSyntax};
 use swc_ecma_transforms_base::{fixer::paren_remover, resolver};
 use swc_typescript::fast_dts::{FastDts, FastDtsOptions};
 
@@ -27,6 +28,21 @@ pub fn main() {
 		.map(|program| program.apply(resolver(unresolved_mark, top_level_mark, true)))
 		.map(|program| program.apply(paren_remover(None)))
 		.unwrap();
+        let comments = SingleThreadedComments::default();
+        let mut program = parse_file_as_program(
+            &fm,
+            Syntax::Typescript(TsSyntax {
+                tsx: true,
+                ..Default::default()
+            }),
+            Default::default(),
+            Some(&comments),
+            &mut Vec::new(),
+        )
+        .map_err(|err| err.into_diagnostic(&handler).emit())
+        .map(|program| program.apply(resolver(unresolved_mark, top_level_mark, true)))
+        .map(|program| program.apply(paren_remover(None)))
+        .unwrap();
 
 		let internal_annotations = FastDts::get_internal_annotations(&comments);
 		let mut checker = FastDts::new(

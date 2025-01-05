@@ -1713,12 +1713,12 @@ export interface ReactConfig {
     optimizer?: OptimizerConfig;
 
     /**
-     * https://swc.rs/docs/configuring-swc.html#jsctransformlegacydecorator
+     * https://swc.rs/docs/configuration/compilation#jsctransformlegacydecorator
      */
     legacyDecorator?: boolean;
 
     /**
-     * https://swc.rs/docs/configuring-swc.html#jsctransformdecoratormetadata
+     * https://swc.rs/docs/configuration/compilation#jsctransformdecoratormetadata
      */
     decoratorMetadata?: boolean;
 
