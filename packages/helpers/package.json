@@ -465,11 +465,11 @@
 		"tslib": "2.8.1"
 	},
 	"devDependencies": {
-		"@ast-grep/napi": "0.31.0",
-		"@playform/build": "0.2.0",
-		"dprint": "0.47.6",
-		"magic-string": "0.30.14",
-		"zx": "8.2.4"
+		"@ast-grep/napi": "0.33.0",
+		"@playform/build": "0.2.1",
+		"dprint": "0.48.0",
+		"magic-string": "0.30.17",
+		"zx": "8.3.0"
 	},
 	"publishConfig": {
 		"access": "public"
