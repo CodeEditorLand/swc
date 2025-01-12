@@ -3,172 +3,134 @@
 use once_cell::sync::Lazy;
 use swc_common::GLOBALS;
 use swc_ecma_ast::*;
+use swc_parallel::{
+    items::{IntoItems, Items},
+    join,
+};
 
-static CPU_COUNT:Lazy<usize> = Lazy::new(num_cpus::get);
+static CPU_COUNT: Lazy<usize> = Lazy::new(num_cpus::get);
 
-pub fn cpu_count() -> usize { *CPU_COUNT }
+pub fn cpu_count() -> usize {
+    *CPU_COUNT
+}
 
 pub trait Parallel: swc_common::sync::Send + swc_common::sync::Sync {
-	/// Used to create visitor.
-	fn create(&self) -> Self;
+    /// Used to create visitor.
+    fn create(&self) -> Self;
 
-	/// This can be called in anytime.
-	fn merge(&mut self, other:Self);
+    /// This can be called in anytime.
+    fn merge(&mut self, other: Self);
 
-	/// Invoked after visiting all [Stmt]s, possibly in parallel.
-	fn after_stmts(&mut self, _stmts:&mut Vec<Stmt>) {}
+    /// Invoked after visiting all [Stmt]s, possibly in parallel.
+    fn after_stmts(&mut self, _stmts: &mut Vec<Stmt>) {}
 
-	/// Invoked after visiting all [ModuleItem]s, possibly in parallel.
-	fn after_module_items(&mut self, _stmts:&mut Vec<ModuleItem>) {}
-}
-
-/// This is considered as a private type and it's NOT A PUBLIC API.
-#[cfg(feature = "concurrent")]
-#[allow(clippy::len_without_is_empty)]
-pub trait Items:
-	rayon::iter::IntoParallelIterator<Iter = Self::ParIter> + IntoIterator<Item = Self::Elem> {
-	type Elem: Send + Sync;
-
-	type ParIter: rayon::iter::ParallelIterator<Item = Self::Elem>
-		+ rayon::iter::IndexedParallelIterator;
-
-	fn len(&self) -> usize;
-}
-
-/// This is considered as a private type and it's NOT A PUBLIC API.
-#[cfg(not(feature = "concurrent"))]
-#[allow(clippy::len_without_is_empty)]
-pub trait Items: IntoIterator<Item = Self::Elem> {
-	type Elem: Send + Sync;
-
-	fn len(&self) -> usize;
-}
-
-impl<T> Items for Vec<T>
-where
-	T: Send + Sync,
-{
-	type Elem = T;
-	#[cfg(feature = "concurrent")]
-	type ParIter = rayon::vec::IntoIter<T>;
-
-	fn len(&self) -> usize { Vec::len(self) }
-}
-
-impl<'a, T> Items for &'a mut Vec<T>
-where
-	T: Send + Sync,
-{
-	type Elem = &'a mut T;
-	#[cfg(feature = "concurrent")]
-	type ParIter = rayon::slice::IterMut<'a, T>;
-
-	fn len(&self) -> usize { Vec::len(self) }
-}
-
-impl<'a, T> Items for &'a mut [T]
-where
-	T: Send + Sync,
-{
-	type Elem = &'a mut T;
-	#[cfg(feature = "concurrent")]
-	type ParIter = rayon::slice::IterMut<'a, T>;
-
-	fn len(&self) -> usize { <[T]>::len(self) }
-}
-
-impl<'a, T> Items for &'a [T]
-where
-	T: Send + Sync,
-{
-	type Elem = &'a T;
-	#[cfg(feature = "concurrent")]
-	type ParIter = rayon::slice::Iter<'a, T>;
-
-	fn len(&self) -> usize { <[T]>::len(self) }
+    /// Invoked after visiting all [ModuleItem]s, possibly in parallel.
+    fn after_module_items(&mut self, _stmts: &mut Vec<ModuleItem>) {}
 }
 
 pub trait ParallelExt: Parallel {
-	/// Invoke `op` in parallel, if `swc_ecma_utils` is compiled with
-	/// concurrent feature enabled and `nodes.len()` is bigger than threshold.
-	///
-	///
-	/// This configures [GLOBALS], while not configuring [HANDLER] nor [HELPERS]
-	fn maybe_par<I, F>(&mut self, threshold:usize, nodes:I, op:F)
-	where
-		I: Items,
-		F: Send + Sync + Fn(&mut Self, I::Elem), {
-		self.maybe_par_idx(threshold, nodes, |v, _, n| op(v, n))
-	}
+    /// Invoke `op` in parallel, if `swc_ecma_utils` is compiled with
+    /// concurrent feature enabled and `nodes.len()` is bigger than threshold.
+    ///
+    ///
+    /// This configures [GLOBALS], while not configuring [HANDLER] nor [HELPERS]
+    fn maybe_par<I, F>(&mut self, threshold: usize, nodes: I, op: F)
+    where
+        I: IntoItems,
+        F: Send + Sync + Fn(&mut Self, I::Elem),
+    {
+        self.maybe_par_idx(threshold, nodes, |v, _, n| op(v, n))
+    }
 
-	/// Invoke `op` in parallel, if `swc_ecma_utils` is compiled with
-	/// concurrent feature enabled and `nodes.len()` is bigger than threshold.
-	///
-	///
-	/// This configures [GLOBALS], while not configuring [HANDLER] nor [HELPERS]
-	fn maybe_par_idx<I, F>(&mut self, threshold:usize, nodes:I, op:F)
-	where
-		I: Items,
-		F: Send + Sync + Fn(&mut Self, usize, I::Elem);
+    /// Invoke `op` in parallel, if `swc_ecma_utils` is compiled with
+    /// concurrent feature enabled and `nodes.len()` is bigger than threshold.
+    ///
+    ///
+    /// This configures [GLOBALS], while not configuring [HANDLER] nor [HELPERS]
+    fn maybe_par_idx<I, F>(&mut self, threshold: usize, nodes: I, op: F)
+    where
+        I: IntoItems,
+        F: Send + Sync + Fn(&mut Self, usize, I::Elem),
+    {
+        self.maybe_par_idx_raw(threshold, nodes.into_items(), &op)
+    }
+
+    /// If you don't have a special reason, use [`ParallelExt::maybe_par`] or
+    /// [`ParallelExt::maybe_par_idx`] instead.
+    fn maybe_par_idx_raw<I, F>(&mut self, threshold: usize, nodes: I, op: &F)
+    where
+        I: Items,
+        F: Send + Sync + Fn(&mut Self, usize, I::Elem);
 }
 
 #[cfg(feature = "concurrent")]
 impl<T> ParallelExt for T
 where
-	T: Parallel,
+    T: Parallel,
 {
-	fn maybe_par_idx<I, F>(&mut self, threshold:usize, nodes:I, op:F)
-	where
-		I: Items,
-		F: Send + Sync + Fn(&mut Self, usize, I::Elem), {
-		if nodes.len() >= threshold {
-			GLOBALS.with(|globals| {
-				use rayon::prelude::*;
+    fn maybe_par_idx_raw<I, F>(&mut self, threshold: usize, nodes: I, op: &F)
+    where
+        I: Items,
+        F: Send + Sync + Fn(&mut Self, usize, I::Elem),
+    {
+        if nodes.len() >= threshold {
+            GLOBALS.with(|globals| {
+                let len = nodes.len();
+                if len == 0 {
+                    return;
+                }
 
-				let visitor = nodes
-					.into_par_iter()
-					.enumerate()
-					.map(|(idx, node)| {
-						GLOBALS.set(globals, || {
-							let mut visitor = Parallel::create(&*self);
+                if len == 1 {
+                    op(self, 0, nodes.into_iter().next().unwrap());
+                    return;
+                }
 
-							op(&mut visitor, idx, node);
+                let (na, nb) = nodes.split_at(len / 2);
 
-							visitor
-						})
-					})
-					.reduce(
-						|| Parallel::create(&*self),
-						|mut a, b| {
-							Parallel::merge(&mut a, b);
+                let (va, vb) = join(
+                    || {
+                        GLOBALS.set(globals, || {
+                            let mut visitor = Parallel::create(&*self);
+                            visitor.maybe_par_idx_raw(threshold, na, op);
 
-							a
-						},
-					);
+                            visitor
+                        })
+                    },
+                    || {
+                        GLOBALS.set(globals, || {
+                            let mut visitor = Parallel::create(&*self);
+                            visitor.maybe_par_idx_raw(threshold, nb, op);
 
-				Parallel::merge(self, visitor);
-			});
+                            visitor
+                        })
+                    },
+                );
 
-			return;
-		}
+                Parallel::merge(self, va);
+                Parallel::merge(self, vb);
+            });
 
-		for (idx, n) in nodes.into_iter().enumerate() {
-			op(self, idx, n);
-		}
-	}
+            return;
+        }
+
+        for (idx, n) in nodes.into_iter().enumerate() {
+            op(self, idx, n);
+        }
+    }
 }
 
 #[cfg(not(feature = "concurrent"))]
 impl<T> ParallelExt for T
 where
-	T: Parallel,
+    T: Parallel,
 {
-	fn maybe_par_idx<I, F>(&mut self, _threshold:usize, nodes:I, op:F)
-	where
-		I: Items,
-		F: Send + Sync + Fn(&mut Self, usize, I::Elem), {
-		for (idx, n) in nodes.into_iter().enumerate() {
-			op(self, idx, n);
-		}
-	}
+    fn maybe_par_idx_raw<I, F>(&mut self, _threshold: usize, nodes: I, op: &F)
+    where
+        I: Items,
+        F: Send + Sync + Fn(&mut Self, usize, I::Elem),
+    {
+        for (idx, n) in nodes.into_iter().enumerate() {
+            op(self, idx, n);
+        }
+    }
 }
