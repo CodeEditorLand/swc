@@ -9,10 +9,12 @@ use swc_common::{
     FileName, Globals, Mark, SourceMap, SyntaxContext, GLOBALS,
 };
 use swc_ecma_ast::{EsVersion, Program};
-use swc_ecma_lints::{config::LintConfig, rule::Rule, rules::LintParams};
+use swc_ecma_lints::{
+    config::LintConfig,
+    rules::{lint_pass, LintParams},
+};
 use swc_ecma_parser::parse_file_as_module;
 use swc_ecma_transforms_base::resolver;
-use swc_ecma_visit::{Visit, VisitWith};
 
 pub fn bench_files(c: &mut Criterion) {
     let mut group = c.benchmark_group("es/lints/libs");
@@ -55,7 +57,12 @@ pub fn bench_files(c: &mut Criterion) {
                 b.iter(|| {
                     GLOBALS.set(&globals, || {
                         HANDLER.set(&handler, || {
-                            run(cm.clone(), program.clone(), unresolved_mark, top_level_mark)
+                            run(
+                                cm.clone(),
+                                &mut program.clone(),
+                                unresolved_mark,
+                                top_level_mark,
+                            )
                         });
                     });
                 });
@@ -80,9 +87,9 @@ pub fn bench_files(c: &mut Criterion) {
 criterion_group!(files, bench_files);
 criterion_main!(files);
 
-fn run(cm: Lrc<SourceMap>, program: Program, unresolved_mark: Mark, top_level_mark: Mark) {
+fn run(cm: Lrc<SourceMap>, program: &mut Program, unresolved_mark: Mark, top_level_mark: Mark) {
     let rules = swc_ecma_lints::rules::all(LintParams {
-        program: &program,
+        program,
         lint_config: &LintConfig::default(),
         unresolved_ctxt: SyntaxContext::empty().apply_mark(unresolved_mark),
         top_level_ctxt: SyntaxContext::empty().apply_mark(top_level_mark),
@@ -90,20 +97,7 @@ fn run(cm: Lrc<SourceMap>, program: Program, unresolved_mark: Mark, top_level_ma
         source_map: cm.clone(),
     });
 
-    let mut visitor = black_box(Visitors(rules));
+    let pass = black_box(lint_pass(rules));
 
-    program.visit_with(&mut visitor);
-}
-
-struct Visitors(Vec<Box<dyn Rule>>);
-
-impl Visit for Visitors {
-    fn visit_program(&mut self, program: &Program) {
-        for rule in self.0.iter_mut() {
-            match program {
-                Program::Module(module) => rule.lint_module(module),
-                Program::Script(script) => rule.lint_script(script),
-            }
-        }
-    }
+    program.mutate(pass)
 }

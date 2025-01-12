@@ -1,39 +1,11 @@
 [workspace]
-members = [
-	"xtask",
-	"crates/swc_allocator",
-	"crates/swc_core",
-	"crates/swc_cli_impl",
-	"crates/dbg-swc",
-	"crates/jsdoc",
-	"crates/binding_macros",
-	"crates/swc_css",
-	"crates/swc_css_lints",
-	"crates/swc_css_prefixer",
-	"crates/swc_ecmascript",
-	"crates/swc_ecma_lints",
-	"crates/swc_ecma_quote",
-	"crates/swc_estree_compat",
-	"crates/swc_html",
-	"crates/swc_plugin",
-	"crates/swc_plugin_macro",
-	"crates/swc_plugin_runner",
-	"crates/swc_plugin_testing",
-	"crates/swc_plugin_proxy",
-	"crates/swc_timer",
-	"crates/swc_xml",
-	"crates/swc_x_optimizer",
-	"crates/swc_transform_common",
-	"crates/swc_typescript",
-	"crates/swc_fast_ts_strip",
-	"tools/generate-code",
-	"tools/swc-releaser",
-]
+members  = ["xtask", "crates/*", "tools/generate-code", "tools/swc-releaser"]
 resolver = "2"
 
-[workspace.package]
-license-file = "LICENSE"
-repository = "https://github.com/swc-project/swc.git"
+  [workspace.package]
+  edition    = "2021"
+  license    = "Apache-2.0"
+  repository = "https://github.com/swc-project/swc.git"
 
 [workspace.dependencies]
 # bytecheck version should be in sync with rkyv version. Do not bump individually.
@@ -65,6 +37,7 @@ rkyv = "=0.7.45"
   cargo_metadata            = "0.18.1"
   cfg-if                    = "1.0.0"
   changesets                = "0.2.2"
+  chili                     = "=0.2.0"
   chrono                    = "0.4.38"
   codspeed-criterion-compat = "2.6.0"
   console_error_panic_hook  = "0.1.7"
@@ -82,7 +55,7 @@ rkyv = "=0.7.45"
   glob                      = "0.3.0"
   hashbrown                 = "0.14.5"
   hex                       = "0.4.3"
-  hstr                      = "0.2.14"
+  hstr                      = "0.2.15"
   indexmap                  = "2.0.0"
   is-macro                  = "0.3.5"
   js-sys                    = "0.3.59"
@@ -151,8 +124,8 @@ rkyv = "=0.7.45"
   walkdir                   = "2.4.0"
   wasm-bindgen              = "0.2.91"
   wasm-bindgen-futures      = "0.4.41"
-  wasmer                    = { version = "5.0.1", default-features = false }
-  wasmer-wasix              = { version = "0.31.0", default-features = false }
+  wasmer                    = { version = "=5.0.5-rc1", default-features = false }
+  wasmer-wasix              = { version = "0.35.0", default-features = false }
 
 [profile.release]
 lto = true

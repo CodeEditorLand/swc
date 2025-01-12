@@ -2,12 +2,12 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Cached types for swc"
 documentation = "https://rustdoc.swc.rs/swc_cached/"
-edition = "2021"
-include = ["Cargo.toml", "src/**/*.rs"]
-license-file = "LICENSE"
-name = "swc_cached"
-repository = "https://github.com/swc-project/swc.git"
-version = "1.0.0"
+edition       = { workspace = true }
+include       = ["Cargo.toml", "src/**/*.rs"]
+license       = { workspace = true }
+name          = "swc_cached"
+repository    = { workspace = true }
+version       = "1.0.0"
 
 [lib]
 bench = false

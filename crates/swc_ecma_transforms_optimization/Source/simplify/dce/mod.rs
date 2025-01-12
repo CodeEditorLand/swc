@@ -16,7 +16,7 @@ use swc_ecma_transforms_base::{
     perf::{cpu_count, ParVisitMut, Parallel},
 };
 use swc_ecma_utils::{
-    collect_decls, find_pat_ids, ExprCtx, ExprExt, IsEmpty, ModuleItemLike, StmtLike,
+    collect_decls, find_pat_ids, ExprCtx, ExprExt, IsEmpty, ModuleItemLike, StmtLike, Value::Known,
 };
 use swc_ecma_visit::{
     noop_visit_mut_type, noop_visit_type, visit_mut_pass, Visit, VisitMut, VisitMutWith, VisitWith,
@@ -591,7 +591,7 @@ impl TreeShaker {
             }
         }
 
-        self.visit_mut_par(cpu_count() * 8, stmts);
+        self.visit_mut_par(cpu_count(), stmts);
 
         stmts.retain(|s| match s.as_stmt() {
             Some(Stmt::Empty(..)) => false,
@@ -655,6 +655,24 @@ impl TreeShaker {
                 .map(|v| v.usage == 0)
                 .unwrap_or_default()
     }
+
+    /// Drops RHS from `null && foo`
+    fn optimize_bin_expr(&mut self, n: &mut Expr) {
+        let Expr::Bin(b) = n else {
+            return;
+        };
+
+        if b.op == op!("&&") && b.left.as_pure_bool(&self.expr_ctx) == Known(false) {
+            *n = *b.left.take();
+            self.changed = true;
+            return;
+        }
+
+        if b.op == op!("||") && b.left.as_pure_bool(&self.expr_ctx) == Known(true) {
+            *n = *b.left.take();
+            self.changed = true;
+        }
+    }
 }
 
 impl VisitMut for TreeShaker {
@@ -697,6 +715,10 @@ impl VisitMut for TreeShaker {
             }
             Decl::Class(c) => {
                 if self.can_drop_binding(c.ident.to_id(), false)
+                    && c.class
+                        .super_class
+                        .as_deref()
+                        .map_or(true, |e| !e.may_have_side_effects(&self.expr_ctx))
                     && c.class.body.iter().all(|m| match m {
                         ClassMember::Method(m) => !matches!(m.key, PropName::Computed(..)),
                         ClassMember::ClassProp(m) => {
@@ -756,6 +778,8 @@ impl VisitMut for TreeShaker {
 
     fn visit_mut_expr(&mut self, n: &mut Expr) {
         n.visit_mut_children_with(self);
+
+        self.optimize_bin_expr(n);
 
         if let Expr::Call(CallExpr {
             callee: Callee::Expr(callee),
@@ -821,11 +845,11 @@ impl VisitMut for TreeShaker {
     }
 
     fn visit_mut_expr_or_spreads(&mut self, n: &mut Vec<ExprOrSpread>) {
-        self.visit_mut_par(cpu_count() * 8, n);
+        self.visit_mut_par(cpu_count(), n);
     }
 
     fn visit_mut_exprs(&mut self, n: &mut Vec<Box<Expr>>) {
-        self.visit_mut_par(cpu_count() * 8, n);
+        self.visit_mut_par(cpu_count(), n);
     }
 
     fn visit_mut_for_head(&mut self, n: &mut ForHead) {
@@ -923,11 +947,11 @@ impl VisitMut for TreeShaker {
     }
 
     fn visit_mut_opt_vec_expr_or_spreads(&mut self, n: &mut Vec<Option<ExprOrSpread>>) {
-        self.visit_mut_par(cpu_count() * 8, n);
+        self.visit_mut_par(cpu_count(), n);
     }
 
     fn visit_mut_prop_or_spreads(&mut self, n: &mut Vec<PropOrSpread>) {
-        self.visit_mut_par(cpu_count() * 8, n);
+        self.visit_mut_par(cpu_count(), n);
     }
 
     fn visit_mut_script(&mut self, m: &mut Script) {
@@ -1071,7 +1095,7 @@ impl VisitMut for TreeShaker {
     }
 
     fn visit_mut_var_declarators(&mut self, n: &mut Vec<VarDeclarator>) {
-        self.visit_mut_par(cpu_count() * 8, n);
+        self.visit_mut_par(cpu_count(), n);
 
         n.retain(|v| {
             if v.name.is_invalid() {

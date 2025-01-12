@@ -2,11 +2,11 @@
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Automatically derive From impls for enums"
 documentation = "https://rustdoc.swc.rs/from_variant/"
-edition = "2021"
-license-file = "LICENSE"
-name = "from_variant"
-repository = "https://github.com/swc-project/swc.git"
-version = "2.0.0"
+edition       = { workspace = true }
+license       = { workspace = true }
+name          = "from_variant"
+repository    = { workspace = true }
+version       = "2.0.0"
 
 [lib]
 bench = false
