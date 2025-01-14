@@ -465,7 +465,7 @@
 		"tslib": "2.8.1"
 	},
 	"devDependencies": {
-		"@ast-grep/napi": "0.33.0",
+		"@ast-grep/napi": "0.33.1",
 		"@playform/build": "0.2.1",
 		"dprint": "0.48.0",
 		"magic-string": "0.30.17",
